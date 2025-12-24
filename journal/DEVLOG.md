@@ -14,3 +14,8 @@ Notes:
 - Git initialised
 - Project structure created (docs/, journal/, cmd/, internal/, web/)
 - Documentation baseline established (README, SPEC, TRACKER)
+- WSL 2 installed
+_ Docker Desktop installed
+- Firmware virtualization enabled
+- Docker Authentication issue resolved
+- Successfully created the MinIO bucket and access key

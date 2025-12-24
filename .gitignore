@@ -1,0 +1,17 @@
+.env
+*.log
+.DS_Store
+Thumbs.db
+
+# Editor / tooling
+.vscode/
+.qodo/
+
+# Build outputs
+*.exe
+*.out
+*.o
+
+# Node / web (future)
+node_modules/
+dist/

@@ -4,7 +4,7 @@ This tracker is the source of truth for implementation progress. A task is only 
 
 ## Milestone 0 – Repository & Documentation Baseline
 
-Status: In progress
+Status: Complete
 
 Acceptance criteria:
 - Repository initialised with Git
@@ -15,7 +15,7 @@ Acceptance criteria:
 
 ## Milestone 1 – Local Dev Environment (Docker Compose)
 
-Status: Not started
+Status: Complete
 
 Acceptance criteria:
 - docker-compose.yml exists
@@ -25,6 +25,7 @@ Acceptance criteria:
   - Backend API (placeholder)
 - A single command starts everything locally
 - Health checks show containers are running
+-PostgreSQL and MinIO are running via Docker Compose and that the MinIO bucket sfd-private exists.
 
 ## Milestone 2 – Backend Skeleton (Go)
 
