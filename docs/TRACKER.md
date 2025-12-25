@@ -39,7 +39,7 @@ Acceptance criteria:
 
 ## Milestone 3 – Authentication (Single Admin)
 
-Status: Not started
+Status: In progress
 
 Acceptance criteria:
 - Admin user is created via environment variables or a one-time bootstrap command

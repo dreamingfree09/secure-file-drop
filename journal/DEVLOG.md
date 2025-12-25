@@ -29,3 +29,11 @@ Notes:
 - enabled Docker Desktop WSL integration and resolved Docker socket permissions
 - fixed MinIO healthcheck by using mc(since curl was not present)
 - confirmed all services healthy with docker compose ps
+
+## 2025-12-25
+
+Notes:
+- Admin login implementation with signed cookie sessions
+- Added a protected test endpoint
+- Wired seccrets via .env
+- Validated via Docker Compose with all services healthy
