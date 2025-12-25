@@ -19,9 +19,24 @@ func main() {
 		Commit:  getenvDefault("SFD_COMMIT", "unknown"),
 	}
 
+	auth := server.AuthConfig{
+		AdminUser:     getenvDefault("SFD_ADMIN_USER", "admin"),
+		AdminPass:     getenvDefault("SFD_ADMIN_PASS", ""),
+		SessionSecret: getenvDefault("SFD_SESSION_SECRET", ""),
+		SessionTTL:    12 * time.Hour,
+		CookieName:    "sfd_session",
+	}
+
+	// Basic safety: refuse to start if secrets are missing (prevents accidental public exposure).
+	if auth.AdminPass == "" || auth.SessionSecret == "" {
+		log.Printf("service=backend msg=%q", "missing SFD_ADMIN_PASS or SFD_SESSION_SECRET")
+		os.Exit(1)
+	}
+
 	srv := server.New(server.Config{
 		Addr:  addr,
 		Build: build,
+		Auth:  auth,
 	})
 
 	// Start server in background

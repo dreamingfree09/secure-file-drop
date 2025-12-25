@@ -16,6 +16,7 @@ type BuildInfo struct {
 type Config struct {
 	Addr  string // e.g. ":8080"
 	Build BuildInfo
+	Auth  AuthConfig
 }
 
 type Server struct {
@@ -43,6 +44,18 @@ func New(cfg Config) *Server {
 			"commit":  cfg.Build.Commit,
 		})
 	})
+
+	// Login endpoint (POST JSON {username,password})
+	mux.HandleFunc("/login", cfg.Auth.loginHandler())
+
+	// Protected endpoint for verification only (will be useful for testing middleware)
+	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status": "ok",
+		})
+	})))
 
 	// Wrap middleware: requestID -> logging -> mux
 	var handler http.Handler = mux

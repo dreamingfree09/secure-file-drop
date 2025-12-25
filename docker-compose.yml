@@ -1,3 +1,5 @@
+name: securefiledrop
+
 services:
   postgres:
     image: postgres:16
@@ -11,7 +13,7 @@ services:
     volumes:
       - sfd_pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sfd -d sfd"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -34,7 +36,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    
+    restart: unless-stopped
 
   backend:
     build:
@@ -45,18 +47,18 @@ services:
       SFD_ADDR: ":8080"
       SFD_VERSION: "dev"
       SFD_COMMIT: "local"
+      SFD_ADMIN_USER: ${SFD_ADMIN_USER}
+      SFD_ADMIN_PASS: ${SFD_ADMIN_PASS}
+      SFD_SESSION_SECRET: ${SFD_SESSION_SECRET}
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
       minio:
-        condition: service_started
-    restart: unless-stopped  
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   sfd_pgdata:
   sfd_minio_data:
-
-  
-  
