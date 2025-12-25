@@ -19,3 +19,6 @@ dist/
 # Native build outputs
 native/sfd-hash
 native/*.o
+
+# Local curl cookie jar
+cookies.txt

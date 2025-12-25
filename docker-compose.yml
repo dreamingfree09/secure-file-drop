@@ -50,6 +50,8 @@ services:
       SFD_ADMIN_USER: ${SFD_ADMIN_USER}
       SFD_ADMIN_PASS: ${SFD_ADMIN_PASS}
       SFD_SESSION_SECRET: ${SFD_SESSION_SECRET}
+      DATABASE_URL: ${DATABASE_URL}
+
     ports:
       - "8080:8080"
     depends_on:

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net"
 	"net/http"
@@ -17,17 +18,38 @@ type Config struct {
 	Addr  string // e.g. ":8080"
 	Build BuildInfo
 	Auth  AuthConfig
+	DB    *sql.DB
 }
 
 type Server struct {
 	httpServer *http.Server
+	db         *sql.DB
 }
 
 func New(cfg Config) *Server {
 	mux := http.NewServeMux()
 
-	// Health endpoint
+	// Health endpoint: process is running (does not check dependencies).
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status": "ok",
+		})
+	})
+
+	// Ready endpoint: dependencies are reachable (initially only Postgres).
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+		if cfg.DB == nil {
+			http.Error(w, "db not configured", http.StatusServiceUnavailable)
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+		defer cancel()
+		if err := cfg.DB.PingContext(ctx); err != nil {
+			http.Error(w, "db not ready", http.StatusServiceUnavailable)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -48,7 +70,7 @@ func New(cfg Config) *Server {
 	// Login endpoint (POST JSON {username,password})
 	mux.HandleFunc("/login", cfg.Auth.loginHandler())
 
-	// Protected endpoint for verification only (will be useful for testing middleware)
+	// Protected endpoint for verification only
 	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -68,7 +90,7 @@ func New(cfg Config) *Server {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	return &Server{httpServer: s}
+	return &Server{httpServer: s, db: cfg.DB}
 }
 
 func (s *Server) Start() error {

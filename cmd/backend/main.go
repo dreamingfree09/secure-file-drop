@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log"
 	"os"
 	"os/signal"
@@ -27,16 +28,26 @@ func main() {
 		CookieName:    "sfd_session",
 	}
 
-	// Basic safety: refuse to start if secrets are missing (prevents accidental public exposure).
+	// Safety: refuse to start if secrets are missing.
 	if auth.AdminPass == "" || auth.SessionSecret == "" {
 		log.Printf("service=backend msg=%q", "missing SFD_ADMIN_PASS or SFD_SESSION_SECRET")
 		os.Exit(1)
 	}
 
+	// Database
+	dsn := getenvDefault("DATABASE_URL", "")
+	db, err := server.OpenDB(dsn)
+	if err != nil {
+		log.Printf("service=backend msg=%q err=%v", "db_connect_failed", err)
+		os.Exit(1)
+	}
+	defer func() { _ = db.Close() }()
+
 	srv := server.New(server.Config{
 		Addr:  addr,
 		Build: build,
 		Auth:  auth,
+		DB:    db,
 	})
 
 	// Start server in background
@@ -69,6 +80,7 @@ func main() {
 	}
 }
 
+// NOTE: kept here for clarity and minimal dependencies.
 func getenvDefault(key, def string) string {
 	v := os.Getenv(key)
 	if v == "" {
@@ -76,3 +88,6 @@ func getenvDefault(key, def string) string {
 	}
 	return v
 }
+
+// Compile-time check to ensure we keep using *sql.DB in the server config.
+var _ *sql.DB
