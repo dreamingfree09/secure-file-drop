@@ -19,3 +19,13 @@ _ Docker Desktop installed
 - Firmware virtualization enabled
 - Docker Authentication issue resolved
 - Successfully created the MinIO bucket and access key
+
+## 2025-12-25
+
+Notes:
+- Installed Ubuntu WSL and Go
+- Implemented the backend skeleton with /health and request-id logging
+- containerised the backend with Dockerfile
+- enabled Docker Desktop WSL integration and resolved Docker socket permissions
+- fixed MinIO healthcheck by using mc(since curl was not present)
+- confirmed all services healthy with docker compose ps

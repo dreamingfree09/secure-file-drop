@@ -1,0 +1,54 @@
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"secure-file-drop/internal/server"
+)
+
+func main() {
+	addr := getenvDefault("SFD_ADDR", ":8080")
+
+	srv := server.New(server.Config{Addr: addr})
+
+	// Start server in background
+	errCh := make(chan error, 1)
+	go func() {
+		log.Printf("service=backend msg=%q addr=%s", "starting", addr)
+		errCh <- srv.Start()
+	}()
+
+	// Wait for signal or server error
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case sig := <-sigCh:
+		log.Printf("service=backend msg=%q signal=%s", "shutting_down", sig.String())
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("service=backend msg=%q err=%v", "shutdown_error", err)
+			os.Exit(1)
+		}
+		log.Printf("service=backend msg=%q", "shutdown_complete")
+	case err := <-errCh:
+		if err != nil {
+			log.Printf("service=backend msg=%q err=%v", "server_error", err)
+			os.Exit(1)
+		}
+	}
+}
+
+func getenvDefault(key, def string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		return def
+	}
+	return v
+}

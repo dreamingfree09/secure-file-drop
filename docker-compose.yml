@@ -30,12 +30,31 @@ services:
     volumes:
       - sfd_minio_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD-SHELL", "mc alias set sfd http://localhost:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD} >/dev/null 2>&1 && mc ready sfd >/dev/null 2>&1"]
       interval: 5s
       timeout: 3s
       retries: 20
-    restart: unless-stopped
+    
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: sfd_backend
+    environment:
+      SFD_ADDR: ":8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    restart: unless-stopped  
 
 volumes:
   sfd_pgdata:
   sfd_minio_data:
+
+  
+  

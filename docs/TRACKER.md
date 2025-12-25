@@ -29,7 +29,7 @@ Acceptance criteria:
 
 ## Milestone 2 – Backend Skeleton (Go)
 
-Status: Not started
+Status: In progress
 
 Acceptance criteria:
 - Go module initialised
