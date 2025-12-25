@@ -43,6 +43,8 @@ services:
     container_name: sfd_backend
     environment:
       SFD_ADDR: ":8080"
+      SFD_VERSION: "dev"
+      SFD_COMMIT: "local"
     ports:
       - "8080:8080"
     depends_on:

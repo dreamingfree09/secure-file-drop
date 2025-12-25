@@ -8,8 +8,14 @@ import (
 	"time"
 )
 
+type BuildInfo struct {
+	Version string
+	Commit  string
+}
+
 type Config struct {
-	Addr string // e.g. ":8080"
+	Addr  string // e.g. ":8080"
+	Build BuildInfo
 }
 
 type Server struct {
@@ -28,10 +34,20 @@ func New(cfg Config) *Server {
 		})
 	})
 
+	// Version endpoint (no secrets)
+	mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"version": cfg.Build.Version,
+			"commit":  cfg.Build.Commit,
+		})
+	})
+
 	// Wrap middleware: requestID -> logging -> mux
 	var handler http.Handler = mux
-    handler = loggingMiddleware(handler)
-    handler = requestIDMiddleware(handler)
+	handler = loggingMiddleware(handler)
+	handler = requestIDMiddleware(handler)
 
 	s := &http.Server{
 		Addr:              cfg.Addr,

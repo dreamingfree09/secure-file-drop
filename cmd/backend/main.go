@@ -14,12 +14,21 @@ import (
 func main() {
 	addr := getenvDefault("SFD_ADDR", ":8080")
 
-	srv := server.New(server.Config{Addr: addr})
+	build := server.BuildInfo{
+		Version: getenvDefault("SFD_VERSION", "dev"),
+		Commit:  getenvDefault("SFD_COMMIT", "unknown"),
+	}
+
+	srv := server.New(server.Config{
+		Addr:  addr,
+		Build: build,
+	})
 
 	// Start server in background
 	errCh := make(chan error, 1)
 	go func() {
-		log.Printf("service=backend msg=%q addr=%s", "starting", addr)
+		log.Printf("service=backend msg=%q addr=%s version=%s commit=%s",
+			"starting", addr, build.Version, build.Commit)
 		errCh <- srv.Start()
 	}()
 
