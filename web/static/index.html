@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Secure File Drop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h1>Secure File Drop (MVP)</h1>
+
+  <section>
+    <h2>Login</h2>
+    <input id="username" placeholder="Username" value="admin">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <pre id="loginStatus"></pre>
+  </section>
+
+  <section>
+    <h2>Upload file</h2>
+    <input type="file" id="fileInput">
+    <button onclick="upload()">Upload</button>
+    <pre id="uploadStatus"></pre>
+  </section>
+
+  <section>
+    <h2>Download link</h2>
+    <pre id="linkOutput"></pre>
+  </section>
+
+<script>
+async function login() {
+  const res = await fetch('/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      username: document.getElementById('username').value,
+      password: document.getElementById('password').value
+    })
+  });
+  document.getElementById('loginStatus').textContent =
+    res.ok ? 'Logged in' : 'Login failed';
+}
+
+async function upload() {
+  const file = document.getElementById('fileInput').files[0];
+  if (!file) {
+    alert('Select a file first');
+    return;
+  }
+
+  const metaRes = await fetch('/files', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      orig_name: file.name,
+      content_type: file.type || 'application/octet-stream',
+      size_bytes: file.size
+    })
+  });
+
+  const meta = await metaRes.json();
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  const upRes = await fetch('/upload?id=' + meta.id, {
+    method: 'POST',
+    body: fd
+  });
+
+  const upJson = await upRes.json();
+  document.getElementById('uploadStatus').textContent =
+    JSON.stringify(upJson, null, 2);
+
+  const linkRes = await fetch('/links', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      id: meta.id,
+      ttl_seconds: 300
+    })
+  });
+
+  const linkJson = await linkRes.json();
+  document.getElementById('linkOutput').textContent =
+    JSON.stringify(linkJson, null, 2);
+}
+</script>
+</body>
+</html>
