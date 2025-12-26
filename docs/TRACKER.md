@@ -64,7 +64,7 @@ Acceptance criteria:
 
 ## Milestone 5 – Integrity Utility (C) + Integration
 
-Status: In progress
+Status: Complete
 
 Acceptance criteria:
 - C utility compiles on your machine
