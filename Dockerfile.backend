@@ -8,6 +8,12 @@ RUN go mod download
 # Copy source
 COPY cmd ./cmd
 COPY internal ./internal
+COPY native ./native
+
+# Build C hash utility inside Alpine (musl) so it runs in the runtime image
+RUN apk add --no-cache build-base openssl-dev
+RUN mkdir -p /out
+RUN gcc -O2 -s -I./native -o /out/sfd-hash ./native/sfd_hash.c ./native/sfd_hash_cli.c -lcrypto
 
 # Build a static binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./cmd/backend
@@ -15,6 +21,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./cmd/backend
 FROM alpine:3.20
 WORKDIR /app
 COPY --from=build /out/backend /app/backend
+COPY --from=build /out/sfd-hash /app/sfd-hash
+RUN chmod +x /app/sfd-hash
 
 EXPOSE 8080
 ENV SFD_ADDR=:8080

@@ -126,12 +126,15 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'pending'`,
 				id,
 			)
+
+			// If MaxBytesReader tripped, surface 413.
 			if r.Body != nil {
 				if _, ok := err.(*http.MaxBytesError); ok {
 					http.Error(w, "file too large", http.StatusRequestEntityTooLarge)
 					return
 				}
 			}
+
 			http.Error(w, "upload failed", http.StatusBadGateway)
 			return
 		}
@@ -145,12 +148,34 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
+		shaHex, shaBytes, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
+		if herr != nil {
+			_, _ = db.Exec(
+				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'stored'`,
+				id,
+			)
+			http.Error(w, "hashing failed", http.StatusBadGateway)
+			return
+		}
+
+		_, err = db.Exec(
+			`UPDATE files SET sha256_hex = $2, sha256_bytes = $3, hashed_bytes = $4, status = 'hashed' WHERE id = $1 AND status = 'stored'`,
+			id,
+			shaHex,
+			shaBytes,
+			hashBytes,
+		)
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(uploadResp{
 			ID:        id.String(),
 			ObjectKey: objectKey,
-			Status:    "stored",
+			Status:    "hashed",
 		})
 	}))
 }

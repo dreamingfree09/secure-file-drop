@@ -49,7 +49,7 @@ Acceptance criteria:
 
 ## Milestone 4 – Upload Pipeline (Backend + MinIO)
 
-Status: In progress
+Status: Complete
 
 Acceptance criteria:
 - Authenticated upload endpoint accepts a file
@@ -57,10 +57,14 @@ Acceptance criteria:
 - File stored in MinIO (private bucket)
 - Metadata stored in PostgreSQL
 - Upload returns file id and basic metadata
+- Explicit lifecycle enforcement (pending → stored → failed)
+- Fail-fast configuration validation
+- Streaming-only handling (no full buffering)
+- DEVLOG entry exists documenting a real production failure and resolution
 
 ## Milestone 5 – Integrity Utility (C) + Integration
 
-Status: Not started
+Status: In progress
 
 Acceptance criteria:
 - C utility compiles on your machine

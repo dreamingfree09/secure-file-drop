@@ -61,3 +61,21 @@ Outcome:
 - Upload failures mark records as `failed`
 - Behaviour verified via API, PostgreSQL, and MinIO
 - Changes committed as `38fe3bd`
+
+## 2025-12-26 – Milestone 5: Integrity hashing integrated (C utility + backend)
+
+Context:
+After completing the upload pipeline to MinIO (pending -> stored), the next step was to implement server-side integrity verification. The project includes a native C SHA-256 utility to practise safe streaming file I/O and interoperability with the Go backend.
+
+Observed behaviour:
+The backend successfully stored uploaded objects in MinIO, then computed SHA-256 server-side and persisted the results in PostgreSQL.
+
+Expected behaviour:
+For a valid upload, the system should transition a file record from stored -> hashed, record sha256_hex, store the raw 32-byte digest, and record the number of bytes hashed.
+
+Resolution:
+- Built the native hashing tool inside the backend Docker build using Alpine (musl) + OpenSSL headers and linked against libcrypto.
+- Ensured /app/sfd-hash is present in the runtime image and executable.
+- Integrated hashing so the backend computes SHA-256 after storage and updates the database to status=hashed, persisting sha256_hex, sha256_bytes, and hashed_bytes.
+- Verified end-to-end via API upload followed by SQL query confirming status=hashed and octet_length(sha256_bytes)=32.
+
