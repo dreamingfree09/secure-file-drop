@@ -29,7 +29,7 @@ Acceptance criteria:
 
 ## Milestone 2 – Backend Skeleton (Go)
 
-Status: In progress
+Status: Complete
 
 Acceptance criteria:
 - Go module initialised
@@ -39,7 +39,7 @@ Acceptance criteria:
 
 ## Milestone 3 – Authentication (Single Admin)
 
-Status: In progress
+Status: Complete
 
 Acceptance criteria:
 - Admin user is created via environment variables or a one-time bootstrap command
@@ -49,7 +49,7 @@ Acceptance criteria:
 
 ## Milestone 4 – Upload Pipeline (Backend + MinIO)
 
-Status: Not started
+Status: In progress
 
 Acceptance criteria:
 - Authenticated upload endpoint accepts a file

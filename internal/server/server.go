@@ -79,6 +79,10 @@ func New(cfg Config) *Server {
 		})
 	})))
 
+
+        // Create file record (metadata only; proves DB writes end-to-end)
+        mux.Handle("/files", cfg.createFileHandler(cfg.DB))
+
 	// Wrap middleware: requestID -> logging -> mux
 	var handler http.Handler = mux
 	handler = loggingMiddleware(handler)
