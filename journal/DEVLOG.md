@@ -79,3 +79,25 @@ Resolution:
 - Integrated hashing so the backend computes SHA-256 after storage and updates the database to status=hashed, persisting sha256_hex, sha256_bytes, and hashed_bytes.
 - Verified end-to-end via API upload followed by SQL query confirming status=hashed and octet_length(sha256_bytes)=32.
 
+
+## 2025-12-26 – Milestone 6: Signed download links with expiry
+
+Context:
+Following successful server-side integrity hashing, the next objective was to enable secure, time-limited file downloads without exposing the object storage layer directly. The goal was to allow authenticated users to generate expiring download links that could be safely shared.
+
+Observed behaviour:
+The backend generates signed URLs containing an HMAC-protected token encoding the file ID and expiry timestamp. Download requests validate the token, enforce expiry, and stream the object from MinIO to the client.
+
+Expected behaviour:
+A valid token should allow download until expiry, after which access must be denied. Token tampering must invalidate the request. No authentication cookie should be required for the download endpoint.
+
+Resolution:
+- Introduced a download signing secret via SFD_DOWNLOAD_SECRET.
+- Implemented compact HMAC-SHA256 tokens with base64url encoding.
+- Added a protected endpoint to create expiring download links.
+- Added a public download endpoint that validates tokens, checks expiry, and streams content from MinIO.
+- Verified behaviour by generating a link, downloading the file successfully, and confirming expiry enforcement.
+
+Outcome:
+Files transition cleanly through the lifecycle and can now be distributed securely via signed, time-limited links without exposing storage credentials.
+
