@@ -37,3 +37,27 @@ Notes:
 - Added a protected test endpoint
 - Wired seccrets via .env
 - Validated via Docker Compose with all services healthy
+
+## 2025-12-26 – Streaming upload to MinIO (pending → stored)
+
+Context:
+Implementation of the authenticated upload pipeline as part of Milestone 4. The goal was to stream files directly to private object storage without buffering, while maintaining explicit lifecycle state in PostgreSQL.
+
+Observed behaviour:
+The backend initially crash-looped on startup after MinIO client integration.
+
+Expected behaviour:
+Backend should start successfully, validate MinIO configuration, and accept authenticated uploads.
+
+Root cause:
+The MinIO Go SDK expects the endpoint as host:port, not a fully qualified URL. The environment variable was set to `http://minio:9000`, causing a panic during client initialisation.
+
+Resolution:
+Normalised the MinIO endpoint in the backend to accept either `host:port` or `http(s)://host:port`. Added explicit startup validation and fail-fast behaviour if configuration is invalid.
+
+Outcome:
+- Authenticated multipart uploads stream directly to MinIO
+- File lifecycle transitions from `pending` to `stored`
+- Upload failures mark records as `failed`
+- Behaviour verified via API, PostgreSQL, and MinIO
+- Changes committed as `38fe3bd`
