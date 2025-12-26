@@ -33,6 +33,16 @@ type Server struct {
 func New(cfg Config) *Server {
 	mux := http.NewServeMux()
 
+	// Minimal web UI (Milestone 7)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
+		http.ServeFile(w, r, "/app/web/static/index.html")
+	})
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/app/web/static"))))
+
 	mc, bucket, err := newMinioClient()
 	if err != nil {
 		// fail fast: uploads depend on MinIO; do not start in a half-configured state

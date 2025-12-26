@@ -8,6 +8,7 @@ RUN go mod download
 # Copy source
 COPY cmd ./cmd
 COPY internal ./internal
+COPY web ./web
 COPY native ./native
 
 # Build C hash utility inside Alpine (musl) so it runs in the runtime image
@@ -21,6 +22,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./cmd/backend
 FROM alpine:3.20
 WORKDIR /app
 COPY --from=build /out/backend /app/backend
+COPY --from=build /src/web /app/web
 COPY --from=build /out/sfd-hash /app/sfd-hash
 RUN chmod +x /app/sfd-hash
 
