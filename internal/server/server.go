@@ -95,6 +95,11 @@ func New(cfg Config) *Server {
 	// Stream upload to MinIO (pending -> stored)
 	mux.Handle("/upload", cfg.uploadHandler(cfg.DB, mc, bucket))
 
+	// Create signed, expiring download links (Milestone 6)
+	mux.Handle("/links", cfg.createLinkHandler(cfg.DB))
+
+	// Download file via signed token (Milestone 6)
+	mux.Handle("/download", cfg.downloadHandler(cfg.DB, mc, bucket))
 
 	// Wrap middleware: requestID -> logging -> mux
 	var handler http.Handler = mux
