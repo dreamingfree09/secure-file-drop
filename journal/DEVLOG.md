@@ -101,3 +101,21 @@ Resolution:
 Outcome:
 Files transition cleanly through the lifecycle and can now be distributed securely via signed, time-limited links without exposing storage credentials.
 
+
+## 2025-12-26 – Milestone 7: Minimal web UI served by backend
+
+Context:
+After implementing signed download links, the next step was to provide a minimal front-end entry point for basic interaction and manual verification, without introducing a full SPA build pipeline.
+
+Observed behaviour:
+The backend initially returned 404 for `/` because the static files were not present in the runtime image.
+
+Expected behaviour:
+`GET /` should return the bundled `index.html` and `/static/*` should serve assets from the container filesystem.
+
+Root cause:
+The `web/` directory was only copied into the build stage. The runtime stage did not contain `/app/web/static`, so `http.ServeFile` pointed to a non-existent path.
+
+Resolution:
+Copied `/src/web` from the build stage into `/app/web` in the runtime stage, and wired handlers in the server mux to serve `/` and `/static/*`. Verified by inspecting container paths and confirming `GET /` returns 200 with the HTML payload.
+

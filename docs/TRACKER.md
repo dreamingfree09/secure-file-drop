@@ -75,7 +75,7 @@ Acceptance criteria:
 
 ## Milestone 6 – Signed Download Links + Expiry
 
-Status: Not started
+Status: Completed
 
 Acceptance criteria:
 - Backend generates a signed token for a file id with expiry time
@@ -85,7 +85,7 @@ Acceptance criteria:
 
 ## Milestone 7 – Minimal Web UI (Upload + Link Display)
 
-Status: Not started
+Status: In progress
 
 Acceptance criteria:
 - User can log in
