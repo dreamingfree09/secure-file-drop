@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/minio/minio-go/v7"
 )
 
 type BuildInfo struct {
@@ -24,10 +26,18 @@ type Config struct {
 type Server struct {
 	httpServer *http.Server
 	db         *sql.DB
+	minio      *minio.Client
+	bucket     string
 }
 
 func New(cfg Config) *Server {
 	mux := http.NewServeMux()
+
+	mc, bucket, err := newMinioClient()
+	if err != nil {
+		// fail fast: uploads depend on MinIO; do not start in a half-configured state
+		panic(err)
+	}
 
 	// Health endpoint: process is running (does not check dependencies).
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -79,9 +89,12 @@ func New(cfg Config) *Server {
 		})
 	})))
 
+	// Create file record (metadata only; proves DB writes end-to-end)
+	mux.Handle("/files", cfg.createFileHandler(cfg.DB))
 
-        // Create file record (metadata only; proves DB writes end-to-end)
-        mux.Handle("/files", cfg.createFileHandler(cfg.DB))
+	// Stream upload to MinIO (pending -> stored)
+	mux.Handle("/upload", cfg.uploadHandler(cfg.DB, mc, bucket))
+
 
 	// Wrap middleware: requestID -> logging -> mux
 	var handler http.Handler = mux
@@ -94,7 +107,12 @@ func New(cfg Config) *Server {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	return &Server{httpServer: s, db: cfg.DB}
+	return &Server{
+		httpServer: s,
+		db:         cfg.DB,
+		minio:      mc,
+		bucket:     bucket,
+	}
 }
 
 func (s *Server) Start() error {
