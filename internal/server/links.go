@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"strconv"
+	"os"
 	"strings"
 	"time"
 
@@ -32,6 +32,34 @@ func clampTTLSeconds(n int) int {
 		return 86400
 	}
 	return n
+}
+
+func requestOrigin(r *http.Request) string {
+	// Prefer reverse-proxy headers if present.
+	scheme := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto"))
+	host := strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
+
+	// Some proxies set X-Forwarded-Host as a comma-separated list.
+	if i := strings.IndexByte(host, ','); i >= 0 {
+		host = strings.TrimSpace(host[:i])
+	}
+
+	if scheme == "" {
+		if r.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+	}
+
+	if host == "" {
+		host = r.Host
+	}
+	if host == "" {
+		host = "localhost:8080"
+	}
+
+	return scheme + "://" + host
 }
 
 func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
@@ -90,19 +118,15 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 			return
 		}
 
-		// Build an absolute-ish URL based on request host.
-		// In local dev this will be localhost:8080; behind proxy it will be the proxy host.
-		scheme := "http"
-		if r.TLS != nil {
-			scheme = "https"
-		}
-		host := r.Host
-		if host == "" {
-			host = "localhost:8080"
+		// Milestone 8: prefer configured public base URL for deterministic links.
+		// This is critical when deployed behind reverse proxies (e.g., Proxmox + Nginx/Traefik/Caddy).
+		base := strings.TrimSpace(os.Getenv("SFD_PUBLIC_BASE_URL"))
+		base = strings.TrimRight(base, "/")
+		if base == "" {
+			base = requestOrigin(r)
 		}
 
-		// Keep it simple: download endpoint will be /download?token=...
-		url := scheme + "://" + host + "/download?token=" + token
+		url := base + "/download?token=" + token
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -110,7 +134,5 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 			URL:       url,
 			ExpiresAt: expiresAt.Format(time.RFC3339),
 		})
-
-		_ = strconv.ErrRange // quiet unused import guard if future edits remove strconv usage
 	}))
 }
