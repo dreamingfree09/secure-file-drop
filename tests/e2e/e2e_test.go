@@ -133,6 +133,12 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	env = append(env, "SFD_MINIO_ACCESS_KEY=minio")
 	env = append(env, "SFD_MINIO_SECRET_KEY=minio123")
 	env = append(env, "SFD_MINIO_BUCKET=testbucket")
+	// Also set the SFD_S3_* and SFD_BUCKET variants used by the production
+	// entrypoint to avoid configuration gaps between environments.
+	env = append(env, "SFD_S3_ENDPOINT=localhost:"+minioPort)
+	env = append(env, "SFD_S3_ACCESS_KEY=minio")
+	env = append(env, "SFD_S3_SECRET_KEY=minio123")
+	env = append(env, "SFD_BUCKET=testbucket")
 	env = append(env, "SFD_ADMIN_USER=admin")
 	env = append(env, "SFD_ADMIN_PASS=pass")
 	env = append(env, "SFD_SESSION_SECRET=secret")
