@@ -73,7 +73,7 @@ func New(cfg Config) *Server {
 		})
 	})
 
-	// Ready endpoint: dependencies are reachable (initially only Postgres).
+	// Ready endpoint: dependencies are reachable (Postgres and MinIO).
 	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) {
 		if cfg.DB == nil {
 			http.Error(w, "db not configured", http.StatusServiceUnavailable)
@@ -81,10 +81,20 @@ func New(cfg Config) *Server {
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
+
+		// Check Postgres
 		if err := cfg.DB.PingContext(ctx); err != nil {
 			http.Error(w, "db not ready", http.StatusServiceUnavailable)
 			return
 		}
+
+		// Check MinIO
+		exists, err := mc.BucketExists(ctx, bucket)
+		if err != nil || !exists {
+			http.Error(w, "minio not ready", http.StatusServiceUnavailable)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{

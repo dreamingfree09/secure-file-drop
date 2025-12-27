@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"secure-file-drop/internal/db"
 	"secure-file-drop/internal/server"
 )
 
@@ -36,18 +37,26 @@ func main() {
 
 	// Database
 	dsn := getenvDefault("DATABASE_URL", "")
-	db, err := server.OpenDB(dsn)
+	dbConn, err := server.OpenDB(dsn)
 	if err != nil {
 		log.Printf("service=backend msg=%q err=%v", "db_connect_failed", err)
 		os.Exit(1)
 	}
-	defer func() { _ = db.Close() }()
+	defer func() { _ = dbConn.Close() }()
+
+	// Run migrations
+	log.Printf("service=backend msg=%q", "running_migrations")
+	if err := db.RunMigrations(dbConn); err != nil {
+		log.Printf("service=backend msg=%q err=%v", "migration_failed", err)
+		os.Exit(1)
+	}
+	log.Printf("service=backend msg=%q", "migrations_complete")
 
 	srv := server.New(server.Config{
 		Addr:  addr,
 		Build: build,
 		Auth:  auth,
-		DB:    db,
+		DB:    dbConn,
 	})
 
 	// Start server in background
