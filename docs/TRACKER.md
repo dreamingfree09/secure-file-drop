@@ -106,11 +106,18 @@ Acceptance criteria:
 - Basic security headers enabled
 - Cloudflare fronting confirmed (DNS + proxy)
 
-## Milestone 9 – Journal & Troubleshooting Discipline
+## ## Milestone 9 – Public Exposure Hardening (Reverse Proxy Layer)
 
 Status: Not started
 
 Acceptance criteria:
-- journal/DEVLOG.md exists
-- At least one entry created in the required format (template)
-- Any troubleshooting performed is captured with outcome and commit references
+- Reverse proxy deployed in front of the backend
+- HTTPS termination confirmed end-to-end
+- Backend API is not directly exposed to the internet
+- Maximum request body size enforced at proxy level
+- Rate limiting enforced at proxy level
+- Basic security headers applied (e.g. HSTS, X-Content-Type-Options)
+- Public access validated through the proxy only
+- Behaviour verified via real requests
+- DEVLOG entry exists documenting configuration, validation, and any issues encountered
+
