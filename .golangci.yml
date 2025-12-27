@@ -20,8 +20,6 @@ linters:
     - prealloc
     - misspell
     - gosec
-  disable:
-    - typecheck
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
