@@ -122,10 +122,14 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			minio.PutObjectOptions{ContentType: contentType},
 		)
 		if err != nil {
+			// Mark the file as failed in case of storage errors.
 			_, _ = db.Exec(
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'pending'`,
 				id,
 			)
+
+			rid := RequestIDFromContext(r.Context())
+			log.Printf("rid=%s msg=putobject err=%v", rid, err)
 
 			// If MaxBytesReader tripped, surface 413.
 			if r.Body != nil {
