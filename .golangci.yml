@@ -1,5 +1,9 @@
 run:
-  timeout: 2m
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - vendor
+    - docs
 linters:
   enable:
     - govet
@@ -9,7 +13,22 @@ linters:
     - goimports
     - deadcode
     - unused
+    - revive
+    - ineffassign
+    - unparam
+    - prealloc
+    - misspell
+    - gosec
 issues:
   exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
+linters-settings:
+  revive:
+    ignore-generated-header: true
+    severity: warning
+  misspell:
+    locale: US
+  gosec:
+    exclude:
+      - G104
