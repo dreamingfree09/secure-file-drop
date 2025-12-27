@@ -159,6 +159,8 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'stored'`,
 				id,
 			)
+			rid := RequestIDFromContext(r.Context())
+			log.Printf("rid=%s msg=hashing_failed err=%v", rid, herr)
 			http.Error(w, "hashing failed", http.StatusBadGateway)
 			return
 		}
