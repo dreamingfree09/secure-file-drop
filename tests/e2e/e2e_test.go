@@ -8,11 +8,12 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 	"testing"
 	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/ory/dockertest/v3"
 	"github.com/ory/dockertest/v3/docker"
 )
@@ -40,10 +41,14 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	}
 	pgPort := pgResource.GetPort("5432/tcp")
 
-	// MinIO
+	// MinIO (tag can be overridden by SFD_MINIO_TEST_TAG env var)
+	tag := os.Getenv("SFD_MINIO_TEST_TAG")
+	if tag == "" {
+		tag = "RELEASE.2024-01-31T20-20-33Z"
+	}
 	minioResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "minio/minio",
-		Tag:        "latest",
+		Tag:        tag,
 		Cmd:        []string{"server", "/data"},
 		Env: []string{
 			"MINIO_ROOT_USER=minio",
@@ -57,6 +62,38 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	}
 	minioPort := minioResource.GetPort("9000/tcp")
 
+	// Wait for minio to be fully ready
+	if err := pool.Retry(func() error {
+		resp, err := http.Get("http://localhost:" + minioPort + "/minio/health/live")
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("minio not ready: %d", resp.StatusCode)
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("minio not ready: %v", err)
+	}
+
+	// Create bucket using minio-go client (avoids relying on external `mc` binary)
+	mc, err := minio.New("localhost:"+minioPort, &minio.Options{
+		Creds:  credentials.NewStaticV4("minio", "minio123", ""),
+		Secure: false,
+	})
+	if err != nil {
+		t.Fatalf("failed to create minio client: %v", err)
+	}
+	bucket := "testbucket"
+	if err := mc.MakeBucket(context.Background(), bucket, minio.MakeBucketOptions{}); err != nil {
+		// If bucket already exists, that's okay
+		exists, err2 := mc.BucketExists(context.Background(), bucket)
+		if err2 != nil || !exists {
+			t.Fatalf("could not create or verify bucket: %v / %v", err, err2)
+		}
+	}
+
 	// Wait for Postgres
 	if err := pool.Retry(func() error {
 		db, err := sql.Open("postgres", fmt.Sprintf("postgres://postgres:secret@localhost:%s/sfd?sslmode=disable", pgPort))
@@ -68,8 +105,19 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatalf("could not connect to postgres: %v", err)
 	}
 
-	// Apply migrations
-	exec.Command("bash", "-c", "psql -h localhost -p "+pgPort+" -U postgres -d sfd -f internal/db/schema.sql").Run()
+	// Apply migrations by executing the SQL file over the DB connection (avoid relying on `psql` binary)
+	if b, err := os.ReadFile("internal/db/schema.sql"); err != nil {
+		t.Fatalf("failed to read schema.sql: %v", err)
+	} else {
+		db, err := sql.Open("postgres", fmt.Sprintf("postgres://postgres:secret@localhost:%s/sfd?sslmode=disable", pgPort))
+		if err != nil {
+			t.Fatalf("failed to open db for migrations: %v", err)
+		}
+		defer db.Close()
+		if _, err := db.Exec(string(b)); err != nil {
+			t.Fatalf("failed to apply migrations: %v", err)
+		}
+	}
 
 	// Prepare env for server
 	env := os.Environ()
@@ -110,8 +158,8 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	}
 	defer cmd.Process.Kill()
 
-	// Wait for readiness
-	if err := retryHTTPGet("http://localhost:8080/ready", 30*time.Second); err != nil {
+	// Wait for readiness (longer timeout for CI environments)
+	if err := retryHTTPGet("http://localhost:8080/ready", 90*time.Second); err != nil {
 		t.Fatalf("server not ready: %v", err)
 	}
 
