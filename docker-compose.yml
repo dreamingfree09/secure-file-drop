@@ -38,6 +38,22 @@ services:
       retries: 20
     restart: unless-stopped
 
+  proxy:
+    image: traefik:v2.11
+    container_name: sfd_proxy
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--log.level=INFO"
+    ports:
+      - "8081:80"
+      - "8443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    restart: unless-stopped
+
   backend:
     build:
       context: .
@@ -58,14 +74,41 @@ services:
       SFD_ADMIN_PASS: ${SFD_ADMIN_PASS}
       SFD_SESSION_SECRET: ${SFD_SESSION_SECRET}
       DATABASE_URL: ${DATABASE_URL}
-
-    ports:
-      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
       minio:
         condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+
+      - "traefik.http.routers.sfd-web.rule=Host(`localhost`)"
+      - "traefik.http.routers.sfd-web.entrypoints=web"
+      - "traefik.http.routers.sfd-web.middlewares=sfd-redirect-https"
+      - "traefik.http.middlewares.sfd-redirect-https.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.sfd-redirect-https.redirectscheme.permanent=true"
+
+      - "traefik.http.routers.sfd.rule=Host(`localhost`)"
+      - "traefik.http.routers.sfd.entrypoints=websecure"
+      - "traefik.http.routers.sfd.tls=true"
+
+      - "traefik.http.services.sfd.loadbalancer.server.port=8080"
+
+      - "traefik.http.middlewares.sfd-sec.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.sfd-sec.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.sfd-sec.headers.stsPreload=true"
+      - "traefik.http.middlewares.sfd-sec.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.sfd-sec.headers.frameDeny=true"
+      - "traefik.http.middlewares.sfd-sec.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.sfd-sec.headers.referrerPolicy=no-referrer"
+
+      - "traefik.http.middlewares.sfd-rl.ratelimit.average=30"
+      - "traefik.http.middlewares.sfd-rl.ratelimit.burst=60"
+
+      - "traefik.http.middlewares.sfd-buf.buffering.maxRequestBodyBytes=${SFD_MAX_UPLOAD_BYTES}"
+      - "traefik.http.middlewares.sfd-buf.buffering.memRequestBodyBytes=10485760"
+
+      - "traefik.http.routers.sfd.middlewares=sfd-sec,sfd-rl,sfd-buf"
     restart: unless-stopped
 
 volumes:
