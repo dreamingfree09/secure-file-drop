@@ -153,7 +153,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
-		shaHex, shaBytes, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
+		shaHex, _, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
 		if herr != nil {
 			_, _ = db.Exec(
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'stored'`,
