@@ -11,11 +11,19 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+// BuildInfo contains build-time metadata embedded into the server.
+//
+// Version is a semantic version string and Commit is the short git
+// commit hash used to build the binary.
 type BuildInfo struct {
 	Version string
 	Commit  string
 }
 
+// Config contains configuration for creating a Server instance.
+//
+// Addr is the listen address (e.g. ":8080"). Auth and DB are required
+// for production use; other values are validated during startup.
 type Config struct {
 	Addr  string // e.g. ":8080"
 	Build BuildInfo
@@ -23,6 +31,10 @@ type Config struct {
 	DB    *sql.DB
 }
 
+// Server is the application HTTP server with its dependencies.
+//
+// It exposes Start and Shutdown to manage lifecycle in tests and in the
+// production entrypoint.
 type Server struct {
 	httpServer *http.Server
 	db         *sql.DB
@@ -30,6 +42,9 @@ type Server struct {
 	bucket     string
 }
 
+// New constructs and returns an initialized Server wiring handlers and
+// dependencies (DB, MinIO). It panics early if required dependencies
+// are missing, to avoid running in a half-configured state.
 func New(cfg Config) *Server {
 	mux := http.NewServeMux()
 
@@ -50,7 +65,7 @@ func New(cfg Config) *Server {
 	}
 
 	// Health endpoint: process is running (does not check dependencies).
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -59,12 +74,12 @@ func New(cfg Config) *Server {
 	})
 
 	// Ready endpoint: dependencies are reachable (initially only Postgres).
-	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) {
 		if cfg.DB == nil {
 			http.Error(w, "db not configured", http.StatusServiceUnavailable)
 			return
 		}
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
 		if err := cfg.DB.PingContext(ctx); err != nil {
 			http.Error(w, "db not ready", http.StatusServiceUnavailable)
@@ -78,7 +93,7 @@ func New(cfg Config) *Server {
 	})
 
 	// Version endpoint (no secrets)
-	mux.HandleFunc("/version", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/version", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -91,7 +106,7 @@ func New(cfg Config) *Server {
 	mux.HandleFunc("/login", cfg.Auth.loginHandler())
 
 	// Protected endpoint for verification only
-	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -130,6 +145,8 @@ func New(cfg Config) *Server {
 	}
 }
 
+// Start begins serving HTTP on the configured address. It blocks until
+// the listener returns an error (or Shutdown is called).
 func (s *Server) Start() error {
 	ln, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
@@ -138,6 +155,8 @@ func (s *Server) Start() error {
 	return s.httpServer.Serve(ln)
 }
 
+// Shutdown gracefully shuts down the HTTP server using the provided
+// context (respecting the deadline/timeout supplied by the caller).
 func (s *Server) Shutdown(ctx context.Context) error {
 	return s.httpServer.Shutdown(ctx)
 }

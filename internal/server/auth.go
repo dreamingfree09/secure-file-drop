@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+// AuthConfig holds authentication-related configuration used by the
+// HTTP handlers (admin credentials, session secrets and cookie settings).
+//
+// It is intentionally lightweight for the MVP and used by unit tests.
 type AuthConfig struct {
 	AdminUser     string
 	AdminPass     string
