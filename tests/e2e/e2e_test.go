@@ -153,9 +153,10 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatalf("minio not ready: %v", err)
 	}
 
-	// Run server (go run) in background
+	// Run server (go run) in background from the repo root
 	cmd := exec.CommandContext(context.Background(), "go", "run", "./cmd/backend")
 	cmd.Env = env
+	cmd.Dir = "../../"
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
