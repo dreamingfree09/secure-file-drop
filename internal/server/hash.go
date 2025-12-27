@@ -26,7 +26,11 @@ func runHashTool(ctx context.Context, filePath string) (hashToolOutput, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "/app/sfd-hash", filePath)
+	toolPath := os.Getenv("SFD_HASH_TOOL")
+	if toolPath == "" {
+		toolPath = "/app/sfd-hash"
+	}
+	cmd := exec.CommandContext(ctx, toolPath, filePath)
 	out, err := cmd.Output()
 	if err != nil {
 		return hashToolOutput{}, fmt.Errorf("hash tool failed: %w", err)
