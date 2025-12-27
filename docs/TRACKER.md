@@ -95,7 +95,7 @@ Acceptance criteria:
 
 ## Milestone 8 – Public Exposure Hardening (Day-One Safe)
 
-Status: In Progress
+Status: Complete
 
 Note: Canonical public base URL handling for signed links implemented and committed as fce217b; remaining proxy hardening tasks still pending
 
@@ -108,7 +108,7 @@ Acceptance criteria:
 
 ## ## Milestone 9 – Public Exposure Hardening (Reverse Proxy Layer)
 
-Status: Not started
+Status: Complete
 
 Acceptance criteria:
 - Reverse proxy deployed in front of the backend
