@@ -43,7 +43,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	// MinIO
 	minioResource, err := pool.RunWithOptions(&dockertest.RunOptions{
 		Repository: "minio/minio",
-		Tag:        "RELEASE.2023-08-25T19-58-06Z",
+		Tag:        "latest",
 		Cmd:        []string{"server", "/data"},
 		Env: []string{
 			"MINIO_ROOT_USER=minio",

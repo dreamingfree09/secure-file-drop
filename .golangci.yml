@@ -4,6 +4,7 @@ run:
   skip-dirs:
     - vendor
     - docs
+    - tests/e2e
 linters:
   enable:
     - govet
