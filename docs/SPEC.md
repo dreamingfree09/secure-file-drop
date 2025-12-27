@@ -1,81 +1,89 @@
 # Secure File Drop – MVP Specification
 
+## Table of contents
+
+- [Purpose](#purpose)
+- [MVP scope](#mvp-scope)
+- [High-level architecture](#high-level-architecture)
+- [Components](#components)
+- [Security constraints](#security-constraints)
+- [Environment variables (required/important)](#environment-variables-requiredimportant)
+- [Deployment (initial)](#deployment-initial)
+
 ## Purpose
 
-Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. The system is designed to be safe to expose on the public internet from day one, while remaining simple enough to implement incrementally.
+Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. The system is designed to be safe to expose on the public internet from day one, while remaining simple and auditable.
 
-This project is also an educational exercise, combining systems programming in C with modern backend and web development practices.
+This project is an educational exercise that combines a memory-safe backend (Go) with a small C utility for efficient, low-level hashing.
 
-## MVP Scope (Strict)
+## MVP scope
 
-The MVP MUST include:
-- Authenticated file uploads
-- Private object storage (not directly exposed)
+**Must include**:
+- Authenticated file uploads with server-side metadata
+- Private object storage (MinIO) not exposed to the public internet
 - Signed, expiring download links
-- Server-side file integrity verification
-- HTTPS-only access
-- Rate limiting and size limits
-- Basic audit logging
+- Server-side file integrity verification (SHA-256)
+- HTTPS-only access (enforced at the reverse proxy)
+- Rate limiting and maximum upload size
+- Basic audit logging for uploads and downloads
 
-The MVP MUST NOT include:
+**Explicitly out of scope for v1**:
 - Public anonymous uploads
-- User-to-user sharing or permissions
+- User-to-user sharing or fine-grained permissions
 - Client-side encryption
 - Resumable uploads
 - Antivirus scanning
-- Folder hierarchies
+- Folder hierarchies in storage
 - Public object storage access
-
-Anything outside this list is explicitly out of scope for v1.
 
 ## High-Level Architecture
 
 - Reverse proxy terminates TLS and enforces request limits
-- Backend API handles authentication, uploads, downloads, and metadata
-- Object storage stores file blobs privately
-- Database stores file metadata and link state
-- C utility computes cryptographic hashes for integrity checks
+- Backend API handles authentication, upload lifecycle, link generation, and metadata
+- Object storage stores file blobs privately; backend streams uploads to object storage
+- Database (Postgres) stores file metadata, states, and audit records
+- C hashing utility computes SHA-256 to provide an auditable integrity check
 
 ## Components
 
 ### Backend API (Go)
-Responsibilities:
-- User authentication
-- Upload handling
-- Download token validation
-- Metadata persistence
-- Calling the C hashing utility
-- Streaming downloads safely
+- Login (/login)
+- Create file record (/files)
+- Upload file (/upload?id=<uuid>) – multipart form, field `file`
+- Create signed download link (/links)
+- Download via signed token (/download?token=...)
 
 ### Integrity Utility (C)
-Responsibilities:
-- Read files in a streaming manner
-- Compute SHA-256 hashes
-- Output results in a machine-readable format
-- Fail safely on invalid input
-
-This component exists to teach:
-- File I/O
-- Memory discipline
-- Process execution
-- Interoperability with higher-level languages
+- Stream-based SHA-256
+- Intended to be small, auditable, and fast
 
 ### Storage
-- Object storage: MinIO (S3-compatible)
-- Database: PostgreSQL
+- MinIO for object store (S3-compatible)
+- PostgreSQL for metadata and state
 
-Object storage must never be publicly accessible.
+## Security constraints
 
-## Security Constraints
+- TLS is mandatory in production (reverse proxy)
+- Admin credentials, session secret, and download secret must be kept secret
+- MinIO and Postgres must not be public
+- Limit upload sizes at both proxy and server
 
-- HTTPS is mandatory
-- All uploads require authentication
-- Maximum upload size enforced at proxy and backend
-- Download links must be signed and time-limited
-- Files are streamed, never fully loaded into memory
-- Secrets are provided via environment variables only
+## Environment variables (required / important)
 
-## Deployment (Initial)
+- SFD_ADMIN_USER, SFD_ADMIN_PASS
+- SFD_SESSION_SECRET
+- SFD_DOWNLOAD_SECRET
+- SFD_MINIO_ENDPOINT, SFD_MINIO_ACCESS_KEY, SFD_MINIO_SECRET_KEY, SFD_MINIO_BUCKET
+- SFD_DB_DSN
+- SFD_PUBLIC_BASE_URL (optional but recommended in deployments)
+- SFD_MAX_UPLOAD_BYTES (optional)
 
-- Docker Compose
-- Local development with public exposure via Cloudflare Tunnel or reverse proxy
+## Deployment (initial)
+
+- Docker Compose (development and simple production)
+- Use a reverse proxy (Caddy, Nginx, Traefik) to manage TLS and public endpoints
+- In production, consider secret management for credentials and secrets
+
+---
+
+If you'd like, I can expand this with diagrams, sequence diagrams for the upload flow, or configuration examples for common reverse proxies.

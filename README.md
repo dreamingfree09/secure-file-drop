@@ -1,36 +1,83 @@
 # Secure File Drop
 
-Secure File Drop is a public-facing, self-hosted application that allows authenticated users to upload files and generate secure, time-limited download links.
+[![Docs](https://img.shields.io/badge/docs-up%E2%86%92-blue)](#docs)
+[![Status](https://img.shields.io/badge/status-active-brightgreen)](#status)
 
-The project is designed as an educational but production-oriented system, focusing on:
-- Secure public deployment
-- Clean backend architecture
-- Practical use of C for performance-critical components
-- Modern backend and web technologies
-- Strong documentation and traceability
+Secure File Drop is a lightweight, self-hosted service for authenticated file uploads and short-lived, signed downloads. It's designed to be safe to expose on the public internet from day one while remaining small and auditable.
 
-## Core Goals
+## Quick summary
 
-- Upload files securely via a web interface
-- Store files privately in object storage
-- Generate signed, expiring download links
-- Enforce size limits, rate limits, and authentication
-- Verify file integrity using a C-based hashing utility
+- Users authenticate with a single admin username/password (session cookie) to upload files
+- Files are stored privately in S3-compatible object storage (MinIO)
+- The server verifies integrity using a native C hashing utility and stores SHA-256 metadata
+- Download links are signed and time-limited
 
-## Technology Overview (Planned)
+## Table of contents
 
-- Backend API: Go
-- Integrity Utility: C (SHA-256 hashing, later chunking)
+- [Status](#status)
+- [Technology](#technology)
+- [Quickstart](#quickstart)
+- [Development](#development)
+- [Usage](#usage)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+
+## Status
+
+This repository contains an MVP-ready backend written in Go, a small web UI, a C-based hashing utility in `native/`, and deployment infrastructure using Docker Compose.
+
+## Technology
+
+- Backend: Go
+- Integrity utility: C (SHA-256)
 - Database: PostgreSQL
-- Object Storage: MinIO (S3-compatible)
-- Reverse Proxy & TLS: Caddy (behind Cloudflare)
-- Frontend: Web UI (initially minimal)
-- Deployment: Docker Compose (initially)
+- Object storage: MinIO (S3-compatible)
+- Reverse proxy: Caddy (recommended)
+- Deployment: Docker Compose
 
-## Project Structure
+## Quickstart (Docker Compose)
 
-- `docs/` – Specifications, API contracts, and planning documents
-- `journal/` – Development log and troubleshooting history
-- `cmd/` – Application entry points
-- `internal/` – Internal backend packages
-- `web/` – Frontend assets and UI
+1. Copy `docker-compose.yml` and set required environment variables (see `docs/USAGE.md` for a full list).
+2. Start services:
+
+   docker compose up -d
+
+3. Initialize database schema (example using `psql`):
+
+   psql -h localhost -U postgres -d sfd -f internal/db/schema.sql
+
+4. Visit the web UI (default: http://localhost:8080) and log in using `SFD_ADMIN_USER`/`SFD_ADMIN_PASS`.
+
+## Development
+
+- Build the backend locally:
+
+  go build ./cmd/backend
+
+- Build the hashing utility:
+
+  make -C native
+
+- Run the server locally with environment variables set; Docker Compose is useful for a full stack dev environment.
+
+## Usage (overview)
+
+- Authenticate: POST /login with JSON {"username":"...","password":"..."}
+- Create file metadata: POST /files (JSON with orig_name, content_type, size_bytes)
+- Upload: POST /upload?id=<file-id> as multipart form field `file`
+- Create link: POST /links with JSON {"id": "<file-id>", "ttl_seconds": 300}
+- Download: GET /download?token=<signed-token>
+
+Refer to `docs/USAGE.md` and `docs/API.md` for detailed examples and request/response samples.
+
+## Documentation
+
+Primary docs live in `docs/` — see `docs/SPEC.md` for the MVP specification and `docs/ARCHITECTURE.md` for component-level notes.
+
+## Contributing
+
+Please read `docs/CONTRIBUTING.md` for development setup, coding style, and PR guidelines.
+
+---
+
+If you'd like, I can open a branch and prepare a PR with a larger docs revision (adding `docs/ARCHITECTURE.md`, `docs/USAGE.md`, `docs/API.md`, and `docs/CONTRIBUTING.md`). Reply with permission to push and open the PR or say if you prefer to review drafts first.
