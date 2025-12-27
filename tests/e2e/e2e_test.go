@@ -107,8 +107,12 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	}
 
 	// Apply migrations by executing the SQL file over the DB connection (avoid relying on `psql` binary)
-	if b, err := os.ReadFile("internal/db/schema.sql"); err != nil {
-		t.Fatalf("failed to read schema.sql: %v", err)
+	// schema.sql is located in the repo root at internal/db/schema.sql. When
+	// running from the test package directory, use a relative path that climbs
+	// to the repo root.
+	schemaPath := "../../internal/db/schema.sql"
+	if b, err := os.ReadFile(schemaPath); err != nil {
+		t.Fatalf("failed to read %s: %v", schemaPath, err)
 	} else {
 		db, err := sql.Open("postgres", fmt.Sprintf("postgres://postgres:secret@localhost:%s/sfd?sslmode=disable", pgPort))
 		if err != nil {
