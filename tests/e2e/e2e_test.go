@@ -1,0 +1,266 @@
+package e2e
+
+import (
+	"context"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"os/exec"
+	"testing"
+	"time"
+
+	_ "github.com/lib/pq"
+	"github.com/ory/dockertest/v3"
+	"github.com/ory/dockertest/v3/docker"
+)
+
+func TestUploadHashDownloadFlow(t *testing.T) {
+	// Start Postgres and MinIO using dockertest
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		t.Fatalf("could not connect to docker: %v", err)
+	}
+
+	// Postgres
+	pgResource, err := pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "postgres",
+		Tag:        "15",
+		Env: []string{
+			"POSTGRES_PASSWORD=secret",
+			"POSTGRES_DB=sfd",
+		},
+	}, func(config *docker.HostConfig) {
+		config.AutoRemove = true
+	})
+	if err != nil {
+		t.Fatalf("could not start postgres: %v", err)
+	}
+	pgPort := pgResource.GetPort("5432/tcp")
+
+	// MinIO
+	minioResource, err := pool.RunWithOptions(&dockertest.RunOptions{
+		Repository: "minio/minio",
+		Tag:        "RELEASE.2023-08-25T19-58-06Z",
+		Cmd:        []string{"server", "/data"},
+		Env: []string{
+			"MINIO_ROOT_USER=minio",
+			"MINIO_ROOT_PASSWORD=minio123",
+		},
+	}, func(config *docker.HostConfig) {
+		config.AutoRemove = true
+	})
+	if err != nil {
+		t.Fatalf("could not start minio: %v", err)
+	}
+	minioPort := minioResource.GetPort("9000/tcp")
+
+	// Wait for Postgres
+	if err := pool.Retry(func() error {
+		db, err := sql.Open("postgres", fmt.Sprintf("postgres://postgres:secret@localhost:%s/sfd?sslmode=disable", pgPort))
+		if err != nil {
+			return err
+		}
+		return db.Ping()
+	}); err != nil {
+		t.Fatalf("could not connect to postgres: %v", err)
+	}
+
+	// Apply migrations
+	exec.Command("bash", "-c", "psql -h localhost -p "+pgPort+" -U postgres -d sfd -f internal/db/schema.sql").Run()
+
+	// Prepare env for server
+	env := os.Environ()
+	env = append(env, "SFD_DB_DSN=postgres://postgres:secret@localhost:"+pgPort+"/sfd?sslmode=disable")
+	env = append(env, "SFD_MINIO_ENDPOINT=localhost:"+minioPort)
+	env = append(env, "SFD_MINIO_ACCESS_KEY=minio")
+	env = append(env, "SFD_MINIO_SECRET_KEY=minio123")
+	env = append(env, "SFD_MINIO_BUCKET=testbucket")
+	env = append(env, "SFD_ADMIN_USER=admin")
+	env = append(env, "SFD_ADMIN_PASS=pass")
+	env = append(env, "SFD_SESSION_SECRET=secret")
+	env = append(env, "SFD_DOWNLOAD_SECRET=secret2")
+
+	// Create bucket
+	// Use mc client or minio-go; for speed use mc if available in runner
+	// Wait for minio to be ready
+	if err := pool.Retry(func() error {
+		resp, err := http.Get("http://localhost:" + minioPort + "/minio/health/live")
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("minio not ready: %d", resp.StatusCode)
+		}
+		return nil
+	}); err != nil {
+		t.Fatalf("minio not ready: %v", err)
+	}
+
+	// Run server (go run) in background
+	cmd := exec.CommandContext(context.Background(), "go", "run", "./cmd/backend")
+	cmd.Env = env
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		t.Fatalf("failed to start server: %v", err)
+	}
+	defer cmd.Process.Kill()
+
+	// Wait for readiness
+	if err := retryHTTPGet("http://localhost:8080/ready", 30*time.Second); err != nil {
+		t.Fatalf("server not ready: %v", err)
+	}
+
+	// Login
+	client := &http.Client{}
+	loginReq := map[string]string{"username": "admin", "password": "pass"}
+	b, _ := json.Marshal(loginReq)
+	req, _ := http.NewRequest(http.MethodPost, "http://localhost:8080/login", bytesReader(b))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("login failed: %v", err)
+	}
+	resp.Body.Close()
+	// Extract cookie
+	cookies := resp.Cookies()
+	if len(cookies) == 0 {
+		t.Fatalf("no cookies from login")
+	}
+
+	// Create file metadata
+	metaReq := map[string]interface{}{"orig_name": "e2e.txt", "content_type": "text/plain", "size_bytes": 4}
+	mb, _ := json.Marshal(metaReq)
+	req, _ = http.NewRequest(http.MethodPost, "http://localhost:8080/files", bytesReader(mb))
+	req.Header.Set("Content-Type", "application/json")
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatalf("create file failed: %v", err)
+	}
+	if resp.StatusCode != 201 {
+		t.Fatalf("create file returned %d", resp.StatusCode)
+	}
+	var metaResp struct {
+		ID string `json:"id"`
+	}
+	_ = json.NewDecoder(resp.Body).Decode(&metaResp)
+	resp.Body.Close()
+
+	// Upload file
+	body := bytesFromString("test")
+	bReq := newMultipartUploadRequest("http://localhost:8080/upload?id="+metaResp.ID, "file", "e2e.txt", body, cookies)
+	resp, err = client.Do(bReq)
+	if err != nil {
+		t.Fatalf("upload failed: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		t.Fatalf("upload returned %d", resp.StatusCode)
+	}
+	resp.Body.Close()
+
+	// Create link
+	linkReq := map[string]interface{}{"id": metaResp.ID, "ttl_seconds": 60}
+	lb, _ := json.Marshal(linkReq)
+	req, _ = http.NewRequest(http.MethodPost, "http://localhost:8080/links", bytesReader(lb))
+	req.Header.Set("Content-Type", "application/json")
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+	resp, err = client.Do(req)
+	if err != nil {
+		t.Fatalf("create link failed: %v", err)
+	}
+	var linkResp struct {
+		URL string `json:"url"`
+	}
+	_ = json.NewDecoder(resp.Body).Decode(&linkResp)
+	resp.Body.Close()
+
+	// Download the file via link
+	dRes, err := http.Get(linkResp.URL)
+	if err != nil {
+		t.Fatalf("download failed: %v", err)
+	}
+	if dRes.StatusCode != 200 {
+		t.Fatalf("download status %d", dRes.StatusCode)
+	}
+	defer dRes.Body.Close()
+	data, _ := io.ReadAll(dRes.Body)
+	if string(data) != "test" {
+		t.Fatalf("downloaded content mismatch: %s", string(data))
+	}
+}
+
+// helpers
+
+func retryHTTPGet(url string, timeout time.Duration) error {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		resp, err := http.Get(url)
+		if err == nil && resp.StatusCode == 200 {
+			return nil
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+	return fmt.Errorf("timeout waiting for %s", url)
+}
+
+// small helpers avoid importing extra packages in test header
+func bytesReader(b []byte) *bytesReaderType { return &bytesReaderType{b: b} }
+
+type bytesReaderType struct{ b []byte }
+
+func (r *bytesReaderType) Read(p []byte) (int, error) { return copy(p, r.b), io.EOF }
+
+func bytesFromString(s string) []byte { return []byte(s) }
+
+func newMultipartUploadRequest(url, fieldname, filename string, content []byte, cookies []*http.Cookie) *http.Request {
+	// For brevity, create a simple request using standard library multipart in-memory
+	pr, pw := io.Pipe()
+	writer := multipartNewWriter(pw)
+	go func() {
+		_ = writer.WriteField("dummy", "1")
+		part, _ := writer.CreateFormFile(fieldname, filename)
+		part.Write(content)
+		writer.Close()
+		pw.Close()
+	}()
+	req, _ := http.NewRequest(http.MethodPost, url, pr)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	for _, c := range cookies {
+		req.AddCookie(c)
+	}
+	return req
+}
+
+// minimal multipart writer wrapper to avoid big imports
+func multipartNewWriter(w io.Writer) *multipartWriter { return &multipartWriter{w: w} }
+
+// very small writer implementation (not robust, but sufficient for this test)
+type multipartWriter struct{ w io.Writer }
+
+func (m *multipartWriter) WriteField(key, val string) error {
+	_, err := fmt.Fprintf(m.w, "--boundary\r\nContent-Disposition: form-data; name=\"%s\"\r\n\r\n%s\r\n", key, val)
+	return err
+}
+func (m *multipartWriter) CreateFormFile(fieldname, filename string) (io.Writer, error) {
+	_, err := fmt.Fprintf(m.w, "--boundary\r\nContent-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\nContent-Type: application/octet-stream\r\n\r\n", fieldname, filename)
+	if err != nil {
+		return nil, err
+	}
+	return m.w, nil
+}
+func (m *multipartWriter) FormDataContentType() string {
+	return "multipart/form-data; boundary=boundary"
+}
+func (m *multipartWriter) Close() error {
+	_, err := fmt.Fprint(m.w, "\r\n--boundary--\r\n")
+	return err
+}

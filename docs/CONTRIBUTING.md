@@ -30,12 +30,15 @@ Thanks for your interest! This project welcomes contributions — small document
 
 ## Tests
 
-- There are no large test suites yet; add tests in `_test.go` files and run `go test ./...`.
+- Run unit tests locally: `make test` or `go test ./...`.
+- Run linter: `make lint` (requires `golangci-lint` installed).
+- For integration/e2e tests (requires Docker), run: `go test ./tests/e2e -v`.
 
 ## Pull request
 
 - Fork and create a feature branch.
-- Rebase / keep history tidy; open a PR against `main` with a clear description and testing steps.
+- Rebase / keep history tidy; open a PR against the project's `master` branch with a clear description and testing steps.
+- Ensure your PR includes: passing `go test`, linter checks, and updated documentation if applicable.
 - Add changelog entry to `CHANGELOG.md` for notable changes.
 
 If you'd like, I can prepare a PR with these docs and a README update — confirm whether you want me to push a branch and open a PR (I will need push access or a fork to open the PR).

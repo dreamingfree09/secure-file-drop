@@ -24,6 +24,9 @@ Secure File Drop is a lightweight, self-hosted service for authenticated file up
 
 ## Status
 
+[![CI](https://github.com/dreamingfree09/secure-file-drop/actions/workflows/ci.yml/badge.svg)](https://github.com/dreamingfree09/secure-file-drop/actions)
+[![Coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)](https://codecov.io/gh/dreamingfree09/secure-file-drop)
+
 This repository contains an MVP-ready backend written in Go, a small web UI, a C-based hashing utility in `native/`, and deployment infrastructure using Docker Compose.
 
 ## Technology
