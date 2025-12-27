@@ -127,6 +127,8 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	// Prepare env for server
 	env := os.Environ()
 	env = append(env, "SFD_DB_DSN=postgres://postgres:secret@localhost:"+pgPort+"/sfd?sslmode=disable")
+	// The backend currently also reads DATABASE_URL in the main entrypoint.
+	env = append(env, "DATABASE_URL=postgres://postgres:secret@localhost:"+pgPort+"/sfd?sslmode=disable")
 	env = append(env, "SFD_MINIO_ENDPOINT=localhost:"+minioPort)
 	env = append(env, "SFD_MINIO_ACCESS_KEY=minio")
 	env = append(env, "SFD_MINIO_SECRET_KEY=minio123")
