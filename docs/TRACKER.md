@@ -85,7 +85,7 @@ Acceptance criteria:
 
 ## Milestone 7 – Minimal Web UI (Upload + Link Display)
 
-Status: In progress
+Status: Complete
 
 Acceptance criteria:
 - User can log in
@@ -95,7 +95,9 @@ Acceptance criteria:
 
 ## Milestone 8 – Public Exposure Hardening (Day-One Safe)
 
-Status: Not started
+Status: In Progress
+
+Note: Canonical public base URL handling for signed links implemented and committed as fce217b; remaining proxy hardening tasks still pending
 
 Acceptance criteria:
 - Reverse proxy configured for HTTPS-only
