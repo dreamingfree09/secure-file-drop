@@ -73,7 +73,7 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			http.Error(w, "storage error", http.StatusBadGateway)
 			return
 		}
-		defer obj.Close()
+		defer func() { _ = obj.Close() }()
 
 		// Force an early error for missing object / auth issues.
 		if _, statErr := obj.Stat(); statErr != nil {
@@ -90,7 +90,7 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			w.Header().Set("Content-Length", strconv.FormatInt(sizeBytes, 10))
 		}
 
-		// Encourage safe download behaviour in browsers.
+		// Encourage safe download behavior in browsers.
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, origName))
 
 		w.WriteHeader(http.StatusOK)

@@ -78,7 +78,7 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 	if err != nil {
 		return "", nil, 0, fmt.Errorf("get object: %w", err)
 	}
-	defer obj.Close()
+	defer func() { _ = obj.Close() }()
 
 	if _, err := io.Copy(tmp, obj); err != nil {
 		return "", nil, 0, fmt.Errorf("copy object to temp: %w", err)

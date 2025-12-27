@@ -94,7 +94,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 				http.Error(w, "bad multipart", http.StatusBadRequest)
 				return
 			}
-			defer part.Close()
+			defer func() { _ = part.Close() }()
 
 			if part.FormName() != "file" {
 				continue

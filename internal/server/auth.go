@@ -130,7 +130,7 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		pOK := hmac.Equal(pwHash[:], adminHash[:])
 
 		if !(uOK && pOK) {
-			http.Error(w, "unauthorised", http.StatusUnauthorized)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -162,11 +162,11 @@ func (a AuthConfig) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		c, err := r.Cookie(a.cookieName())
 		if err != nil {
-			http.Error(w, "unauthorised", http.StatusUnauthorized)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 		if _, err := a.verifyToken(c.Value); err != nil {
-			http.Error(w, "unauthorised", http.StatusUnauthorized)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 		next.ServeHTTP(w, r)
