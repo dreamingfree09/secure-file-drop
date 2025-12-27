@@ -161,6 +161,58 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatalf("minio not ready: %v", err)
 	}
 
+	// Build a small compatible hash tool (C or Go fallback) and set SFD_HASH_TOOL
+	toolPath := ""
+	// Try to build the native C tool first (if gcc is available)
+	cPath := "/tmp/sfd-hash-c"
+	if err := exec.Command("gcc", "-o", cPath, "./native/sfd_hash.c", "./native/sfd_hash_cli.c", "-lcrypto").Run(); err == nil {
+		toolPath = cPath
+	} else {
+		// Fallback: compile a tiny Go program that computes sha256 and emits the expected JSON.
+		gPath := "/tmp/sfd-hash-go"
+		src := `package main
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
+	"os"
+)
+
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Fprintln(os.Stderr, "missing path")
+		os.Exit(2)
+	}
+	p := os.Args[1]
+	f, err := os.Open(p)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	defer f.Close()
+	h := sha256.New()
+	n, _ := io.Copy(h, f)
+	s := hex.EncodeToString(h.Sum(nil))
+	out := map[string]interface{}{"algorithm": "sha256", "hash": s, "bytes": n}
+	b, _ := json.Marshal(out)
+	fmt.Println(string(b))
+}
+`
+		if err := os.WriteFile("/tmp/sfd-hash-go.go", []byte(src), 0o644); err == nil {
+			if err := exec.Command("go", "build", "-o", gPath, "/tmp/sfd-hash-go.go").Run(); err == nil {
+				toolPath = gPath
+			}
+		}
+	}
+	if toolPath == "" {
+		t.Fatalf("could not build a hash tool for tests")
+	}
+	// Export it for the server to use
+	env = append(env, "SFD_HASH_TOOL="+toolPath)
+
 	// Run server (go run) in background from the repo root
 	cmd := exec.CommandContext(context.Background(), "go", "run", "./cmd/backend")
 	cmd.Env = env
