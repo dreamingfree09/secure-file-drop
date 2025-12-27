@@ -119,3 +119,37 @@ The `web/` directory was only copied into the build stage. The runtime stage did
 Resolution:
 Copied `/src/web` from the build stage into `/app/web` in the runtime stage, and wired handlers in the server mux to serve `/` and `/static/*`. Verified by inspecting container paths and confirming `GET /` returns 200 with the HTML payload.
 
+
+## 2025-12-27 – Milestone 9: Reverse proxy hardening and public exposure validation
+
+Context:
+With the backend and storage layers complete, the next objective was to harden public exposure by introducing a reverse proxy in front of the application. The goal was to ensure HTTPS-only access, remove direct backend exposure, and enforce basic safety controls at the edge before any real internet deployment.
+
+Observed behaviour:
+Prior to this milestone, the backend was directly published on the host port and relied solely on application-level controls.
+
+Expected behaviour:
+All public traffic should terminate at a reverse proxy. The backend must not be directly reachable. HTTPS should be enforced, basic security headers applied, request body size limits enforced at the proxy layer, and abusive request patterns throttled.
+
+Resolution:
+- Added a reverse proxy service (Traefik v2) to the Docker Compose stack.
+- Removed direct host port publishing from the backend service.
+- Configured HTTP to HTTPS redirection at the proxy.
+- Enabled TLS termination for proxied traffic.
+- Applied basic security headers (HSTS, X-Content-Type-Options, X-Frame-Options, XSS protection, Referrer-Policy).
+- Configured proxy-level rate limiting.
+- Configured proxy-level request body buffering and maximum body size enforcement.
+- Ensured all public access routes exclusively through the proxy.
+
+Validation:
+- Direct access to the backend on localhost:8080 fails.
+- HTTP requests to the proxy are redirected to HTTPS.
+- HTTPS requests to the proxy successfully reach the backend.
+- Security headers are present on proxied responses.
+- Burst request testing produces HTTP 429 responses, confirming rate limiting.
+- Oversized request testing produces HTTP 413 responses, confirming proxy-level body size enforcement.
+
+Outcome:
+The application is now safe to expose behind a reverse proxy, with critical edge protections validated via real requests rather than configuration inspection alone.
+
+Changes implemented and committed as 1a96baf.
