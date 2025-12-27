@@ -166,13 +166,14 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 		}
 
 		_, err = db.Exec(
-			`UPDATE files SET sha256_hex = $2, sha256_bytes = $3, hashed_bytes = $4, status = 'hashed' WHERE id = $1 AND status = 'stored'`,
+			`UPDATE files SET sha256_hex = $2, sha256_bytes = $3, status = 'hashed' WHERE id = $1 AND status = 'stored'`,
 			id,
 			shaHex,
-			shaBytes,
 			hashBytes,
 		)
 		if err != nil {
+			rid := RequestIDFromContext(r.Context())
+			log.Printf("rid=%s msg=db_update_hash err=%v", rid, err)
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
