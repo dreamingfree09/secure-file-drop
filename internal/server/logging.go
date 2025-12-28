@@ -49,31 +49,82 @@ func requestIDMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-// loggingMiddleware logs one line per request in a simple structured format.
+// loggingMiddleware logs one line per request with detailed structured information.
+// Includes request ID, method, path, status, timing, client IP, user agent, and size.
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		rid := RequestIDFromContext(r.Context())
 
-		// Wrap ResponseWriter to capture status code.
+		// Wrap ResponseWriter to capture status code and response size
 		lrw := &loggingResponseWriter{ResponseWriter: w, status: 200}
 		next.ServeHTTP(lrw, r)
 
-		ms := time.Since(start).Milliseconds()
-		log.Printf("rid=%s method=%s path=%s status=%d ms=%d remote=%s ua=%q",
-			rid, r.Method, r.URL.Path, lrw.status, ms, r.RemoteAddr, r.UserAgent())
+		duration := time.Since(start)
+		ms := duration.Milliseconds()
+
+		// Extract client IP (same logic as rate limiter)
+		clientIP := getClientIPForLogging(r)
+
+		// Log with enhanced details
+		log.Printf("rid=%s method=%s path=%s status=%d ms=%d bytes=%d ip=%s ua=%q referer=%q",
+			rid,
+			r.Method,
+			r.URL.Path,
+			lrw.status,
+			ms,
+			lrw.size,
+			clientIP,
+			r.UserAgent(),
+			r.Referer(),
+		)
 
 		// Record metrics
 		GetMetrics().RecordRequest(lrw.status)
 	})
 }
 
+// getClientIPForLogging extracts client IP for logging purposes
+func getClientIPForLogging(r *http.Request) string {
+	// Check X-Forwarded-For header (comma-separated list of IPs)
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// Take the first IP in the list
+		for i, c := range xff {
+			if c == ',' {
+				return xff[:i]
+			}
+		}
+		return xff
+	}
+
+	// Check X-Real-IP header
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return xri
+	}
+
+	// Fall back to RemoteAddr (format: "ip:port")
+	for i := len(r.RemoteAddr) - 1; i >= 0; i-- {
+		if r.RemoteAddr[i] == ':' {
+			return r.RemoteAddr[:i]
+		}
+	}
+
+	return r.RemoteAddr
+}
+
 type loggingResponseWriter struct {
 	http.ResponseWriter
 	status int
+	size   int
 }
 
 func (w *loggingResponseWriter) WriteHeader(code int) {
 	w.status = code
 	w.ResponseWriter.WriteHeader(code)
+}
+
+func (w *loggingResponseWriter) Write(b []byte) (int, error) {
+	n, err := w.ResponseWriter.Write(b)
+	w.size += n
+	return n, err
 }
