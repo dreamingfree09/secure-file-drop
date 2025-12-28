@@ -1,14 +1,26 @@
 # Frontend / Static site notes
 
-The frontend is intentionally minimal and lives in `web/static/index.html`. The server mounts the `web/static/` directory at `/static/` and serves the index at `/`.
+The frontend features a modern, WeTransfer-inspired design and lives in `web/static/index.html`. The server mounts the `web/static/` directory at `/static/` and serves the index at `/`.
 
 ## Current behavior
 
-- A tiny single-page UI supports:
-  - Login (POST /login)
-  - Upload flow: create metadata (/files) -> upload multipart to /upload?id=<id> -> request link (/links)
-  - Displaying the returned signed link
+- Modern single-page UI with:
+  - Animated gradient background (purple/pink theme)
+  - User registration with client-side validation (POST /register)
+  - Login screen (POST /login)
+  - Drag-and-drop file upload with visual feedback
+  - **Real-time upload progress tracking** with XMLHttpRequest
+    - Shows exact bytes transferred (e.g., "Uploading... 245.3MB / 512.0MB (48%)")
+    - Dynamic progress bar updates during upload
+    - Supports files up to 50GB (configurable via SFD_MAX_UPLOAD_BYTES)
+  - Progress bars with shimmer animations
+  - One-click copy-to-clipboard for download links
+  - Responsive mobile design
+  - Admin dashboard with metrics and file management
 - The UI relies on same-origin requests and session cookie authentication.
+- Uses Inter font from Google Fonts for professional typography
+- CSS custom properties for consistent theming
+- Native browser download progress (Content-Length headers enable browser's download UI)
 
 ## How to extend
 

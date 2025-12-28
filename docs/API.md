@@ -4,6 +4,15 @@ This page documents the primary HTTP endpoints used by Secure File Drop. All end
 
 Authentication: /login returns a session cookie used for subsequent requests (cookie name `sfd_session` by default).
 
+## POST /register
+- Body: JSON {"email":"user@example.com","username":"myusername","password":"securepass123"}
+- Response: 201 {"id":"<uuid>","email":"user@example.com","username":"myusername"}
+- Validation:
+  - Email must be valid format
+  - Username: 3-50 characters, alphanumeric + underscore only
+  - Password: minimum 8 characters, must contain both letters and numbers
+- Errors: 400 validation failed, 409 email/username already exists
+
 ## POST /login
 - Body: JSON {"username":"admin","password":"password"}
 - Response: 200 {"status":"ok"}
@@ -18,7 +27,8 @@ Authentication: /login returns a session cookie used for subsequent requests (co
 - Auth required
 - Content-Type: multipart/form-data; field name `file`
 - Response: 200 {"id": "<uuid>", "object_key":"uploads/<uuid>", "status":"hashed"}
-- Errors: 413 file too large (when upload limit exceeded)
+- Errors: 413 file too large (default limit: 50GB, configurable via SFD_MAX_UPLOAD_BYTES)
+- Note: Upload progress is tracked client-side using XMLHttpRequest with progress events
 
 ## POST /links
 - Auth required

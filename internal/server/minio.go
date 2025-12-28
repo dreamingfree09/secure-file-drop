@@ -11,6 +11,9 @@ import (
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
+// normaliseEndpoint parses a MinIO endpoint string and determines whether to use TLS.
+// Accepts formats: "minio:9000", "http://minio:9000", or "https://minio:9000".
+// Returns the host:port endpoint, secure flag (true for HTTPS), or an error.
 func normaliseEndpoint(raw string) (endpoint string, secure bool, err error) {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {

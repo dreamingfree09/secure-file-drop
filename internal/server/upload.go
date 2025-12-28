@@ -15,12 +15,17 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+// uploadResp is the JSON response returned after a successful file upload.
+// It contains the file ID, the MinIO object key, and the updated status.
 type uploadResp struct {
 	ID        string `json:"id"`
 	ObjectKey string `json:"object_key"`
 	Status    string `json:"status"`
 }
 
+// maxUploadBytes reads the SFD_MAX_UPLOAD_BYTES environment variable and
+// returns the maximum allowed upload size in bytes. Returns 0 if not set
+// (meaning no limit). Returns an error if the value cannot be parsed.
 func maxUploadBytes() (int64, error) {
 	raw := os.Getenv("SFD_MAX_UPLOAD_BYTES")
 	if raw == "" {
@@ -29,8 +34,17 @@ func maxUploadBytes() (int64, error) {
 	return strconv.ParseInt(raw, 10, 64)
 }
 
+// uploadHandler handles POST /upload?id={uuid} requests for streaming file uploads to MinIO.
+// It validates the file ID exists in the database with status "pending", reads the multipart
+// form data, streams it directly to MinIO, then updates the database status to "stored".
+// After storage, it triggers asynchronous hashing of the file via the native C utility.
+//
+// Required query parameter: id (UUID of file record created via /files)
+// Required form field: file (the binary file data)
+// Authentication: Required (checked by requireAuth middleware)
 func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) http.Handler {
 	return cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Only accept POST requests
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return

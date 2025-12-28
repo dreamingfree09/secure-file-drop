@@ -62,6 +62,9 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		ms := time.Since(start).Milliseconds()
 		log.Printf("rid=%s method=%s path=%s status=%d ms=%d remote=%s ua=%q",
 			rid, r.Method, r.URL.Path, lrw.status, ms, r.RemoteAddr, r.UserAgent())
+
+		// Record metrics
+		GetMetrics().RecordRequest(lrw.status)
 	})
 }
 

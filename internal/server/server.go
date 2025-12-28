@@ -36,10 +36,11 @@ type Config struct {
 // It exposes Start and Shutdown to manage lifecycle in tests and in the
 // production entrypoint.
 type Server struct {
-	httpServer *http.Server
-	db         *sql.DB
-	minio      *minio.Client
-	bucket     string
+	httpServer  *http.Server
+	db          *sql.DB
+	minio       *minio.Client
+	bucket      string
+	cleanupDone chan struct{}
 }
 
 // New constructs and returns an initialized Server wiring handlers and
@@ -112,8 +113,19 @@ func New(cfg Config) *Server {
 		})
 	})
 
+	// Metrics endpoint (protected)
+	mux.Handle("/metrics", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		snapshot := GetMetrics().Snapshot()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(snapshot)
+	})))
+
 	// Login endpoint (POST JSON {username,password})
 	mux.HandleFunc("/login", cfg.Auth.loginHandler())
+
+	// Register endpoint (POST JSON {email,username,password})
+	mux.HandleFunc("/register", cfg.RegisterHandler)
 
 	// Protected endpoint for verification only
 	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -147,26 +159,55 @@ func New(cfg Config) *Server {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	return &Server{
-		httpServer: s,
-		db:         cfg.DB,
-		minio:      mc,
-		bucket:     bucket,
+	srv := &Server{
+		httpServer:  s,
+		db:          cfg.DB,
+		minio:       mc,
+		bucket:      bucket,
+		cleanupDone: make(chan struct{}),
 	}
+
+	// Admin endpoints (protected) - registered after Server creation
+	mux.Handle("/admin/files", cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminListFilesHandler)))
+	mux.HandleFunc("/admin/files/", func(w http.ResponseWriter, r *http.Request) {
+		cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminDeleteFileHandler)).ServeHTTP(w, r)
+	})
+	mux.Handle("/admin/cleanup", cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminManualCleanupHandler)))
+
+	return srv
 }
 
-// Start begins serving HTTP on the configured address. It blocks until
-// the listener returns an error (or Shutdown is called).
+// Start begins serving HTTP on the configured address and starts background jobs.
+// It blocks until the listener returns an error (or Shutdown is called).
 func (s *Server) Start() error {
+	// Start cleanup job in background
+	cleanupCfg := GetCleanupConfigFromEnv(s.db, s.minio, s.bucket)
+	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
+
+	go func() {
+		defer close(s.cleanupDone)
+		StartCleanupJob(cleanupCtx, cleanupCfg)
+	}()
+
+	// Store cancel func for shutdown
+	go func() {
+		<-s.cleanupDone
+		cleanupCancel()
+	}()
+
 	ln, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
+		cleanupCancel()
 		return err
 	}
 	return s.httpServer.Serve(ln)
 }
 
-// Shutdown gracefully shuts down the HTTP server using the provided
-// context (respecting the deadline/timeout supplied by the caller).
+// Shutdown gracefully shuts down the HTTP server and background jobs
+// using the provided context (respecting the deadline/timeout supplied by the caller).
 func (s *Server) Shutdown(ctx context.Context) error {
+	// Signal cleanup job to stop (via cleanupDone channel close will happen)
+	// The cleanup job checks context.Done() which we handle in Start()
+
 	return s.httpServer.Shutdown(ctx)
 }

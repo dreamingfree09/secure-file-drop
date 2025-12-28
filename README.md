@@ -7,7 +7,9 @@ Secure File Drop is a lightweight, self-hosted service for authenticated file up
 
 ## Quick summary
 
-- Users authenticate with a single admin username/password (session cookie) to upload files
+- Modern, WeTransfer-inspired UI with animated gradients and drag-and-drop file upload
+- User registration system with secure bcrypt password hashing
+- Users authenticate via username/password (session cookie) to upload files
 - Files are stored privately in S3-compatible object storage (MinIO)
 - The server verifies integrity using a native C hashing utility and stores SHA-256 metadata
 - Download links are signed and time-limited
@@ -65,11 +67,32 @@ This repository contains an MVP-ready backend written in Go, a small web UI, a C
 
 ## Usage (overview)
 
+### Authentication & Upload Flow
+- Register: POST /register with JSON {"email":"...","username":"...","password":"..."}
 - Authenticate: POST /login with JSON {"username":"...","password":"..."}
 - Create file metadata: POST /files (JSON with orig_name, content_type, size_bytes)
 - Upload: POST /upload?id=<file-id> as multipart form field `file`
 - Create link: POST /links with JSON {"id": "<file-id>", "ttl_seconds": 300}
 - Download: GET /download?token=<signed-token>
+
+### Admin Dashboard
+After logging in, the web UI provides an admin dashboard with:
+- **System Metrics**: View upload/download counts, authentication stats, and file lifecycle metrics
+- **File Management**: Browse all files with status, size, hash, and creation timestamps
+- **Manual Cleanup**: Trigger immediate cleanup of old pending/failed files
+- **File Deletion**: Delete individual files from both storage and database
+
+Admin endpoints (require authentication):
+- GET /admin/files - List all files
+- DELETE /admin/files/{id} - Delete specific file
+- POST /admin/cleanup - Run manual cleanup job
+- GET /metrics - View system metrics (JSON)
+
+### Background Jobs
+The server runs an automated cleanup job (configurable via environment):
+- `SFD_CLEANUP_ENABLED=true` - Enable/disable cleanup (default: true)
+- `SFD_CLEANUP_INTERVAL=1h` - How often to run (default: 1 hour)
+- `SFD_CLEANUP_MAX_AGE=24h` - Delete files older than this in pending/failed states (default: 24 hours)
 
 Refer to `docs/USAGE.md` and `docs/API.md` for detailed examples and request/response samples.
 

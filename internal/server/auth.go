@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/hmac"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -16,12 +17,14 @@ import (
 // HTTP handlers (admin credentials, session secrets and cookie settings).
 //
 // It is intentionally lightweight for the MVP and used by unit tests.
+// Now also supports database-backed user authentication.
 type AuthConfig struct {
 	AdminUser     string
 	AdminPass     string
 	SessionSecret string
 	SessionTTL    time.Duration
 	CookieName    string
+	DB            *sql.DB // Database connection for user authentication
 }
 
 type sessionPayload struct {
@@ -107,6 +110,7 @@ func (a AuthConfig) verifyToken(tok string) (sessionPayload, error) {
 	return decoded, nil
 }
 
+// loginHandler handles both legacy admin login and database user login
 func (a AuthConfig) loginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -123,18 +127,33 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 			return
 		}
 
-		// Constant-time-ish compare on password by hashing both.
-		uOK := body.Username == a.AdminUser
-		pwHash := sha256.Sum256([]byte(body.Password))
-		adminHash := sha256.Sum256([]byte(a.AdminPass))
-		pOK := hmac.Equal(pwHash[:], adminHash[:])
+		var authenticated bool
+		var userID string
 
-		if !(uOK && pOK) {
+		// First, try database authentication if DB is available
+		if a.DB != nil {
+			userID, authenticated = authenticateUser(a.DB, body.Username, body.Password)
+		}
+
+		// Fallback to legacy admin authentication if DB auth failed or no DB
+		if !authenticated && a.AdminUser != "" && a.AdminPass != "" {
+			uOK := body.Username == a.AdminUser
+			pwHash := sha256.Sum256([]byte(body.Password))
+			adminHash := sha256.Sum256([]byte(a.AdminPass))
+			pOK := hmac.Equal(pwHash[:], adminHash[:])
+
+			if uOK && pOK {
+				authenticated = true
+				userID = a.AdminUser
+			}
+		}
+
+		if !authenticated {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		tok, exp, err := a.makeToken(body.Username)
+		tok, exp, err := a.makeToken(userID)
 		if err != nil {
 			http.Error(w, "server error", http.StatusInternalServerError)
 			return

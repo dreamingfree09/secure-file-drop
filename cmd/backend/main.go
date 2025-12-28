@@ -52,6 +52,9 @@ func main() {
 	}
 	log.Printf("service=backend msg=%q", "migrations_complete")
 
+	// Add database to auth config for user authentication
+	auth.DB = dbConn
+
 	srv := server.New(server.Config{
 		Addr:  addr,
 		Build: build,
@@ -59,7 +62,8 @@ func main() {
 		DB:    dbConn,
 	})
 
-	// Start server in background
+	// Start the HTTP server in a background goroutine.
+	// This allows us to listen for OS signals while the server runs.
 	errCh := make(chan error, 1)
 	go func() {
 		log.Printf("service=backend msg=%q addr=%s version=%s commit=%s",
@@ -67,13 +71,16 @@ func main() {
 		errCh <- srv.Start()
 	}()
 
-	// Wait for signal or server error
+	// Set up signal handling for graceful shutdown on SIGINT (Ctrl+C) or SIGTERM (container stop).
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
+	// Block until either a shutdown signal is received or the server encounters an error.
 	select {
 	case sig := <-sigCh:
+		// Signal received: initiate graceful shutdown.
 		log.Printf("service=backend msg=%q signal=%s", "shutting_down", sig.String())
+		// Give the server 5 seconds to finish in-flight requests and cleanup.
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
@@ -82,6 +89,7 @@ func main() {
 		}
 		log.Printf("service=backend msg=%q", "shutdown_complete")
 	case err := <-errCh:
+		// Server error: exit immediately.
 		if err != nil {
 			log.Printf("service=backend msg=%q err=%v", "server_error", err)
 			os.Exit(1)
@@ -89,6 +97,8 @@ func main() {
 	}
 }
 
+// getenvDefault reads an environment variable and returns a default value if not set.
+// This helper avoids importing extra packages and keeps main.go self-contained.
 // NOTE: kept here for clarity and minimal dependencies.
 func getenvDefault(key, def string) string {
 	v := os.Getenv(key)

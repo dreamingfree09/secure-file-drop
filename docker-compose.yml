@@ -59,6 +59,8 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     container_name: sfd_backend
+    ports:
+      - "8080:8080"  # Direct access to backend (bypasses Traefik for easier development)
     environment:
       SFD_BUCKET: ${SFD_BUCKET}
       SFD_S3_ENDPOINT: http://minio:9000

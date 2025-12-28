@@ -10,6 +10,7 @@ This document provides step-by-step examples for common workflows: logging in, c
 - SFD_ADMIN_PASS (strong password)
 - SFD_SESSION_SECRET (random string for HMAC-signed sessions)
 - SFD_DOWNLOAD_SECRET (random string for signing download tokens)
+- SFD_MAX_UPLOAD_BYTES (max upload size in bytes, default: 50GB = 53687091200)
 - SFD_MINIO_ENDPOINT, SFD_MINIO_ACCESS_KEY, SFD_MINIO_SECRET_KEY, SFD_MINIO_BUCKET
 - SFD_DB_DSN (Postgres connection string)
 - SFD_PUBLIC_BASE_URL (optional; used to generate deterministic download links)
@@ -51,7 +52,9 @@ curl -v -X POST -F "file=@./example.txt" \
 
 Notes:
 - The multipart field name must be `file`.
-- If `SFD_MAX_UPLOAD_BYTES` is configured, uploads larger than that will be rejected with 413.
+- Default upload limit is 50GB. Configure via `SFD_MAX_UPLOAD_BYTES` environment variable.
+- Files larger than the limit will be rejected with HTTP 413.
+- The web UI shows real-time upload progress with bytes transferred and percentage.
 
 Response (200):
 
