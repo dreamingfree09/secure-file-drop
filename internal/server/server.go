@@ -172,6 +172,16 @@ func New(cfg Config) *Server {
 		})
 	})
 
+	// Config endpoint (public) - expose client-side configuration
+	mux.HandleFunc("/config", func(w http.ResponseWriter, _ *http.Request) {
+		maxBytes, _ := maxUploadBytes()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"max_upload_bytes": maxBytes,
+		})
+	})
+
 	// Metrics endpoint (protected) - includes disk usage stats
 	mux.Handle("/metrics", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		snapshot := GetMetrics().Snapshot()

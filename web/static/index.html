@@ -878,6 +878,20 @@
 <script>
 let isLoggedIn = false;
 let selectedFile = null;
+let maxUploadBytes = 0; // Will be loaded from server config
+
+// Load server configuration on page load
+async function loadConfig() {
+  try {
+    const res = await fetch('/config');
+    if (res.ok) {
+      const config = await res.json();
+      maxUploadBytes = config.max_upload_bytes || 0;
+    }
+  } catch (err) {
+    console.error('Failed to load config:', err);
+  }
+}
 
 // Login function
 async function login() {
@@ -916,6 +930,15 @@ async function login() {
 function handleFileSelect(event) {
   selectedFile = event.target.files[0];
   if (selectedFile) {
+    // Validate file size
+    if (maxUploadBytes > 0 && selectedFile.size > maxUploadBytes) {
+      const maxMB = (maxUploadBytes / (1024 * 1024)).toFixed(0);
+      const fileMB = (selectedFile.size / (1024 * 1024)).toFixed(1);
+      alert(`File too large! Maximum size is ${maxMB} MB, but your file is ${fileMB} MB.`);
+      document.getElementById('fileInput').value = ''; // Clear selection
+      return;
+    }
+    
     displayFileInfo(selectedFile);
     uploadFile();
   }
@@ -959,6 +982,16 @@ function handleDrop(e) {
   
   if (files.length > 0) {
     selectedFile = files[0];
+    
+    // Validate file size
+    if (maxUploadBytes > 0 && selectedFile.size > maxUploadBytes) {
+      const maxMB = (maxUploadBytes / (1024 * 1024)).toFixed(0);
+      const fileMB = (selectedFile.size / (1024 * 1024)).toFixed(1);
+      alert(`File too large! Maximum size is ${maxMB} MB, but your file is ${fileMB} MB.`);
+      selectedFile = null;
+      return;
+    }
+    
     displayFileInfo(selectedFile);
     uploadFile();
   }
@@ -1504,6 +1537,9 @@ function setupEventListeners() {
   
   // Initialize drag and drop for file upload
   initDragAndDrop();
+  
+  // Load server configuration
+  loadConfig();
 }
 
 // Call setup when DOM is ready
