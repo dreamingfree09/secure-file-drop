@@ -329,6 +329,33 @@
       text-align: center;
       color: var(--text-secondary);
       font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .progress-details {
+      margin-top: 10px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .progress-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .progress-stat-label {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+
+    .progress-stat-value {
+      font-weight: 600;
+      color: var(--primary);
     }
 
     /* Download Link Section */
@@ -702,10 +729,12 @@
             </div>
           </div>
 
-          <div class="progress-container" id="progressContainer">\n            <div class="progress-bar">
+          <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
               <div class="progress-fill" id="progressFill"></div>
             </div>
             <div class="progress-text" id="progressText">Uploading...</div>
+            <div class="progress-details" id="progressDetails"></div>
           </div>
 
           <div class="link-container" id="linkContainer">
@@ -818,6 +847,7 @@ async function uploadFile() {
   const progressContainer = document.getElementById('progressContainer');
   const progressFill = document.getElementById('progressFill');
   const progressText = document.getElementById('progressText');
+  const progressDetails = document.getElementById('progressDetails');
   const uploadAlert = document.getElementById('uploadAlert');
   
   try {
@@ -825,6 +855,7 @@ async function uploadFile() {
     progressContainer.classList.add('show');
     progressFill.style.width = '30%';
     progressText.textContent = 'Creating file record...';
+    progressDetails.innerHTML = '';
 
     // Get selected expiration time
     const ttlHours = parseInt(document.getElementById('fileExpiration').value);
@@ -858,20 +889,79 @@ async function uploadFile() {
     progressFill.style.width = '50%';
     progressText.textContent = 'Uploading file...';
 
-    // Step 2: Upload file with real progress tracking
+    // Step 2: Upload file with real progress tracking and speed calculation
     const fd = new FormData();
     fd.append('file', selectedFile);
+
+    let startTime = Date.now();
+    let lastTime = startTime;
+    let lastLoaded = 0;
 
     const upRes = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
+          const now = Date.now();
+          const timeDiff = (now - lastTime) / 1000; // seconds
+          const bytesDiff = e.loaded - lastLoaded;
+          
+          // Calculate speed (bytes per second)
+          let speed = 0;
+          if (timeDiff > 0) {
+            speed = bytesDiff / timeDiff;
+          }
+          
+          // Calculate overall average speed
+          const totalTime = (now - startTime) / 1000;
+          const avgSpeed = totalTime > 0 ? e.loaded / totalTime : 0;
+          
+          // Calculate time remaining
+          const remaining = e.total - e.loaded;
+          const timeRemaining = avgSpeed > 0 ? remaining / avgSpeed : 0;
+          
           const percentComplete = Math.round((e.loaded / e.total) * 30) + 50; // 50% to 80%
           progressFill.style.width = percentComplete + '%';
+          
           const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(1);
           const mbTotal = (e.total / (1024 * 1024)).toFixed(1);
-          progressText.textContent = `Uploading... ${mbLoaded}MB / ${mbTotal}MB (${Math.round((e.loaded / e.total) * 100)}%)`;
+          const percent = Math.round((e.loaded / e.total) * 100);
+          
+          progressText.textContent = `Uploading... ${mbLoaded}MB / ${mbTotal}MB (${percent}%)`;
+          
+          // Format speed
+          let speedText = '';
+          if (avgSpeed > 1024 * 1024) {
+            speedText = (avgSpeed / (1024 * 1024)).toFixed(1) + ' MB/s';
+          } else if (avgSpeed > 1024) {
+            speedText = (avgSpeed / 1024).toFixed(1) + ' KB/s';
+          } else {
+            speedText = avgSpeed.toFixed(0) + ' B/s';
+          }
+          
+          // Format time remaining
+          let timeText = '';
+          if (timeRemaining > 3600) {
+            timeText = Math.floor(timeRemaining / 3600) + 'h ' + Math.floor((timeRemaining % 3600) / 60) + 'm';
+          } else if (timeRemaining > 60) {
+            timeText = Math.floor(timeRemaining / 60) + 'm ' + Math.floor(timeRemaining % 60) + 's';
+          } else if (timeRemaining > 0) {
+            timeText = Math.ceil(timeRemaining) + 's';
+          }
+          
+          progressDetails.innerHTML = `
+            <div class="progress-stat">
+              <div class="progress-stat-label">Speed</div>
+              <div class="progress-stat-value">${speedText}</div>
+            </div>
+            ${timeText ? `<div class="progress-stat">
+              <div class="progress-stat-label">Time Left</div>
+              <div class="progress-stat-value">${timeText}</div>
+            </div>` : ''}
+          `;
+          
+          lastTime = now;
+          lastLoaded = e.loaded;
         }
       });
       
