@@ -694,10 +694,15 @@
               </select>
               <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">File will be automatically deleted after this period</div>
             </div>
+
+            <div style="margin-top: 15px;">
+              <label class="input-label" for="linkPassword">Download Password (Optional)</label>
+              <input type="password" id="linkPassword" placeholder="Leave empty for public downloads" style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-family: inherit; background: var(--bg-white);">
+              <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px;">Require a password to download this file</div>
+            </div>
           </div>
 
-          <div class="progress-container" id="progressContainer">
-            <div class="progress-bar">
+          <div class="progress-container" id="progressContainer">\n            <div class="progress-bar">
               <div class="progress-fill" id="progressFill"></div>
             </div>
             <div class="progress-text" id="progressText">Uploading...</div>
@@ -823,6 +828,7 @@ async function uploadFile() {
 
     // Get selected expiration time
     const ttlHours = parseInt(document.getElementById('fileExpiration').value);
+    const linkPassword = document.getElementById('linkPassword').value;
 
     // Step 1: Create file metadata
     const payload = {
@@ -832,6 +838,9 @@ async function uploadFile() {
     };
     if (ttlHours > 0) {
       payload.ttl_hours = ttlHours;
+    }
+    if (linkPassword) {
+      payload.link_password = linkPassword;
     }
 
     const metaRes = await fetch('/files', {

@@ -13,10 +13,11 @@ import (
 // createFileReq represents the JSON payload for creating a new file record.
 // This is the first step in the upload flow - creating metadata before the actual upload.
 type createFileReq struct {
-	OrigName    string `json:"orig_name"`
-	ContentType string `json:"content_type"`
-	SizeBytes   int64  `json:"size_bytes"`
-	TTLHours    int    `json:"ttl_hours,omitempty"` // Optional: hours until file expires (0 = never)
+	OrigName     string `json:"orig_name"`
+	ContentType  string `json:"content_type"`
+	SizeBytes    int64  `json:"size_bytes"`
+	TTLHours     int    `json:"ttl_hours,omitempty"`     // Optional: hours until file expires (0 = never)
+	LinkPassword string `json:"link_password,omitempty"` // Optional: password required to download
 }
 
 // createFileResp is the JSON response returned when a file record is successfully created.

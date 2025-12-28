@@ -45,19 +45,20 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 		}
 
 		var (
-			objectKey   string
-			status      string
-			contentType string
-			origName    string
-			sizeBytes   int64
-		)
+		objectKey    string
+		status       string
+		contentType  string
+		origName     string
+		sizeBytes    int64
+		linkPassword sql.NullString
+	)
 
-		err = db.QueryRow(
-			`SELECT object_key, status, content_type, orig_name, size_bytes
-			 FROM files
-			 WHERE id = $1`,
-			claims.FileID,
-		).Scan(&objectKey, &status, &contentType, &origName, &sizeBytes)
+	err = db.QueryRow(
+		`SELECT object_key, status, content_type, orig_name, size_bytes, link_password
+		 FROM files
+		 WHERE id = $1`,
+		claims.FileID,
+	).Scan(&objectKey, &status, &contentType, &origName, &sizeBytes, &linkPassword)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "not found", http.StatusNotFound)
@@ -74,22 +75,22 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			return
 		}
 
-		// Set a generous timeout for large file downloads (30 minutes for up to 50GB files)
-		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Minute)
-		defer cancel()
-
-		// Stream the object directly from MinIO (no memory buffering)
-		obj, err := mc.GetObject(ctx, bucket, objectKey, minio.GetObjectOptions{})
-		if err != nil {
-			http.Error(w, "storage error", http.StatusBadGateway)
+	// Verify password if file is password-protected
+	if linkPassword.Valid && linkPassword.String != "" {
+		providedPassword := r.URL.Query().Get("password")
+		if providedPassword != linkPassword.String {
+			http.Error(w, "incorrect password", http.StatusUnauthorized)
 			return
 		}
-		defer func() { _ = obj.Close() }()
+	}
 
-		// Force an early error for missing object / auth issues.
-		if _, statErr := obj.Stat(); statErr != nil {
-			http.Error(w, "storage error", http.StatusBadGateway)
-			return
+	// Set a generous timeout for large file downloads (30 minutes for up to 50GB files)
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Minute)
+	defer cancel()
+
+	// Stream the object directly from MinIO (no memory buffering)
+	obj, err := mc.GetObject(ctx, bucket, objectKey, minio.GetObjectOptions{})
+	if err != nil {
 		}
 
 		if contentType != "" {
