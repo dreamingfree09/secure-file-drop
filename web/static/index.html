@@ -856,6 +856,17 @@
 
         <div class="files-section">
           <div class="section-title">Recent Files</div>
+          <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+            <input type="text" id="fileSearch" placeholder="Search files..." oninput="filterFiles()" style="flex: 1; padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95rem;">
+            <select id="statusFilter" onchange="filterFiles()" style="padding: 12px; border: 2px solid var(--border); border-radius: 10px; font-size: 0.95rem; cursor: pointer;">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="stored">Stored</option>
+              <option value="hashed">Hashed</option>
+              <option value="ready">Ready</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
           <div id="filesOutput"></div>
         </div>
       </div>
@@ -1360,42 +1371,64 @@ async function loadMetrics() {
 }
 
 // Load files
+let allFiles = []; // Store all files for filtering
+
 async function loadFiles() {
   try {
     const res = await fetch('/admin/files');
     if (!res.ok) return;
     
-    const files = await res.json();
-    
-    if (!files || files.length === 0) {
-      document.getElementById('filesOutput').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No files found</p>';
-      return;
-    }
-
-    let html = '<table><thead><tr>';
-    html += '<th>Original Name</th><th>Status</th><th>Size</th>';
-    html += '<th>Downloads</th><th>Created</th><th>Actions</th>';
-    html += '</tr></thead><tbody>';
-
-    files.forEach(f => {
-      const icon = getFileIcon(f.orig_name, f.content_type);
-      html += '<tr>';
-      html += `<td>${icon} <strong>${escapeHtml(f.orig_name)}</strong></td>`;
-      html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
-      html += `<td>${formatFileSize(f.size_bytes)}</td>`;
-      html += `<td>${f.download_count || 0}</td>`;
-      html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
-      html += `<td><button class="btn btn-danger" onclick="deleteFile('${f.id}')">Delete</button></td>`;
-      html += '</tr>';
-    });
-
-    html += '</tbody></table>';
-    document.getElementById('filesOutput').innerHTML = html;
+    allFiles = await res.json();
+    renderFiles(allFiles);
   } catch (err) {
     console.error('Failed to load files:', err);
   }
 }
 
+// Render files table
+function renderFiles(files) {
+  if (!files || files.length === 0) {
+    document.getElementById('filesOutput').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No files found</p>';
+    return;
+  }
+
+  let html = '<table><thead><tr>';
+  html += '<th>Original Name</th><th>Status</th><th>Size</th>';
+  html += '<th>Downloads</th><th>Created</th><th>Actions</th>';
+  html += '</tr></thead><tbody>';
+
+  files.forEach(f => {
+    const icon = getFileIcon(f.orig_name, f.content_type);
+    html += '<tr>';
+    html += `<td>${icon} <strong>${escapeHtml(f.orig_name)}</strong></td>`;
+    html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
+    html += `<td>${formatFileSize(f.size_bytes)}</td>`;
+    html += `<td>${f.download_count || 0}</td>`;
+    html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
+    html += `<td><button class="btn btn-danger" onclick="deleteFile('${f.id}')">Delete</button></td>`;
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('filesOutput').innerHTML = html;
+}
+
+// Filter files based on search and status
+function filterFiles() {
+  const searchTerm = document.getElementById('fileSearch').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+  
+  const filtered = allFiles.filter(f => {
+    const matchesSearch = f.orig_name.toLowerCase().includes(searchTerm) || 
+                         f.id.toLowerCase().includes(searchTerm);
+    const matchesStatus = !statusFilter || f.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+  
+  renderFiles(filtered);
+}
+
+// Load user's own files
 // Load user's own files
 async function loadMyFiles() {
   try {
