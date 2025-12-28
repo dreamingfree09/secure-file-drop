@@ -158,8 +158,12 @@ func New(cfg Config) *Server {
 	// Download file via signed token (Milestone 6)
 	mux.Handle("/download", cfg.downloadHandler(cfg.DB, mc, bucket))
 
-	// Wrap middleware: requestID -> logging -> mux
+	// Wrap middleware: requestID -> logging -> rate limiting -> mux
+	// Apply global rate limit: 100 requests per minute per IP
+	rateLimiter := newRateLimiter(100, time.Minute)
+
 	var handler http.Handler = mux
+	handler = rateLimiter.middleware(handler)
 	handler = loggingMiddleware(handler)
 	handler = requestIDMiddleware(handler)
 
