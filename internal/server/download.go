@@ -13,6 +13,14 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+// downloadHandler handles GET /download?token={signed-token} requests for streaming
+// file downloads from MinIO. It validates the signed download token (HMAC-SHA256),
+// checks the file status (must be "hashed" or "ready"), and streams the file directly
+// from MinIO to the client without buffering in memory.
+//
+// Required query parameter: token (HMAC-signed token with file ID and expiry)
+// Response: Binary file stream with Content-Type, Content-Length, Content-Disposition headers
+// Authentication: Not required (uses signed token for authorization)
 func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -59,21 +67,24 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			return
 		}
 
-		// For Milestone 6 we only allow downloads once hashing is done.
+		// Only allow downloads after file integrity has been verified via hashing.
+		// Status must be "hashed" (hash complete) or "ready" (verified and approved).
 		if status != "hashed" && status != "ready" {
 			http.Error(w, "file not ready", http.StatusConflict)
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
+		// Set a generous timeout for large file downloads (30 minutes for up to 50GB files)
+		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Minute)
 		defer cancel()
 
+		// Stream the object directly from MinIO (no memory buffering)
 		obj, err := mc.GetObject(ctx, bucket, objectKey, minio.GetObjectOptions{})
 		if err != nil {
 			http.Error(w, "storage error", http.StatusBadGateway)
 			return
 		}
-		defer obj.Close()
+		defer func() { _ = obj.Close() }()
 
 		// Force an early error for missing object / auth issues.
 		if _, statErr := obj.Stat(); statErr != nil {
@@ -90,7 +101,7 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			w.Header().Set("Content-Length", strconv.FormatInt(sizeBytes, 10))
 		}
 
-		// Encourage safe download behaviour in browsers.
+		// Encourage safe download behavior in browsers.
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, origName))
 
 		w.WriteHeader(http.StatusOK)

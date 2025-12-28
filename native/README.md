@@ -1,42 +1,52 @@
 # Secure File Drop – Native Integrity Utility
 
 This directory contains a small C-based command-line utility used to compute
-cryptographic hashes for file integrity verification.
+cryptographic hashes for file integrity verification. It is intentionally
+minimal and auditable.
 
 ## Purpose
 
-The utility is responsible for:
-- Reading a file from disk
-- Computing a SHA-256 hash
-- Producing deterministic output for backend consumption
+- Read a file from disk (streaming)
+- Compute SHA-256
+- Emit deterministic JSON output for backend consumption
 
-It is designed to be:
-- Minimal
-- Deterministic
-- Easy to audit
-- Safe to call from other services
+## Build
 
-## Planned Interface
+The implementation uses OpenSSL for digest primitives. Build using:
 
+```
+gcc -o sfd-hash sfd_hash.c sfd_hash_cli.c -lcrypto
+```
 
+(If you prefer a Makefile target, we can add one; currently the repo's `native/Makefile` is empty.)
+
+## Usage
+
+```
 sfd-hash <file-path>
+```
 
+Example:
 
-### Output (stdout)
+```
+./sfd-hash ./example.txt
+```
 
-```json
-{
-  "algorithm": "sha256",
-  "hash": "<hex-encoded-hash>",
-  "bytes": <file-size>
-}
+Output (stdout):
 
-Exit Codes
+```
+{"algorithm":"sha256","hash":"<hex-encoded-hash>","bytes":123}
+```
 
-0 – success
+Exit codes:
+- 0 – success
+- 1 – usage error
+- 2 – file I/O error
+- 3 – hashing error
 
-1 – usage error
+## Integration notes
 
-2 – file I/O error
+- The backend calls a hashing routine against objects stored in MinIO (via a streaming read) and stores `hash` and `bytes` in the DB.
+- Keep the interface stable: JSON output and exit codes are used by surrounding processes.
 
-3 – hashing error
+If you want, I can add a Makefile target and an example test harness that runs the tool against a temporary file and asserts the output format.

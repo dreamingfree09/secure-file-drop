@@ -1,0 +1,768 @@
+From 576d3efa5309056af40c5f9aa3d8aae8007473e5 Mon Sep 17 00:00:00 2001
+From: Konstantinos Aidinidis <kostasdnds@outlook.com>
+Date: Sat, 27 Dec 2025 05:24:47 +0000
+Subject: [PATCH] docs: improve documentation (README, SPEC, ARCHITECTURE,
+ USAGE, API, CONTRIBUTING, DEPLOYMENT, DB_SCHEMA, FRONTEND, CHANGELOG, native
+ README)
+
+---
+ CHANGELOG.md         |   8 ++++
+ README.md            | 103 ++++++++++++++++++++++++++++++-----------
+ docs/API.md          |  42 +++++++++++++++++
+ docs/ARCHITECTURE.md |  48 +++++++++++++++++++
+ docs/CONTRIBUTING.md |  41 ++++++++++++++++
+ docs/DB_SCHEMA.md    |  40 ++++++++++++++++
+ docs/DEPLOYMENT.md   |  48 +++++++++++++++++++
+ docs/FRONTEND.md     |  23 +++++++++
+ docs/SPEC.md         | 108 +++++++++++++++++++++++--------------------
+ docs/USAGE.md        |  90 ++++++++++++++++++++++++++++++++++++
+ native/README.md     |  56 +++++++++++++---------
+ 11 files changed, 506 insertions(+), 101 deletions(-)
+ create mode 100644 CHANGELOG.md
+ create mode 100644 docs/API.md
+ create mode 100644 docs/ARCHITECTURE.md
+ create mode 100644 docs/CONTRIBUTING.md
+ create mode 100644 docs/DB_SCHEMA.md
+ create mode 100644 docs/DEPLOYMENT.md
+ create mode 100644 docs/FRONTEND.md
+ create mode 100644 docs/USAGE.md
+
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+new file mode 100644
+index 0000000..a655f75
+--- /dev/null
++++ b/CHANGELOG.md
+@@ -0,0 +1,8 @@
++# Changelog
++
++All notable changes to this project will be documented in this file.
++
++## [Unreleased]
++- Add/expand project documentation: README, ARCHITECTURE, USAGE, API, CONTRIBUTING, DEPLOYMENT
++- Add DB schema summary and native tool documentation
++- Add frontend and deployment notes
+diff --git a/README.md b/README.md
+index 71ddec6..0554043 100644
+--- a/README.md
++++ b/README.md
+@@ -1,36 +1,83 @@
+ # Secure File Drop
+ 
+-Secure File Drop is a public-facing, self-hosted application that allows authenticated users to upload files and generate secure, time-limited download links.
++[![Docs](https://img.shields.io/badge/docs-up%E2%86%92-blue)](#docs)
++[![Status](https://img.shields.io/badge/status-active-brightgreen)](#status)
+ 
+-The project is designed as an educational but production-oriented system, focusing on:
+-- Secure public deployment
+-- Clean backend architecture
+-- Practical use of C for performance-critical components
+-- Modern backend and web technologies
+-- Strong documentation and traceability
++Secure File Drop is a lightweight, self-hosted service for authenticated file uploads and short-lived, signed downloads. It's designed to be safe to expose on the public internet from day one while remaining small and auditable.
+ 
+-## Core Goals
++## Quick summary
+ 
+-- Upload files securely via a web interface
+-- Store files privately in object storage
+-- Generate signed, expiring download links
+-- Enforce size limits, rate limits, and authentication
+-- Verify file integrity using a C-based hashing utility
++- Users authenticate with a single admin username/password (session cookie) to upload files
++- Files are stored privately in S3-compatible object storage (MinIO)
++- The server verifies integrity using a native C hashing utility and stores SHA-256 metadata
++- Download links are signed and time-limited
+ 
+-## Technology Overview (Planned)
++## Table of contents
+ 
+-- Backend API: Go
+-- Integrity Utility: C (SHA-256 hashing, later chunking)
++- [Status](#status)
++- [Technology](#technology)
++- [Quickstart](#quickstart)
++- [Development](#development)
++- [Usage](#usage)
++- [Documentation](#documentation)
++- [Contributing](#contributing)
++
++## Status
++
++This repository contains an MVP-ready backend written in Go, a small web UI, a C-based hashing utility in `native/`, and deployment infrastructure using Docker Compose.
++
++## Technology
++
++- Backend: Go
++- Integrity utility: C (SHA-256)
+ - Database: PostgreSQL
+-- Object Storage: MinIO (S3-compatible)
+-- Reverse Proxy & TLS: Caddy (behind Cloudflare)
+-- Frontend: Web UI (initially minimal)
+-- Deployment: Docker Compose (initially)
+-
+-## Project Structure
+-
+-- `docs/` – Specifications, API contracts, and planning documents
+-- `journal/` – Development log and troubleshooting history
+-- `cmd/` – Application entry points
+-- `internal/` – Internal backend packages
+-- `web/` – Frontend assets and UI
++- Object storage: MinIO (S3-compatible)
++- Reverse proxy: Caddy (recommended)
++- Deployment: Docker Compose
++
++## Quickstart (Docker Compose)
++
++1. Copy `docker-compose.yml` and set required environment variables (see `docs/USAGE.md` for a full list).
++2. Start services:
++
++   docker compose up -d
++
++3. Initialize database schema (example using `psql`):
++
++   psql -h localhost -U postgres -d sfd -f internal/db/schema.sql
++
++4. Visit the web UI (default: http://localhost:8080) and log in using `SFD_ADMIN_USER`/`SFD_ADMIN_PASS`.
++
++## Development
++
++- Build the backend locally:
++
++  go build ./cmd/backend
++
++- Build the hashing utility:
++
++  make -C native
++
++- Run the server locally with environment variables set; Docker Compose is useful for a full stack dev environment.
++
++## Usage (overview)
++
++- Authenticate: POST /login with JSON {"username":"...","password":"..."}
++- Create file metadata: POST /files (JSON with orig_name, content_type, size_bytes)
++- Upload: POST /upload?id=<file-id> as multipart form field `file`
++- Create link: POST /links with JSON {"id": "<file-id>", "ttl_seconds": 300}
++- Download: GET /download?token=<signed-token>
++
++Refer to `docs/USAGE.md` and `docs/API.md` for detailed examples and request/response samples.
++
++## Documentation
++
++Primary docs live in `docs/` — see `docs/SPEC.md` for the MVP specification and `docs/ARCHITECTURE.md` for component-level notes.
++
++## Contributing
++
++Please read `docs/CONTRIBUTING.md` for development setup, coding style, and PR guidelines.
++
++---
++
++If you'd like, I can open a branch and prepare a PR with a larger docs revision (adding `docs/ARCHITECTURE.md`, `docs/USAGE.md`, `docs/API.md`, and `docs/CONTRIBUTING.md`). Reply with permission to push and open the PR or say if you prefer to review drafts first.
+diff --git a/docs/API.md b/docs/API.md
+new file mode 100644
+index 0000000..5a509e3
+--- /dev/null
++++ b/docs/API.md
+@@ -0,0 +1,42 @@
++# API Reference
++
++This page documents the primary HTTP endpoints used by Secure File Drop. All endpoints are served on the server address (default `:8080`).
++
++Authentication: /login returns a session cookie used for subsequent requests (cookie name `sfd_session` by default).
++
++## POST /login
++- Body: JSON {"username":"admin","password":"password"}
++- Response: 200 {"status":"ok"}
++- Side effect: sets a session cookie `sfd_session`
++
++## POST /files
++- Auth required
++- Body: JSON {"orig_name": "file.txt", "content_type": "text/plain", "size_bytes": 123}
++- Response: 201 {"id": "<uuid>", "object_key":"uploads/<uuid>", "status":"pending"}
++
++## POST /upload?id=<uuid>
++- Auth required
++- Content-Type: multipart/form-data; field name `file`
++- Response: 200 {"id": "<uuid>", "object_key":"uploads/<uuid>", "status":"hashed"}
++- Errors: 413 file too large (when upload limit exceeded)
++
++## POST /links
++- Auth required
++- Body: JSON {"id": "<uuid>", "ttl_seconds": 300}
++- Response: 200 {"url": "https://host/download?token=<token>", "expires_at":"RFC3339 timestamp"}
++- Error codes: 409 invalid status, 404 not found
++
++## GET /download?token=<token>
++- No auth required; token must be valid and unexpired
++- Response: 200 with file content and headers:
++  - Content-Type
++  - Content-Length (when available)
++  - Content-Disposition attachment; filename="<orig_name>"
++- Error codes: 410 token expired, 401 invalid token
++
++## Misc
++- GET /health returns {"status":"ok"}
++- GET /ready returns {"status":"ok"} when DB is reachable
++- GET /version returns build information
++
++For example `curl` usages, see `docs/USAGE.md`.
+\ No newline at end of file
+diff --git a/docs/ARCHITECTURE.md b/docs/ARCHITECTURE.md
+new file mode 100644
+index 0000000..dfbd384
+--- /dev/null
++++ b/docs/ARCHITECTURE.md
+@@ -0,0 +1,48 @@
++# Architecture
++
++This document describes the high-level components and responsibilities of Secure File Drop.
++
++## Components
++
++- Reverse proxy (recommended: Caddy)
++  - Terminates TLS, enforces global rate limits, and provides an externally reachable hostname.
++
++- Backend API (Go)
++  - Auth: simple admin username/password -> HMAC-signed session cookie
++  - File metadata management: PostgreSQL stores file records and lifecycle state
++  - Upload handling: POST /upload streams multipart file parts into MinIO
++  - Hashing: after upload, files are hashed (SHA-256) and metadata persisted
++  - Signed download: short-lived signed tokens for direct download via /download
++
++- Object storage (MinIO)
++  - Stores file blobs under internal keys (no user-provided paths)
++  - Must be private (not exposed to the public internet)
++
++- Database (Postgres)
++  - `files` table tracks id, status (pending/stored/hashed/ready/failed), size, content type, sha256 metadata
++  - Migrations live in `internal/db/` (see `schema.sql` and `alter_001.sql`)
++
++- Native hashing utility (C)
++  - Computes SHA-256 over streamed objects and emits machine-readable outputs
++  - Useful for reproducible integrity checks and educational value
++
++## Data flow
++
++1. Authenticated user creates a file record (POST /files). A server-generated UUID and object key are returned.
++2. User uploads the file via POST /upload?id=<uuid> as multipart form with field `file`.
++3. Server streams the file into MinIO. On success, it computes SHA-256 (using MinIO get + local hashing helper) and stores results in the database.
++4. User requests a download link (POST /links with file id and TTL). Server signs a download token and returns a URL.
++5. Anyone with the link can GET /download?token=<token> until the token expires.
++
++## Security notes
++
++- Reverse proxy must enforce HTTPS and recommended security headers.
++- Keep MinIO and Postgres private to the backend network.
++- Secrets (admin credentials, session secret, download secret) must be provided through environment variables or secret management systems.
++
++## Operational notes
++
++- Reverse proxy health checks can use /health (process liveness) and /ready (dependency readiness).
++- Monitor DB connectivity and MinIO availability.
++
++For more details about the API, see `docs/API.md` and `docs/USAGE.md`.
+\ No newline at end of file
+diff --git a/docs/CONTRIBUTING.md b/docs/CONTRIBUTING.md
+new file mode 100644
+index 0000000..97167fd
+--- /dev/null
++++ b/docs/CONTRIBUTING.md
+@@ -0,0 +1,41 @@
++# Contributing
++
++Thanks for your interest! This project welcomes contributions — small documentation fixes to larger features.
++
++## Developer setup
++
++1. Clone the repository and build with Go 1.20+.
++
++   git clone <repo>
++   cd Secure\ File\ Drop
++   go build ./cmd/backend
++
++2. Optionally use Docker Compose for a full dev stack (Postgres + MinIO):
++
++   docker compose up -d
++
++3. Initialize DB schema:
++
++   psql -h localhost -U postgres -d sfd -f internal/db/schema.sql
++
++4. Build the native hashing tool:
++
++   make -C native
++
++## Coding & style
++
++- Keep functions small and testable.
++- Be explicit about error handling and logging.
++- Add unit tests where appropriate.
++
++## Tests
++
++- There are no large test suites yet; add tests in `_test.go` files and run `go test ./...`.
++
++## Pull request
++
++- Fork and create a feature branch.
++- Rebase / keep history tidy; open a PR against `main` with a clear description and testing steps.
++- Add changelog entry to `CHANGELOG.md` for notable changes.
++
++If you'd like, I can prepare a PR with these docs and a README update — confirm whether you want me to push a branch and open a PR (I will need push access or a fork to open the PR).
+\ No newline at end of file
+diff --git a/docs/DB_SCHEMA.md b/docs/DB_SCHEMA.md
+new file mode 100644
+index 0000000..1f1e74b
+--- /dev/null
++++ b/docs/DB_SCHEMA.md
+@@ -0,0 +1,40 @@
++# Database schema & migrations
++
++This document summarises the database schema and available migration files in `internal/db/`.
++
++## Primary table: `files`
++
++The `files` table tracks file metadata and lifecycle state.
++
++Columns of interest:
++- `id` (UUID, PK) — stable identifier used across the system
++- `object_key` (TEXT) — the MinIO key (e.g., `uploads/<uuid>`)
++- `orig_name` (TEXT) — original client-provided filename
++- `content_type` (TEXT) — declared content type
++- `size_bytes` (BIGINT) — file size recorded at upload
++- `sha256_hex` (CHAR(64)) — lowercase hex SHA-256 of the stored object
++- `sha256_bytes` (BIGINT) — the byte count computed during hashing
++- `created_by` (TEXT) — admin username or future user id
++- `status` (TEXT) — one of `pending`, `stored`, `hashed`, `ready`, `failed`
++- `created_at` (TIMESTAMPTZ)
++
++Indexing:
++- `idx_files_created_at` (created_at DESC)
++- `idx_files_status` (status)
++
++## Migrations
++
++- `schema.sql` — the initial schema to create `files` and indexes (applied via `psql` for local dev).
++- `alter_001.sql` — migration that adds `sha256_bytes`, `created_by`, and ensures `status` exists with a check constraint.
++
++## Applying migrations (local/dev)
++
++Example using `psql`:
++
++psql -h <host> -U <user> -d <db> -f internal/db/schema.sql
++psql -h <host> -U <user> -d <db> -f internal/db/alter_001.sql
++
++## Notes
++
++- Migrations are intentionally simple and applied manually for now. If you prefer, we can add a small migration runner or adopt tools like `golang-migrate`.
++- The system expects the `status` lifecycle; other components assume a file is downloadable only when `status` is `hashed` or `ready`.
+diff --git a/docs/DEPLOYMENT.md b/docs/DEPLOYMENT.md
+new file mode 100644
+index 0000000..714f14f
+--- /dev/null
++++ b/docs/DEPLOYMENT.md
+@@ -0,0 +1,48 @@
++# Deployment
++
++This document outlines simple deployment options and recommendations for running Secure File Drop in production.
++
++## Quick Docker Compose deployment
++
++The repository contains `docker-compose.yml` intended for a simple deployment with Postgres and MinIO. Basic steps:
++
++1. Ensure required environment variables are set (see `docs/USAGE.md`).
++2. Start services:
++
++   docker compose up -d
++
++3. Apply DB migrations:
++
++   psql -h postgres -U postgres -d sfd -f internal/db/schema.sql
++   psql -h postgres -U postgres -d sfd -f internal/db/alter_001.sql
++
++4. Confirm readiness: `GET http://<host>:8080/ready` should return `{"status":"ok"}`.
++
++## Reverse proxy & TLS
++
++- Use a reverse proxy to terminate TLS and provide a stable `SFD_PUBLIC_BASE_URL`.
++- Recommended: Caddy for automatic HTTPS or Traefik/Nginx if you prefer fine-grained control.
++- Enforce HTTPS only and set proxy headers (X-Forwarded-Proto, X-Forwarded-Host) so the server generates correct public links.
++
++## Secrets & configuration
++
++- Use environment variables or a secrets manager to provide credentials and secrets:
++  - SFD_ADMIN_USER / SFD_ADMIN_PASS
++  - SFD_SESSION_SECRET
++  - SFD_DOWNLOAD_SECRET
++  - MinIO and Postgres credentials
++- Rotate secrets periodically and keep a secure audit trail for changes.
++
++## Production considerations
++
++- Make MinIO and Postgres accessible only to the backend service (private network).
++- Use logging collection and monitoring; ensure `/health` and `/ready` are wired into your orchestrator.
++- Consider rate limiting at the proxy to protect against abuse.
++- Tune `SFD_MAX_UPLOAD_BYTES` to control allowed file sizes.
++
++## Rolling updates & backups
++
++- Back up Postgres regularly. Files are stored in MinIO; consider object storage replication or snapshot strategies depending on your provider.
++- For upgrades, drain traffic from the instance, perform a rolling deploy, and verify `/ready` before reintroducing traffic.
++
++If you'd like, I can add a sample `caddy` or `nginx` configuration snippet and a systemd unit for running the service directly on a VM.
+\ No newline at end of file
+diff --git a/docs/FRONTEND.md b/docs/FRONTEND.md
+new file mode 100644
+index 0000000..a3d1652
+--- /dev/null
++++ b/docs/FRONTEND.md
+@@ -0,0 +1,23 @@
++# Frontend / Static site notes
++
++The frontend is intentionally minimal and lives in `web/static/index.html`. The server mounts the `web/static/` directory at `/static/` and serves the index at `/`.
++
++## Current behavior
++
++- A tiny single-page UI supports:
++  - Login (POST /login)
++  - Upload flow: create metadata (/files) -> upload multipart to /upload?id=<id> -> request link (/links)
++  - Displaying the returned signed link
++- The UI relies on same-origin requests and session cookie authentication.
++
++## How to extend
++
++- Add CSS/JS assets into `web/static/` and reference them from `index.html`.
++- For larger frontends, consider adding a build step that outputs to `web/static/` (for example a small React/Vue app built into the `web/static` folder).
++- Keep authentication via the session cookie and avoid exposing the download-secret to the client.
++
++## Deployment
++
++- Static files are served by the backend process in the container (see `New` in `internal/server/server.go`). In production, a reverse proxy can serve static assets directly for performance.
++
++If you'd like, I can convert the UI into a slightly larger front-end scaffold (with a build pipeline) and add a small set of end-to-end tests for the upload flow.
+\ No newline at end of file
+diff --git a/docs/SPEC.md b/docs/SPEC.md
+index 00aa9c5..471efbc 100644
+--- a/docs/SPEC.md
++++ b/docs/SPEC.md
+@@ -1,81 +1,89 @@
+ # Secure File Drop – MVP Specification
+ 
++## Table of contents
++
++- [Purpose](#purpose)
++- [MVP scope](#mvp-scope)
++- [High-level architecture](#high-level-architecture)
++- [Components](#components)
++- [Security constraints](#security-constraints)
++- [Environment variables (required/important)](#environment-variables-requiredimportant)
++- [Deployment (initial)](#deployment-initial)
++
+ ## Purpose
+ 
+-Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. The system is designed to be safe to expose on the public internet from day one, while remaining simple enough to implement incrementally.
++Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. The system is designed to be safe to expose on the public internet from day one, while remaining simple and auditable.
+ 
+-This project is also an educational exercise, combining systems programming in C with modern backend and web development practices.
++This project is an educational exercise that combines a memory-safe backend (Go) with a small C utility for efficient, low-level hashing.
+ 
+-## MVP Scope (Strict)
++## MVP scope
+ 
+-The MVP MUST include:
+-- Authenticated file uploads
+-- Private object storage (not directly exposed)
++**Must include**:
++- Authenticated file uploads with server-side metadata
++- Private object storage (MinIO) not exposed to the public internet
+ - Signed, expiring download links
+-- Server-side file integrity verification
+-- HTTPS-only access
+-- Rate limiting and size limits
+-- Basic audit logging
++- Server-side file integrity verification (SHA-256)
++- HTTPS-only access (enforced at the reverse proxy)
++- Rate limiting and maximum upload size
++- Basic audit logging for uploads and downloads
+ 
+-The MVP MUST NOT include:
++**Explicitly out of scope for v1**:
+ - Public anonymous uploads
+-- User-to-user sharing or permissions
++- User-to-user sharing or fine-grained permissions
+ - Client-side encryption
+ - Resumable uploads
+ - Antivirus scanning
+-- Folder hierarchies
++- Folder hierarchies in storage
+ - Public object storage access
+ 
+-Anything outside this list is explicitly out of scope for v1.
+-
+ ## High-Level Architecture
+ 
+ - Reverse proxy terminates TLS and enforces request limits
+-- Backend API handles authentication, uploads, downloads, and metadata
+-- Object storage stores file blobs privately
+-- Database stores file metadata and link state
+-- C utility computes cryptographic hashes for integrity checks
++- Backend API handles authentication, upload lifecycle, link generation, and metadata
++- Object storage stores file blobs privately; backend streams uploads to object storage
++- Database (Postgres) stores file metadata, states, and audit records
++- C hashing utility computes SHA-256 to provide an auditable integrity check
+ 
+ ## Components
+ 
+ ### Backend API (Go)
+-Responsibilities:
+-- User authentication
+-- Upload handling
+-- Download token validation
+-- Metadata persistence
+-- Calling the C hashing utility
+-- Streaming downloads safely
++- Login (/login)
++- Create file record (/files)
++- Upload file (/upload?id=<uuid>) – multipart form, field `file`
++- Create signed download link (/links)
++- Download via signed token (/download?token=...)
+ 
+ ### Integrity Utility (C)
+-Responsibilities:
+-- Read files in a streaming manner
+-- Compute SHA-256 hashes
+-- Output results in a machine-readable format
+-- Fail safely on invalid input
+-
+-This component exists to teach:
+-- File I/O
+-- Memory discipline
+-- Process execution
+-- Interoperability with higher-level languages
++- Stream-based SHA-256
++- Intended to be small, auditable, and fast
+ 
+ ### Storage
+-- Object storage: MinIO (S3-compatible)
+-- Database: PostgreSQL
++- MinIO for object store (S3-compatible)
++- PostgreSQL for metadata and state
++
++## Security constraints
++
++- TLS is mandatory in production (reverse proxy)
++- Admin credentials, session secret, and download secret must be kept secret
++- MinIO and Postgres must not be public
++- Limit upload sizes at both proxy and server
++
++## Environment variables (required / important)
+ 
+-Object storage must never be publicly accessible.
++- SFD_ADMIN_USER, SFD_ADMIN_PASS
++- SFD_SESSION_SECRET
++- SFD_DOWNLOAD_SECRET
++- SFD_MINIO_ENDPOINT, SFD_MINIO_ACCESS_KEY, SFD_MINIO_SECRET_KEY, SFD_MINIO_BUCKET
++- SFD_DB_DSN
++- SFD_PUBLIC_BASE_URL (optional but recommended in deployments)
++- SFD_MAX_UPLOAD_BYTES (optional)
+ 
+-## Security Constraints
++## Deployment (initial)
+ 
+-- HTTPS is mandatory
+-- All uploads require authentication
+-- Maximum upload size enforced at proxy and backend
+-- Download links must be signed and time-limited
+-- Files are streamed, never fully loaded into memory
+-- Secrets are provided via environment variables only
++- Docker Compose (development and simple production)
++- Use a reverse proxy (Caddy, Nginx, Traefik) to manage TLS and public endpoints
++- In production, consider secret management for credentials and secrets
+ 
+-## Deployment (Initial)
++---
+ 
+-- Docker Compose
+-- Local development with public exposure via Cloudflare Tunnel or reverse proxy
++If you'd like, I can expand this with diagrams, sequence diagrams for the upload flow, or configuration examples for common reverse proxies.
+diff --git a/docs/USAGE.md b/docs/USAGE.md
+new file mode 100644
+index 0000000..1c1c9ec
+--- /dev/null
++++ b/docs/USAGE.md
+@@ -0,0 +1,90 @@
++# Usage
++
++This document provides step-by-step examples for common workflows: logging in, creating a file record, uploading content, creating a download link, and downloading a file.
++
++> Note: the server expects authentication via a session cookie set by POST /login. All write actions require authentication.
++
++## Environment variables (examples)
++
++- SFD_ADMIN_USER (e.g. `admin`)
++- SFD_ADMIN_PASS (strong password)
++- SFD_SESSION_SECRET (random string for HMAC-signed sessions)
++- SFD_DOWNLOAD_SECRET (random string for signing download tokens)
++- SFD_MINIO_ENDPOINT, SFD_MINIO_ACCESS_KEY, SFD_MINIO_SECRET_KEY, SFD_MINIO_BUCKET
++- SFD_DB_DSN (Postgres connection string)
++- SFD_PUBLIC_BASE_URL (optional; used to generate deterministic download links)
++
++## Login
++
++Request:
++
++curl -v -X POST -H "Content-Type: application/json" \
++  -d '{"username":"admin","password":"password"}' \
++  http://localhost:8080/login -c cookies.txt
++
++- The `-c cookies.txt` flag saves the session cookie for subsequent requests.
++
++## Create file metadata
++
++Request:
++
++curl -v -X POST -H "Content-Type: application/json" \
++  -d '{"orig_name":"example.txt","content_type":"text/plain","size_bytes":123}' \
++  http://localhost:8080/files -b cookies.txt
++
++Response (201):
++
++{
++  "id": "<uuid>",
++  "object_key": "uploads/<uuid>",
++  "status": "pending"
++}
++
++Save the returned `id` for the upload step.
++
++## Upload file
++
++Request (multipart form):
++
++curl -v -X POST -F "file=@./example.txt" \
++  "http://localhost:8080/upload?id=<uuid>" -b cookies.txt
++
++Notes:
++- The multipart field name must be `file`.
++- If `SFD_MAX_UPLOAD_BYTES` is configured, uploads larger than that will be rejected with 413.
++
++Response (200):
++
++{
++  "id": "<uuid>",
++  "object_key": "uploads/<uuid>",
++  "status": "hashed"
++}
++
++## Create a signed download link
++
++Request:
++
++curl -v -X POST -H "Content-Type: application/json" \
++  -d '{"id":"<uuid>","ttl_seconds":300}' \
++  http://localhost:8080/links -b cookies.txt
++
++Response (200):
++
++{
++  "url": "https://your-host/download?token=<signed-token>",
++  "expires_at": "2025-12-27T12:34:56Z"
++}
++
++## Download
++
++GET the provided URL (no authentication required if token is valid):
++
++curl -v "https://your-host/download?token=<signed-token>" -O
++
++## Troubleshooting
++
++- Check `/health` and `/ready` for service status.
++- Inspect `journal/DEVLOG.md` for development notes and known issues.
++
++For API request/response examples and details, see `docs/API.md`.
+\ No newline at end of file
+diff --git a/native/README.md b/native/README.md
+index 27d5d52..85928a3 100644
+--- a/native/README.md
++++ b/native/README.md
+@@ -1,42 +1,52 @@
+ # Secure File Drop – Native Integrity Utility
+ 
+ This directory contains a small C-based command-line utility used to compute
+-cryptographic hashes for file integrity verification.
++cryptographic hashes for file integrity verification. It is intentionally
++minimal and auditable.
+ 
+ ## Purpose
+ 
+-The utility is responsible for:
+-- Reading a file from disk
+-- Computing a SHA-256 hash
+-- Producing deterministic output for backend consumption
++- Read a file from disk (streaming)
++- Compute SHA-256
++- Emit deterministic JSON output for backend consumption
+ 
+-It is designed to be:
+-- Minimal
+-- Deterministic
+-- Easy to audit
+-- Safe to call from other services
++## Build
+ 
+-## Planned Interface
++The implementation uses OpenSSL for digest primitives. Build using:
+ 
++```
++gcc -o sfd-hash sfd_hash.c sfd_hash_cli.c -lcrypto
++```
+ 
++(If you prefer a Makefile target, we can add one; currently the repo's `native/Makefile` is empty.)
++
++## Usage
++
++```
+ sfd-hash <file-path>
++```
+ 
++Example:
+ 
+-### Output (stdout)
++```
++./sfd-hash ./example.txt
++```
+ 
+-```json
+-{
+-  "algorithm": "sha256",
+-  "hash": "<hex-encoded-hash>",
+-  "bytes": <file-size>
+-}
++Output (stdout):
+ 
+-Exit Codes
++```
++{"algorithm":"sha256","hash":"<hex-encoded-hash>","bytes":123}
++```
+ 
+-0 – success
++Exit codes:
++- 0 – success
++- 1 – usage error
++- 2 – file I/O error
++- 3 – hashing error
+ 
+-1 – usage error
++## Integration notes
+ 
+-2 – file I/O error
++- The backend calls a hashing routine against objects stored in MinIO (via a streaming read) and stores `hash` and `bytes` in the DB.
++- Keep the interface stable: JSON output and exit codes are used by surrounding processes.
+ 
+-3 – hashing error
+\ No newline at end of file
++If you want, I can add a Makefile target and an example test harness that runs the tool against a temporary file and asserts the output format.
+\ No newline at end of file
+-- 
+2.43.0
+

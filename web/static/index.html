@@ -2,90 +2,1210 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Secure File Drop</title>
+  <title>Secure File Drop - Share Files Securely</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --text-light: #9ca3af;
+      --bg-light: #f9fafb;
+      --bg-white: #ffffff;
+      --border: #e5e7eb;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+      --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Animated background gradient */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      z-index: -1;
+      opacity: 0.9;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 60px 20px 40px;
+      color: white;
+    }
+
+    .logo {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .tagline {
+      font-size: 1.1rem;
+      font-weight: 300;
+      opacity: 0.95;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      font-weight: 400;
+      opacity: 0.8;
+    }
+
+    /* Main card container */
+    .main-card {
+      background: var(--bg-white);
+      border-radius: 20px;
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      margin-bottom: 30px;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Login Screen */
+    .login-container {
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 450px;
+      margin: 0 auto;
+    }
+
+    .login-title {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .login-subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 30px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      outline: none;
+      background: var(--bg-white);
+    }
+
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="email"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-secondary {
+      background: var(--bg-light);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border);
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+
+    /* Upload Section */
+    .upload-container {
+      padding: 40px;
+    }
+
+    .upload-area {
+      border: 3px dashed var(--border);
+      border-radius: 16px;
+      padding: 60px 40px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      background: var(--bg-light);
+      position: relative;
+    }
+
+    .upload-area:hover,
+    .upload-area.dragover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.05);
+      transform: scale(1.02);
+    }
+
+    .upload-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .upload-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+
+    .upload-subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .file-info {
+      background: var(--bg-light);
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      text-align: left;
+      display: none;
+    }
+
+    .file-info.show {
+      display: block;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    .file-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 5px;
+      word-break: break-all;
+    }
+
+    .file-size {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .progress-container {
+      margin-top: 20px;
+      display: none;
+    }
+
+    .progress-container.show {
+      display: block;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-light);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      width: 0%;
+      transition: width 0.3s ease;
+      animation: shimmer 2s infinite;
+      background-size: 200% 100%;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .progress-text {
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Download Link Section */
+    .link-container {
+      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+      border-radius: 12px;
+      padding: 30px;
+      margin-top: 30px;
+      display: none;
+    }
+
+    .link-container.show {
+      display: block;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    .link-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: var(--text-primary);
+    }
+
+    .link-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .link-input {
+      flex: 1;
+      padding: 14px 16px;
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-family: monospace;
+    }
+
+    .btn-copy {
+      padding: 14px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .btn-copy:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .link-expires {
+      margin-top: 10px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    /* Admin Dashboard */
+    .admin-nav {
+      display: flex;
+      gap: 10px;
+      padding: 20px 40px;
+      background: var(--bg-light);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      padding: 30px 40px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+      padding: 24px;
+      border-radius: 12px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .files-section {
+      padding: 0 40px 40px;
+    }
+
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: var(--text-primary);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    th {
+      background: var(--bg-light);
+      padding: 14px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover {
+      background: var(--bg-light);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .status-ready {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+    }
+
+    .status-pending {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--warning);
+    }
+
+    .status-failed {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+
+    .status-stored, .status-hashed {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Alert messages */
+    .alert {
+      padding: 14px 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      font-size: 0.95rem;
+      animation: fadeInUp 0.3s ease-out;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .alert-info {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      header {
+        padding: 40px 20px 30px;
+      }
+
+      .logo {
+        font-size: 2rem;
+      }
+
+      .login-container,
+      .upload-container,
+      .admin-nav,
+      .stats-grid,
+      .files-section {
+        padding: 30px 20px;
+      }
+
+      .upload-area {
+        padding: 40px 20px;
+      }
+
+      .link-box {
+        flex-direction: column;
+      }
+
+      .btn-copy {
+        width: 100%;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+      }
+    }
+
+    /* Loading spinner */
+    .spinner {
+      border: 3px solid var(--border);
+      border-top: 3px solid var(--primary);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 <body>
-  <h1>Secure File Drop (MVP)</h1>
+  <header>
+    <div class="logo">🔒 Secure File Drop</div>
+    <div class="tagline">Share files securely with time-limited download links</div>
+    <div class="subtitle">End-to-end encrypted transfers with SHA-256 verification</div>
+  </header>
 
-  <section>
-    <h2>Login</h2>
-    <input id="username" placeholder="Username" value="admin">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <pre id="loginStatus"></pre>
-  </section>
+  <div class="container">
+    <!-- Login Screen -->
+    <div id="loginScreen" class="main-card">
+      <div class="login-container">
+        <div id="loginForm">
+          <div class="login-title">Welcome Back</div>
+          <div class="login-subtitle">Sign in to start sharing files securely</div>
+          
+          <div class="input-group">
+            <label class="input-label" for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter your username" value="admin">
+          </div>
 
-  <section>
-    <h2>Upload file</h2>
-    <input type="file" id="fileInput">
-    <button onclick="upload()">Upload</button>
-    <pre id="uploadStatus"></pre>
-  </section>
+          <div class="input-group">
+            <label class="input-label" for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password">
+          </div>
 
-  <section>
-    <h2>Download link</h2>
-    <pre id="linkOutput"></pre>
-  </section>
+          <button class="btn btn-primary" onclick="login()">Sign In</button>
+
+          <div id="loginAlert"></div>
+
+          <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+            <span style="color: var(--text-secondary);">Don't have an account?</span>
+            <a href="#" onclick="showRegisterForm(); return false;" style="color: var(--primary); font-weight: 600; margin-left: 8px; text-decoration: none;">Create Account</a>
+          </div>
+        </div>
+
+        <div id="registerForm" class="hidden">
+          <div class="login-title">Create Account</div>
+          <div class="login-subtitle">Join to start sharing files securely</div>
+          
+          <div class="input-group">
+            <label class="input-label" for="regEmail">Email Address</label>
+            <input type="email" id="regEmail" placeholder="your@email.com">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regUsername">Username</label>
+            <input type="text" id="regUsername" placeholder="Choose a username">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regPassword">Password</label>
+            <input type="password" id="regPassword" placeholder="Min. 8 characters, letters + numbers">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="regPasswordConfirm">Confirm Password</label>
+            <input type="password" id="regPasswordConfirm" placeholder="Re-enter your password">
+          </div>
+
+          <button class="btn btn-primary" onclick="register()">Create Account</button>
+
+          <div id="registerAlert"></div>
+
+          <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
+            <span style="color: var(--text-secondary);">Already have an account?</span>
+            <a href="#" onclick="showLoginForm(); return false;" style="color: var(--primary); font-weight: 600; margin-left: 8px; text-decoration: none;">Sign In</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="appScreen" class="hidden">
+      <!-- Upload Section -->
+      <div class="main-card">
+        <div class="upload-container">
+          <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">📁</div>
+            <div class="upload-title">Drop your file here</div>
+            <div class="upload-subtitle">or click to browse</div>
+            <button class="btn btn-primary" style="width: auto; margin-top: 20px;">Choose File</button>
+          </div>
+          <input type="file" id="fileInput" onchange="handleFileSelect(event)">
+
+          <div class="file-info" id="fileInfo">
+            <div class="file-name" id="fileName"></div>
+            <div class="file-size" id="fileSize"></div>
+          </div>
+
+          <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Uploading...</div>
+          </div>
+
+          <div class="link-container" id="linkContainer">
+            <div class="link-title">✓ Upload Complete!</div>
+            <div class="link-box">
+              <input type="text" class="link-input" id="downloadLink" readonly>
+              <button class="btn-copy" onclick="copyLink()">Copy Link</button>
+            </div>
+            <div class="link-expires" id="linkExpires"></div>
+          </div>
+
+          <div id="uploadAlert"></div>
+        </div>
+      </div>
+
+      <!-- Admin Dashboard -->
+      <div class="main-card" id="adminSection">
+        <div class="admin-nav">
+          <button class="btn btn-secondary" onclick="loadMetrics()">📊 Refresh Metrics</button>
+          <button class="btn btn-secondary" onclick="loadFiles()">📁 Refresh Files</button>
+          <button class="btn btn-success" onclick="manualCleanup()">🧹 Run Cleanup</button>
+        </div>
+
+        <div class="stats-grid" id="metricsOutput"></div>
+
+        <div class="files-section">
+          <div class="section-title">Recent Files</div>
+          <div id="filesOutput"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script>
-async function login() {
-  const res = await fetch('/login', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      username: document.getElementById('username').value,
-      password: document.getElementById('password').value
-    })
-  });
-  document.getElementById('loginStatus').textContent =
-    res.ok ? 'Logged in' : 'Login failed';
-}
+let isLoggedIn = false;
+let selectedFile = null;
 
-async function upload() {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) {
-    alert('Select a file first');
+// Login function
+async function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  const loginAlert = document.getElementById('loginAlert');
+
+  if (!username || !password) {
+    showAlert(loginAlert, 'Please enter both username and password', 'error');
     return;
   }
 
-  const metaRes = await fetch('/files', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      orig_name: file.name,
-      content_type: file.type || 'application/octet-stream',
-      size_bytes: file.size
-    })
-  });
-
-  const meta = await metaRes.json();
-
-  const fd = new FormData();
-  fd.append('file', file);
-
-  const upRes = await fetch('/upload?id=' + meta.id, {
-    method: 'POST',
-    body: fd
-  });
-
-  const upJson = await upRes.json();
-  document.getElementById('uploadStatus').textContent =
-    JSON.stringify(upJson, null, 2);
-
-  const linkRes = await fetch('/links', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      id: meta.id,
-      ttl_seconds: 300
-    })
-  });
-
-  const linkJson = await linkRes.json();
-  document.getElementById('linkOutput').textContent =
-    JSON.stringify(linkJson, null, 2);
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    
+    if (res.ok) {
+      isLoggedIn = true;
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('appScreen').classList.remove('hidden');
+      loadMetrics();
+      loadFiles();
+    } else {
+      showAlert(loginAlert, 'Invalid username or password', 'error');
+    }
+  } catch (err) {
+    showAlert(loginAlert, 'Connection error. Please try again.', 'error');
+  }
 }
-</script>
+
+// Handle file selection
+function handleFileSelect(event) {
+  selectedFile = event.target.files[0];
+  if (selectedFile) {
+    displayFileInfo(selectedFile);
+    uploadFile();
+  }
+}
+
+// Display selected file info
+function displayFileInfo(file) {
+  const fileInfo = document.getElementById('fileInfo');
+  const fileName = document.getElementById('fileName');
+  const fileSize = document.getElementById('fileSize');
+
+  fileName.textContent = file.name;
+  fileSize.textContent = formatFileSize(file.size);
+  fileInfo.classList.add('show');
+  
+  // Hide previous link if any
+  document.getElementById('linkContainer').classList.remove('show');
+}
+
+// Upload file
+async function uploadFile() {
+  if (!selectedFile) return;
+
+  const progressContainer = document.getElementById('progressContainer');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const uploadAlert = document.getElementById('uploadAlert');
+  
+  try {
+    // Show progress
+    progressContainer.classList.add('show');
+    progressFill.style.width = '30%';
+    progressText.textContent = 'Creating file record...';
+
+    // Step 1: Create file metadata
+    const metaRes = await fetch('/files', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        orig_name: selectedFile.name,
+        content_type: selectedFile.type || 'application/octet-stream',
+        size_bytes: selectedFile.size
+      })
+    });
+
+    if (!metaRes.ok) {
+      throw new Error('Failed to create file record');
+    }
+
+    const meta = await metaRes.json();
+    
+    progressFill.style.width = '50%';
+    progressText.textContent = 'Uploading file...';
+
+    // Step 2: Upload file with real progress tracking
+    const fd = new FormData();
+    fd.append('file', selectedFile);
+
+    const upRes = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 30) + 50; // 50% to 80%
+          progressFill.style.width = percentComplete + '%';
+          const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(1);
+          const mbTotal = (e.total / (1024 * 1024)).toFixed(1);
+          progressText.textContent = `Uploading... ${mbLoaded}MB / ${mbTotal}MB (${Math.round((e.loaded / e.total) * 100)}%)`;
+        }
+      });
+      
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve({ ok: true });
+        } else {
+          reject(new Error('Upload failed'));
+        }
+      });
+      
+      xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+      xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
+      
+      xhr.open('POST', '/upload?id=' + meta.id);
+      xhr.send(fd);
+    });
+
+    if (!upRes.ok) {
+      throw new Error('Failed to upload file');
+    }
+
+    progressFill.style.width = '80%';
+    progressText.textContent = 'Generating download link...';
+
+    // Step 3: Create download link
+    const linkRes = await fetch('/links', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        id: meta.id,
+        ttl_seconds: 300
+      })
+    });
+
+    if (!linkRes.ok) {
+      throw new Error('Failed to create download link');
+    }
+
+    const linkJson = await linkRes.json();
+
+    progressFill.style.width = '100%';
+    progressText.textContent = 'Complete!';
+
+    // Show download link
+    setTimeout(() => {
+      progressContainer.classList.remove('show');
+      displayDownloadLink(linkJson.url, linkJson.expires_at);
+      
+      // Reload metrics and files
+      loadMetrics();
+      loadFiles();
+    }, 500);
+
+  } catch (err) {
+    progressContainer.classList.remove('show');
+    showAlert(uploadAlert, 'Upload failed: ' + err.message, 'error');
+  }
+}
+
+// Display download link
+function displayDownloadLink(url, expiresAt) {
+  const linkContainer = document.getElementById('linkContainer');
+  const downloadLink = document.getElementById('downloadLink');
+  const linkExpires = document.getElementById('linkExpires');
+
+  downloadLink.value = url;
+  linkExpires.textContent = `Expires: ${new Date(expiresAt).toLocaleString()}`;
+  linkContainer.classList.add('show');
+}
+
+// Copy link to clipboard
+function copyLink() {
+  const downloadLink = document.getElementById('downloadLink');
+  downloadLink.select();
+  document.execCommand('copy');
+  
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = '✓ Copied!';
+  setTimeout(() => {
+    btn.textContent = originalText;
+  }, 2000);
+}
+
+// Drag and drop handlers
+const uploadArea = document.getElementById('uploadArea');
+
+uploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    selectedFile = files[0];
+    document.getElementById('fileInput').files = files;
+    displayFileInfo(selectedFile);
+    uploadFile();
+  }
+});
+
+// Load metrics
+async function loadMetrics() {
+  try {
+    const res = await fetch('/metrics');
+    if (!res.ok) return;
+    
+    const metrics = await res.json();
+    
+    const html = `
+      <div class="stat-card">
+        <div class="stat-value">${metrics.total_uploads || 0}</div>
+        <div class="stat-label">Total Uploads</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.total_downloads || 0}</div>
+        <div class="stat-label">Total Downloads</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.successful_auths || 0}</div>
+        <div class="stat-label">Successful Logins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.failed_auths || 0}</div>
+        <div class="stat-label">Failed Logins</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.files_ready || 0}</div>
+        <div class="stat-label">Files Ready</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.files_pending || 0}</div>
+        <div class="stat-label">Files Pending</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.files_failed || 0}</div>
+        <div class="stat-label">Files Failed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.total_requests || 0}</div>
+        <div class="stat-label">Total Requests</div>
+      </div>
+    `;
+    
+    document.getElementById('metricsOutput').innerHTML = html;
+  } catch (err) {
+    console.error('Failed to load metrics:', err);
+  }
+}
+
+// Load files
+async function loadFiles() {
+  try {
+    const res = await fetch('/admin/files');
+    if (!res.ok) return;
+    
+    const files = await res.json();
+    
+    if (!files || files.length === 0) {
+      document.getElementById('filesOutput').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No files found</p>';
+      return;
+    }
+
+    let html = '<table><thead><tr>';
+    html += '<th>Original Name</th><th>Status</th><th>Size</th>';
+    html += '<th>Created</th><th>Actions</th>';
+    html += '</tr></thead><tbody>';
+
+    files.forEach(f => {
+      html += '<tr>';
+      html += `<td><strong>${escapeHtml(f.orig_name)}</strong></td>`;
+      html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
+      html += `<td>${formatFileSize(f.size_bytes)}</td>`;
+      html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
+      html += `<td><button class="btn btn-danger" onclick="deleteFile('${f.id}')">Delete</button></td>`;
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('filesOutput').innerHTML = html;
+  } catch (err) {
+    console.error('Failed to load files:', err);
+  }
+}
+
+// Delete file
+async function deleteFile(id) {
+  if (!confirm(`Delete file ${id}?`)) return;
+  
+  try {
+    const res = await fetch(`/admin/files/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      loadFiles();
+      loadMetrics();
+    } else {
+      alert('Failed to delete file');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// Manual cleanup
+async function manualCleanup() {
+  if (!confirm('Run cleanup job to delete old pending/failed files?')) return;
+  
+  try {
+    const res = await fetch('/admin/cleanup', { method: 'POST' });
+    if (res.ok) {
+      const result = await res.json();
+      alert(`Cleanup complete. Deleted ${result.deleted_count || 0} files.`);
+      loadFiles();
+      loadMetrics();
+    } else {
+      alert('Cleanup failed');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+// Utility functions
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function showAlert(container, message, type) {
+  const alertClass = type === 'error' ? 'alert-error' : type === 'success' ? 'alert-success' : 'alert-info';
+  container.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+  setTimeout(() => {
+    container.innerHTML = '';
+  }, 5000);
+}
+
+// Allow Enter key to submit login
+function setupEventListeners() {
+  document.getElementById('password').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      login();
+    }
+  });
+
+  // Set up register form listener
+  const regPasswordConfirm = document.getElementById('regPasswordConfirm');
+  if (regPasswordConfirm) {
+    regPasswordConfirm.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        register();
+      }
+    });
+  }
+}
+
+// Call setup when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupEventListeners);
+} else {
+  setupEventListeners();
+}
+
+// Toggle between login and register forms
+function showRegisterForm() {
+  document.getElementById('loginForm').classList.add('hidden');
+  document.getElementById('registerForm').classList.remove('hidden');
+  document.getElementById('regEmail').value = '';
+  document.getElementById('regUsername').value = '';
+  document.getElementById('regPassword').value = '';
+  document.getElementById('regPasswordConfirm').value = '';
+  document.getElementById('registerAlert').innerHTML = '';
+}
+
+function showLoginForm() {
+  document.getElementById('registerForm').classList.add('hidden');
+  document.getElementById('loginForm').classList.remove('hidden');
+  document.getElementById('loginAlert').innerHTML = '';
+}
+
+// Register new user
+async function register() {
+  const email = document.getElementById('regEmail').value.trim();
+  const username = document.getElementById('regUsername').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+  const registerAlert = document.getElementById('registerAlert');
+
+  registerAlert.innerHTML = '';
+
+  // Validation
+  if (!email || !username || !password || !passwordConfirm) {
+    showAlert(registerAlert, 'Please fill in all fields', 'error');
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showAlert(registerAlert, 'Please enter a valid email address', 'error');
+    return;
+  }
+
+  if (username.length < 3 || username.length > 50) {
+    showAlert(registerAlert, 'Username must be 3-50 characters', 'error');
+    return;
+  }
+
+  const usernameRegex = /^[a-zA-Z0-9_]+$/;
+  if (!usernameRegex.test(username)) {
+    showAlert(registerAlert, 'Username can only contain letters, numbers, and underscores', 'error');
+    return;
+  }
+
+  if (password.length < 8) {
+    showAlert(registerAlert, 'Password must be at least 8 characters', 'error');
+    return;
+  }
+
+  const hasLetter = /[a-zA-Z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  if (!hasLetter || !hasNumber) {
+    showAlert(registerAlert, 'Password must contain both letters and numbers', 'error');
+    return;
+  }
+
+  if (password !== passwordConfirm) {
+    showAlert(registerAlert, 'Passwords do not match', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch('/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, username, password })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      showAlert(registerAlert, data.error || 'Registration failed', 'error');
+      return;
+    }
+
+    showAlert(registerAlert, 'Account created successfully! Please sign in.', 'success');
+    
+    // Switch to login form after 2 seconds
+    setTimeout(() => {
+      document.getElementById('username').value = username;
+      showLoginForm();
+    }, 2000);
+
+  } catch (err) {
+    showAlert(registerAlert, 'Registration failed: ' + err.message, 'error');
+  }
+}</script>
 </body>
 </html>

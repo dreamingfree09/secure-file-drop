@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -14,12 +15,17 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
+// uploadResp is the JSON response returned after a successful file upload.
+// It contains the file ID, the MinIO object key, and the updated status.
 type uploadResp struct {
 	ID        string `json:"id"`
 	ObjectKey string `json:"object_key"`
 	Status    string `json:"status"`
 }
 
+// maxUploadBytes reads the SFD_MAX_UPLOAD_BYTES environment variable and
+// returns the maximum allowed upload size in bytes. Returns 0 if not set
+// (meaning no limit). Returns an error if the value cannot be parsed.
 func maxUploadBytes() (int64, error) {
 	raw := os.Getenv("SFD_MAX_UPLOAD_BYTES")
 	if raw == "" {
@@ -28,8 +34,17 @@ func maxUploadBytes() (int64, error) {
 	return strconv.ParseInt(raw, 10, 64)
 }
 
+// uploadHandler handles POST /upload?id={uuid} requests for streaming file uploads to MinIO.
+// It validates the file ID exists in the database with status "pending", reads the multipart
+// form data, streams it directly to MinIO, then updates the database status to "stored".
+// After storage, it triggers asynchronous hashing of the file via the native C utility.
+//
+// Required query parameter: id (UUID of file record created via /files)
+// Required form field: file (the binary file data)
+// Authentication: Required (checked by requireAuth middleware)
 func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) http.Handler {
 	return cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Only accept POST requests
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -94,7 +109,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 				http.Error(w, "bad multipart", http.StatusBadRequest)
 				return
 			}
-			defer part.Close()
+			defer func() { _ = part.Close() }()
 
 			if part.FormName() != "file" {
 				continue
@@ -122,10 +137,14 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			minio.PutObjectOptions{ContentType: contentType},
 		)
 		if err != nil {
+			// Mark the file as failed in case of storage errors.
 			_, _ = db.Exec(
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'pending'`,
 				id,
 			)
+
+			rid := RequestIDFromContext(r.Context())
+			log.Printf("rid=%s msg=putobject err=%v", rid, err)
 
 			// If MaxBytesReader tripped, surface 413.
 			if r.Body != nil {
@@ -148,24 +167,27 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
-		shaHex, shaBytes, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
+		shaHex, _, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
 		if herr != nil {
 			_, _ = db.Exec(
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'stored'`,
 				id,
 			)
+			rid := RequestIDFromContext(r.Context())
+			log.Printf("rid=%s msg=hashing_failed err=%v", rid, herr)
 			http.Error(w, "hashing failed", http.StatusBadGateway)
 			return
 		}
 
 		_, err = db.Exec(
-			`UPDATE files SET sha256_hex = $2, sha256_bytes = $3, hashed_bytes = $4, status = 'hashed' WHERE id = $1 AND status = 'stored'`,
+			`UPDATE files SET sha256_hex = $2, sha256_bytes = $3, status = 'hashed' WHERE id = $1 AND status = 'stored'`,
 			id,
 			shaHex,
-			shaBytes,
 			hashBytes,
 		)
 		if err != nil {
+			rid := RequestIDFromContext(r.Context())
+			log.Printf("rid=%s msg=db_update_hash err=%v", rid, err)
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}

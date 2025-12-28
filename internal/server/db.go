@@ -6,6 +6,8 @@ import (
 	"errors"
 	"time"
 
+	// Register the pgx driver with database/sql. The blank import ensures the
+	// driver initialization runs when the package is used.
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 

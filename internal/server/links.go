@@ -11,16 +11,24 @@ import (
 	"github.com/google/uuid"
 )
 
+// createLinkReq represents the JSON payload for creating a signed download link.
+// Requires the file ID (UUID) and desired TTL (time to live) in seconds.
 type createLinkReq struct {
 	ID         string `json:"id"`
 	TTLSeconds int    `json:"ttl_seconds"`
 }
 
+// createLinkResp is the JSON response containing the signed download URL
+// and its expiration timestamp (RFC3339 format).
 type createLinkResp struct {
 	URL       string `json:"url"`
 	ExpiresAt string `json:"expires_at"`
 }
 
+// clampTTLSeconds enforces TTL constraints for download links.
+// Default: 5 minutes (300 seconds) if omitted or invalid.
+// Minimum: 60 seconds, Maximum: 24 hours (86400 seconds).
+// This prevents both too-short and effectively-permanent links.
 func clampTTLSeconds(n int) int {
 	// MVP defaults: safe and simple.
 	// If omitted/invalid, default to 5 minutes.

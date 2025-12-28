@@ -153,3 +153,117 @@ Outcome:
 The application is now safe to expose behind a reverse proxy, with critical edge protections validated via real requests rather than configuration inspection alone.
 
 Changes implemented and committed as 1a96baf.
+---
+
+## 2025-12-28 – Modern UI Redesign (WeTransfer-inspired)
+
+Context:
+After completing the core backend functionality, the next step was to improve the user experience with a modern, professional interface inspired by WeTransfer's clean design.
+
+Observed behaviour:
+The frontend was functional but minimal. The new design features animated gradients, drag-and-drop upload, progress bars with shimmer effects, and responsive mobile layout.
+
+Expected behaviour:
+Users should experience a visually appealing, modern interface with smooth animations, clear visual feedback during uploads, and easy-to-use file sharing.
+
+Resolution:
+- Redesigned the entire UI with animated gradient background (purple/pink theme)
+- Integrated Inter font from Google Fonts for professional typography
+- Implemented drag-and-drop file upload with visual feedback
+- Added progress bars with shimmer animations during upload
+- Created modern card-based layout with rounded corners and shadows
+- Added one-click copy-to-clipboard functionality for download links
+- Implemented responsive design for mobile devices
+- Styled admin dashboard with metrics grid and file management table
+- Used CSS custom properties for consistent theming
+- Added smooth transitions and hover effects throughout
+
+Validation:
+- UI loads with animated gradient background
+- Drag-and-drop upload works seamlessly
+- Progress indicators show clear upload status
+- Download links can be copied with single click
+- Admin dashboard displays metrics in clean grid layout
+- Mobile layout adapts properly to smaller screens
+
+Outcome:
+The application now has a modern, professional interface that significantly improves user experience while maintaining all existing functionality.
+
+---
+
+## 2025-12-28 – User Registration System
+
+Context:
+With the modern UI in place, the next objective was to expand from single-admin authentication to support multiple users with individual accounts and secure password storage.
+
+Observed behaviour:
+Previously, only a single admin account existed (via environment variables). The new system allows users to register accounts with email/username/password, stored securely in the database.
+
+Expected behaviour:
+Users should be able to register new accounts through the UI, with comprehensive validation and secure password hashing. Authentication should support both new database users and legacy admin credentials.
+
+Resolution:
+- Created database migration (000003_add_users_table) with users table:
+  - UUID primary key for user IDs
+  - Unique email and username constraints
+  - bcrypt password hashing (cost factor 12)
+  - Timestamps for created_at and updated_at
+  - Indexes on email and username for performance
+- Added user_id foreign key to files table for user association
+- Implemented comprehensive server-side validation:
+  - Email: RFC-compliant regex pattern validation
+  - Username: 3-50 characters, alphanumeric + underscore only
+  - Password: minimum 8 characters, must contain letters AND numbers
+- Created POST /register endpoint with validation and bcrypt hashing
+- Updated authentication to support both database users and legacy admin (backward compatible)
+- Designed registration form UI matching modern aesthetic:
+  - Toggle between login and registration screens
+  - Client-side validation with helpful error messages
+  - Password confirmation field
+  - Success message with auto-redirect to login
+- Added bcrypt dependency (golang.org/x/crypto/bcrypt)
+
+Validation:
+- Registration form validates all inputs client-side before submission
+- Server enforces email format, username constraints, and password strength
+- Passwords are hashed with bcrypt before database storage (never stored plaintext)
+- Duplicate email or username returns appropriate error
+- Successful registration creates user and redirects to login
+- Database authentication works alongside legacy admin credentials
+- UI seamlessly toggles between login and registration forms
+
+Outcome:
+The application now supports multi-user registration with industry-standard security practices, while maintaining backward compatibility with existing admin authentication.
+
+---
+
+## 2025-12-28 – Large File Support and Real-time Upload Progress
+
+Context:
+With the core functionality complete, the next objective was to support large file transfers (up to 50GB) and provide users with real-time feedback during uploads.
+
+Observed behaviour:
+Previously, the upload limit was set to 10MB and the UI used a simple fetch API with staged progress indicators (30%, 50%, 80%). Users had no visibility into actual upload progress for large files.
+
+Expected behaviour:
+The system should support files up to 50GB with real-time upload progress showing exact bytes transferred and percentage complete. Downloads should include proper headers for browser progress tracking.
+
+Resolution:
+- Increased SFD_MAX_UPLOAD_BYTES from 10MB to 50GB (53,687,091,200 bytes)
+- Replaced fetch API with XMLHttpRequest to access upload progress events
+- Implemented real-time progress tracking:
+  - Shows exact megabytes transferred (e.g., "Uploading... 245.3MB / 512.0MB (48%)")
+  - Progress bar updates dynamically from 50% to 80% based on actual upload progress
+  - Calculates and displays percentage complete
+- Extended download timeout from 5 minutes to 30 minutes for large files
+- Content-Length headers enable native browser download progress
+- Updated documentation (FRONTEND.md, API.md, USAGE.md) to reflect changes
+
+Validation:
+- Upload progress shows real-time MB transferred and percentage
+- Large files up to 50GB can be uploaded (configurable)
+- Download timeout accommodates 30-minute transfers
+- Browser download UI shows progress natively
+
+Outcome:
+The application now supports enterprise-scale file transfers with professional progress tracking, providing users with clear visibility into upload and download status.
