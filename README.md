@@ -7,12 +7,15 @@ Secure File Drop is a lightweight, self-hosted service for authenticated file up
 
 ## Quick summary
 
-- Modern, WeTransfer-inspired UI with animated gradients and drag-and-drop file upload
-- User registration system with secure bcrypt password hashing
-- Users authenticate via username/password (session cookie) to upload files
-- Files are stored privately in S3-compatible object storage (MinIO)
-- The server verifies integrity using a native C hashing utility and stores SHA-256 metadata
-- Download links are signed and time-limited
+- **Modern UI**: WeTransfer-inspired interface with drag-and-drop, file type icons, and QR codes
+- **User System**: Secure registration with email verification and password reset
+- **File Management**: Multi-file uploads with progress tracking and auto-expiration
+- **Secure Downloads**: Signed, time-limited links with optional password protection
+- **Admin Dashboard**: System metrics, file search/filtering, and manual cleanup
+- **Storage Quotas**: Per-user storage limits with real-time usage tracking
+- **Email Notifications**: SMTP support for upload, download, and deletion alerts
+- **Rate Limiting**: 100 requests/minute per IP with token bucket algorithm
+- **Health Monitoring**: Comprehensive health checks and request logging
 
 ## Table of contents
 
@@ -29,7 +32,25 @@ Secure File Drop is a lightweight, self-hosted service for authenticated file up
 [![CI](https://github.com/dreamingfree09/secure-file-drop/actions/workflows/ci.yml/badge.svg)](https://github.com/dreamingfree09/secure-file-drop/actions)
 [![Coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)](https://codecov.io/gh/dreamingfree09/secure-file-drop)
 
-This repository contains an MVP-ready backend written in Go, a small web UI, a C-based hashing utility in `native/`, and deployment infrastructure using Docker Compose.
+This repository contains a production-ready file sharing service with 20+ features:
+
+**Core Features:**
+- Multi-file upload with drag & drop
+- Email verification and password reset
+- Password-protected downloads
+- File expiration and auto-delete
+- QR code generation for download links
+- Real-time upload progress tracking
+
+**Advanced Features:**
+- User storage quotas (configurable)
+- Download statistics and tracking
+- File search and filtering
+- Email notifications (upload, download, deletion)
+- Rate limiting (100 req/min per IP)
+- Comprehensive API documentation
+
+Built with Go, PostgreSQL, MinIO, and deployed via Docker Compose.
 
 ## Technology
 
@@ -68,25 +89,41 @@ This repository contains an MVP-ready backend written in Go, a small web UI, a C
 ## Usage (overview)
 
 ### Authentication & Upload Flow
-- Register: POST /register with JSON {"email":"...","username":"...","password":"..."}
-- Authenticate: POST /login with JSON {"username":"...","password":"..."}
-- Create file metadata: POST /files (JSON with orig_name, content_type, size_bytes)
-- Upload: POST /upload?id=<file-id> as multipart form field `file`
-- Create link: POST /links with JSON {"id": "<file-id>", "ttl_seconds": 300}
-- Download: GET /download?token=<signed-token>
+- **Register**: POST /register with email verification
+- **Verify Email**: GET /verify?token={token}
+- **Login**: POST /login (session cookie authentication)
+- **Reset Password**: POST /reset-password-request and POST /reset-password
+- **Check Quota**: GET /quota (storage usage and limits)
+- **Create File**: POST /files (multi-file support with TTL)
+- **Upload**: POST /upload?id={file-id} (with progress tracking)
+- **Create Link**: POST /links (with password and expiration options)
+- **Download**: GET /download?token={signed-token}&password={optional}
+
+### User Features
+- **Drag & Drop Upload**: Multiple files with queue processing
+- **File Type Icons**: Visual file type identification
+- **QR Code Links**: Generate QR codes for easy mobile sharing
+- **Upload History**: View all uploaded files with download stats
+- **Storage Quota**: Real-time usage tracking (10GB default)
+- **File Search**: Filter files by name and status
+- **Email Alerts**: Notifications for uploads, downloads, and deletions
 
 ### Admin Dashboard
-After logging in, the web UI provides an admin dashboard with:
-- **System Metrics**: View upload/download counts, authentication stats, and file lifecycle metrics
-- **File Management**: Browse all files with status, size, hash, and creation timestamps
-- **Manual Cleanup**: Trigger immediate cleanup of old pending/failed files
-- **File Deletion**: Delete individual files from both storage and database
+After logging in with admin credentials, access powerful management features:
+- **System Metrics**: Real-time stats for uploads, downloads, storage, and authentication
+- **File Management**: Browse all files with status, size, hash, download counts, and timestamps
+- **File Search**: Filter by filename and status (pending, stored, hashed, failed)
+- **Storage Monitoring**: Track total storage usage across all users
+- **Manual Cleanup**: Trigger immediate cleanup of expired and failed files
+- **File Deletion**: Remove individual files with automatic email notifications
+- **Health Checks**: Monitor database and storage health
 
 Admin endpoints (require authentication):
-- GET /admin/files - List all files
-- DELETE /admin/files/{id} - Delete specific file
+- GET /admin/files - List all files with full metadata
+- DELETE /admin/files/{id} - Delete file and notify owner
 - POST /admin/cleanup - Run manual cleanup job
-- GET /metrics - View system metrics (JSON)
+- GET /metrics - System-wide usage statistics
+- GET /quota - User storage quota information
 
 ### Background Jobs
 The server runs an automated cleanup job (configurable via environment):
@@ -94,11 +131,19 @@ The server runs an automated cleanup job (configurable via environment):
 - `SFD_CLEANUP_INTERVAL=1h` - How often to run (default: 1 hour)
 - `SFD_CLEANUP_MAX_AGE=24h` - Delete files older than this in pending/failed states (default: 24 hours)
 
-Refer to `docs/USAGE.md` and `docs/API.md` for detailed examples and request/response samples.
+Refer to `docs/API.md` for comprehensive API documentation with request/response examples, `docs/EMAIL_NOTIFICATIONS.md` for SMTP configuration, and `docs/USAGE.md` for detailed usage guides.
 
 ## Documentation
 
-Primary docs live in `docs/` — see `docs/SPEC.md` for the MVP specification and `docs/ARCHITECTURE.md` for component-level notes.
+Comprehensive documentation is available in `docs/`:
+
+- **[API.md](docs/API.md)**: Complete API reference with 25+ endpoints
+- **[EMAIL_NOTIFICATIONS.md](docs/EMAIL_NOTIFICATIONS.md)**: SMTP setup and email templates
+- **[SPEC.md](docs/SPEC.md)**: Original MVP specification
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**: System architecture and components
+- **[USAGE.md](docs/USAGE.md)**: Detailed usage examples
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**: Production deployment guide
+- **[DB_SCHEMA.md](docs/DB_SCHEMA.md)**: Database schema and migrations
 
 ## Contributing
 
