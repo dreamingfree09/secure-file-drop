@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     * {
       margin: 0;
@@ -620,6 +621,86 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* QR Code Modal */
+    .qr-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .qr-modal.show {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .qr-modal-content {
+      background: var(--bg-white);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: var(--shadow-xl);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      animation: fadeInUp 0.3s ease-out;
+    }
+
+    .qr-modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+
+    .qr-modal-subtitle {
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+
+    .qr-code-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+      padding: 20px;
+      background: var(--bg-light);
+      border-radius: 12px;
+    }
+
+    .qr-modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .qr-modal-actions button {
+      flex: 1;
+    }
+
+    .btn-qr {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-left: 8px;
+    }
+
+    .btn-qr:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -742,6 +823,7 @@
             <div class="link-box">
               <input type="text" class="link-input" id="downloadLink" readonly>
               <button class="btn-copy" onclick="copyLink()">Copy Link</button>
+              <button class="btn-qr" onclick="showQRCode()">QR Code</button>
             </div>
             <div class="link-expires" id="linkExpires"></div>
           </div>
@@ -776,6 +858,19 @@
           <div class="section-title">Recent Files</div>
           <div id="filesOutput"></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div id="qrModal" class="qr-modal" onclick="closeQRModal()">
+    <div class="qr-modal-content" onclick="event.stopPropagation()">
+      <div class="qr-modal-title">📱 Download QR Code</div>
+      <div class="qr-modal-subtitle">Scan with your phone to download the file</div>
+      <div class="qr-code-container" id="qrCodeContainer"></div>
+      <div class="qr-modal-actions">
+        <button class="btn btn-primary" onclick="downloadQRCode()">Download QR</button>
+        <button class="btn btn-secondary" onclick="closeQRModal()">Close</button>
       </div>
     </div>
   </div>
@@ -1496,6 +1591,45 @@ async function register() {
   } catch (err) {
     showAlert(registerAlert, 'Registration failed: ' + err.message, 'error');
   }
+}
+
+// QR Code functionality
+function showQRCode() {
+  const downloadLink = document.getElementById('downloadLink').value;
+  if (!downloadLink) return;
+  
+  const modal = document.getElementById('qrModal');
+  const qrContainer = document.getElementById('qrCodeContainer');
+  
+  // Clear previous QR code
+  qrContainer.innerHTML = '';
+  
+  // Generate new QR code
+  new QRCode(qrContainer, {
+    text: downloadLink,
+    width: 256,
+    height: 256,
+    colorDark: '#1f2937',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+  
+  modal.classList.add('show');
+}
+
+function closeQRModal() {
+  const modal = document.getElementById('qrModal');
+  modal.classList.remove('show');
+}
+
+function downloadQRCode() {
+  const canvas = document.querySelector('#qrCodeContainer canvas');
+  if (!canvas) return;
+  
+  const link = document.createElement('a');
+  link.download = 'download-qr-code.png';
+  link.href = canvas.toDataURL();
+  link.click();
 }</script>
 </body>
 </html>
