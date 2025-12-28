@@ -97,13 +97,15 @@ func generateVerificationToken() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-// sendVerificationEmail sends an email with verification link (stubbed for MVP)
-func sendVerificationEmail(email, token string) error {
-	// TODO: Implement actual email sending with SMTP
-	// For MVP, just log the verification link
-	log.Printf("EMAIL VERIFICATION: Send to %s - Token: %s", email, token)
-	log.Printf("Verification URL: http://localhost:8080/verify?token=%s", token)
-	return nil
+// sendVerificationEmail sends an email with verification link
+func sendVerificationEmail(emailSvc *EmailService, baseURL, email, token string) error {
+	if emailSvc == nil {
+		// Fallback to logging if no email service
+		log.Printf("EMAIL VERIFICATION: Send to %s - Token: %s", email, token)
+		log.Printf("Verification URL: %s/verify?token=%s", baseURL, token)
+		return nil
+	}
+	return emailSvc.SendVerificationEmail(email, token, baseURL)
 }
 
 // generateResetToken creates a random hex token for password reset
@@ -115,13 +117,15 @@ func generateResetToken() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-// sendPasswordResetEmail sends an email with password reset link (stubbed for MVP)
-func sendPasswordResetEmail(email, token string) error {
-	// TODO: Implement actual email sending with SMTP
-	// For MVP, just log the reset link
-	log.Printf("PASSWORD RESET: Send to %s - Token: %s", email, token)
-	log.Printf("Reset URL: http://localhost:8080/reset-password?token=%s", token)
-	return nil
+// sendPasswordResetEmail sends an email with password reset link
+func sendPasswordResetEmail(emailSvc *EmailService, baseURL, email, token string) error {
+	if emailSvc == nil {
+		// Fallback to logging if no email service
+		log.Printf("PASSWORD RESET: Send to %s - Token: %s", email, token)
+		log.Printf("Reset URL: %s/reset-password?token=%s", baseURL, token)
+		return nil
+	}
+	return emailSvc.SendPasswordResetEmail(email, token, baseURL)
 }
 
 // RegisterHandler handles POST /register requests for user registration
@@ -205,7 +209,7 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send verification email
-	if err := sendVerificationEmail(req.Email, verificationToken); err != nil {
+	if err := sendVerificationEmail(cfg.EmailSvc, cfg.BaseURL, req.Email, verificationToken); err != nil {
 		log.Printf("register: email send failed: %v", err)
 		// Don't fail registration if email fails - user is already created
 	}
@@ -342,7 +346,7 @@ func (cfg Config) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// Send reset email
-	if err := sendPasswordResetEmail(req.Email, resetToken); err != nil {
+	if err := sendPasswordResetEmail(cfg.EmailSvc, cfg.BaseURL, req.Email, resetToken); err != nil {
 		log.Printf("reset-request: email send failed: %v", err)
 	}
 

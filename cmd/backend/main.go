@@ -55,11 +55,20 @@ func main() {
 	// Add database to auth config for user authentication
 	auth.DB = dbConn
 
+	// Load email configuration
+	emailCfg := server.LoadEmailConfig()
+	emailSvc := server.NewEmailService(emailCfg)
+
+	// Get base URL for email links
+	baseURL := getenvDefault("SFD_BASE_URL", "http://localhost:8080")
+
 	srv := server.New(server.Config{
-		Addr:  addr,
-		Build: build,
-		Auth:  auth,
-		DB:    dbConn,
+		Addr:     addr,
+		Build:    build,
+		Auth:     auth,
+		DB:       dbConn,
+		EmailSvc: emailSvc,
+		BaseURL:  baseURL,
 	})
 
 	// Start the HTTP server in a background goroutine.

@@ -25,10 +25,12 @@ type BuildInfo struct {
 // Addr is the listen address (e.g. ":8080"). Auth and DB are required
 // for production use; other values are validated during startup.
 type Config struct {
-	Addr  string // e.g. ":8080"
-	Build BuildInfo
-	Auth  AuthConfig
-	DB    *sql.DB
+	Addr     string // e.g. ":8080"
+	Build    BuildInfo
+	Auth     AuthConfig
+	DB       *sql.DB
+	EmailSvc *EmailService
+	BaseURL  string // Base URL for email links (e.g. "http://localhost:8080")
 }
 
 // Server is the application HTTP server with its dependencies.
@@ -42,6 +44,7 @@ type Server struct {
 	bucket      string
 	cleanupDone chan struct{}
 	authCfg     AuthConfig // Store auth config for getCurrentUser
+	emailSvc    *EmailService
 }
 
 // New constructs and returns an initialized Server wiring handlers and
@@ -49,6 +52,17 @@ type Server struct {
 // are missing, to avoid running in a half-configured state.
 func New(cfg Config) *Server {
 	mux := http.NewServeMux()
+
+	// Initialize email service if not provided
+	if cfg.EmailSvc == nil {
+		emailCfg := LoadEmailConfig()
+		cfg.EmailSvc = NewEmailService(emailCfg)
+	}
+
+	// Set default base URL if not provided
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = "http://localhost:8080"
+	}
 
 	// Minimal web UI (Milestone 7)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -264,6 +278,7 @@ func New(cfg Config) *Server {
 		bucket:      bucket,
 		cleanupDone: make(chan struct{}),
 		authCfg:     cfg.Auth,
+		emailSvc:    cfg.EmailSvc,
 	}
 
 	// Admin endpoints (protected) - registered after Server creation

@@ -140,9 +140,14 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	fileID := parts[0]
 
-	// Get file info before deletion (for MinIO cleanup)
-	var status string
-	err := s.db.QueryRow("SELECT status FROM files WHERE id = $1", fileID).Scan(&status)
+	// Get file info before deletion (for MinIO cleanup and notification)
+	var status, origName, createdBy, userEmail string
+	err := s.db.QueryRow(`
+		SELECT f.status, f.orig_name, f.created_by, u.email
+		FROM files f
+		JOIN users u ON u.username = f.created_by
+		WHERE f.id = $1
+	`, fileID).Scan(&status, &origName, &createdBy, &userEmail)
 	if err != nil {
 		log.Printf("admin delete file: query failed: %v", err)
 		http.Error(w, "File not found", http.StatusNotFound)
@@ -179,6 +184,14 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	log.Printf("admin delete file: deleted file %s", fileID)
+
+	// Send deletion notification (fire and forget)
+	go func() {
+		if s.emailSvc != nil {
+			_ = s.emailSvc.SendFileDeletedNotification(userEmail, origName, "manual deletion by admin")
+		}
+	}()
+
 	w.WriteHeader(http.StatusNoContent)
 }
 

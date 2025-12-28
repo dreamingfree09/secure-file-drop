@@ -109,14 +109,29 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 
 		_, _ = io.Copy(w, obj)
 
-		// Track download statistics (fire and forget)
+		// Track download statistics and send notification (fire and forget)
 		go func() {
+			// Update download count
 			_, _ = db.Exec(`
 				UPDATE files 
 				SET download_count = download_count + 1,
 				    last_downloaded_at = NOW()
 				WHERE id = $1
 			`, claims.FileID)
+
+			// Send download notification to file owner
+			var userEmail string
+			err := db.QueryRow(`
+				SELECT u.email
+				FROM files f
+				JOIN users u ON u.username = f.created_by
+				WHERE f.id = $1
+			`, claims.FileID).Scan(&userEmail)
+
+			if err == nil && cfg.EmailSvc != nil {
+				downloaderIP := getClientIP(r)
+				_ = cfg.EmailSvc.SendFileDownloadNotification(userEmail, origName, downloaderIP)
+			}
 		}()
 	})
 }

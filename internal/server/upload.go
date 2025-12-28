@@ -192,6 +192,21 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
+		// Send upload complete notification asynchronously
+		go func() {
+			var userEmail, fileName string
+			err := db.QueryRow(`
+				SELECT u.email, f.orig_name
+				FROM files f
+				JOIN users u ON u.username = f.created_by
+				WHERE f.id = $1
+			`, id).Scan(&userEmail, &fileName)
+
+			if err == nil && cfg.EmailSvc != nil {
+				_ = cfg.EmailSvc.SendFileUploadNotification(userEmail, fileName, id.String(), cfg.BaseURL)
+			}
+		}()
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(uploadResp{
