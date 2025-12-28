@@ -708,6 +708,7 @@
     <div class="logo">🔒 Secure File Drop</div>
     <div class="tagline">Share files securely with time-limited download links</div>
     <div class="subtitle">End-to-end encrypted transfers with SHA-256 verification</div>
+    <button id="logoutBtn" class="hidden" onclick="logout()" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.9); color: var(--primary); border: 2px solid var(--primary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s ease;" onmouseover="this.style.background='var(--primary)'; this.style.color='white';" onmouseout="this.style.background='rgba(255,255,255,0.9)'; this.style.color='var(--primary)';">Sign Out</button>
   </header>
 
   <div class="container">
@@ -931,6 +932,7 @@ async function login() {
       isLoggedIn = true;
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('appScreen').classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.remove('hidden');
       loadMyFiles();
       loadMetrics();
       loadQuota();
@@ -1685,8 +1687,16 @@ if (document.readyState === 'loading') {
 } else {
   setupEventListeners();
 }
-} else {
-  setupEventListeners();
+
+// Logout function
+function logout() {
+  isLoggedIn = false;
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.add('hidden');
+  document.getElementById('username').value = '';
+  document.getElementById('password').value = '';
+  document.getElementById('loginAlert').innerHTML = '';
 }
 
 // Toggle between login and register forms
