@@ -782,10 +782,10 @@
           <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
             <div class="upload-icon">📁</div>
             <div class="upload-title">Drop your file here</div>
-            <div class="upload-subtitle">or click to browse</div>
-            <button class="btn btn-primary" style="width: auto; margin-top: 20px;">Choose File</button>
+            <div class="upload-subtitle">or click to browse (multiple files supported)</div>
+            <button class="btn btn-primary" style="width: auto; margin-top: 20px;">Choose Files</button>
           </div>
-          <input type="file" id="fileInput" onchange="handleFileSelect(event)">
+          <input type="file" id="fileInput" onchange="handleFileSelect(event)" multiple>
 
           <div class="file-info" id="fileInfo">
             <div class="file-name" id="fileName"></div>
@@ -879,6 +879,8 @@
 let isLoggedIn = false;
 let selectedFile = null;
 let maxUploadBytes = 0; // Will be loaded from server config
+let uploadQueue = [];
+let currentUpload = null;
 
 // Load server configuration on page load
 async function loadConfig() {
@@ -926,22 +928,35 @@ async function login() {
   }
 }
 
-// Handle file selection
+// Handle file selection (supports multiple files)
 function handleFileSelect(event) {
-  selectedFile = event.target.files[0];
-  if (selectedFile) {
-    // Validate file size
-    if (maxUploadBytes > 0 && selectedFile.size > maxUploadBytes) {
+  const files = Array.from(event.target.files);
+  if (files.length === 0) return;
+  
+  // Validate all files
+  const invalidFiles = [];
+  const validFiles = [];
+  
+  for (const file of files) {
+    if (maxUploadBytes > 0 && file.size > maxUploadBytes) {
       const maxMB = (maxUploadBytes / (1024 * 1024)).toFixed(0);
-      const fileMB = (selectedFile.size / (1024 * 1024)).toFixed(1);
-      alert(`File too large! Maximum size is ${maxMB} MB, but your file is ${fileMB} MB.`);
-      document.getElementById('fileInput').value = ''; // Clear selection
-      return;
+      const fileMB = (file.size / (1024 * 1024)).toFixed(1);
+      invalidFiles.push(`${file.name} (${fileMB} MB)`);
+    } else {
+      validFiles.push(file);
     }
-    
-    displayFileInfo(selectedFile);
-    uploadFile();
   }
+  
+  if (invalidFiles.length > 0) {
+    const maxMB = (maxUploadBytes / (1024 * 1024)).toFixed(0);
+    alert(`${invalidFiles.length} file(s) too large (max ${maxMB} MB):\n${invalidFiles.join('\n')}`);
+  }
+  
+  if (validFiles.length > 0) {
+    addFilesToQueue(validFiles);
+  }
+  
+  document.getElementById('fileInput').value = ''; // Clear for next selection
 }
 
 // Initialize drag and drop
@@ -978,22 +993,31 @@ function preventDefaults(e) {
 
 function handleDrop(e) {
   const dt = e.dataTransfer;
-  const files = dt.files;
+  const files = Array.from(dt.files);
   
-  if (files.length > 0) {
-    selectedFile = files[0];
-    
-    // Validate file size
-    if (maxUploadBytes > 0 && selectedFile.size > maxUploadBytes) {
+  if (files.length === 0) return;
+  
+  // Validate all files
+  const invalidFiles = [];
+  const validFiles = [];
+  
+  for (const file of files) {
+    if (maxUploadBytes > 0 && file.size > maxUploadBytes) {
       const maxMB = (maxUploadBytes / (1024 * 1024)).toFixed(0);
-      const fileMB = (selectedFile.size / (1024 * 1024)).toFixed(1);
-      alert(`File too large! Maximum size is ${maxMB} MB, but your file is ${fileMB} MB.`);
-      selectedFile = null;
-      return;
+      const fileMB = (file.size / (1024 * 1024)).toFixed(1);
+      invalidFiles.push(`${file.name} (${fileMB} MB)`);
+    } else {
+      validFiles.push(file);
     }
-    
-    displayFileInfo(selectedFile);
-    uploadFile();
+  }
+  
+  if (invalidFiles.length > 0) {
+    const maxMB = (maxUploadBytes / (1024 * 1024)).toFixed(0);
+    alert(`${invalidFiles.length} file(s) too large (max ${maxMB} MB):\n${invalidFiles.join('\n')}`);
+  }
+  
+  if (validFiles.length > 0) {
+    addFilesToQueue(validFiles);
   }
 }
 
@@ -1010,6 +1034,30 @@ function displayFileInfo(file) {
   
   // Hide previous link if any
   document.getElementById('linkContainer').classList.remove('show');
+}
+
+// Add files to upload queue
+function addFilesToQueue(files) {
+  uploadQueue.push(...files);
+  displayFileInfo(files[0]); // Show first file info
+  processUploadQueue();
+}
+
+// Process upload queue
+async function processUploadQueue() {
+  if (currentUpload || uploadQueue.length === 0) return;
+  
+  currentUpload = uploadQueue.shift();
+  selectedFile = currentUpload;
+  
+  await uploadFile();
+  
+  currentUpload = null;
+  
+  // Continue with next file if any
+  if (uploadQueue.length > 0) {
+    setTimeout(() => processUploadQueue(), 500);
+  }
 }
 
 // Upload file
