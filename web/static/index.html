@@ -854,6 +854,9 @@
 
         <div class="stats-grid" id="metricsOutput"></div>
 
+        <!-- User Quota Display -->
+        <div class="stats-grid" id="quotaOutput"></div>
+
         <div class="files-section">
           <div class="section-title">Recent Files</div>
           <div style="margin-bottom: 20px; display: flex; gap: 10px;">
@@ -930,6 +933,7 @@ async function login() {
       document.getElementById('appScreen').classList.remove('hidden');
       loadMyFiles();
       loadMetrics();
+      loadQuota();
       loadFiles();
     } else {
       showAlert(loginAlert, 'Invalid username or password', 'error');
@@ -1367,6 +1371,56 @@ async function loadMetrics() {
     document.getElementById('metricsOutput').innerHTML = html;
   } catch (err) {
     console.error('Failed to load metrics:', err);
+  }
+}
+
+// Load user quota information
+async function loadQuota() {
+  try {
+    const res = await fetch('/quota');
+    if (!res.ok) return;
+    
+    const quota = await res.json();
+    
+    // Format storage size for display
+    const formatStorage = (bytes) => {
+      if (!bytes) return '0 B';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    };
+    
+    const usedBytes = quota.storage_used_bytes || 0;
+    const quotaBytes = quota.storage_quota_bytes || 0;
+    const percentUsed = quotaBytes > 0 ? ((usedBytes / quotaBytes) * 100).toFixed(1) : 0;
+    
+    // Determine color based on usage
+    let usageColor = 'var(--success)';
+    if (percentUsed >= 90) {
+      usageColor = 'var(--danger)';
+    } else if (percentUsed >= 75) {
+      usageColor = 'var(--warning)';
+    }
+    
+    const html = `
+      <div class="stat-card">
+        <div class="stat-value">${formatStorage(usedBytes)}</div>
+        <div class="stat-label">Storage Used</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${quotaBytes > 0 ? formatStorage(quotaBytes) : 'Unlimited'}</div>
+        <div class="stat-label">Storage Quota</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" style="color: ${usageColor}">${percentUsed}%</div>
+        <div class="stat-label">Quota Used</div>
+      </div>
+    `;
+    
+    document.getElementById('quotaOutput').innerHTML = html;
+  } catch (err) {
+    console.error('Failed to load quota:', err);
   }
 }
 

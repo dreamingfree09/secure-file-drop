@@ -58,6 +58,37 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 			return
 		}
 
+		// Get current user
+		userID, err := cfg.Auth.getCurrentUser(r)
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Check user quota
+		var quota sql.NullInt64
+		var currentUsage int64
+		err = db.QueryRow(`
+			SELECT 
+				u.storage_quota_bytes,
+				COALESCE(SUM(f.size_bytes), 0) as current_usage
+			FROM users u
+			LEFT JOIN files f ON f.created_by = u.username AND f.status IN ('stored', 'hashed', 'ready')
+			WHERE u.username = $1
+			GROUP BY u.storage_quota_bytes
+		`, userID).Scan(&quota, &currentUsage)
+
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+
+		// Enforce quota if set
+		if quota.Valid && (currentUsage+req.SizeBytes) > quota.Int64 {
+			http.Error(w, "storage quota exceeded", http.StatusForbidden)
+			return
+		}
+
 		// Generate a unique UUID for the file record
 		id := uuid.New()
 		// Create a stable, non-guessable object key in MinIO.
@@ -75,7 +106,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 			autoDelete = true
 		}
 
-		_, err := db.Exec(`
+		_, err = db.Exec(`
 			INSERT INTO files (id, object_key, orig_name, content_type, size_bytes, created_by, status, expires_at, auto_delete)
 			VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8)
 		`, id, objectKey, req.OrigName, req.ContentType, req.SizeBytes, cfg.Auth.AdminUser, expiresAt, autoDelete)

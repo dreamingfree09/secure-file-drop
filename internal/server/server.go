@@ -276,6 +276,9 @@ func New(cfg Config) *Server {
 	// User endpoints (protected) - show user's own files
 	mux.Handle("/user/files", cfg.Auth.requireAuth(http.HandlerFunc(srv.UserFilesHandler)))
 
+	// User quota endpoint (protected)
+	mux.Handle("/quota", cfg.Auth.requireAuth(http.HandlerFunc(srv.UserQuotaHandler)))
+
 	return srv
 }
 
