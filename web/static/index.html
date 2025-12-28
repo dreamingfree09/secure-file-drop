@@ -875,7 +875,8 @@ function displayFileInfo(file) {
   const fileName = document.getElementById('fileName');
   const fileSize = document.getElementById('fileSize');
 
-  fileName.textContent = file.name;
+  const icon = getFileIcon(file.name, file.type);
+  fileName.textContent = `${icon} ${file.name}`;
   fileSize.textContent = formatFileSize(file.size);
   fileInfo.classList.add('show');
   
@@ -1184,8 +1185,9 @@ async function loadFiles() {
     html += '</tr></thead><tbody>';
 
     files.forEach(f => {
+      const icon = getFileIcon(f.orig_name, f.content_type);
       html += '<tr>';
-      html += `<td><strong>${escapeHtml(f.orig_name)}</strong></td>`;
+      html += `<td>${icon} <strong>${escapeHtml(f.orig_name)}</strong></td>`;
       html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
       html += `<td>${formatFileSize(f.size_bytes)}</td>`;
       html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
@@ -1219,8 +1221,9 @@ async function loadMyFiles() {
     html += '</tr></thead><tbody>';
 
     files.forEach(f => {
+      const icon = getFileIcon(f.orig_name, f.content_type);
       html += '<tr>';
-      html += `<td><strong>${escapeHtml(f.orig_name)}</strong></td>`;
+      html += `<td>${icon} <strong>${escapeHtml(f.orig_name)}</strong></td>`;
       html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
       html += `<td>${formatFileSize(f.size_bytes)}</td>`;
       html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
@@ -1277,6 +1280,77 @@ function formatFileSize(bytes) {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function getFileIcon(filename, contentType) {
+  const ext = filename.toLowerCase().split('.').pop();
+  const type = contentType ? contentType.toLowerCase() : '';
+  
+  // Images
+  if (type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp', 'ico'].includes(ext)) {
+    return '🖼️';
+  }
+  // Videos
+  if (type.startsWith('video/') || ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'].includes(ext)) {
+    return '🎥';
+  }
+  // Audio
+  if (type.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'aac'].includes(ext)) {
+    return '🎵';
+  }
+  // Documents
+  if (type.includes('pdf') || ext === 'pdf') {
+    return '📄';
+  }
+  if (['doc', 'docx', 'odt', 'rtf'].includes(ext)) {
+    return '📝';
+  }
+  if (['xls', 'xlsx', 'ods', 'csv'].includes(ext)) {
+    return '📊';
+  }
+  if (['ppt', 'pptx', 'odp'].includes(ext)) {
+    return '📽️';
+  }
+  // Archives
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz'].includes(ext)) {
+    return '📦';
+  }
+  // Code
+  if (['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'c', 'cpp', 'h', 'cs', 'php', 'rb', 'go', 'rs', 'swift'].includes(ext)) {
+    return '💻';
+  }
+  if (['html', 'css', 'scss', 'sass', 'less'].includes(ext)) {
+    return '🌐';
+  }
+  if (['json', 'xml', 'yaml', 'yml', 'toml'].includes(ext)) {
+    return '⚙️';
+  }
+  // Text
+  if (type.startsWith('text/') || ['txt', 'md', 'log'].includes(ext)) {
+    return '📃';
+  }
+  // Default
+  return '📁';
+}
+
+function isPreviewable(filename, contentType) {
+  const ext = filename.toLowerCase().split('.').pop();
+  const type = contentType ? contentType.toLowerCase() : '';
+  
+  // Images are previewable
+  if (type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext)) {
+    return true;
+  }
+  // Videos are previewable
+  if (type.startsWith('video/') || ['mp4', 'webm', 'ogg'].includes(ext)) {
+    return true;
+  }
+  // PDFs are previewable
+  if (type.includes('pdf') || ext === 'pdf') {
+    return true;
+  }
+  
+  return false;
 }
 
 function escapeHtml(text) {
