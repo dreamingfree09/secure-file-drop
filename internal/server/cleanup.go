@@ -54,12 +54,19 @@ func runCleanup(ctx context.Context, cfg CleanupConfig) {
 
 	cutoff := time.Now().Add(-cfg.MaxAge)
 
-	// Find expired files (created more than MaxAge ago, not in 'ready' state)
+	// Find expired files in two categories:
+	// 1. Old files in pending/failed status (created more than MaxAge ago)
+	// 2. Files with auto_delete=true that have passed their expires_at time
 	rows, err := cfg.DB.QueryContext(ctx, `
-		SELECT id, object_key, status, created_at
+		SELECT id, object_key, status, created_at, expires_at, auto_delete
 		FROM files
-		WHERE created_at < $1
-		  AND status IN ('pending', 'failed')
+		WHERE (
+			-- Old pending/failed files
+			(created_at < $1 AND status IN ('pending', 'failed'))
+			OR
+			-- Files with explicit expiration
+			(auto_delete = true AND expires_at IS NOT NULL AND expires_at < NOW())
+		)
 		ORDER BY created_at ASC
 		LIMIT 100
 	`, cutoff)
@@ -72,20 +79,26 @@ func runCleanup(ctx context.Context, cfg CleanupConfig) {
 	deleted := 0
 	for rows.Next() {
 		var (
-			id        string
-			objectKey string
-			status    string
-			createdAt time.Time
+			id         string
+			objectKey  string
+			status     string
+			createdAt  time.Time
+			expiresAt  sql.NullTime
+			autoDelete bool
 		)
 
-		if err := rows.Scan(&id, &objectKey, &status, &createdAt); err != nil {
+		if err := rows.Scan(&id, &objectKey, &status, &createdAt, &expiresAt, &autoDelete); err != nil {
 			log.Printf("service=cleanup msg=%q err=%v", "scan_failed", err)
 			continue
 		}
 
 		age := time.Since(createdAt)
-		log.Printf("service=cleanup msg=%q id=%s status=%s age=%s",
-			"deleting_expired_file", id, status, age)
+		reason := "old_pending_failed"
+		if autoDelete && expiresAt.Valid {
+			reason = "auto_delete_expired"
+		}
+		log.Printf("service=cleanup msg=%q id=%s status=%s age=%s reason=%s",
+			"deleting_file", id, status, age, reason)
 
 		// Delete from MinIO (if exists)
 		if err := cfg.MinioClient.RemoveObject(ctx, cfg.Bucket, objectKey, minio.RemoveObjectOptions{}); err != nil {

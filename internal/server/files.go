@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -15,6 +16,7 @@ type createFileReq struct {
 	OrigName    string `json:"orig_name"`
 	ContentType string `json:"content_type"`
 	SizeBytes   int64  `json:"size_bytes"`
+	TTLHours    int    `json:"ttl_hours,omitempty"` // Optional: hours until file expires (0 = never)
 }
 
 // createFileResp is the JSON response returned when a file record is successfully created.
@@ -61,15 +63,25 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		// Uses "uploads/" prefix + UUID to avoid path traversal attacks.
 		objectKey := "uploads/" + id.String()
 
+		// Calculate expiration time if TTL is provided
+		var expiresAt sql.NullTime
+		autoDelete := false
+		if req.TTLHours > 0 {
+			expiresAt = sql.NullTime{
+				Time:  time.Now().UTC().Add(time.Duration(req.TTLHours) * time.Hour),
+				Valid: true,
+			}
+			autoDelete = true
+		}
+
 		_, err := db.Exec(`
-			INSERT INTO files (id, object_key, orig_name, content_type, size_bytes, created_by, status)
-			VALUES ($1, $2, $3, $4, $5, $6, 'pending')
-		`, id, objectKey, req.OrigName, req.ContentType, req.SizeBytes, cfg.Auth.AdminUser)
+			INSERT INTO files (id, object_key, orig_name, content_type, size_bytes, created_by, status, expires_at, auto_delete)
+			VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8)
+		`, id, objectKey, req.OrigName, req.ContentType, req.SizeBytes, cfg.Auth.AdminUser, expiresAt, autoDelete)
 		if err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(createFileResp{
