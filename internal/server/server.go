@@ -172,9 +172,25 @@ func New(cfg Config) *Server {
 		})
 	})
 
-	// Metrics endpoint (protected)
+	// Metrics endpoint (protected) - includes disk usage stats
 	mux.Handle("/metrics", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		snapshot := GetMetrics().Snapshot()
+
+		// Add disk usage statistics from database
+		var totalBytes, totalFiles int64
+		err := cfg.DB.QueryRow(`
+			SELECT 
+				COALESCE(SUM(size_bytes), 0) as total_bytes,
+				COUNT(*) as total_files
+			FROM files
+			WHERE status IN ('stored', 'hashed', 'ready')
+		`).Scan(&totalBytes, &totalFiles)
+
+		if err == nil {
+			snapshot.StorageTotalBytes = totalBytes
+			snapshot.StorageTotalFiles = totalFiles
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(snapshot)

@@ -1220,37 +1220,54 @@ async function loadMetrics() {
     
     const metrics = await res.json();
     
+    // Format storage size for display
+    const formatStorage = (bytes) => {
+      if (!bytes) return '0 B';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    };
+    
     const html = `
       <div class="stat-card">
-        <div class="stat-value">${metrics.total_uploads || 0}</div>
+        <div class="stat-value">${metrics.uploads_total || 0}</div>
         <div class="stat-label">Total Uploads</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.total_downloads || 0}</div>
+        <div class="stat-value">${metrics.downloads_total || 0}</div>
         <div class="stat-label">Total Downloads</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.successful_auths || 0}</div>
+        <div class="stat-value">${formatStorage(metrics.storage_total_bytes)}</div>
+        <div class="stat-label">Storage Used</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.storage_total_files || 0}</div>
+        <div class="stat-label">Files Stored</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${metrics.login_success_total || 0}</div>
         <div class="stat-label">Successful Logins</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.failed_auths || 0}</div>
+        <div class="stat-value">${metrics.login_failures_total || 0}</div>
         <div class="stat-label">Failed Logins</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.files_ready || 0}</div>
+        <div class="stat-value">${metrics.files_ready_total || 0}</div>
         <div class="stat-label">Files Ready</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.files_pending || 0}</div>
+        <div class="stat-value">${metrics.files_pending_total || 0}</div>
         <div class="stat-label">Files Pending</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.files_failed || 0}</div>
+        <div class="stat-value">${metrics.files_failed_total || 0}</div>
         <div class="stat-label">Files Failed</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.total_requests || 0}</div>
+        <div class="stat-value">${metrics.requests_total || 0}</div>
         <div class="stat-label">Total Requests</div>
       </div>
     `;
