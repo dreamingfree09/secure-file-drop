@@ -128,6 +128,9 @@ func New(cfg Config) *Server {
 	// Register endpoint (POST JSON {email,username,password})
 	mux.HandleFunc("/register", cfg.RegisterHandler)
 
+	// Email verification endpoint (GET /verify?token={token})
+	mux.HandleFunc("/verify", cfg.VerifyEmailHandler)
+
 	// Protected endpoint for verification only
 	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

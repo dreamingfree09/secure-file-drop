@@ -1,12 +1,15 @@
 package server
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -85,6 +88,24 @@ func verifyPassword(password, hash string) bool {
 	return err == nil
 }
 
+// generateVerificationToken creates a random hex token for email verification
+func generateVerificationToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+// sendVerificationEmail sends an email with verification link (stubbed for MVP)
+func sendVerificationEmail(email, token string) error {
+	// TODO: Implement actual email sending with SMTP
+	// For MVP, just log the verification link
+	log.Printf("EMAIL VERIFICATION: Send to %s - Token: %s", email, token)
+	log.Printf("Verification URL: http://localhost:8080/verify?token=%s", token)
+	return nil
+}
+
 // RegisterHandler handles POST /register requests for user registration
 func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -145,19 +166,33 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create user
+	// Generate verification token
+	verificationToken, err := generateVerificationToken()
+	if err != nil {
+		log.Printf("register: token generation failed: %v", err)
+		http.Error(w, "Failed to generate verification token", http.StatusInternalServerError)
+		return
+	}
+
+	// Create user with verification token
 	userID := uuid.New()
 	_, err = cfg.DB.Exec(`
-		INSERT INTO users (id, email, username, password_hash)
-		VALUES ($1, $2, $3, $4)
-	`, userID, req.Email, req.Username, passwordHash)
+		INSERT INTO users (id, email, username, password_hash, verification_token, verification_sent_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`, userID, req.Email, req.Username, passwordHash, verificationToken, time.Now().UTC())
 	if err != nil {
 		log.Printf("register: insert failed: %v", err)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("register: created user %s (%s)", req.Username, req.Email)
+	// Send verification email
+	if err := sendVerificationEmail(req.Email, verificationToken); err != nil {
+		log.Printf("register: email send failed: %v", err)
+		// Don't fail registration if email fails - user is already created
+	}
+
+	log.Printf("register: created user %s (%s) - verification email sent", req.Username, req.Email)
 
 	// Return success response
 	w.Header().Set("Content-Type", "application/json")
@@ -169,15 +204,74 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// VerifyEmailHandler handles GET /verify?token={token} requests for email verification
+func (cfg Config) VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		http.Error(w, "Missing verification token", http.StatusBadRequest)
+		return
+	}
+
+	// Find user with this token
+	var userID, email string
+	var alreadyVerified bool
+	err := cfg.DB.QueryRow(`
+		SELECT id, email, email_verified
+		FROM users
+		WHERE verification_token = $1
+	`, token).Scan(&userID, &email, &alreadyVerified)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, "Invalid or expired verification token", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		log.Printf("verify: db query failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if alreadyVerified {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte("<h2>Email already verified!</h2><p>You can now <a href='/'>log in</a>.</p>"))
+		return
+	}
+
+	// Mark email as verified and clear token
+	_, err = cfg.DB.Exec(`
+		UPDATE users
+		SET email_verified = true,
+		    verification_token = NULL
+		WHERE id = $1
+	`, userID)
+
+	if err != nil {
+		log.Printf("verify: update failed: %v", err)
+		http.Error(w, "Failed to verify email", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("verify: email verified for user %s", email)
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<h2>Email verified successfully!</h2><p>You can now <a href='/'>log in</a>.</p>"))
+}
+
 // authenticateUser checks credentials against the database
 func authenticateUser(db *sql.DB, username, password string) (string, bool) {
 	var userID string
 	var passwordHash string
+	var emailVerified bool
 
 	err := db.QueryRow(
-		"SELECT id, password_hash FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE",
+		"SELECT id, password_hash, email_verified FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE",
 		username,
-	).Scan(&userID, &passwordHash)
+	).Scan(&userID, &passwordHash, &emailVerified)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -188,6 +282,12 @@ func authenticateUser(db *sql.DB, username, password string) (string, bool) {
 	}
 
 	if !verifyPassword(password, passwordHash) {
+		return "", false
+	}
+
+	// Check if email is verified
+	if !emailVerified {
+		log.Printf("auth: login blocked - email not verified for user %s", userID)
 		return "", false
 	}
 
