@@ -75,33 +75,91 @@ func New(cfg Config) *Server {
 		})
 	})
 
-	// Ready endpoint: dependencies are reachable (Postgres and MinIO).
+	// Ready endpoint: comprehensive dependency health checks with detailed status.
+	// Returns 200 OK if all dependencies are healthy, 503 if any are unhealthy.
+	// Provides detailed status for each component (postgres, minio) with latency.
 	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) {
-		if cfg.DB == nil {
-			http.Error(w, "db not configured", http.StatusServiceUnavailable)
-			return
+		type ComponentStatus struct {
+			Status  string `json:"status"` // "ok" or "error"
+			Message string `json:"message,omitempty"`
+			Latency int64  `json:"latency_ms,omitempty"`
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-		defer cancel()
+
+		response := map[string]any{
+			"status":     "ok",
+			"components": map[string]ComponentStatus{},
+		}
+
+		overallOK := true
 
 		// Check Postgres
-		if err := cfg.DB.PingContext(ctx); err != nil {
-			http.Error(w, "db not ready", http.StatusServiceUnavailable)
-			return
+		if cfg.DB == nil {
+			response["components"].(map[string]ComponentStatus)["postgres"] = ComponentStatus{
+				Status:  "error",
+				Message: "not configured",
+			}
+			overallOK = false
+		} else {
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+
+			start := time.Now()
+			err := cfg.DB.PingContext(ctx)
+			latency := time.Since(start).Milliseconds()
+
+			if err != nil {
+				response["components"].(map[string]ComponentStatus)["postgres"] = ComponentStatus{
+					Status:  "error",
+					Message: err.Error(),
+					Latency: latency,
+				}
+				overallOK = false
+			} else {
+				response["components"].(map[string]ComponentStatus)["postgres"] = ComponentStatus{
+					Status:  "ok",
+					Latency: latency,
+				}
+			}
 		}
 
 		// Check MinIO
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+
+		start := time.Now()
 		exists, err := mc.BucketExists(ctx, bucket)
+		latency := time.Since(start).Milliseconds()
+
 		if err != nil || !exists {
-			http.Error(w, "minio not ready", http.StatusServiceUnavailable)
-			return
+			msg := "bucket not found"
+			if err != nil {
+				msg = err.Error()
+			}
+			response["components"].(map[string]ComponentStatus)["minio"] = ComponentStatus{
+				Status:  "error",
+				Message: msg,
+				Latency: latency,
+			}
+			overallOK = false
+		} else {
+			response["components"].(map[string]ComponentStatus)["minio"] = ComponentStatus{
+				Status:  "ok",
+				Latency: latency,
+			}
+		}
+
+		// Set overall status
+		if !overallOK {
+			response["status"] = "degraded"
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"status": "ok",
-		})
+		if overallOK {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		_ = json.NewEncoder(w).Encode(response)
 	})
 
 	// Version endpoint (no secrets)
