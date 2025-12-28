@@ -191,3 +191,16 @@ func (a AuthConfig) requireAuth(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+// getCurrentUser extracts the current user ID from the session cookie
+func (a AuthConfig) getCurrentUser(r *http.Request) (string, error) {
+	c, err := r.Cookie(a.cookieName())
+	if err != nil {
+		return "", errors.New("no session cookie")
+	}
+	payload, err := a.verifyToken(c.Value)
+	if err != nil {
+		return "", err
+	}
+	return payload.Sub, nil
+}

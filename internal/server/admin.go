@@ -20,7 +20,6 @@ type FileInfo struct {
 	Status      string    `json:"status"`
 	SHA256Hex   string    `json:"sha256_hex,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // AdminListFilesHandler returns all files for admin dashboard
@@ -33,7 +32,7 @@ func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 	// Query all files ordered by creation time (newest first)
 	rows, err := s.db.Query(`
 		SELECT id, orig_name, content_type, size_bytes, status, 
-		       COALESCE(sha256_hex, '') as sha256_hex, created_at, updated_at
+		       COALESCE(sha256_hex, '') as sha256_hex, created_at
 		FROM files 
 		ORDER BY created_at DESC
 		LIMIT 100
@@ -49,7 +48,7 @@ func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var f FileInfo
 		if err := rows.Scan(&f.ID, &f.OrigName, &f.ContentType, &f.SizeBytes,
-			&f.Status, &f.SHA256Hex, &f.CreatedAt, &f.UpdatedAt); err != nil {
+			&f.Status, &f.SHA256Hex, &f.CreatedAt); err != nil {
 			log.Printf("admin list files: scan failed: %v", err)
 			continue
 		}
@@ -65,6 +64,59 @@ func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(files); err != nil {
 		log.Printf("admin list files: encode failed: %v", err)
+	}
+}
+
+// UserFilesHandler returns files uploaded by the current user
+func (s *Server) UserFilesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Get current user from session
+	userID, err := s.authCfg.getCurrentUser(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Query files created by this user
+	rows, err := s.db.Query(`
+		SELECT id, orig_name, content_type, size_bytes, status, 
+		       COALESCE(sha256_hex, '') as sha256_hex, created_at
+		FROM files 
+		WHERE created_by = $1
+		ORDER BY created_at DESC
+		LIMIT 100
+	`, userID)
+	if err != nil {
+		log.Printf("user files: query failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var files []FileInfo
+	for rows.Next() {
+		var f FileInfo
+		if err := rows.Scan(&f.ID, &f.OrigName, &f.ContentType, &f.SizeBytes,
+			&f.Status, &f.SHA256Hex, &f.CreatedAt); err != nil {
+			log.Printf("user files: scan failed: %v", err)
+			continue
+		}
+		files = append(files, f)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("user files: rows error: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(files); err != nil {
+		log.Printf("user files: encode failed: %v", err)
 	}
 }
 

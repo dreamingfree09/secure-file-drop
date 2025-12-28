@@ -41,6 +41,7 @@ type Server struct {
 	minio       *minio.Client
 	bucket      string
 	cleanupDone chan struct{}
+	authCfg     AuthConfig // Store auth config for getCurrentUser
 }
 
 // New constructs and returns an initialized Server wiring handlers and
@@ -165,6 +166,7 @@ func New(cfg Config) *Server {
 		minio:       mc,
 		bucket:      bucket,
 		cleanupDone: make(chan struct{}),
+		authCfg:     cfg.Auth,
 	}
 
 	// Admin endpoints (protected) - registered after Server creation
@@ -173,6 +175,9 @@ func New(cfg Config) *Server {
 		cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminDeleteFileHandler)).ServeHTTP(w, r)
 	})
 	mux.Handle("/admin/cleanup", cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminManualCleanupHandler)))
+
+	// User endpoints (protected) - show user's own files
+	mux.Handle("/user/files", cfg.Auth.requireAuth(http.HandlerFunc(srv.UserFilesHandler)))
 
 	return srv
 }

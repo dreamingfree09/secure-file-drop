@@ -716,6 +716,18 @@
         </div>
       </div>
 
+      <!-- My Uploads Section -->
+      <div class="main-card">
+        <div class="admin-nav">
+          <div class="section-title" style="flex: 1; text-align: left;">📂 My Uploads</div>
+          <button class="btn btn-secondary" onclick="loadMyFiles()">🔄 Refresh</button>
+        </div>
+
+        <div class="files-section">
+          <div id="myFilesOutput"></div>
+        </div>
+      </div>
+
       <!-- Admin Dashboard -->
       <div class="main-card" id="adminSection">
         <div class="admin-nav">
@@ -760,6 +772,7 @@ async function login() {
       isLoggedIn = true;
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('appScreen').classList.remove('hidden');
+      loadMyFiles();
       loadMetrics();
       loadFiles();
     } else {
@@ -900,6 +913,7 @@ async function uploadFile() {
       displayDownloadLink(linkJson.url, linkJson.expires_at);
       
       // Reload metrics and files
+      loadMyFiles();
       loadMetrics();
       loadFiles();
     }, 500);
@@ -1041,6 +1055,40 @@ async function loadFiles() {
     document.getElementById('filesOutput').innerHTML = html;
   } catch (err) {
     console.error('Failed to load files:', err);
+  }
+}
+
+// Load user's own files
+async function loadMyFiles() {
+  try {
+    const res = await fetch('/user/files');
+    if (!res.ok) return;
+    
+    const files = await res.json();
+    
+    if (!files || files.length === 0) {
+      document.getElementById('myFilesOutput').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">You haven\'t uploaded any files yet</p>';
+      return;
+    }
+
+    let html = '<table><thead><tr>';
+    html += '<th>Original Name</th><th>Status</th><th>Size</th>';
+    html += '<th>Uploaded</th>';
+    html += '</tr></thead><tbody>';
+
+    files.forEach(f => {
+      html += '<tr>';
+      html += `<td><strong>${escapeHtml(f.orig_name)}</strong></td>`;
+      html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
+      html += `<td>${formatFileSize(f.size_bytes)}</td>`;
+      html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
+      html += '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('myFilesOutput').innerHTML = html;
+  } catch (err) {
+    console.error('Failed to load my files:', err);
   }
 }
 
