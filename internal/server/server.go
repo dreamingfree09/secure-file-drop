@@ -131,6 +131,12 @@ func New(cfg Config) *Server {
 	// Email verification endpoint (GET /verify?token={token})
 	mux.HandleFunc("/verify", cfg.VerifyEmailHandler)
 
+	// Password reset request (POST JSON {email})
+	mux.HandleFunc("/reset-password-request", cfg.RequestPasswordResetHandler)
+
+	// Password reset completion (POST JSON {token, new_password})
+	mux.HandleFunc("/reset-password", cfg.ResetPasswordHandler)
+
 	// Protected endpoint for verification only
 	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

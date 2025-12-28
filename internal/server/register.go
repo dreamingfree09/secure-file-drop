@@ -106,6 +106,24 @@ func sendVerificationEmail(email, token string) error {
 	return nil
 }
 
+// generateResetToken creates a random hex token for password reset
+func generateResetToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+// sendPasswordResetEmail sends an email with password reset link (stubbed for MVP)
+func sendPasswordResetEmail(email, token string) error {
+	// TODO: Implement actual email sending with SMTP
+	// For MVP, just log the reset link
+	log.Printf("PASSWORD RESET: Send to %s - Token: %s", email, token)
+	log.Printf("Reset URL: http://localhost:8080/reset-password?token=%s", token)
+	return nil
+}
+
 // RegisterHandler handles POST /register requests for user registration
 func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -260,6 +278,164 @@ func (cfg Config) VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte("<h2>Email verified successfully!</h2><p>You can now <a href='/'>log in</a>.</p>"))
+}
+
+// RequestPasswordResetHandler handles POST /reset-password-request for initiating password reset
+func (cfg Config) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if !validateEmail(req.Email) {
+		http.Error(w, "Invalid email address", http.StatusBadRequest)
+		return
+	}
+
+	// Check if user exists
+	var userID string
+	err := cfg.DB.QueryRow("SELECT id FROM users WHERE email = $1 AND is_active = TRUE", req.Email).Scan(&userID)
+	if err == sql.ErrNoRows {
+		// Don't reveal if email exists or not for security
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "If the email exists, a reset link has been sent"})
+		return
+	}
+	if err != nil {
+		log.Printf("reset-request: db query failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Generate reset token (expires in 1 hour)
+	resetToken, err := generateResetToken()
+	if err != nil {
+		log.Printf("reset-request: token generation failed: %v", err)
+		http.Error(w, "Failed to generate reset token", http.StatusInternalServerError)
+		return
+	}
+
+	expiresAt := time.Now().UTC().Add(1 * time.Hour)
+
+	// Store reset token
+	_, err = cfg.DB.Exec(`
+		UPDATE users
+		SET reset_token = $1,
+		    reset_token_expires = $2
+		WHERE id = $3
+	`, resetToken, expiresAt, userID)
+
+	if err != nil {
+		log.Printf("reset-request: update failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Send reset email
+	if err := sendPasswordResetEmail(req.Email, resetToken); err != nil {
+		log.Printf("reset-request: email send failed: %v", err)
+	}
+
+	log.Printf("reset-request: password reset requested for %s", req.Email)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "If the email exists, a reset link has been sent"})
+}
+
+// ResetPasswordHandler handles POST /reset-password for completing password reset
+func (cfg Config) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"new_password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	req.Token = strings.TrimSpace(req.Token)
+	req.NewPassword = strings.TrimSpace(req.NewPassword)
+
+	if req.Token == "" {
+		http.Error(w, "Missing reset token", http.StatusBadRequest)
+		return
+	}
+
+	// Validate new password
+	if valid, msg := validatePassword(req.NewPassword); !valid {
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	// Find user with valid token
+	var userID string
+	var expiresAt time.Time
+	err := cfg.DB.QueryRow(`
+		SELECT id, reset_token_expires
+		FROM users
+		WHERE reset_token = $1 AND is_active = TRUE
+	`, req.Token).Scan(&userID, &expiresAt)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, "Invalid or expired reset token", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		log.Printf("reset-password: db query failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if token is expired
+	if time.Now().UTC().After(expiresAt) {
+		http.Error(w, "Reset token has expired", http.StatusGone)
+		return
+	}
+
+	// Hash new password
+	passwordHash, err := hashPassword(req.NewPassword)
+	if err != nil {
+		log.Printf("reset-password: hash failed: %v", err)
+		http.Error(w, "Failed to process password", http.StatusInternalServerError)
+		return
+	}
+
+	// Update password and clear reset token
+	_, err = cfg.DB.Exec(`
+		UPDATE users
+		SET password_hash = $1,
+		    reset_token = NULL,
+		    reset_token_expires = NULL
+		WHERE id = $2
+	`, passwordHash, userID)
+
+	if err != nil {
+		log.Printf("reset-password: update failed: %v", err)
+		http.Error(w, "Failed to reset password", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("reset-password: password reset successful for user %s", userID)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "Password reset successfully"})
 }
 
 // authenticateUser checks credentials against the database
