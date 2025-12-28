@@ -1374,7 +1374,7 @@ async function loadFiles() {
 
     let html = '<table><thead><tr>';
     html += '<th>Original Name</th><th>Status</th><th>Size</th>';
-    html += '<th>Created</th><th>Actions</th>';
+    html += '<th>Downloads</th><th>Created</th><th>Actions</th>';
     html += '</tr></thead><tbody>';
 
     files.forEach(f => {
@@ -1383,6 +1383,7 @@ async function loadFiles() {
       html += `<td>${icon} <strong>${escapeHtml(f.orig_name)}</strong></td>`;
       html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
       html += `<td>${formatFileSize(f.size_bytes)}</td>`;
+      html += `<td>${f.download_count || 0}</td>`;
       html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
       html += `<td><button class="btn btn-danger" onclick="deleteFile('${f.id}')">Delete</button></td>`;
       html += '</tr>';
@@ -1410,7 +1411,7 @@ async function loadMyFiles() {
 
     let html = '<table><thead><tr>';
     html += '<th>Original Name</th><th>Status</th><th>Size</th>';
-    html += '<th>Uploaded</th>';
+    html += '<th>Downloads</th><th>Uploaded</th>';
     html += '</tr></thead><tbody>';
 
     files.forEach(f => {
@@ -1419,6 +1420,7 @@ async function loadMyFiles() {
       html += `<td>${icon} <strong>${escapeHtml(f.orig_name)}</strong></td>`;
       html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
       html += `<td>${formatFileSize(f.size_bytes)}</td>`;
+      html += `<td>${f.download_count || 0}</td>`;
       html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
       html += '</tr>';
     });

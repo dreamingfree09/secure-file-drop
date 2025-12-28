@@ -13,13 +13,15 @@ import (
 
 // FileInfo represents a file record for admin listing
 type FileInfo struct {
-	ID          string    `json:"id"`
-	OrigName    string    `json:"orig_name"`
-	ContentType string    `json:"content_type"`
-	SizeBytes   int64     `json:"size_bytes"`
-	Status      string    `json:"status"`
-	SHA256Hex   string    `json:"sha256_hex,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID               string     `json:"id"`
+	OrigName         string     `json:"orig_name"`
+	ContentType      string     `json:"content_type"`
+	SizeBytes        int64      `json:"size_bytes"`
+	Status           string     `json:"status"`
+	SHA256Hex        string     `json:"sha256_hex,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	DownloadCount    int        `json:"download_count"`
+	LastDownloadedAt *time.Time `json:"last_downloaded_at,omitempty"`
 }
 
 // AdminListFilesHandler returns all files for admin dashboard
@@ -32,7 +34,8 @@ func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 	// Query all files ordered by creation time (newest first)
 	rows, err := s.db.Query(`
 		SELECT id, orig_name, content_type, size_bytes, status, 
-		       COALESCE(sha256_hex, '') as sha256_hex, created_at
+		       COALESCE(sha256_hex, '') as sha256_hex, created_at,
+		       download_count, last_downloaded_at
 		FROM files 
 		ORDER BY created_at DESC
 		LIMIT 100
@@ -48,7 +51,7 @@ func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var f FileInfo
 		if err := rows.Scan(&f.ID, &f.OrigName, &f.ContentType, &f.SizeBytes,
-			&f.Status, &f.SHA256Hex, &f.CreatedAt); err != nil {
+			&f.Status, &f.SHA256Hex, &f.CreatedAt, &f.DownloadCount, &f.LastDownloadedAt); err != nil {
 			log.Printf("admin list files: scan failed: %v", err)
 			continue
 		}
@@ -84,7 +87,8 @@ func (s *Server) UserFilesHandler(w http.ResponseWriter, r *http.Request) {
 	// Query files created by this user
 	rows, err := s.db.Query(`
 		SELECT id, orig_name, content_type, size_bytes, status, 
-		       COALESCE(sha256_hex, '') as sha256_hex, created_at
+		       COALESCE(sha256_hex, '') as sha256_hex, created_at,
+		       download_count, last_downloaded_at
 		FROM files 
 		WHERE created_by = $1
 		ORDER BY created_at DESC
@@ -101,7 +105,7 @@ func (s *Server) UserFilesHandler(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var f FileInfo
 		if err := rows.Scan(&f.ID, &f.OrigName, &f.ContentType, &f.SizeBytes,
-			&f.Status, &f.SHA256Hex, &f.CreatedAt); err != nil {
+			&f.Status, &f.SHA256Hex, &f.CreatedAt, &f.DownloadCount, &f.LastDownloadedAt); err != nil {
 			log.Printf("user files: scan failed: %v", err)
 			continue
 		}

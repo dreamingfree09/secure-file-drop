@@ -108,5 +108,15 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 		w.WriteHeader(http.StatusOK)
 
 		_, _ = io.Copy(w, obj)
+
+		// Track download statistics (fire and forget)
+		go func() {
+			_, _ = db.Exec(`
+				UPDATE files 
+				SET download_count = download_count + 1,
+				    last_downloaded_at = NOW()
+				WHERE id = $1
+			`, claims.FileID)
+		}()
 	})
 }
