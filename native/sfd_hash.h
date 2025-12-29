@@ -1,3 +1,9 @@
+/*
+ * sfd_hash.h - Public interface for Secure File Drop's
+ *              native SHA-256 hashing helper.
+ *
+ * Provides routines to hash a file and hex-encode the digest.
+ */
 #ifndef SFD_HASH_H
 #define SFD_HASH_H
 

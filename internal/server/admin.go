@@ -1,3 +1,7 @@
+// admin.go - Admin and user file listing and deletion endpoints.
+//
+// Provides JSON APIs for admins to list/delete files and for users
+// to view and remove their own uploads with ownership checks.
 package server
 
 import (
@@ -11,7 +15,7 @@ import (
 	minio "github.com/minio/minio-go/v7"
 )
 
-// FileInfo represents a file record for admin listing
+// FileInfo represents a file record for admin and user listings.
 type FileInfo struct {
 	ID               string     `json:"id"`
 	OrigName         string     `json:"orig_name"`
@@ -24,7 +28,8 @@ type FileInfo struct {
 	LastDownloadedAt *time.Time `json:"last_downloaded_at,omitempty"`
 }
 
-// AdminListFilesHandler returns all files for admin dashboard
+// AdminListFilesHandler returns a page of files for the admin dashboard.
+// Results are ordered by creation time (newest first) and limited to 100.
 func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -70,27 +75,28 @@ func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// UserFilesHandler returns files uploaded by the current user
+// UserFilesHandler returns files uploaded by the current authenticated user.
+// Results are ordered by creation time (newest first) and limited to 100.
 func (s *Server) UserFilesHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Get current user from session
+	// Get current user from session (returns user UUID)
 	userID, err := s.authCfg.getCurrentUser(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	// Query files created by this user
+	// Query files created by this user (using user_id UUID, not created_by text)
 	rows, err := s.db.Query(`
 		SELECT id, orig_name, content_type, size_bytes, status, 
 		       COALESCE(sha256_hex, '') as sha256_hex, created_at,
 		       download_count, last_downloaded_at
 		FROM files 
-		WHERE created_by = $1
+		WHERE user_id = $1
 		ORDER BY created_at DESC
 		LIMIT 100
 	`, userID)
@@ -124,7 +130,78 @@ func (s *Server) UserFilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// AdminDeleteFileHandler deletes a specific file from both MinIO and database
+// UserDeleteFileHandler allows a user to delete their own file
+// Route: DELETE /user/files/{id}
+// Auth: required; verifies ownership via user_id
+func (s *Server) UserDeleteFileHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract file ID from URL path
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/user/files/"), "/")
+	if len(parts) == 0 || parts[0] == "" {
+		http.Error(w, "File ID required", http.StatusBadRequest)
+		return
+	}
+	fileID := parts[0]
+
+	// Get current user from session
+	userID, err := s.authCfg.getCurrentUser(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Look up file ensuring ownership; fetch object_key and status
+	var objectKey, status, origName, userEmail string
+	err = s.db.QueryRow(`
+		SELECT f.object_key, f.status, f.orig_name, u.email
+		FROM files f
+		JOIN users u ON u.id = f.user_id
+		WHERE f.id = $1 AND f.user_id = $2
+	`, fileID, userID).Scan(&objectKey, &status, &origName, &userEmail)
+	if err != nil {
+		log.Printf("user delete file: lookup failed: %v", err)
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+
+	// Remove object from MinIO if it exists (not pending)
+	if status != "pending" && objectKey != "" {
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+		if err := s.minio.RemoveObject(ctx, s.bucket, objectKey, minio.RemoveObjectOptions{}); err != nil {
+			log.Printf("user delete file: MinIO removal failed for %s: %v", objectKey, err)
+			// Continue with DB deletion even if MinIO fails
+		}
+	}
+
+	// Delete from database
+	res, err := s.db.Exec("DELETE FROM files WHERE id = $1 AND user_id = $2", fileID, userID)
+	if err != nil {
+		log.Printf("user delete file: db delete failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		http.Error(w, "File not found", http.StatusNotFound)
+		return
+	}
+
+	// Send deletion notification (best-effort)
+	go func() {
+		if s.emailSvc != nil {
+			_ = s.emailSvc.SendFileDeletedNotification(userEmail, origName, "manual deletion by user")
+		}
+	}()
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// AdminDeleteFileHandler deletes a specific file from both MinIO and database.
+// It also triggers a best-effort email notification to the file owner.
 func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -195,12 +272,13 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// CleanupResult represents the result of a cleanup operation
+// CleanupResult represents the result of a manual cleanup operation.
 type CleanupResult struct {
 	DeletedCount int `json:"deleted_count"`
 }
 
-// AdminManualCleanupHandler triggers a manual cleanup of old pending/failed files
+// AdminManualCleanupHandler triggers a manual cleanup of old pending/failed files.
+// The operation is synchronous and returns the number of files deleted.
 func (s *Server) AdminManualCleanupHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

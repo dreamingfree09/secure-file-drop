@@ -13,6 +13,7 @@ This document describes the high-level components and responsibilities of Secure
   - Upload handling: POST /upload streams multipart file parts into MinIO with quota enforcement
   - Hashing: after upload, files are hashed (SHA-256) and metadata persisted
   - Signed download: short-lived signed tokens for direct download via /download
+  - Public links: `SFD_PUBLIC_BASE_URL` preferred for generating externally reachable download URLs
   - Email notifications: SMTP integration for verification, password reset, and file activity alerts
   - Rate limiting: Per-IP and per-user protection against abuse
   - Admin panel: User management, quota settings, system statistics
@@ -56,10 +57,10 @@ This document describes the high-level components and responsibilities of Secure
 8. Download count and last download timestamp tracked for analytics
 
 ### Password Reset
-1. User requests reset (POST /password-reset/request with email)
+1. User requests reset (POST /reset-password-request with email)
 2. System generates reset token (1-hour expiry)
 3. Email sent with reset link
-4. User submits new password (POST /password-reset/confirm)
+4. User submits new password (POST /reset-password)
 5. Token validated and password updated
 
 ## Security notes
@@ -67,7 +68,8 @@ This document describes the high-level components and responsibilities of Secure
 - Reverse proxy must enforce HTTPS and recommended security headers.
 - Keep MinIO and Postgres private to the backend network.
 - Secrets (session secret, download secret, SMTP password) must be provided through environment variables or secret management systems.
-- Passwords hashed with bcrypt (cost 10)
+- Passwords hashed with bcrypt (cost 12)
+- Session cookies are HMAC-signed, stateless, and validated server-side
 - Email verification prevents unauthorized registrations
 - Rate limiting protects against brute force and abuse
 - Download tokens use HMAC signatures with expiry

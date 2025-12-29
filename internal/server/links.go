@@ -1,3 +1,10 @@
+// createLinkHandler handles POST /links to create signed, expiring tokens
+// for downloads. The token includes file id, expiry, and optional password
+// requirements. Returns the public URL constructed from Config.BaseURL.
+// links.go - Signed download link creation.
+//
+// Generates HMAC-signed tokens bound to file ID and expiry; optional
+// password protection is supported.
 package server
 
 import (

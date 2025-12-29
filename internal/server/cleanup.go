@@ -1,3 +1,6 @@
+// cleanup.go - Periodic cleanup of old pending/failed files.
+//
+// Background job triggered by configuration to remove stale items.
 package server
 
 import (

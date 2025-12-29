@@ -358,6 +358,22 @@
       font-weight: 600;
       color: var(--primary);
     }
+    /* My Uploads collapsible content */
+    .my-uploads-content.collapsed {
+      display: none;
+    }
+    /* Compact table view */
+    .compact-table {
+      font-size: 0.85rem;
+    }
+    .compact-table th, .compact-table td {
+      padding: 6px 8px;
+    }
+    /* Scrollable uploads content when expanded */
+    .my-uploads-content {
+      max-height: 360px;
+      overflow-y: auto;
+    }
 
     /* Download Link Section */
     .link-container {
@@ -712,6 +728,14 @@
   </header>
 
   <div class="container">
+    <!-- Info Banner (non-blocking) -->
+    <div id="quotaBanner" class="hidden" style="margin-bottom: 10px;">
+      <div class="alert alert-info" style="background: rgba(99, 102, 241, 0.08); display: flex; align-items: center; gap: 8px;">
+        <span id="quotaBannerText">Quota information is temporarily unavailable.</span>
+        <span id="quotaBannerInfo" title="The quota service is temporarily unavailable or still initializing behind the proxy. Uploads still work. You can try again in a moment or check the proxy limits for /quota." style="color: var(--primary); cursor: help; font-weight: 700;">ℹ️</span>
+        <button id="quotaBannerDismiss" aria-label="Dismiss quota banner" style="margin-left: auto; background: transparent; color: var(--primary); border: 1px solid var(--primary); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-weight: 600;">Dismiss</button>
+      </div>
+    </div>
     <!-- Login Screen -->
     <div id="loginScreen" class="main-card">
       <div class="login-container">
@@ -780,11 +804,11 @@
       <!-- Upload Section -->
       <div class="main-card">
         <div class="upload-container">
-          <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-area" id="uploadArea">
             <div class="upload-icon">📁</div>
             <div class="upload-title">Drop your file here</div>
             <div class="upload-subtitle">or click to browse (multiple files supported)</div>
-            <button class="btn btn-primary" style="width: auto; margin-top: 20px;">Choose Files</button>
+            <button class="btn btn-primary" style="width: auto; margin-top: 20px;" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">Choose Files</button>
           </div>
           <input type="file" id="fileInput" onchange="handleFileSelect(event)" multiple>
 
@@ -835,13 +859,46 @@
 
       <!-- My Uploads Section -->
       <div class="main-card">
-        <div class="admin-nav">
-          <div class="section-title" style="flex: 1; text-align: left;">📂 My Uploads</div>
-          <button class="btn btn-secondary" onclick="loadMyFiles()">🔄 Refresh</button>
+        <div class="admin-nav" style="cursor: pointer;" onclick="toggleMyUploads()">
+          <div class="section-title" style="flex: 1; text-align: left;">
+            <span id="myUploadsIcon">▶</span> 📂 My Uploads <span id="myFilesCount" style="color: var(--text-secondary); font-size: 0.9rem;"></span><span id="myFilesUpdated" style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 8px;"></span>
+          </div>
+          <button class="btn btn-secondary" onclick="event.stopPropagation(); loadMyFiles()">🔄 Refresh</button>
         </div>
 
-        <div class="files-section">
-          <div id="myFilesOutput"></div>
+        <div id="myUploadsContent" class="my-uploads-content collapsed">
+          <!-- Search and Controls -->
+          <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="text" id="myFilesSearch" placeholder="🔍 Search files..." oninput="filterMyFiles()" style="flex: 1; min-width: 200px; padding: 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem;">
+            <select id="myFilesStatus" onchange="filterMyFiles()" style="padding: 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; cursor: pointer;">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="stored">Stored</option>
+              <option value="hashed">Hashed</option>
+              <option value="ready">Ready</option>
+              <option value="failed">Failed</option>
+            </select>
+            <select id="myFilesSort" onchange="sortMyFiles()" style="padding: 10px; border: 2px solid var(--border); border-radius: 8px; font-size: 0.9rem; cursor: pointer;">
+              <option value="date-desc">📅 Newest First</option>
+              <option value="date-asc">📅 Oldest First</option>
+              <option value="name-asc">🔤 Name (A-Z)</option>
+              <option value="name-desc">🔤 Name (Z-A)</option>
+              <option value="size-desc">📊 Largest First</option>
+              <option value="size-asc">📊 Smallest First</option>
+              <option value="downloads-desc">⬇️ Most Downloads</option>
+              <option value="downloads-asc">⬇️ Least Downloads</option>
+            </select>
+            <button class="btn btn-secondary" onclick="toggleCompactView()" style="padding: 10px 15px;">
+              <span id="viewToggleIcon">📋</span> <span id="viewToggleText">Compact</span>
+            </button>
+            <button id="deleteSelectedBtn" class="btn btn-danger" onclick="deleteSelected()" style="padding: 10px 15px;" disabled>🗑️ Delete Selected</button>
+            <button id="clearSelectionBtn" class="btn btn-secondary" onclick="clearSelection()" style="padding: 10px 15px;">✖️ Clear Selection</button>
+            <button id="selectReadyBtn" class="btn btn-secondary" onclick="selectReadyOnly()" style="padding: 10px 15px;">✅ Select Ready Only</button>
+          </div>
+
+          <div class="files-section">
+            <div id="myFilesOutput"></div>
+          </div>
         </div>
       </div>
 
@@ -892,10 +949,13 @@
 
 <script>
 let isLoggedIn = false;
+let isAdmin = false;
 let selectedFile = null;
 let maxUploadBytes = 0; // Will be loaded from server config
 let uploadQueue = [];
 let currentUpload = null;
+let lastDropAt = 0; // debounce for drop events
+const queuedKeys = new Set(); // global dedupe across events
 
 // Load server configuration on page load
 async function loadConfig() {
@@ -930,18 +990,77 @@ async function login() {
     
     if (res.ok) {
       isLoggedIn = true;
+      
+      // Check if user is admin
+      const meRes = await fetch('/me');
+      if (meRes.ok) {
+        const userData = await meRes.json();
+        isAdmin = userData.is_admin || false;
+        
+        // Show/hide admin section based on admin status
+        const adminSection = document.getElementById('adminSection');
+        if (adminSection) {
+          if (isAdmin) {
+            adminSection.style.display = 'block';
+          } else {
+            adminSection.style.display = 'none';
+          }
+        }
+      }
+      
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('appScreen').classList.remove('hidden');
       document.getElementById('logoutBtn').classList.remove('hidden');
       loadMyFiles();
-      loadMetrics();
       loadQuota();
-      loadFiles();
+      
+      // Only load admin data if user is admin
+      if (isAdmin) {
+        loadMetrics();
+        loadFiles();
+      }
     } else {
       showAlert(loginAlert, 'Invalid username or password', 'error');
     }
   } catch (err) {
     showAlert(loginAlert, 'Connection error. Please try again.', 'error');
+  }
+}
+
+// Check existing session on page load and restore UI if authenticated
+async function checkSession() {
+  try {
+    const meRes = await fetch('/me');
+    if (!meRes.ok) {
+      // Not logged in; keep login screen visible
+      return;
+    }
+    const userData = await meRes.json();
+    isLoggedIn = true;
+    isAdmin = !!userData.is_admin;
+
+    // Toggle UI
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+
+    // Show/hide admin section based on admin status
+    const adminSection = document.getElementById('adminSection');
+    if (adminSection) {
+      adminSection.style.display = isAdmin ? 'block' : 'none';
+    }
+
+    // Load user data
+    loadMyFiles();
+    loadQuota();
+
+    // Load admin data if applicable
+    if (isAdmin) {
+      loadMetrics();
+      loadFiles();
+    }
+  } catch (err) {
+    console.error('Session check failed:', err);
   }
 }
 
@@ -1009,6 +1128,14 @@ function preventDefaults(e) {
 }
 
 function handleDrop(e) {
+  // Debounce duplicate drop event sequences from browsers
+  const now = Date.now();
+  if (now - lastDropAt < 500) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+  lastDropAt = now;
   const dt = e.dataTransfer;
   const files = Array.from(dt.files);
   
@@ -1055,8 +1182,23 @@ function displayFileInfo(file) {
 
 // Add files to upload queue
 function addFilesToQueue(files) {
-  uploadQueue.push(...files);
-  displayFileInfo(files[0]); // Show first file info
+  // Deduplicate by name+size across current queue and active upload
+  const key = (f) => `${f.name}|${f.size}`;
+  const existing = new Set();
+  if (currentUpload) existing.add(key(currentUpload));
+  for (const f of uploadQueue) existing.add(key(f));
+  const unique = [];
+  for (const f of files) {
+    const k = key(f);
+    if (!existing.has(k) && !queuedKeys.has(k)) {
+      unique.push(f);
+      existing.add(k);
+      queuedKeys.add(k);
+    }
+  }
+  if (unique.length === 0) return;
+  uploadQueue.push(...unique);
+  displayFileInfo(unique[0]); // Show first file info
   processUploadQueue();
 }
 
@@ -1078,8 +1220,10 @@ async function processUploadQueue() {
 }
 
 // Upload file
+let uploadInProgress = false;
 async function uploadFile() {
-  if (!selectedFile) return;
+  if (!selectedFile || uploadInProgress) return;
+  uploadInProgress = true;
 
   const progressContainer = document.getElementById('progressContainer');
   const progressFill = document.getElementById('progressFill');
@@ -1157,7 +1301,7 @@ async function uploadFile() {
           const remaining = e.total - e.loaded;
           const timeRemaining = avgSpeed > 0 ? remaining / avgSpeed : 0;
           
-          const percentComplete = Math.round((e.loaded / e.total) * 30) + 50; // 50% to 80%
+          const percentComplete = Math.round((e.loaded / e.total) * 100);
           progressFill.style.width = percentComplete + '%';
           
           const mbLoaded = (e.loaded / (1024 * 1024)).toFixed(1);
@@ -1241,6 +1385,7 @@ async function uploadFile() {
     const linkJson = await linkRes.json();
 
     progressFill.style.width = '100%';
+    progressFill.style.animation = 'none'; // Stop shimmer animation at 100%
     progressText.textContent = 'Complete!';
 
     // Show download link
@@ -1248,15 +1393,27 @@ async function uploadFile() {
       progressContainer.classList.remove('show');
       displayDownloadLink(linkJson.url, linkJson.expires_at);
       
-      // Reload metrics and files
+      // Reload lists; admin endpoints only if isAdmin
       loadMyFiles();
-      loadMetrics();
-      loadFiles();
+      if (isAdmin) {
+        loadMetrics();
+        loadFiles();
+      }
+      
+      // Remove from global dedupe set to allow future re-uploads of the same file
+      try {
+        const keyStr = `${selectedFile.name}|${selectedFile.size}`;
+        queuedKeys.delete(keyStr);
+      } catch (_) {}
+
+      uploadInProgress = false;
     }, 500);
 
   } catch (err) {
     progressContainer.classList.remove('show');
+    uploadInProgress = false;
     showAlert(uploadAlert, 'Upload failed: ' + err.message, 'error');
+    console.error('Upload error:', err);
   }
 }
 
@@ -1285,30 +1442,7 @@ function copyLink() {
   }, 2000);
 }
 
-// Drag and drop handlers
-const uploadArea = document.getElementById('uploadArea');
-
-uploadArea.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  uploadArea.classList.add('dragover');
-});
-
-uploadArea.addEventListener('dragleave', () => {
-  uploadArea.classList.remove('dragover');
-});
-
-uploadArea.addEventListener('drop', (e) => {
-  e.preventDefault();
-  uploadArea.classList.remove('dragover');
-  
-  const files = e.dataTransfer.files;
-  if (files.length > 0) {
-    selectedFile = files[0];
-    document.getElementById('fileInput').files = files;
-    displayFileInfo(selectedFile);
-    uploadFile();
-  }
-});
+// Note: Drag-and-drop is initialized in initDragAndDrop(); duplicate handlers removed.
 
 // Load metrics
 async function loadMetrics() {
@@ -1377,10 +1511,40 @@ async function loadMetrics() {
 }
 
 // Load user quota information
+function setQuotaBanner(message) {
+  const banner = document.getElementById('quotaBanner');
+  const text = document.getElementById('quotaBannerText');
+  if (!banner || !text) return;
+  const dismissed = (typeof localStorage !== 'undefined') && localStorage.getItem('quotaBannerDismissed') === 'true';
+  text.textContent = message || 'Quota information is temporarily unavailable.';
+  if (!dismissed) {
+    banner.classList.remove('hidden');
+  }
+}
+
+function hideQuotaBanner() {
+  const banner = document.getElementById('quotaBanner');
+  if (banner) banner.classList.add('hidden');
+  // Clear dismissal so future quota errors can show the banner again
+  try { localStorage.removeItem('quotaBannerDismissed'); } catch (e) {}
+}
+
 async function loadQuota() {
   try {
     const res = await fetch('/quota');
-    if (!res.ok) return;
+    const quotaOutput = document.getElementById('quotaOutput');
+    if (!res.ok) {
+      if (quotaOutput) {
+        quotaOutput.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-value">–</div>
+            <div class="stat-label">Quota Unavailable</div>
+          </div>
+        `;
+      }
+      setQuotaBanner('Quota information is temporarily unavailable.');
+      return;
+    }
     
     const quota = await res.json();
     
@@ -1420,9 +1584,19 @@ async function loadQuota() {
       </div>
     `;
     
-    document.getElementById('quotaOutput').innerHTML = html;
+    if (quotaOutput) quotaOutput.innerHTML = html;
+    hideQuotaBanner();
   } catch (err) {
-    console.error('Failed to load quota:', err);
+    const quotaOutput = document.getElementById('quotaOutput');
+    if (quotaOutput) {
+      quotaOutput.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">–</div>
+          <div class="stat-label">Quota Unavailable</div>
+        </div>
+      `;
+    }
+    setQuotaBanner('Quota information is temporarily unavailable.');
   }
 }
 
@@ -1486,39 +1660,284 @@ function filterFiles() {
 
 // Load user's own files
 // Load user's own files
+// My Uploads state
+let myFilesAll = [];
+let myFilesState = {
+  sort: 'date-desc',
+  search: '',
+  compact: false,
+  collapsed: true,
+  status: '',
+};
+let mySelection = new Set();
+let myFilesRendered = [];
+
 async function loadMyFiles() {
   try {
     const res = await fetch('/user/files');
     if (!res.ok) return;
-    
-    const files = await res.json();
-    
-    if (!files || files.length === 0) {
-      document.getElementById('myFilesOutput').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">You haven\'t uploaded any files yet</p>';
-      return;
+
+    myFilesAll = await res.json();
+
+    const countEl = document.getElementById('myFilesCount');
+    if (countEl) {
+      const count = myFilesAll?.length || 0;
+      countEl.textContent = count > 0 ? `• ${count} file${count === 1 ? '' : 's'}` : '';
     }
 
-    let html = '<table><thead><tr>';
-    html += '<th>Original Name</th><th>Status</th><th>Size</th>';
-    html += '<th>Downloads</th><th>Uploaded</th>';
-    html += '</tr></thead><tbody>';
+    const updEl = document.getElementById('myFilesUpdated');
+    if (updEl) {
+      const now = new Date();
+      updEl.textContent = `• updated ${now.toLocaleTimeString()}`;
+    }
 
-    files.forEach(f => {
-      const icon = getFileIcon(f.orig_name, f.content_type);
-      html += '<tr>';
-      html += `<td>${icon} <strong>${escapeHtml(f.orig_name)}</strong></td>`;
-      html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
-      html += `<td>${formatFileSize(f.size_bytes)}</td>`;
-      html += `<td>${f.download_count || 0}</td>`;
-      html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
-      html += '</tr>';
-    });
+    // Initialize controls to current state
+    const sortSel = document.getElementById('myFilesSort');
+    if (sortSel) sortSel.value = myFilesState.sort;
+    const searchInput = document.getElementById('myFilesSearch');
+    if (searchInput) searchInput.value = myFilesState.search;
+    const statusSel = document.getElementById('myFilesStatus');
+    if (statusSel) statusSel.value = myFilesState.status;
 
-    html += '</tbody></table>';
-    document.getElementById('myFilesOutput').innerHTML = html;
+    applySortAndFilter();
   } catch (err) {
     console.error('Failed to load my files:', err);
   }
+}
+
+function applySortAndFilter() {
+  let files = Array.isArray(myFilesAll) ? [...myFilesAll] : [];
+
+  // Filter
+  const term = (myFilesState.search || '').toLowerCase();
+  if (term) {
+    files = files.filter(f => {
+      const name = (f.orig_name || '').toLowerCase();
+      return name.includes(term);
+    });
+  }
+
+  // Status filter
+  if (myFilesState.status) {
+    files = files.filter(f => f.status === myFilesState.status);
+  }
+
+  // Sort
+  const [key, dir] = myFilesState.sort.split('-');
+  const asc = dir === 'asc';
+  files.sort((a, b) => {
+    switch (key) {
+      case 'name': {
+        const an = (a.orig_name || '').toLowerCase();
+        const bn = (b.orig_name || '').toLowerCase();
+        if (an < bn) return asc ? -1 : 1;
+        if (an > bn) return asc ? 1 : -1;
+        return 0;
+      }
+      case 'size': {
+        const av = a.size_bytes || 0;
+        const bv = b.size_bytes || 0;
+        return asc ? av - bv : bv - av;
+      }
+      case 'downloads': {
+        const av = a.download_count || 0;
+        const bv = b.download_count || 0;
+        return asc ? av - bv : bv - av;
+      }
+      case 'date':
+      default: {
+        const at = new Date(a.created_at).getTime() || 0;
+        const bt = new Date(b.created_at).getTime() || 0;
+        return asc ? at - bt : bt - at;
+      }
+    }
+  });
+
+  myFilesRendered = files;
+  renderMyFiles(files);
+}
+
+function renderMyFiles(files) {
+  const out = document.getElementById('myFilesOutput');
+  if (!out) return;
+
+  if (!files || files.length === 0) {
+    out.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">You haven\'t uploaded any files yet</p>';
+    return;
+  }
+
+  const compactClass = myFilesState.compact ? 'compact-table' : '';
+  let html = `<table class="${compactClass}"><thead><tr>`;
+  html += '<th><input type="checkbox" id="mySelectAll" onchange="toggleSelectAll(this.checked)"></th>';
+  html += '<th>Original Name</th><th>Status</th><th>Size</th>';
+  html += '<th>Downloads</th><th>Uploaded</th><th>Actions</th>';
+  html += '</tr></thead><tbody>';
+
+  files.forEach(f => {
+    const icon = getFileIcon(f.orig_name, f.content_type);
+    const checked = mySelection.has(f.id) ? 'checked' : '';
+    html += '<tr>';
+    html += `<td><input type="checkbox" ${checked} onchange="toggleRowSelection('${f.id}', this.checked)"></td>`;
+    html += `<td>${icon} <strong>${escapeHtml(f.orig_name)}</strong></td>`;
+    html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
+    html += `<td>${formatFileSize(f.size_bytes)}</td>`;
+    html += `<td>${f.download_count || 0}</td>`;
+    html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
+    html += `<td><button class="btn btn-danger" onclick="deleteMyFile('${f.id}')">Delete</button></td>`;
+    html += '</tr>';
+  });
+
+  html += '</tbody></table>';
+  out.innerHTML = html;
+
+  // Update select-all checkbox based on current view
+  const allIds = files.map(f => f.id);
+  const allSelected = allIds.length > 0 && allIds.every(id => mySelection.has(id));
+  const selAllEl = document.getElementById('mySelectAll');
+  if (selAllEl) selAllEl.checked = allSelected;
+
+  updateSelectionUI();
+}
+function toggleRowSelection(id, isChecked) {
+  if (isChecked) mySelection.add(id); else mySelection.delete(id);
+  updateSelectionUI();
+}
+
+function toggleSelectAll(isChecked) {
+  const ids = myFilesRendered.map(f => f.id);
+  ids.forEach(id => { if (isChecked) mySelection.add(id); else mySelection.delete(id); });
+  renderMyFiles(myFilesRendered);
+}
+
+function updateSelectionUI() {
+  const btn = document.getElementById('deleteSelectedBtn');
+  if (btn) {
+    const count = mySelection.size;
+    btn.disabled = count === 0;
+    btn.textContent = count > 0 ? `🗑️ Delete Selected (${count})` : '🗑️ Delete Selected';
+  }
+}
+function clearSelection() {
+  mySelection.clear();
+  // Uncheck all checkboxes in current view
+  const out = document.getElementById('myFilesOutput');
+  if (out) {
+    out.querySelectorAll('tbody input[type="checkbox"]').forEach(cb => cb.checked = false);
+  }
+  const selAllEl = document.getElementById('mySelectAll');
+  if (selAllEl) selAllEl.checked = false;
+  updateSelectionUI();
+}
+
+async function deleteSelected() {
+  const count = mySelection.size;
+  if (count === 0) return;
+  // Build filename list
+  const idSet = new Set(mySelection);
+  const names = myFilesAll.filter(f => idSet.has(f.id)).map(f => f.orig_name);
+  const preview = names.slice(0, 10).map(n => `- ${n}`).join('\n');
+  const more = names.length > 10 ? `\n...and ${names.length - 10} more` : '';
+  const msg = `Delete ${count} selected file${count === 1 ? '' : 's'}?\n\n${preview}${more}`;
+  if (!confirm(msg)) return;
+  const ids = Array.from(mySelection);
+  for (const id of ids) {
+    try {
+      const res = await fetch(`/user/files/${id}`, { method: 'DELETE' });
+      if (res.status === 204) {
+        mySelection.delete(id);
+      }
+    } catch (_) {}
+  }
+  // Refresh the list and quota
+  await loadMyFiles();
+  loadQuota();
+}
+
+function selectReadyOnly() {
+  const readyIds = myFilesRendered.filter(f => f.status === 'ready').map(f => f.id);
+  readyIds.forEach(id => mySelection.add(id));
+  renderMyFiles(myFilesRendered);
+}
+async function deleteMyFile(id) {
+  if (!confirm(`Delete file ${id}?`)) return;
+  try {
+    const res = await fetch(`/user/files/${id}`, { method: 'DELETE' });
+    if (res.status === 204) {
+      // Refresh user's files and quota
+      await loadMyFiles();
+      loadQuota();
+    } else if (res.status === 404) {
+      alert('File not found or not owned by you');
+    } else {
+      alert('Failed to delete file');
+    }
+  } catch (err) {
+    alert('Error: ' + err.message);
+  }
+}
+
+function sortMyFiles() {
+  const sel = document.getElementById('myFilesSort');
+  if (!sel) return;
+  myFilesState.sort = sel.value;
+  applySortAndFilter();
+}
+
+function filterMyFiles() {
+  const input = document.getElementById('myFilesSearch');
+  if (!input) return;
+  myFilesState.search = input.value || '';
+  applySortAndFilter();
+}
+
+function toggleCompactView() {
+  myFilesState.compact = !myFilesState.compact;
+  const icon = document.getElementById('viewToggleIcon');
+  const text = document.getElementById('viewToggleText');
+  if (icon && text) {
+    if (myFilesState.compact) {
+      icon.textContent = '🗂️';
+      text.textContent = 'Comfortable';
+    } else {
+      icon.textContent = '📋';
+      text.textContent = 'Compact';
+    }
+  }
+  applySortAndFilter();
+}
+
+function toggleMyUploads() {
+  myFilesState.collapsed = !myFilesState.collapsed;
+  const content = document.getElementById('myUploadsContent');
+  const icon = document.getElementById('myUploadsIcon');
+  if (content) {
+    if (myFilesState.collapsed) {
+      content.classList.add('collapsed');
+    } else {
+      content.classList.remove('collapsed');
+    }
+  }
+  if (icon) {
+    icon.textContent = myFilesState.collapsed ? '▶' : '▼';
+  }
+  try { localStorage.setItem('myUploadsCollapsed', JSON.stringify(myFilesState.collapsed)); } catch (_) {}
+}
+
+// Initialize My Uploads collapsed state from localStorage
+function initMyUploadsCollapseFromStorage() {
+  try {
+    const saved = localStorage.getItem('myUploadsCollapsed');
+    if (saved !== null) {
+      myFilesState.collapsed = JSON.parse(saved) === true;
+      const content = document.getElementById('myUploadsContent');
+      const icon = document.getElementById('myUploadsIcon');
+      if (content) {
+        if (myFilesState.collapsed) content.classList.add('collapsed');
+        else content.classList.remove('collapsed');
+      }
+      if (icon) icon.textContent = myFilesState.collapsed ? '▶' : '▼';
+    }
+  } catch (_) {}
 }
 
 // Delete file
@@ -1679,6 +2098,56 @@ function setupEventListeners() {
   
   // Load server configuration
   loadConfig();
+
+  // Restore session if already logged in (cookie-based)
+  checkSession();
+
+  // Restore My Uploads collapse state from localStorage
+  initMyUploadsCollapseFromStorage();
+
+  // Initialize quota banner dismissal handler
+  const dismissBtn = document.getElementById('quotaBannerDismiss');
+  if (dismissBtn) {
+    dismissBtn.addEventListener('click', () => {
+      try { localStorage.setItem('quotaBannerDismissed', 'true'); } catch (e) {}
+      const banner = document.getElementById('quotaBanner');
+      if (banner) banner.classList.add('hidden');
+    });
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    const targetTag = (e.target && e.target.tagName) || '';
+    const isTyping = ['INPUT', 'TEXTAREA'].includes(targetTag);
+    if (!isLoggedIn) return;
+    // Focus search with '/'
+    if (!isTyping && e.key === '/') {
+      e.preventDefault();
+      const search = document.getElementById('myFilesSearch');
+      if (search) search.focus();
+      return;
+    }
+    // Toggle My Uploads with 'e'
+    if (!isTyping && e.key.toLowerCase() === 'e') {
+      toggleMyUploads();
+      return;
+    }
+    // Select-all visible with 'a'
+    if (!isTyping && e.key.toLowerCase() === 'a') {
+      toggleSelectAll(true);
+      return;
+    }
+    // Clear selection with Escape
+    if (e.key === 'Escape') {
+      clearSelection();
+      return;
+    }
+    // Refresh My Uploads with 'r'
+    if (!isTyping && e.key.toLowerCase() === 'r') {
+      loadMyFiles();
+      return;
+    }
+  });
 }
 
 // Call setup when DOM is ready
@@ -1690,13 +2159,15 @@ if (document.readyState === 'loading') {
 
 // Logout function
 function logout() {
-  isLoggedIn = false;
-  document.getElementById('appScreen').classList.add('hidden');
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('logoutBtn').classList.add('hidden');
-  document.getElementById('username').value = '';
-  document.getElementById('password').value = '';
-  document.getElementById('loginAlert').innerHTML = '';
+  fetch('/logout', { method: 'POST' }).finally(() => {
+    isLoggedIn = false;
+    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.add('hidden');
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('loginAlert').innerHTML = '';
+  });
 }
 
 // Toggle between login and register forms

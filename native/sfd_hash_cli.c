@@ -1,3 +1,9 @@
+/*
+ * sfd_hash_cli.c - Minimal CLI wrapper for the SHA-256 helper.
+ *
+ * Outputs deterministic JSON: {algorithm, hash, bytes}
+ * Used by the Go backend to verify object integrity post-upload.
+ */
 #include "sfd_hash.h"
 
 #include <stdio.h>

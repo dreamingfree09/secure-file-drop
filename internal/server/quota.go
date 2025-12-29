@@ -1,3 +1,8 @@
+// UserQuotaHandler returns per-user storage quota usage and limits.
+// It is used by the UI to display percentage used and color-coded state.
+// quota.go - Per-user storage quota reporting endpoint.
+//
+// Exposes current usage and configured quota to the UI.
 package server
 
 import (
@@ -29,6 +34,7 @@ func (s *Server) UserQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Query user's storage quota and current usage
+	// Note: use user UUID (`users.id`) and `files.user_id` for ownership.
 	var quota sql.NullInt64
 	var usage int64
 
@@ -37,8 +43,8 @@ func (s *Server) UserQuotaHandler(w http.ResponseWriter, r *http.Request) {
 			u.storage_quota_bytes,
 			COALESCE(SUM(f.size_bytes), 0) as current_usage
 		FROM users u
-		LEFT JOIN files f ON f.created_by = u.username AND f.status IN ('stored', 'hashed', 'ready')
-		WHERE u.username = $1
+		LEFT JOIN files f ON f.user_id = u.id AND f.status IN ('stored', 'hashed', 'ready')
+		WHERE u.id = $1
 		GROUP BY u.storage_quota_bytes
 	`, userID).Scan(&quota, &usage)
 

@@ -1,8 +1,13 @@
+// files.go - Metadata creation and user quota enforcement.
+//
+// Handles POST /files to register file metadata with lifecycle status
+// and enforces per-user storage quotas before accepting uploads.
 package server
 
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -11,7 +16,8 @@ import (
 )
 
 // createFileReq represents the JSON payload for creating a new file record.
-// This is the first step in the upload flow - creating metadata before the actual upload.
+//
+// This is step 1 in the upload flow: create metadata before streaming data.
 type createFileReq struct {
 	OrigName     string `json:"orig_name"`
 	ContentType  string `json:"content_type"`
@@ -20,21 +26,22 @@ type createFileReq struct {
 	LinkPassword string `json:"link_password,omitempty"` // Optional: password required to download
 }
 
-// createFileResp is the JSON response returned when a file record is successfully created.
-// Contains the generated UUID, object storage key, and initial status ("pending").
+// createFileResp is returned when a file record is successfully created.
+// It contains the generated UUID, object storage key, and initial status ("pending").
 type createFileResp struct {
 	ID        string `json:"id"`
 	ObjectKey string `json:"object_key"`
 	Status    string `json:"status"`
 }
 
-// createFileHandler handles POST /files requests to create a new file metadata record.
-// This is step 1 of the upload flow: register file metadata in the database with status "pending".
-// The client must then upload the actual file data via POST /upload?id={uuid}.
+// createFileHandler handles POST /files to create a new file metadata record.
 //
-// Request body: JSON with orig_name, content_type, size_bytes
-// Response: JSON with id (UUID), object_key, status ("pending")
-// Authentication: Required (checked by requireAuth middleware)
+// Lifecycle: register metadata in DB with status "pending". The client must
+// subsequently stream file data via POST /upload?id={uuid}.
+//
+// Request: JSON {orig_name, content_type, size_bytes, ttl_hours?}
+// Response: JSON {id (UUID), object_key, status="pending"}
+// Auth: required.
 func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 	return cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -58,7 +65,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 			return
 		}
 
-		// Get current user
+		// Get current user (returns user UUID from session)
 		userID, err := cfg.Auth.getCurrentUser(r)
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -73,12 +80,13 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 				u.storage_quota_bytes,
 				COALESCE(SUM(f.size_bytes), 0) as current_usage
 			FROM users u
-			LEFT JOIN files f ON f.created_by = u.username AND f.status IN ('stored', 'hashed', 'ready')
-			WHERE u.username = $1
-			GROUP BY u.storage_quota_bytes
+			LEFT JOIN files f ON f.user_id = u.id AND f.status IN ('stored', 'hashed', 'ready')
+			WHERE u.id = $1
+			GROUP BY u.id, u.storage_quota_bytes
 		`, userID).Scan(&quota, &currentUsage)
 
 		if err != nil {
+			log.Printf("create file: failed to get user info for %s: %v", userID, err)
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
@@ -107,10 +115,11 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		}
 
 		_, err = db.Exec(`
-			INSERT INTO files (id, object_key, orig_name, content_type, size_bytes, created_by, status, expires_at, auto_delete)
+			INSERT INTO files (id, object_key, orig_name, content_type, size_bytes, user_id, status, expires_at, auto_delete)
 			VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8)
-		`, id, objectKey, req.OrigName, req.ContentType, req.SizeBytes, cfg.Auth.AdminUser, expiresAt, autoDelete)
+		`, id, objectKey, req.OrigName, req.ContentType, req.SizeBytes, userID, expiresAt, autoDelete)
 		if err != nil {
+			log.Printf("create file: failed to insert file record: %v", err)
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}

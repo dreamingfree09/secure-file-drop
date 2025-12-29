@@ -1,0 +1,28 @@
+name: Docs Link Check
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  local-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run local link checker
+        run: bash scripts/link-check.sh
+
+  external-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Lychee link checker (external URLs)
+        uses: lycheeverse/lychee-action@v1.8.0
+        with:
+          args: --no-progress --max-concurrency 4 -c lychee.toml README.md docs/**/*.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

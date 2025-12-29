@@ -1,3 +1,7 @@
+// email.go - SMTP email notifications (verification, resets, file events).
+//
+// Wraps SMTP client configuration and provides convenience methods
+// for sending user-facing emails.
 package server
 
 import (
@@ -20,15 +24,12 @@ type EmailConfig struct {
 
 // LoadEmailConfig reads email configuration from environment variables
 func LoadEmailConfig() EmailConfig {
-	enabled := os.Getenv("SFD_EMAIL_ENABLED") == "true"
-
 	cfg := EmailConfig{
 		SMTPHost:     os.Getenv("SFD_SMTP_HOST"),
 		SMTPPort:     os.Getenv("SFD_SMTP_PORT"),
 		SMTPUser:     os.Getenv("SFD_SMTP_USER"),
-		SMTPPassword: os.Getenv("SFD_SMTP_PASSWORD"),
-		FromEmail:    os.Getenv("SFD_FROM_EMAIL"),
-		Enabled:      enabled,
+		SMTPPassword: os.Getenv("SFD_SMTP_PASS"),
+		FromEmail:    os.Getenv("SFD_SMTP_FROM"),
 	}
 
 	// Set defaults if not provided
@@ -38,6 +39,9 @@ func LoadEmailConfig() EmailConfig {
 	if cfg.FromEmail == "" {
 		cfg.FromEmail = cfg.SMTPUser
 	}
+
+	// Auto-enable if SMTP host is configured
+	cfg.Enabled = cfg.SMTPHost != "" && cfg.SMTPUser != "" && cfg.SMTPPassword != ""
 
 	return cfg
 }
@@ -55,8 +59,8 @@ func NewEmailService(cfg EmailConfig) *EmailService {
 // SendEmail sends an email with the given subject and body
 func (s *EmailService) SendEmail(to, subject, body string) error {
 	if !s.config.Enabled {
-		// Email disabled, just log
-		log.Printf("EMAIL (disabled): To: %s, Subject: %s", to, subject)
+		// Email disabled, just log (sanitized - no email addresses)
+		log.Printf("EMAIL (disabled): Subject: %s", subject)
 		return nil
 	}
 
@@ -234,7 +238,9 @@ func (s *EmailService) SendFileExpirationNotification(to, filename, expiresIn st
 	return s.SendEmail(to, subject, body)
 }
 
-// SendFileDeletedNotification sends notification when file is deleted
+// SendFileDeletedNotification sends a notification when a file is deleted.
+// "reason" is a human-readable descriptor used in the email (e.g.,
+// "manual deletion by admin" or "automatically deleted due to expiration").
 func (s *EmailService) SendFileDeletedNotification(to, filename, reason string) error {
 	subject := "File Deleted - Secure File Drop"
 

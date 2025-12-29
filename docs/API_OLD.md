@@ -1,6 +1,6 @@
-# API Reference
+# API Reference (Deprecated)
 
-This page documents the primary HTTP endpoints used by Secure File Drop. All endpoints are served on the server address (default `:8080`).
+This page is preserved for historical reference. Please refer to the up-to-date API documentation in [docs/API.md](API.md).
 
 Authentication: /login returns a session cookie used for subsequent requests (cookie name `sfd_session` by default).
 
@@ -30,11 +30,8 @@ Authentication: /login returns a session cookie used for subsequent requests (co
 - Errors: 413 file too large (default limit: 50GB, configurable via SFD_MAX_UPLOAD_BYTES)
 - Note: Upload progress is tracked client-side using XMLHttpRequest with progress events
 
-## POST /links
-- Auth required
-- Body: JSON {"id": "<uuid>", "ttl_seconds": 300}
-- Response: 200 {"url": "https://host/download?token=<token>", "expires_at":"RFC3339 timestamp"}
-- Error codes: 409 invalid status, 404 not found
+## POST /links (see API.md for current spec)
+Body shape and fields have been updated. Use `file_id` and `expires_in_hours`, and note that responses return `download_url`.
 
 ## GET /download?token=<token>
 - No auth required; token must be valid and unexpired
@@ -49,4 +46,4 @@ Authentication: /login returns a session cookie used for subsequent requests (co
 - GET /ready returns {"status":"ok"} when DB is reachable
 - GET /version returns build information
 
-For example `curl` usages, see `docs/USAGE.md`.
+For example `curl` usages, see [docs/USAGE.md](USAGE.md) and [docs/API.md](API.md).

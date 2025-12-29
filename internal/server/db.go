@@ -1,3 +1,7 @@
+// db.go - PostgreSQL connection helpers for Secure File Drop.
+//
+// Provides a thin wrapper around database/sql to open a pgx-backed pool,
+// set conservative defaults, and validate connectivity.
 package server
 
 import (

@@ -1,3 +1,10 @@
+// newMinioClient constructs an authenticated MinIO client and ensures the
+// configured bucket exists (creating it if necessary). It returns the client,
+// the bucket name, and any error encountered.
+// minio.go - MinIO client construction and endpoint normalization.
+//
+// Creates an authenticated client, validates bucket existence, and
+// supports endpoints with or without scheme for local/prod usage.
 package server
 
 import (

@@ -11,18 +11,17 @@ Secure File Drop supports email notifications for important events:
 
 ## Configuration
 
-Email notifications are controlled via environment variables:
+Email notifications are controlled via environment variables. Email is automatically enabled when SMTP credentials are provided.
 
-### Required Variables (when email is enabled)
+### Required Variables (auto-enable when provided)
 
 ```bash
-SFD_EMAIL_ENABLED=true              # Set to "true" to enable email notifications
-SFD_SMTP_HOST=smtp.gmail.com        # Your SMTP server hostname
-SFD_SMTP_PORT=587                   # SMTP server port (default: 587 for TLS)
-SFD_SMTP_USER=your-email@gmail.com  # SMTP username (usually your email)
-SFD_SMTP_PASSWORD=your-app-password # SMTP password or app-specific password
-SFD_FROM_EMAIL=noreply@yourdomain.com # From address (defaults to SMTP_USER)
-SFD_BASE_URL=https://yourdomain.com # Base URL for links in emails
+SFD_SMTP_HOST=smtp.gmail.com          # SMTP server hostname
+SFD_SMTP_PORT=587                     # SMTP server port (default: 587 for TLS)
+SFD_SMTP_USER=your-email@gmail.com    # SMTP username (usually your email)
+SFD_SMTP_PASS=your-app-password       # SMTP password or app-specific password
+SFD_SMTP_FROM=noreply@yourdomain.com  # From address (defaults to SMTP_USER)
+SFD_PUBLIC_BASE_URL=https://yourdomain.com  # Public base URL for links in emails
 ```
 
 ### Example: Gmail Configuration
@@ -32,42 +31,39 @@ SFD_BASE_URL=https://yourdomain.com # Base URL for links in emails
 3. Use the following configuration:
 
 ```bash
-SFD_EMAIL_ENABLED=true
 SFD_SMTP_HOST=smtp.gmail.com
 SFD_SMTP_PORT=587
 SFD_SMTP_USER=your-email@gmail.com
-SFD_SMTP_PASSWORD=your-16-char-app-password
-SFD_FROM_EMAIL=noreply@gmail.com
-SFD_BASE_URL=http://localhost:8080
+SFD_SMTP_PASS=your-16-char-app-password
+SFD_SMTP_FROM=noreply@gmail.com
+SFD_PUBLIC_BASE_URL=http://localhost:8080
 ```
 
 ### Example: SendGrid Configuration
 
 ```bash
-SFD_EMAIL_ENABLED=true
 SFD_SMTP_HOST=smtp.sendgrid.net
 SFD_SMTP_PORT=587
 SFD_SMTP_USER=apikey
-SFD_SMTP_PASSWORD=your-sendgrid-api-key
-SFD_FROM_EMAIL=noreply@yourdomain.com
-SFD_BASE_URL=https://yourdomain.com
+SFD_SMTP_PASS=your-sendgrid-api-key
+SFD_SMTP_FROM=noreply@yourdomain.com
+SFD_PUBLIC_BASE_URL=https://yourdomain.com
 ```
 
 ### Example: AWS SES Configuration
 
 ```bash
-SFD_EMAIL_ENABLED=true
 SFD_SMTP_HOST=email-smtp.us-east-1.amazonaws.com
 SFD_SMTP_PORT=587
 SFD_SMTP_USER=your-ses-smtp-username
-SFD_SMTP_PASSWORD=your-ses-smtp-password
-SFD_FROM_EMAIL=verified-sender@yourdomain.com
-SFD_BASE_URL=https://yourdomain.com
+SFD_SMTP_PASS=your-ses-smtp-password
+SFD_SMTP_FROM=verified-sender@yourdomain.com
+SFD_PUBLIC_BASE_URL=https://yourdomain.com
 ```
 
-## Disabling Email Notifications
+## Email Disabled Behavior
 
-If `SFD_EMAIL_ENABLED` is not set to "true" (or is omitted), email notifications are disabled. The system will log email events to the console instead:
+If SMTP credentials are not provided, email notifications are disabled. The system will log email events to the console instead:
 
 ```
 EMAIL (disabled): To: user@example.com, Subject: File Upload Complete
@@ -110,7 +106,7 @@ Content: Shows filename and IP address of downloader
 
 ## Testing Email Configuration
 
-1. Start the backend with email enabled:
+1. Start the backend with SMTP configured:
    ```bash
    docker compose up -d
    ```
@@ -177,7 +173,7 @@ Content: Shows filename and IP address of downloader
 3. **Monitor email delivery**: Track bounces and delivery failures
 4. **Use a custom domain**: More professional than Gmail
 5. **Set appropriate FROM address**: noreply@yourdomain.com
-6. **Configure SFD_BASE_URL**: Use your actual domain, not localhost
+6. **Configure SFD_PUBLIC_BASE_URL**: Use your actual domain, not localhost
 
 ## Future Enhancements
 

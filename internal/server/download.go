@@ -1,3 +1,6 @@
+// downloadHandler serves GET /download requests using a signed token.
+// The token encodes file id and expiry; optional password protection
+// may be enforced. On success, it streams the object from MinIO.
 package server
 
 import (

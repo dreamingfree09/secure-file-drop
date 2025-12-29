@@ -3,12 +3,11 @@
 **Date**: December 28, 2025  
 **Status**: ✅ Production Ready  
 **Test Status**: All passing (45+ unit tests)  
-**Build Status**: Clean (zero errors, zero warnings)
+**Date**: December 29, 2025  
 
 ---
 
 ## Executive Summary
-
 Secure File Drop is a production-ready, self-hosted secure file transfer system with authenticated uploads, integrity verification, and time-limited signed downloads. The system is designed for security-first deployment on the public internet with comprehensive observability, automated maintenance, and enterprise-grade operational features.
 
 ## Project Metrics
@@ -17,7 +16,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 - **Total Go Code**: 3,482 lines
 - **Test Code**: 1,483 lines (42.6% of production code)
 - **Test Coverage**: 17.8% statement coverage in server package
-- **Total Tests**: 45+ unit tests + 1 E2E integration test
+4. Backend → Exec C hash → Calculate SHA-256 (status: hashed)
 - **Source Files**: 20 Go files, 10 test files
 - **Documentation**: 2,000+ lines across 6 guides
 
@@ -30,7 +29,6 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 
 ---
 
-## Architecture Overview
 
 ### Technology Stack
 ```
@@ -67,12 +65,12 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 ### Data Flow
 
 #### Upload Flow
-```
+  "ttl_seconds": 300
 1. User → POST /login → Session cookie
 2. User → POST /files → File metadata created (status: pending)
 3. User → POST /upload?id={uuid} → MinIO storage (status: stored)
 4. Backend → Exec C hash → Calculate SHA-256 (status: hashed)
-5. User → POST /links → Generate signed download token
+  "download_url": "https://yourdomain.com/download?token=...",
 6. User → Share link with recipient
 ```
 
@@ -84,9 +82,10 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 4. MinIO → Content-Type + Content-Disposition headers
 ```
 
----
-
-## Production Features
+SFD_MINIO_ENDPOINT=http://minio:9000
+SFD_MINIO_ACCESS_KEY=minioadmin
+SFD_MINIO_SECRET_KEY=secure-password
+SFD_MINIO_BUCKET=sfd-private
 
 ### ✅ Security (Defense in Depth)
 
@@ -102,7 +101,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 - Separate secrets for sessions and downloads (blast radius reduction)
 - Configurable token expiry (default: 5 minutes)
 
-#### Transport & Network Security
+SFD_MAX_UPLOAD_BYTES=53687091200     # 50 GB
 - TLS termination at Traefik layer
 - Secure headers (HSTS, X-Frame-Options, X-Content-Type-Options)
 - Rate limiting (100 req/s per IP, 1000 burst)
@@ -122,7 +121,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 - Embedded migration files in binary (no external dependencies)
 - Versioned schema with up/down migrations
 - Migration history tracking in `schema_migrations` table
-- Rollback procedures documented ([docs/MIGRATIONS.md](docs/MIGRATIONS.md))
+- Rollback procedures documented ([MIGRATIONS.md](MIGRATIONS.md))
 
 #### Health Checks
 - `/ready` endpoint checks PostgreSQL + MinIO
@@ -145,7 +144,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 ### ✅ Observability
 
 #### Metrics Collection
-- **System Metrics** ([/metrics](internal/server/metrics.go)):
+- **System Metrics** ([/metrics](../internal/server/metrics.go)):
   - `total_uploads` - Successful file uploads
   - `total_downloads` - Successful file downloads
   - `successful_auths` / `failed_auths` - Authentication attempts
@@ -175,7 +174,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 ### ✅ Maintainability
 
 #### Automated Maintenance
-- **Cleanup Job** ([internal/server/cleanup.go](internal/server/cleanup.go)):
+- **Cleanup Job** ([internal/server/cleanup.go](../internal/server/cleanup.go)):
   - Runs on configurable interval (default: 1 hour)
   - Deletes files older than `SFD_CLEANUP_MAX_AGE` (default: 24 hours)
   - Targets `pending` and `failed` statuses only
@@ -185,28 +184,28 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 
 #### Configuration Management
 - **Environment Variables**: All configuration via `.env`
-- **Validation Script** ([scripts/validate-env.sh](scripts/validate-env.sh)):
+- **Validation Script** ([scripts/validate-env.sh](../scripts/validate-env.sh)):
   - Checks required variables
   - Validates secret strength (min 16 chars for passwords, 32 for secrets)
   - DATABASE_URL format verification
   - Color-coded output
-- **Template** ([.env.example](.env.example)):
+- **Template** ([.env.example](../.env.example)):
   - Complete variable listing with descriptions
   - Secret generation instructions
   - Sane defaults for optional variables
 
 #### Documentation
-- **[CONTRIBUTING.md](CONTRIBUTING.md)**: Developer onboarding, code style, PR process
-- **[docs/MIGRATIONS.md](docs/MIGRATIONS.md)**: Migration rollback procedures
-- **[docs/SPEC.md](docs/SPEC.md)**: MVP specification and design decisions
-- **[docs/TRACKER.md](docs/TRACKER.md)**: Feature tracking and milestones
-- **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md)**: This document
-- **[README.md](README.md)**: Quick start, usage overview, admin features
+- **[CONTRIBUTING.md](../CONTRIBUTING.md)**: Developer onboarding, code style, PR process
+- **[MIGRATIONS.md](MIGRATIONS.md)**: Migration rollback procedures
+- **[SPEC.md](SPEC.md)**: MVP specification and design decisions
+- **[TRACKER.md](TRACKER.md)**: Feature tracking and milestones
+- **[PRODUCTION_READINESS.md](PRODUCTION_READINESS.md)**: This document
+- **[README.md](../README.md)**: Quick start, usage overview, admin features
 
 ### ✅ Testing
 
 #### Unit Tests (45+ tests)
-- **Upload Handler** ([internal/server/upload_test.go](internal/server/upload_test.go)):
+- **Upload Handler** ([internal/server/upload_test.go](../internal/server/upload_test.go)):
   - Invalid method validation
   - Missing/invalid UUID handling
   - Max bytes limit enforcement (valid, empty, invalid, negative)
@@ -214,7 +213,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
   - Status validation (pending/stored/hashed/failed)
   - Context timeout handling
 
-- **Download Handler** ([internal/server/download_test.go](internal/server/download_test.go)):
+- **Download Handler** ([internal/server/download_test.go](../internal/server/download_test.go)):
   - Token expiry validation
   - Valid token flow (end-to-end)
   - Status checks (ready/pending/stored/failed)
@@ -223,12 +222,12 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
   - Content-Disposition headers (filenames with spaces, quotes)
   - Token verification errors (malformed, empty, multiple dots)
 
-- **File Creation** ([internal/server/files_test.go](internal/server/files_test.go)):
+- **File Creation** ([internal/server/files_test.go](../internal/server/files_test.go)):
   - Success case
   - Invalid HTTP methods
   - Input validation (empty name/type, negative size, whitespace)
 
-- **Admin Endpoints** ([internal/server/admin_test.go](internal/server/admin_test.go)):
+- **Admin Endpoints** ([internal/server/admin_test.go](../internal/server/admin_test.go)):
   - List files invalid method
   - Delete file invalid method
   - Missing file ID
@@ -236,7 +235,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
   - JSON serialization (CleanupResult, FileInfo)
 
 #### Integration Tests
-- **E2E Test** ([tests/e2e/main_test.go](tests/e2e/main_test.go)):
+- **E2E Test** ([tests/e2e/e2e_test.go](../tests/e2e/e2e_test.go)):
   - Full stack Docker Compose environment
   - Login → Upload → Hash → Link → Download flow
   - Real PostgreSQL, MinIO, and C hash utility
@@ -331,7 +330,7 @@ Content-Type: application/json
 {"username": "admin", "password": "..."}
 
 Response: 200 OK
-Set-Cookie: sfd_session=...; HttpOnly; Secure; SameSite=Strict
+Set-Cookie: sfd_session=...; HttpOnly; Secure; SameSite=Lax
 ```
 
 ### File Upload Flow
@@ -358,7 +357,7 @@ Content-Type: multipart/form-data
 file=@document.pdf
 
 Response: 200 OK
-{"status": "stored"}
+{"status": "hashed"}
 
 # 3. Generate download link
 POST /links
@@ -366,8 +365,8 @@ Authorization: Cookie sfd_session=...
 Content-Type: application/json
 
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "ttl_seconds": 300
+  "file_id": "550e8400-e29b-41d4-a716-446655440000",
+  "expires_in_hours": 24
 }
 
 Response: 200 OK
@@ -506,7 +505,7 @@ Response: 200 OK
 4. **No usage quotas**: Users can upload unlimited files (within size limit)
 
 ### Future Work Items
-See [docs/TRACKER.md](docs/TRACKER.md) for full feature roadmap.
+See [TRACKER.md](TRACKER.md) for full feature roadmap.
 
 ---
 

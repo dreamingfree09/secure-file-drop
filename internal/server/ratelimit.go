@@ -1,3 +1,10 @@
+// rateLimiter implements a simple token bucket rate limiting middleware
+// applied globally. It limits requests per IP over a fixed interval and
+// responds with 429 when the bucket is empty.
+// ratelimit.go - Token-bucket rate limiter middleware by client IP.
+//
+// Provides a simple per-IP limiter to protect endpoints; designed
+// to complement proxy-side limits.
 package server
 
 import (

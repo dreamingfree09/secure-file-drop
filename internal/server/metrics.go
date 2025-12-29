@@ -1,3 +1,7 @@
+// metrics.go - In-memory counters and snapshot for simple observability.
+//
+// Tracks request counts and file lifecycle tallies; exposes a
+// thread-safe API for handlers and a JSON snapshot for dashboards.
 package server
 
 import (

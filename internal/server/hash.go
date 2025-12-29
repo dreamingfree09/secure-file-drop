@@ -1,3 +1,10 @@
+// sha256FromMinioObject reads an object from MinIO, computes its SHA-256
+// and returns both hex and raw byte representations along with the number
+// of bytes processed. Errors are returned when streaming fails.
+// hash.go - SHA-256 computation via native helper for stored objects.
+//
+// Downloads MinIO objects to temp files and invokes sfd-hash to
+// produce deterministic integrity metadata.
 package server
 
 import (

@@ -4,7 +4,7 @@
 
 Secure File Drop provides a RESTful API for secure file uploads, downloads, and management. All authenticated endpoints require a session cookie obtained via `/login`.
 
-**Base URL**: `http://localhost:8080` (configure via `SFD_BASE_URL`)
+**Base URL**: `http://localhost:8080` (prefer `SFD_PUBLIC_BASE_URL`, fallback to `SFD_BASE_URL`)
 
 **Authentication**: Session-based (cookie: `sfd_session`)
 
@@ -52,6 +52,27 @@ Authenticate and receive a session cookie.
 - `400 Bad Request`: Missing username or password
 
 **Cookie Set:** `sfd_session` (HttpOnly, 12-hour expiry)
+
+---
+
+### Logout
+
+**POST** `/logout`
+
+Clear the session cookie and end the session.
+
+**Headers:**
+```
+Cookie: sfd_session=<token>
+```
+
+**Response:** `200 OK`
+```json
+{ "status": "ok" }
+```
+
+**Errors:**
+- `405 Method Not Allowed`: Wrong HTTP method (must be POST)
 
 ---
 
@@ -341,6 +362,35 @@ Cookie: sfd_session=<token>
 **Errors:**
 - `401 Unauthorized`: Not authenticated
 
+**Operational Notes:**
+- The UI periodically polls `/quota` to render storage usage. Apply lighter reverse proxy rate limits (e.g., ~10 requests/second per IP) to avoid hammering while keeping it responsive.
+- Do not cache `/quota` at the proxy layer; responses are user-specific and should reflect current usage immediately.
+ - See also: reverse proxy examples and `/quota` tuning in [docs/DEPLOYMENT.md](DEPLOYMENT.md).
+
+---
+
+### Delete User File
+
+**DELETE** `/user/files/{file-id}`
+
+Delete a file owned by the current user.
+
+**Headers:**
+```
+Cookie: sfd_session=<token>
+```
+
+**Path Parameters:**
+- `file-id`: UUID of file to delete
+
+**Response:** `204 No Content`
+
+**Errors:**
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: File not found or not owned by user
+
+**Side Effect:** Sends deletion notification email to the user (best-effort)
+
 ---
 
 ### Get User Quota
@@ -402,10 +452,12 @@ Content-Type: application/json
 **Response:** `200 OK`
 ```json
 {
-  "download_url": "http://localhost:8080/download?token=eyJhbG...",
+  "download_url": "https://example.com/download?token=eyJhbG...",
   "expires_at": "2025-12-29T10:30:00Z"
 }
 ```
+
+Note: `download_url` uses `SFD_PUBLIC_BASE_URL` when set (recommended for public links), otherwise falls back to `SFD_BASE_URL`.
 
 **Errors:**
 - `401 Unauthorized`: Not authenticated
@@ -449,6 +501,8 @@ Content-Length: 1048576
 ---
 
 ## Admin Operations
+
+Admin endpoints are protected by `requireAdmin`. For operational hardening and best practices, see [docs/SECURITY.md](SECURITY.md).
 
 ### List All Files
 
@@ -724,7 +778,7 @@ Clients should call `/config` to get the current limit before upload.
 - `SameSite`: Lax
 - `Max-Age`: 12 hours
 
-**Storage:** In-memory (cleared on server restart)
+**Storage:** Stateless HMAC-signed cookie; validated server-side without persistent session storage
 
 **Renewal:** Sessions do not auto-renew; re-login required after expiry
 
@@ -733,7 +787,7 @@ Clients should call `/config` to get the current limit before upload.
 ## Security Features
 
 1. **HMAC-Signed Tokens**: Download links use HMAC-SHA256 for integrity
-2. **Password Hashing**: Bcrypt with cost factor 10
+2. **Password Hashing**: Bcrypt with cost factor 12
 3. **Session Secrets**: Require `SFD_SESSION_SECRET` environment variable
 4. **Rate Limiting**: Global 100 req/min per IP
 5. **Content-Type Validation**: Enforced on uploads
@@ -845,6 +899,6 @@ curl -O "http://localhost:8080/download?token=<signed-token>"
 
 ---
 
-**Last Updated:** 2025-12-28
+**Last Updated:** 2025-12-29
 **API Version:** 1.0
 **Server Version:** See `/version` endpoint

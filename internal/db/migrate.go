@@ -1,3 +1,7 @@
+// migrate.go - Embedded SQL migrations runner using golang-migrate.
+//
+// Applies all pending migrations from the embedded iofs to Postgres
+// on startup; safe to run repeatedly (no-op when up to date).
 package db
 
 import (

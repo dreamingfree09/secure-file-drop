@@ -1,0 +1,15 @@
+# Lychee configuration for external link checking
+verbose = "warn"
+max_concurrency = 4
+max_retries = 3
+timeout = 20
+
+# Exclude local dev and placeholder domains
+exclude = [
+  "http://localhost:8080/.*",
+  "https://yourdomain.com/.*",
+  "https://your-host/.*",
+]
+
+# Accept common redirect codes as valid
+accept = ["200..=399"]

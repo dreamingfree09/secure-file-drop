@@ -34,6 +34,8 @@ Secure File Drop is a lightweight, self-hosted service for authenticated file up
 
 This repository contains a production-ready file sharing service with 20+ features:
 
+Docs link health: links are checked in pre-commit (local Markdown link checker) and in CI via a local checker plus Lychee for external URLs. See [.pre-commit-config.yaml](.pre-commit-config.yaml) and [.github/workflows/docs-link-check.yml](.github/workflows/docs-link-check.yml).
+
 **Core Features:**
 - Multi-file upload with drag & drop
 - Email verification and password reset
@@ -66,11 +68,11 @@ Built with Go, PostgreSQL, MinIO, and deployed via Docker Compose.
 1. Copy `docker-compose.yml` and set required environment variables (see `docs/USAGE.md` for a full list).
 2. Start services:
 
-   docker compose up -d
+  docker compose up -d
 
-3. Initialize database schema (example using `psql`):
+3. Migrations apply automatically on backend startup. Verify readiness:
 
-   psql -h localhost -U postgres -d sfd -f internal/db/schema.sql
+  curl http://localhost:8080/ready
 
 4. Visit the web UI (default: http://localhost:8080) and log in using `SFD_ADMIN_USER`/`SFD_ADMIN_PASS`.
 
@@ -125,6 +127,8 @@ Admin endpoints (require authentication):
 - GET /metrics - System-wide usage statistics
 - GET /quota - User storage quota information
 
+See Security best practices for admin routes and deployment hardening in [docs/SECURITY.md](docs/SECURITY.md).
+
 ### Background Jobs
 The server runs an automated cleanup job (configurable via environment):
 - `SFD_CLEANUP_ENABLED=true` - Enable/disable cleanup (default: true)
@@ -132,6 +136,13 @@ The server runs an automated cleanup job (configurable via environment):
 - `SFD_CLEANUP_MAX_AGE=24h` - Delete files older than this in pending/failed states (default: 24 hours)
 
 Refer to `docs/API.md` for comprehensive API documentation with request/response examples, `docs/EMAIL_NOTIFICATIONS.md` for SMTP configuration, and `docs/USAGE.md` for detailed usage guides.
+
+## Frontend UX
+
+- **My Uploads Controls**: Sorting, search, status filters, compact view. The section is collapsed by default and its collapse state persists via localStorage. Keyboard shortcuts: `/` focuses search, `e` toggles the section, `a` selects all visible, `Esc` clears selection, `r` refreshes the list.
+- **Drag-and-Drop Stability**: Drop events are debounced and uploads deduplicated to prevent accidental double-initiations when dragging files over the page.
+- **Quota Banner**: If `/quota` is unavailable or rate-limited, a non-blocking information banner appears with an ℹ️ tooltip. Users can dismiss the banner; dismissal persists locally and resets after a successful quota load.
+ - **Proxy Tuning**: See reverse proxy examples (Traefik/Nginx) for `/quota` rate-limit guidance in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Documentation
 
@@ -141,6 +152,7 @@ Comprehensive documentation is available in `docs/`:
 - **[EMAIL_NOTIFICATIONS.md](docs/EMAIL_NOTIFICATIONS.md)**: SMTP setup and email templates
 - **[SPEC.md](docs/SPEC.md)**: Original MVP specification
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**: System architecture and components
+- **[SECURITY.md](docs/SECURITY.md)**: Session model, hashing, signed links, and best practices
 - **[USAGE.md](docs/USAGE.md)**: Detailed usage examples
 - **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**: Production deployment guide
 - **[DB_SCHEMA.md](docs/DB_SCHEMA.md)**: Database schema and migrations

@@ -1,3 +1,11 @@
+// RegisterHandler handles POST /register to create new users and issue
+// an email verification. Email must be verified before login succeeds.
+// Password complexity is enforced; responses avoid leaking user existence.
+// VerifyEmailHandler handles GET /verify?token=... and marks the user
+// email as verified, enabling login. Tokens are single-use and time-bound.
+// register.go - User registration and verification flow handlers.
+//
+// Handles account creation with email verification and basic validation.
 package server
 
 import (
@@ -188,7 +196,7 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate verification token
+	// Generate verification token for email verification
 	verificationToken, err := generateVerificationToken()
 	if err != nil {
 		log.Printf("register: token generation failed: %v", err)
@@ -196,12 +204,12 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create user with verification token
+	// Create user
 	userID := uuid.New()
 	_, err = cfg.DB.Exec(`
-		INSERT INTO users (id, email, username, password_hash, verification_token, verification_sent_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`, userID, req.Email, req.Username, passwordHash, verificationToken, time.Now().UTC())
+		INSERT INTO users (id, email, username, password_hash, verification_token, verification_sent_at, email_verified)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, userID, req.Email, req.Username, passwordHash, verificationToken, time.Now().UTC(), false)
 	if err != nil {
 		log.Printf("register: insert failed: %v", err)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
@@ -214,7 +222,7 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		// Don't fail registration if email fails - user is already created
 	}
 
-	log.Printf("register: created user %s (%s) - verification email sent", req.Username, req.Email)
+	log.Printf("register: created user - verification email sent")
 
 	// Return success response
 	w.Header().Set("Content-Type", "application/json")
@@ -448,6 +456,8 @@ func authenticateUser(db *sql.DB, username, password string) (string, bool) {
 	var passwordHash string
 	var emailVerified bool
 
+	log.Printf("auth: attempting login (username: %s)", username)
+
 	err := db.QueryRow(
 		"SELECT id, password_hash, email_verified FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE",
 		username,
@@ -455,21 +465,29 @@ func authenticateUser(db *sql.DB, username, password string) (string, bool) {
 
 	if err != nil {
 		if err == sql.ErrNoRows {
+			log.Printf("auth: user not found or not active")
 			return "", false
 		}
 		log.Printf("auth: db query failed: %v", err)
 		return "", false
 	}
 
+	log.Printf("auth: found user (id: %s, verified: %v)", userID, emailVerified)
+
 	if !verifyPassword(password, passwordHash) {
+		log.Printf("auth: password verification failed")
 		return "", false
 	}
+
+	log.Printf("auth: password verified")
 
 	// Check if email is verified
 	if !emailVerified {
 		log.Printf("auth: login blocked - email not verified for user %s", userID)
 		return "", false
 	}
+
+	log.Printf("auth: login successful")
 
 	// Update last login
 	_, _ = db.Exec("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1", userID)

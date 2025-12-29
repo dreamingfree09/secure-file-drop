@@ -1,3 +1,10 @@
+/*
+ * sfd_hash.c - Native SHA-256 hashing utility (implementation)
+ *
+ * Uses OpenSSL EVP to stream a file and compute its SHA-256 digest.
+ * Part of Secure File Drop's integrity verification pipeline.
+ * Non-allocating, incremental processing for large files.
+ */
 #include "sfd_hash.h"
 
 #include <errno.h>

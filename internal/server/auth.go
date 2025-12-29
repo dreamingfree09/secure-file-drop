@@ -1,3 +1,7 @@
+// auth.go - Stateless session cookies and authentication helpers.
+//
+// Implements HMAC-signed cookie sessions, login/logout handlers,
+// and DB-backed user authentication compatible with the MVP.
 package server
 
 import (
@@ -8,16 +12,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 	"time"
 )
 
-// AuthConfig holds authentication-related configuration used by the
-// HTTP handlers (admin credentials, session secrets and cookie settings).
+// AuthConfig holds authentication-related configuration used by HTTP handlers
+// (admin credentials, session secrets, cookie settings, and DB for user auth).
 //
-// It is intentionally lightweight for the MVP and used by unit tests.
-// Now also supports database-backed user authentication.
+// It is intentionally lightweight for the MVP yet production-ready.
+// Unit tests can construct this directly. Database-backed user auth
+// is supported when DB is non-nil.
 type AuthConfig struct {
 	AdminUser     string
 	AdminPass     string
@@ -110,7 +116,8 @@ func (a AuthConfig) verifyToken(tok string) (sessionPayload, error) {
 	return decoded, nil
 }
 
-// loginHandler handles both legacy admin login and database user login
+// loginHandler handles both database-backed user login and legacy admin login.
+// On success, it issues a signed session cookie (HttpOnly, SameSite=Lax, Secure).
 func (a AuthConfig) loginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -166,14 +173,36 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 			Expires:  exp,
 			HttpOnly: true,
 			SameSite: http.SameSiteLaxMode,
-			// Secure will be true once HTTPS is enforced at proxy; for local dev it can remain false.
-			Secure: false,
+			// Secure flag enabled for HTTPS (cloudflared tunnel provides TLS)
+			Secure: true,
 		})
 
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"status": "ok",
 		})
+	}
+}
+
+// logoutHandler clears the session cookie by setting an expired cookie
+func (a AuthConfig) logoutHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		http.SetCookie(w, &http.Cookie{
+			Name:     a.cookieName(),
+			Value:    "",
+			Path:     "/",
+			Expires:  time.Unix(0, 0),
+			MaxAge:   -1,
+			HttpOnly: true,
+			SameSite: http.SameSiteLaxMode,
+			Secure:   true,
+		})
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"status": "ok"})
 	}
 }
 
@@ -192,7 +221,7 @@ func (a AuthConfig) requireAuth(next http.Handler) http.Handler {
 	})
 }
 
-// getCurrentUser extracts the current user ID from the session cookie
+// getCurrentUser extracts the current user ID (subject) from the session cookie.
 func (a AuthConfig) getCurrentUser(r *http.Request) (string, error) {
 	c, err := r.Cookie(a.cookieName())
 	if err != nil {
@@ -203,4 +232,46 @@ func (a AuthConfig) getCurrentUser(r *http.Request) (string, error) {
 		return "", err
 	}
 	return payload.Sub, nil
+}
+
+// requireAdmin is middleware that checks if the authenticated user has admin role.
+func (a AuthConfig) requireAdmin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// First check authentication
+		c, err := r.Cookie(a.cookieName())
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		payload, err := a.verifyToken(c.Value)
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		// Check if user is admin
+		if a.DB == nil {
+			http.Error(w, "server misconfigured", http.StatusInternalServerError)
+			return
+		}
+
+		var isAdmin bool
+		err = a.DB.QueryRow("SELECT is_admin FROM users WHERE id = $1 AND is_active = TRUE", payload.Sub).Scan(&isAdmin)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "forbidden", http.StatusForbidden)
+				return
+			}
+			log.Printf("requireAdmin: db query failed: %v", err)
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+
+		if !isAdmin {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

@@ -1,3 +1,8 @@
+// logging.go - Request ID injection and structured request logging.
+//
+// Wraps handlers to emit one log line per request including request ID,
+// method, path, status code, duration, and user agent. Avoids sensitive
+// data and records basic metrics.
 package server
 
 import (

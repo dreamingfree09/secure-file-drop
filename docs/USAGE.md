@@ -1,6 +1,6 @@
 # Usage
 
-This document provides step-by-step examples for common workflows: logging in, creating a file record, uploading content, creating a download link, and downloading a file.
+This document provides step-by-step examples for common workflows: logging in, verifying session, creating a file record, uploading content, creating a download link, downloading a file, and logging out.
 
 > Note: the server expects authentication via a session cookie set by POST /login. All write actions require authentication.
 
@@ -12,8 +12,8 @@ This document provides step-by-step examples for common workflows: logging in, c
 - SFD_DOWNLOAD_SECRET (random string for signing download tokens)
 - SFD_MAX_UPLOAD_BYTES (max upload size in bytes, default: 50GB = 53687091200)
 - SFD_MINIO_ENDPOINT, SFD_MINIO_ACCESS_KEY, SFD_MINIO_SECRET_KEY, SFD_MINIO_BUCKET
-- SFD_DB_DSN (Postgres connection string)
-- SFD_PUBLIC_BASE_URL (optional; used to generate deterministic download links)
+- DATABASE_URL (Postgres connection string)
+- SFD_PUBLIC_BASE_URL (preferred; used to generate public download links)
 
 ## Login
 
@@ -69,13 +69,13 @@ Response (200):
 Request:
 
 curl -v -X POST -H "Content-Type: application/json" \
-  -d '{"id":"<uuid>","ttl_seconds":300}' \
+  -d '{"file_id":"<uuid>","expires_in_hours":24}' \
   http://localhost:8080/links -b cookies.txt
 
 Response (200):
 
 {
-  "url": "https://your-host/download?token=<signed-token>",
+  "download_url": "https://your-host/download?token=<signed-token>",
   "expires_at": "2025-12-27T12:34:56Z"
 }
 
@@ -84,6 +84,33 @@ Response (200):
 GET the provided URL (no authentication required if token is valid):
 
 curl -v "https://your-host/download?token=<signed-token>" -O
+
+If the link was created with a password, include `&password=<password>` in the URL.
+## Verify Session
+
+Check if you are still authenticated:
+
+curl -v http://localhost:8080/me -b cookies.txt
+
+Response (200):
+
+{
+  "status": "ok",
+  "username": "admin",
+  "is_admin": true
+}
+
+If the session is invalid or expired, the response will be `401 Unauthorized`.
+
+## Logout
+
+End the session and clear the cookie:
+
+curl -v -X POST http://localhost:8080/logout -b cookies.txt
+
+Response (200):
+
+{ "status": "ok" }
 
 ## Troubleshooting
 

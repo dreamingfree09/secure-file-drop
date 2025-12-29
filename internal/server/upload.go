@@ -1,3 +1,7 @@
+// upload.go - Streaming upload handler and post-storage hashing.
+//
+// Streams multipart file data to MinIO, updates lifecycle status,
+// computes SHA-256 via native utility, and transitions metadata.
 package server
 
 import (
@@ -34,14 +38,15 @@ func maxUploadBytes() (int64, error) {
 	return strconv.ParseInt(raw, 10, 64)
 }
 
-// uploadHandler handles POST /upload?id={uuid} requests for streaming file uploads to MinIO.
-// It validates the file ID exists in the database with status "pending", reads the multipart
-// form data, streams it directly to MinIO, then updates the database status to "stored".
-// After storage, it triggers asynchronous hashing of the file via the native C utility.
+// uploadHandler handles POST /upload?id={uuid} streaming uploads to MinIO.
 //
-// Required query parameter: id (UUID of file record created via /files)
-// Required form field: file (the binary file data)
-// Authentication: Required (checked by requireAuth middleware)
+// It validates the file ID exists with status "pending", reads multipart form data,
+// streams it directly to MinIO, then updates status to "stored". After storage,
+// it computes SHA-256 (via native utility) and transitions to "hashed" or "failed".
+//
+// Required query: id (UUID from /files)
+// Required form: file (binary)
+// Auth: required.
 func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) http.Handler {
 	return cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Only accept POST requests
@@ -167,7 +172,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
-		shaHex, _, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
+		shaHex, hashBytes, _, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
 		if herr != nil {
 			_, _ = db.Exec(
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'stored'`,

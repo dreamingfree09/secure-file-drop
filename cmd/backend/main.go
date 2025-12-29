@@ -1,3 +1,8 @@
+// cmd/backend/main.go - Production entrypoint for Secure File Drop.
+//
+// Wires configuration, runs migrations, starts the HTTP server, and
+// performs graceful shutdown on signals. Prefers SFD_PUBLIC_BASE_URL
+// for generating absolute links.
 package main
 
 import (
@@ -59,8 +64,8 @@ func main() {
 	emailCfg := server.LoadEmailConfig()
 	emailSvc := server.NewEmailService(emailCfg)
 
-	// Get base URL for email links
-	baseURL := getenvDefault("SFD_BASE_URL", "http://localhost:8080")
+	// Get public base URL for links (prefer SFD_PUBLIC_BASE_URL, fallback to SFD_BASE_URL)
+	baseURL := getenvDefault("SFD_PUBLIC_BASE_URL", getenvDefault("SFD_BASE_URL", "http://localhost:8080"))
 
 	srv := server.New(server.Config{
 		Addr:     addr,

@@ -1,3 +1,28 @@
+//
+// Secure File Drop - End-to-End Test
+//
+// Purpose:
+//   Validates the core upload → hash → link → download flow against real
+//   Postgres and MinIO instances using dockertest. It builds a compatible
+//   hash tool (native C if available, else a tiny Go fallback), starts the
+//   backend with ephemeral configuration, performs an authenticated session,
+//   creates file metadata, uploads content, creates a download link, and
+//   verifies the downloaded payload.
+//
+// Usage:
+//   Requires Docker available to the test runner. Run:
+//     go test -v ./tests/e2e -run TestUploadHashDownloadFlow
+//   Optional env:
+//     SFD_MINIO_TEST_TAG  override MinIO image tag for compatibility.
+//
+// Notes:
+//   - Network ports are dynamically mapped by dockertest; the test queries
+//     assigned host ports and injects them into backend env vars.
+//   - The test applies schema migrations by executing internal/db/schema.sql
+//     directly via database/sql to minimize external tooling dependencies.
+//   - This suite is self-contained and does not require the local docker-compose
+//     stack to be running.
+
 package e2e
 
 import (

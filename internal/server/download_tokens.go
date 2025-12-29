@@ -1,3 +1,7 @@
+// download_tokens.go - HMAC-signed download token helpers.
+//
+// Encodes file ID and expiry into URL-safe tokens and verifies them
+// server-side for authorization.
 package server
 
 import (

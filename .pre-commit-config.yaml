@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: docs-link-check
+        name: Docs link check (README + docs)
+        entry: bash scripts/link-check.sh
+        language: system
+        types: [markdown]
+        pass_filenames: false

@@ -1,3 +1,7 @@
+// server.go - HTTP server wiring and lifecycle for Secure File Drop.
+//
+// Registers routes, configures dependencies, and exposes Start/Shutdown.
+// Keeps handler logic modular for testability.
 package server
 
 import (
@@ -14,16 +18,19 @@ import (
 // BuildInfo contains build-time metadata embedded into the server.
 //
 // Version is a semantic version string and Commit is the short git
-// commit hash used to build the binary.
+// commit hash used to build the binary. These values are exposed by
+// the /version endpoint and can be used for debugging and telemetry.
 type BuildInfo struct {
 	Version string
 	Commit  string
 }
 
-// Config contains configuration for creating a Server instance.
+// Config contains dependency injection and runtime settings for Server.
 //
-// Addr is the listen address (e.g. ":8080"). Auth and DB are required
-// for production use; other values are validated during startup.
+// Addr is the listen address (e.g. ":8080"). Auth holds middleware
+// and session handling configuration. DB is a live *sql.DB connection.
+// EmailSvc is optional; when nil, a service is constructed from env.
+// BaseURL is the publicly reachable URL used in emails and link generation.
 type Config struct {
 	Addr     string // e.g. ":8080"
 	Build    BuildInfo
@@ -33,10 +40,11 @@ type Config struct {
 	BaseURL  string // Base URL for email links (e.g. "http://localhost:8080")
 }
 
-// Server is the application HTTP server with its dependencies.
+// Server wires HTTP routes to handlers and holds external dependencies.
 //
 // It exposes Start and Shutdown to manage lifecycle in tests and in the
-// production entrypoint.
+// production entrypoint. The struct is intentionally simple; most logic
+// resides in handler functions to keep unit-testing straightforward.
 type Server struct {
 	httpServer  *http.Server
 	db          *sql.DB
@@ -47,9 +55,9 @@ type Server struct {
 	emailSvc    *EmailService
 }
 
-// New constructs and returns an initialized Server wiring handlers and
-// dependencies (DB, MinIO). It panics early if required dependencies
-// are missing, to avoid running in a half-configured state.
+// New constructs and returns a Server, registers routes, and validates
+// critical dependencies (MinIO). It panics early if required dependencies
+// are missing to avoid running in a half-configured state.
 func New(cfg Config) *Server {
 	mux := http.NewServeMux()
 
@@ -64,7 +72,7 @@ func New(cfg Config) *Server {
 		cfg.BaseURL = "http://localhost:8080"
 	}
 
-	// Minimal web UI (Milestone 7)
+	// Minimal web UI (Milestone 7): serves the SPA and static assets.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
@@ -80,7 +88,7 @@ func New(cfg Config) *Server {
 		panic(err)
 	}
 
-	// Health endpoint: process is running (does not check dependencies).
+	// Health endpoint: process liveness (does not check dependencies).
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -89,7 +97,7 @@ func New(cfg Config) *Server {
 		})
 	})
 
-	// Ready endpoint: comprehensive dependency health checks with detailed status.
+	// Ready endpoint: comprehensive dependency readiness checks with detailed status.
 	// Returns 200 OK if all dependencies are healthy, 503 if any are unhealthy.
 	// Provides detailed status for each component (postgres, minio) with latency.
 	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) {
@@ -176,7 +184,7 @@ func New(cfg Config) *Server {
 		_ = json.NewEncoder(w).Encode(response)
 	})
 
-	// Version endpoint (no secrets)
+	// Version endpoint (no secrets): exposes build info for debugging.
 	mux.HandleFunc("/version", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -186,7 +194,8 @@ func New(cfg Config) *Server {
 		})
 	})
 
-	// Config endpoint (public) - expose client-side configuration
+	// Config endpoint (public): exposes client-side configuration such as
+	// maximum upload size in bytes.
 	mux.HandleFunc("/config", func(w http.ResponseWriter, _ *http.Request) {
 		maxBytes, _ := maxUploadBytes()
 		w.Header().Set("Content-Type", "application/json")
@@ -196,7 +205,8 @@ func New(cfg Config) *Server {
 		})
 	})
 
-	// Metrics endpoint (protected) - includes disk usage stats
+	// Metrics endpoint (protected): includes disk usage stats in addition to
+	// in-memory application counters.
 	mux.Handle("/metrics", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		snapshot := GetMetrics().Snapshot()
 
@@ -223,6 +233,9 @@ func New(cfg Config) *Server {
 	// Login endpoint (POST JSON {username,password})
 	mux.HandleFunc("/login", cfg.Auth.loginHandler())
 
+	// Logout endpoint (POST) clears session cookie
+	mux.HandleFunc("/logout", cfg.Auth.logoutHandler())
+
 	// Register endpoint (POST JSON {email,username,password})
 	mux.HandleFunc("/register", cfg.RegisterHandler)
 
@@ -235,25 +248,50 @@ func New(cfg Config) *Server {
 	// Password reset completion (POST JSON {token, new_password})
 	mux.HandleFunc("/reset-password", cfg.ResetPasswordHandler)
 
-	// Protected endpoint for verification only
-	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	// Protected endpoint for user info (includes admin status for UI).
+	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		userID, err := cfg.Auth.getCurrentUser(r)
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		var username string
+		var isAdmin bool
+		err = cfg.DB.QueryRow(
+			"SELECT username, is_admin FROM users WHERE id = $1 AND is_active = TRUE",
+			userID,
+		).Scan(&username, &isAdmin)
+
+		if err != nil {
+			if err == sql.ErrNoRows {
+				http.Error(w, "user not found", http.StatusNotFound)
+				return
+			}
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(map[string]any{
-			"status": "ok",
+			"status":   "ok",
+			"username": username,
+			"is_admin": isAdmin,
 		})
 	})))
 
-	// Create file record (metadata only; proves DB writes end-to-end)
+	// Create file record (metadata only): step 1 in upload lifecycle
+	// (pending -> stored -> hashed -> ready/failed).
 	mux.Handle("/files", cfg.createFileHandler(cfg.DB))
 
-	// Stream upload to MinIO (pending -> stored)
+	// Stream upload to MinIO (pending -> stored).
 	mux.Handle("/upload", cfg.uploadHandler(cfg.DB, mc, bucket))
 
-	// Create signed, expiring download links (Milestone 6)
+	// Create signed, expiring download links.
 	mux.Handle("/links", cfg.createLinkHandler(cfg.DB))
 
-	// Download file via signed token (Milestone 6)
+	// Download file via signed token.
 	mux.Handle("/download", cfg.downloadHandler(cfg.DB, mc, bucket))
 
 	// Wrap middleware: requestID -> logging -> rate limiting -> mux
@@ -281,15 +319,18 @@ func New(cfg Config) *Server {
 		emailSvc:    cfg.EmailSvc,
 	}
 
-	// Admin endpoints (protected) - registered after Server creation
-	mux.Handle("/admin/files", cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminListFilesHandler)))
+	// Admin endpoints (protected) - only accessible by admin users
+	mux.Handle("/admin/files", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminListFilesHandler)))
 	mux.HandleFunc("/admin/files/", func(w http.ResponseWriter, r *http.Request) {
-		cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminDeleteFileHandler)).ServeHTTP(w, r)
+		cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminDeleteFileHandler)).ServeHTTP(w, r)
 	})
-	mux.Handle("/admin/cleanup", cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminManualCleanupHandler)))
+	mux.Handle("/admin/cleanup", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminManualCleanupHandler)))
 
 	// User endpoints (protected) - show user's own files
 	mux.Handle("/user/files", cfg.Auth.requireAuth(http.HandlerFunc(srv.UserFilesHandler)))
+	mux.HandleFunc("/user/files/", func(w http.ResponseWriter, r *http.Request) {
+		cfg.Auth.requireAuth(http.HandlerFunc(srv.UserDeleteFileHandler)).ServeHTTP(w, r)
+	})
 
 	// User quota endpoint (protected)
 	mux.Handle("/quota", cfg.Auth.requireAuth(http.HandlerFunc(srv.UserQuotaHandler)))
@@ -298,7 +339,7 @@ func New(cfg Config) *Server {
 }
 
 // Start begins serving HTTP on the configured address and starts background jobs.
-// It blocks until the listener returns an error (or Shutdown is called).
+// It blocks until the listener returns an error or Shutdown is called.
 func (s *Server) Start() error {
 	// Start cleanup job in background
 	cleanupCfg := GetCleanupConfigFromEnv(s.db, s.minio, s.bucket)
@@ -323,8 +364,8 @@ func (s *Server) Start() error {
 	return s.httpServer.Serve(ln)
 }
 
-// Shutdown gracefully shuts down the HTTP server and background jobs
-// using the provided context (respecting the deadline/timeout supplied by the caller).
+// Shutdown gracefully shuts down the HTTP server and background jobs using
+// the provided context (deadline/timeout respected).
 func (s *Server) Shutdown(ctx context.Context) error {
 	// Signal cleanup job to stop (via cleanupDone channel close will happen)
 	// The cleanup job checks context.Done() which we handle in Start()

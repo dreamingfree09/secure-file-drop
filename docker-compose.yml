@@ -76,6 +76,11 @@ services:
       SFD_ADMIN_PASS: ${SFD_ADMIN_PASS}
       SFD_SESSION_SECRET: ${SFD_SESSION_SECRET}
       DATABASE_URL: ${DATABASE_URL}
+      SFD_SMTP_HOST: ${SFD_SMTP_HOST}
+      SFD_SMTP_PORT: ${SFD_SMTP_PORT}
+      SFD_SMTP_USER: ${SFD_SMTP_USER}
+      SFD_SMTP_PASS: ${SFD_SMTP_PASS}
+      SFD_SMTP_FROM: ${SFD_SMTP_FROM}
     depends_on:
       postgres:
         condition: service_healthy
