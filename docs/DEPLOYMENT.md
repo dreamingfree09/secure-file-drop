@@ -11,10 +11,7 @@ The repository contains `docker-compose.yml` intended for a simple deployment wi
 
    docker compose up -d
 
-3. Apply DB migrations:
-
-   psql -h postgres -U postgres -d sfd -f internal/db/schema.sql
-   psql -h postgres -U postgres -d sfd -f internal/db/alter_001.sql
+3. Migrations are applied automatically on backend startup (see `docs/MIGRATIONS.md`).
 
 4. Confirm readiness: `GET http://<host>:8080/ready` should return `{"status":"ok"}`.
 
@@ -27,18 +24,25 @@ The repository contains `docker-compose.yml` intended for a simple deployment wi
 ## Secrets & configuration
 
 - Use environment variables or a secrets manager to provide credentials and secrets:
-  - SFD_ADMIN_USER / SFD_ADMIN_PASS
-  - SFD_SESSION_SECRET
-  - SFD_DOWNLOAD_SECRET
-  - MinIO and Postgres credentials
+  - SFD_SESSION_SECRET - HMAC signing key for session cookies
+  - SFD_DOWNLOAD_SECRET - HMAC signing key for download tokens
+  - SFD_DB_DSN - PostgreSQL connection string
+  - SFD_MINIO_ENDPOINT, SFD_MINIO_ACCESS_KEY, SFD_MINIO_SECRET_KEY, SFD_MINIO_BUCKET
+  - SFD_SMTP_HOST, SFD_SMTP_PORT, SFD_SMTP_USER, SFD_SMTP_PASS - Email notifications (optional)
+  - SFD_SMTP_FROM - Sender email address
+  - SFD_PUBLIC_BASE_URL - Base URL for email links (e.g., https://files.example.com)
 - Rotate secrets periodically and keep a secure audit trail for changes.
+- See `docs/EMAIL_NOTIFICATIONS.md` for SMTP setup details.
 
 ## Production considerations
 
 - Make MinIO and Postgres accessible only to the backend service (private network).
 - Use logging collection and monitoring; ensure `/health` and `/ready` are wired into your orchestrator.
-- Consider rate limiting at the proxy to protect against abuse.
-- Tune `SFD_MAX_UPLOAD_BYTES` to control allowed file sizes.
+- Rate limiting is built-in at the application level (see `docs/API.md`).
+- Tune `SFD_MAX_UPLOAD_BYTES` to control allowed file sizes (default: 50GB).
+- Configure SMTP for email notifications (registration verification, password resets, file notifications).
+- Monitor storage quotas - default is 10GB per user (configurable via admin panel).
+- Set up automatic file cleanup for expired files.
 
 ## Rolling updates & backups
 

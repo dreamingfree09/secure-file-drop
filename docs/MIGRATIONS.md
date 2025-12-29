@@ -338,6 +338,70 @@ If migrations are completely broken:
    psql $DATABASE_URL -c "SELECT COUNT(*) FROM files;"
    ```
 
+## Complete Migration History
+
+### Version 000001: Initial Files Table
+**File:** `000001_initial_files_table.up.sql`
+- Creates `files` table with core columns
+- Adds status constraint (pending, stored, hashed, ready, failed)
+- Creates indexes on created_at and status
+
+### Version 000002: User Foreign Key
+**File:** `000002_add_user_id_to_files.up.sql`
+- Adds `user_id` UUID column to files table
+- Creates foreign key to users(id)
+- Adds index on user_id
+
+### Version 000003: Users Table
+**File:** `000003_add_users_table.up.sql`
+- Creates `users` table with authentication fields
+- Adds email, username, password_hash
+- Creates unique indexes on email and username
+
+### Version 000004: File Expiration
+**File:** `000004_add_file_expiration.up.sql`
+- Adds `expires_at` TIMESTAMPTZ column
+- Adds `auto_delete` BOOLEAN column
+- Enables automatic file cleanup based on TTL
+
+### Version 000005: Download Passwords
+**File:** `000005_add_link_password.up.sql`
+- Adds `link_password` TEXT column to files
+- Stores bcrypt hash for password-protected downloads
+- Optional per-file password protection
+
+### Version 000006: Email Verification
+**File:** `000006_add_email_verification.up.sql`
+- Adds `verification_token` to users
+- Adds `verification_sent_at` timestamp
+- Adds `email_verified` boolean flag
+- Enables secure registration flow
+
+### Version 000007: Password Reset
+**File:** `000007_add_password_reset.up.sql`
+- Adds `reset_token` to users
+- Adds `reset_token_expires` timestamp
+- Enables self-service password reset (1 hour expiry)
+
+### Version 000008: Download Statistics
+**File:** `000008_add_download_stats.up.sql`
+- Adds `download_count` INTEGER (default 0)
+- Adds `last_downloaded_at` TIMESTAMPTZ
+- Creates index on last_downloaded_at
+- Enables download tracking and analytics
+
+### Version 000009: User Storage Quotas
+**File:** `000009_add_user_quotas.up.sql`
+- Adds `storage_quota_bytes` BIGINT to users
+- Sets default 10GB quota for existing users
+- Enables per-user storage limits
+
+## Current Schema Version
+
+**Latest:** 000009 (9 migrations)
+**Status:** All migrations applied and tested
+**Database:** PostgreSQL 16
+
 ## Additional Resources
 
 - [golang-migrate documentation](https://github.com/golang-migrate/migrate)
