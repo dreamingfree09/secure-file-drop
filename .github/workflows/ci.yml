@@ -2,24 +2,133 @@ name: CI
 
 on:
   push:
+    branches: [ main, master, develop, feature/* ]
   pull_request:
+    branches: [ main, master, develop ]
+
+env:
+  GO_VERSION: '1.21'
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   test:
-    name: Lint & Go tests
+    name: Go Tests
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-go@v4
+    - uses: actions/setup-go@v5
       with:
-        go-version: '1.20'
-    - name: Run golangci-lint
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+    - name: Download dependencies
+      run: go mod download
+    - name: Run tests
+      run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.txt
+        flags: unittests
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
+    - name: golangci-lint
       uses: golangci/golangci-lint-action@v4
       with:
-        version: v1.54.0
-        args: --timeout 2m
-    - name: Run go tests
-      run: go test ./...
+        version: latest
+        args: --timeout=5m
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    - name: Upload Trivy results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+    - name: Run gosec Security Scanner
+      uses: securego/gosec@master
+      with:
+        args: '-no-fail -fmt sarif -out gosec-results.sarif ./...'
+    - name: Upload gosec results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'gosec-results.sarif'
+
+  build-native:
+    name: Build Native Hash Utility
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y gcc libssl-dev jq
+    - name: Build hash utility
+      run: make -C native
+    - name: Test hash utility
+      run: |
+        echo "test" > /tmp/test.txt
+        ./native/sfd-hash /tmp/test.txt
+        ./native/sfd-hash /tmp/test.txt | jq -e '.algorithm == "sha256"'
+
+  build-docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    - name: Log in to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.DOCKER_REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+    - name: Build and push backend
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile.backend
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
 
   docs-link-check:
     name: Docs link check
@@ -32,6 +141,92 @@ jobs:
     - name: Run markdown-link-check
       run: npx markdown-link-check 'docs/**/*.md' --quiet || true
 
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sfd_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 9000:9000
+    env:
+      SFD_DB_HOST: localhost
+      SFD_DB_PORT: 5432
+      SFD_DB_USER: postgres
+      SFD_DB_PASSWORD: postgres
+      SFD_DB_NAME: sfd_test
+      SFD_MINIO_ENDPOINT: localhost:9000
+      SFD_MINIO_ACCESS_KEY: minioadmin
+      SFD_MINIO_SECRET_KEY: minioadmin
+      SFD_MINIO_BUCKET: sfd-test
+      SFD_SESSION_SECRET: test-session-secret-min-32-chars-long
+      SFD_DOWNLOAD_SECRET: test-download-secret-min-32-chars
+      SFD_ADMIN_USER: admin
+      SFD_ADMIN_PASS_HASH: '$2a$10$N9qo8uLOickgx2ZMRZoMye'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: ${{ env.GO_VERSION }}
+    - name: Wait for PostgreSQL
+      run: |
+        for i in {1..30}; do
+          if pg_isready -h localhost -U postgres; then
+            echo "PostgreSQL is ready"
+            break
+          fi
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
+    - name: Apply database schema
+      run: |
+        PGPASSWORD=postgres psql -h localhost -U postgres -d sfd_test -f internal/db/schema.sql
+    - name: Wait for MinIO
+      run: |
+        for i in {1..30}; do
+          if curl -f http://localhost:9000/minio/health/live; then
+            echo "MinIO is ready"
+            break
+          fi
+          echo "Waiting for MinIO..."
+          sleep 2
+        done
+    - name: Create MinIO bucket
+      run: |
+        wget -q https://dl.min.io/client/mc/release/linux-amd64/mc
+        chmod +x mc
+        ./mc alias set local http://localhost:9000 minioadmin minioadmin
+        ./mc mb local/sfd-test --ignore-existing
+    - name: Run integration tests
+      run: go test -v -tags=integration -coverprofile=integration-coverage.out ./tests/integration/...
+    - name: Upload integration coverage
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./integration-coverage.out
+        flags: integration
+        name: integration-coverage
+
   e2e-tests:
     name: End-to-end (docker)
     runs-on: ubuntu-latest
@@ -39,9 +234,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
-        go-version: '1.20'
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
     - name: Install dependencies
       run: go mod tidy
     - name: Run e2e tests
@@ -52,9 +248,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-go@v4
+    - uses: actions/setup-go@v5
       with:
-        go-version: '1.20'
+        go-version: ${{ env.GO_VERSION }}
+        cache: true
     - name: Run tests with coverage
       run: go test ./... -coverprofile=coverage.out || true
     - name: Upload coverage to Codecov
@@ -62,3 +259,30 @@ jobs:
       with:
         files: coverage.out
         fail_ci_if_error: false
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, lint, build-docker, e2e-tests]
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - name: Generate changelog
+      id: changelog
+      uses: mikepenz/release-changelog-builder-action@v4
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -154,13 +154,119 @@ Comprehensive documentation is available in `docs/`:
 - **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**: System architecture and components
 - **[SECURITY.md](docs/SECURITY.md)**: Session model, hashing, signed links, and best practices
 - **[USAGE.md](docs/USAGE.md)**: Detailed usage examples
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**: Production deployment guide
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**: Production deployment guide (including Traefik/Nginx examples)
+- **[PROXMOX_DEPLOYMENT.md](docs/PROXMOX_DEPLOYMENT.md)**: Complete Proxmox LXC deployment guide with automated script
 - **[DB_SCHEMA.md](docs/DB_SCHEMA.md)**: Database schema and migrations
+- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)**: Development setup, coding style, and PR guidelines
+
+## Development
+
+### Prerequisites
+
+- Go 1.21+
+- PostgreSQL 14+
+- MinIO or S3-compatible storage
+- Docker (optional, for containerized development)
+
+### Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/secure-file-drop.git
+cd secure-file-drop
+
+# Install dependencies
+go mod download
+
+# Set up environment (see .env.example)
+cp .env.example .env
+# Edit .env with your configuration
+
+# Run tests
+make test
+
+# Run with live reload
+make dev
+
+# Build for production
+make build
+```
+
+### Available Make Targets
+
+The project includes a comprehensive Makefile for common development tasks:
+
+```bash
+make help           # Show all available targets
+make build          # Build the backend binary
+make run            # Run the development server
+make test           # Run unit tests
+make test-integration  # Run integration tests (requires services)
+make test-coverage  # Run tests with coverage report
+make lint           # Run linters (golangci-lint)
+make fmt            # Format code (gofmt + goimports)
+make vet            # Run go vet
+make clean          # Clean build artifacts
+make docker-build   # Build Docker image
+make docker-up      # Start all services with Docker Compose
+make docker-down    # Stop all services
+make migrate-up     # Apply database migrations
+make migrate-down   # Rollback database migrations
+make native-build   # Build native hash utility
+make native-test    # Test native hash utility
+```
+
+### Testing
+
+The project has three levels of testing:
+
+1. **Unit Tests**: Fast, isolated tests for individual components
+   ```bash
+   go test ./internal/...
+   ```
+
+2. **Integration Tests**: Test API endpoints with real services
+   ```bash
+   # Start services first
+   docker-compose up -d postgres minio
+   
+   # Run integration tests
+   go test -tags=integration ./tests/integration/...
+   ```
+   See [tests/integration/README.md](tests/integration/README.md) for details.
+
+3. **E2E Tests**: Full workflow tests in Docker
+   ```bash
+   go test ./tests/e2e/...
+   ```
+   See [tests/e2e/e2e_test.go](tests/e2e/e2e_test.go) for details.
+
+### Monitoring
+
+Production deployments can use the included monitoring stack:
+
+- **Prometheus**: Metrics collection from `/metrics` endpoint
+- **Grafana**: Pre-built dashboards for system monitoring
+- **Alerts**: Configurable alerts for storage, errors, and performance
+
+See [monitoring/README.md](monitoring/README.md) for setup instructions.
+
+### CI/CD Pipeline
+
+The project uses GitHub Actions for continuous integration:
+
+- **Tests**: Unit, integration, and E2E tests on every push
+- **Linting**: golangci-lint with strict rules
+- **Security**: Trivy filesystem scan and gosec analysis
+- **Coverage**: Automatic coverage reports uploaded to Codecov
+- **Docker**: Multi-platform builds (amd64/arm64) pushed to GHCR
+- **Native Build**: Hash utility compilation and validation
+- **Releases**: Automated releases on version tags
+
+See [.github/workflows/ci.yml](.github/workflows/ci.yml) for pipeline configuration.
 
 ## Contributing
 
-Please read `docs/CONTRIBUTING.md` for development setup, coding style, and PR guidelines.
+Please read [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) for development setup, coding style, and PR guidelines.
 
 ---
-
-If you'd like, I can open a branch and prepare a PR with a larger docs revision (adding `docs/ARCHITECTURE.md`, `docs/USAGE.md`, `docs/API.md`, and `docs/CONTRIBUTING.md`). Reply with permission to push and open the PR or say if you prefer to review drafts first.
