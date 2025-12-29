@@ -1,0 +1,772 @@
+openapi: 3.0.3
+info:
+  title: Secure File Drop API
+  description: |
+    A secure, self-hosted file sharing application with end-to-end encryption, 
+    expiring links, and comprehensive admin controls.
+    
+    ## Features
+    - User registration and authentication
+    - Secure file upload with hash verification
+    - Expiring download links with optional passwords
+    - Storage quota management
+    - Admin dashboard and metrics
+    - Email notifications
+    
+    ## Authentication
+    Most endpoints require session-based authentication. After logging in via `/login`,
+    a session cookie (`sfd_session`) is set and must be included in subsequent requests.
+    
+    Admin-only endpoints require authentication with admin credentials.
+  version: 2.0.0
+  contact:
+    name: API Support
+    url: https://github.com/yourusername/secure-file-drop
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://filedrop.example.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Files
+    description: File upload, metadata, and management
+  - name: Downloads
+    description: Download link generation and file retrieval
+  - name: User
+    description: User account and storage management
+  - name: Admin
+    description: Administrative endpoints (admin only)
+  - name: Health
+    description: System health and readiness checks
+
+paths:
+  /register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user account
+      description: |
+        Create a new user account. Sends a verification email to the provided address.
+        User must verify email before full access is granted.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - username
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 50
+                  example: johndoe
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: SecurePass123
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered. Please check your email to verify your account.
+                  user_id:
+                    type: string
+                    format: uuid
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in to user account
+      description: Authenticate with username/password and receive session cookie
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: johndoe
+                password:
+                  type: string
+                  format: password
+                  example: SecurePass123
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: sfd_session=abc123...; Path=/; HttpOnly; Secure; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login successful
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /logout:
+    post:
+      tags:
+        - Authentication
+      summary: Log out of current session
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Logout successful
+
+  /files:
+    post:
+      tags:
+        - Files
+      summary: Create file metadata
+      description: |
+        Create file metadata before uploading. Returns a file ID to use in the upload request.
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orig_name
+                - content_type
+                - size_bytes
+              properties:
+                orig_name:
+                  type: string
+                  example: document.pdf
+                content_type:
+                  type: string
+                  example: application/pdf
+                size_bytes:
+                  type: integer
+                  example: 1048576
+      responses:
+        '201':
+          description: File metadata created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileMetadata'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: File too large or quota exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /upload:
+    post:
+      tags:
+        - Files
+      summary: Upload file
+      description: |
+        Upload file content using multipart/form-data. Requires file ID from `/files` endpoint.
+        
+        After successful upload, hashing is performed asynchronously in the background.
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: File ID from metadata creation
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Upload successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Upload successful
+                  file_id:
+                    type: string
+                    format: uuid
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: File ID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /links:
+    post:
+      tags:
+        - Downloads
+      summary: Create download link
+      description: |
+        Generate a signed, expiring download link for a file. Optionally protect with a password.
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - file_id
+              properties:
+                file_id:
+                  type: string
+                  format: uuid
+                  example: 123e4567-e89b-12d3-a456-426614174000
+                expires_in_hours:
+                  type: integer
+                  minimum: 1
+                  maximum: 720
+                  default: 24
+                  example: 48
+                password:
+                  type: string
+                  format: password
+                  example: optional-password
+                max_downloads:
+                  type: integer
+                  minimum: 1
+                  default: null
+                  example: 5
+      responses:
+        '201':
+          description: Download link created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadLink'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /download:
+    get:
+      tags:
+        - Downloads
+      summary: Download file
+      description: |
+        Download a file using a signed token. If the link is password-protected,
+        provide the password as a query parameter.
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Signed download token
+        - name: password
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Password (if link is protected)
+      responses:
+        '200':
+          description: File download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: attachment; filename="document.pdf"
+            Content-Type:
+              schema:
+                type: string
+        '400':
+          description: Invalid token or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Link expired or max downloads reached
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /quota:
+    get:
+      tags:
+        - User
+      summary: Get user storage quota
+      description: Returns current storage usage and quota limits
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: Quota information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quota'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /user/files:
+    get:
+      tags:
+        - User
+      summary: List user's files
+      description: Get all files uploaded by the authenticated user
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, stored, hashed, failed]
+          description: Filter by file status
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/File'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+
+  /user/files/{file_id}:
+    delete:
+      tags:
+        - User
+      summary: Delete a file
+      description: Delete a file and all associated download links
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: file_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: File deleted successfully
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/metrics:
+    get:
+      tags:
+        - Admin
+      summary: Get system metrics
+      description: Retrieve system-wide statistics (admin only)
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: System metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metrics'
+        '403':
+          description: Admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/files:
+    get:
+      tags:
+        - Admin
+      summary: List all files
+      description: Get all files in the system (admin only)
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, stored, hashed, failed]
+        - name: user_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of all files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AdminFile'
+                  total:
+                    type: integer
+
+  /metrics:
+    get:
+      tags:
+        - Health
+      summary: Prometheus metrics
+      description: Prometheus-formatted metrics for monitoring
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /ready:
+    get:
+      tags:
+        - Health
+      summary: Readiness check
+      description: Check if the service is ready to accept requests
+      responses:
+        '200':
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+        '503':
+          description: Service not ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Detailed health status including dependencies
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: sfd_session
+      description: Session cookie obtained from /login
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Invalid credentials
+        code:
+          type: string
+          example: AUTH_FAILED
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        is_admin:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    FileMetadata:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orig_name:
+          type: string
+        content_type:
+          type: string
+        size_bytes:
+          type: integer
+        status:
+          type: string
+          enum: [pending, stored, hashed, failed]
+        created_at:
+          type: string
+          format: date-time
+
+    File:
+      allOf:
+        - $ref: '#/components/schemas/FileMetadata'
+        - type: object
+          properties:
+            hash:
+              type: string
+              nullable: true
+            hash_algorithm:
+              type: string
+              example: sha256
+            download_count:
+              type: integer
+            last_downloaded:
+              type: string
+              format: date-time
+              nullable: true
+
+    AdminFile:
+      allOf:
+        - $ref: '#/components/schemas/File'
+        - type: object
+          properties:
+            user_id:
+              type: string
+              format: uuid
+            username:
+              type: string
+
+    DownloadLink:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          example: https://filedrop.example.com/download?token=eyJ...
+        expires_at:
+          type: string
+          format: date-time
+        max_downloads:
+          type: integer
+          nullable: true
+        password_protected:
+          type: boolean
+
+    Quota:
+      type: object
+      properties:
+        storage_used_bytes:
+          type: integer
+          example: 5368709120
+        storage_quota_bytes:
+          type: integer
+          example: 10737418240
+        file_count:
+          type: integer
+          example: 42
+        percentage_used:
+          type: number
+          format: float
+          example: 50.0
+
+    Metrics:
+      type: object
+      properties:
+        uploads_total:
+          type: integer
+        downloads_total:
+          type: integer
+        storage_bytes_total:
+          type: integer
+        users_total:
+          type: integer
+        active_sessions:
+          type: integer
+
+    Health:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        components:
+          type: object
+          properties:
+            database:
+              $ref: '#/components/schemas/ComponentHealth'
+            minio:
+              $ref: '#/components/schemas/ComponentHealth'
+            storage:
+              $ref: '#/components/schemas/ComponentHealth'
+
+    ComponentHealth:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [up, down, degraded]
+        message:
+          type: string
+        latency_ms:
+          type: number
+          format: float
