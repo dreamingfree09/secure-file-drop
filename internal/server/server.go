@@ -267,11 +267,15 @@ func New(cfg Config) *Server {
 	// Email verification endpoint (GET /verify?token={token})
 	mux.HandleFunc("/verify", cfg.VerifyEmailHandler)
 
-	// Password reset request (POST JSON {email})
-	mux.HandleFunc("/reset-password-request", cfg.RequestPasswordResetHandler)
+	// Password reset request (POST JSON {email}) - strict rate limiting
+	// 5 requests per 15 minutes per IP to prevent email enumeration and spam
+	resetRateLimiter := newRateLimiter(5, 15*time.Minute)
+	mux.Handle("/reset-password-request", resetRateLimiter.middleware(http.HandlerFunc(cfg.RequestPasswordResetHandler)))
 
 	// Password reset completion (POST JSON {token, new_password})
-	mux.HandleFunc("/reset-password", cfg.ResetPasswordHandler)
+	// 10 attempts per hour to prevent token brute-force
+	resetCompleteLimiter := newRateLimiter(10, time.Hour)
+	mux.Handle("/reset-password", resetCompleteLimiter.middleware(http.HandlerFunc(cfg.ResetPasswordHandler)))
 
 	// Protected endpoint for user info (includes admin status for UI).
 	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

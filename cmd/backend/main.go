@@ -29,7 +29,7 @@ func main() {
 
 	auth := server.AuthConfig{
 		AdminUser:     getenvDefault("SFD_ADMIN_USER", "admin"),
-		AdminPass:     getenvDefault("SFD_ADMIN_PASS", ""),
+		AdminPass:     getenvDefault("SFD_ADMIN_PASS", ""), // Should be bcrypt hash
 		SessionSecret: getenvDefault("SFD_SESSION_SECRET", ""),
 		SessionTTL:    12 * time.Hour,
 		CookieName:    "sfd_session",
@@ -51,7 +51,7 @@ func main() {
 		"default",
 		"123456",
 	}
-	
+
 	sessionSecretLower := strings.ToLower(auth.SessionSecret)
 	for _, insecure := range insecureSecrets {
 		if strings.Contains(sessionSecretLower, insecure) {
@@ -59,9 +59,17 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	
+
 	if len(auth.SessionSecret) < 32 {
 		log.Printf("service=backend msg=%q len=%d", "SECURITY ERROR: SFD_SESSION_SECRET too short (minimum 32 characters)", len(auth.SessionSecret))
+		os.Exit(1)
+	}
+
+	// Validate admin password is a bcrypt hash (starts with $2a$, $2b$, or $2y$)
+	if auth.AdminPass != "" && !strings.HasPrefix(auth.AdminPass, "$2a$") &&
+		!strings.HasPrefix(auth.AdminPass, "$2b$") && !strings.HasPrefix(auth.AdminPass, "$2y$") {
+		log.Printf("service=backend msg=%q", "SECURITY ERROR: SFD_ADMIN_PASS must be a bcrypt hash (use 'htpasswd -bnBC 12 \"\" password | tr -d ':'\" to generate)")
+		log.Printf("service=backend msg=%q", "Example: htpasswd -bnBC 12 '' yourpassword | tr -d ':'")
 		os.Exit(1)
 	}
 

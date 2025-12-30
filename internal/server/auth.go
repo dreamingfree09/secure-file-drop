@@ -16,6 +16,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthConfig holds authentication-related configuration used by HTTP handlers
@@ -142,16 +144,16 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 			userID, authenticated = authenticateUser(a.DB, body.Username, body.Password)
 		}
 
-		// Fallback to legacy admin authentication if DB auth failed or no DB
+		// Fallback to admin authentication if DB auth failed or no DB
+		// AdminPass should now be a bcrypt hash (not plaintext)
 		if !authenticated && a.AdminUser != "" && a.AdminPass != "" {
-			uOK := body.Username == a.AdminUser
-			pwHash := sha256.Sum256([]byte(body.Password))
-			adminHash := sha256.Sum256([]byte(a.AdminPass))
-			pOK := hmac.Equal(pwHash[:], adminHash[:])
-
-			if uOK && pOK {
-				authenticated = true
-				userID = a.AdminUser
+			if body.Username == a.AdminUser {
+				// AdminPass is expected to be a bcrypt hash
+				err := bcrypt.CompareHashAndPassword([]byte(a.AdminPass), []byte(body.Password))
+				if err == nil {
+					authenticated = true
+					userID = a.AdminUser
+				}
 			}
 		}
 
