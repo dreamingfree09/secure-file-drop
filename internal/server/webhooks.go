@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -74,7 +75,7 @@ func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
 
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		s.logger.Error("Failed to marshal webhook payload", "error", err)
+		log.Printf("WEBHOOK ERROR: Failed to marshal webhook payload: %v", err)
 		return
 	}
 
@@ -90,7 +91,7 @@ func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
 
 		req, err := http.NewRequestWithContext(ctx, "POST", config.URL, bytes.NewReader(payloadBytes))
 		if err != nil {
-			s.logger.Error("Failed to create webhook request", "error", err)
+			log.Printf("WEBHOOK ERROR: Failed to create webhook request: %v", err)
 			continue
 		}
 
@@ -107,7 +108,7 @@ func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			s.logger.Error("Webhook request failed", "url", config.URL, "attempt", attempt+1, "error", err)
+			log.Printf("WEBHOOK ERROR: Request failed to %s (attempt %d): %v", config.URL, attempt+1, err)
 			continue
 		}
 
@@ -115,23 +116,19 @@ func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
 		body, _ := io.ReadAll(resp.Body)
 
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			s.logger.Info("Webhook sent successfully", "url", config.URL, "event", payload.Event)
-			
+			log.Printf("WEBHOOK SENT: To %s, Event: %s", config.URL, payload.Event)
 			// Log webhook delivery
 			s.logWebhookDelivery(context.Background(), config.URL, payload, true, "")
 			return
 		}
 
-		s.logger.Error("Webhook returned error status",
-			"url", config.URL,
-			"status", resp.StatusCode,
-			"body", string(body),
-			"attempt", attempt+1)
+		log.Printf("WEBHOOK ERROR: %s returned status %d (attempt %d): %s", 
+			config.URL, resp.StatusCode, attempt+1, string(body))
 	}
 
 	// All retries failed
 	s.logWebhookDelivery(context.Background(), config.URL, payload, false, "max retries exceeded")
-	s.logger.Error("Webhook failed after max retries", "url", config.URL, "event", payload.Event)
+	log.Printf("WEBHOOK ERROR: Failed after max retries to %s for event %s", config.URL, payload.Event)
 }
 
 // generateWebhookSignature creates an HMAC signature for the payload
@@ -154,9 +151,9 @@ func (s *Server) logWebhookDelivery(ctx context.Context, url string, payload Web
 		INSERT INTO webhook_deliveries (url, event, payload, success, error_message, timestamp)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
-	
+
 	payloadJSON, _ := json.Marshal(payload)
-	
+
 	_, err := s.db.ExecContext(ctx, query,
 		url,
 		payload.Event,
@@ -165,8 +162,7 @@ func (s *Server) logWebhookDelivery(ctx context.Context, url string, payload Web
 		errorMsg,
 		time.Now(),
 	)
-	
+
 	if err != nil {
-		s.logger.Error("Failed to log webhook delivery", "error", err)
-	}
+		log.Printf("WEBHOOK ERROR: Failed to log webhook delivery: %v", err)	}
 }

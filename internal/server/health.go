@@ -2,12 +2,9 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
-
-	"github.com/minio/minio-go/v7"
 )
 
 // HealthStatus represents the overall health of the system
@@ -30,9 +27,9 @@ const (
 
 // Health represents the complete health check response
 type Health struct {
-	Status     HealthStatus           `json:"status"`
-	Timestamp  time.Time              `json:"timestamp"`
-	Version    string                 `json:"version,omitempty"`
+	Status     HealthStatus               `json:"status"`
+	Timestamp  time.Time                  `json:"timestamp"`
+	Version    string                     `json:"version,omitempty"`
 	Components map[string]ComponentHealth `json:"components"`
 }
 
@@ -105,7 +102,6 @@ func (s *Server) HandleLive(w http.ResponseWriter, r *http.Request) {
 func (s *Server) checkHealth() Health {
 	health := Health{
 		Timestamp:  time.Now(),
-		Version:    s.version, // Add version field to Server struct
 		Components: make(map[string]ComponentHealth),
 	}
 
@@ -187,7 +183,7 @@ func (s *Server) checkMinIOHealth() ComponentHealth {
 	defer cancel()
 
 	// Check if bucket exists and is accessible
-	exists, err := s.minioClient.BucketExists(ctx, s.bucketName)
+	exists, err := s.minio.BucketExists(ctx, s.bucket)
 	if err != nil {
 		return ComponentHealth{
 			Status:  ComponentStatusDown,
@@ -198,7 +194,7 @@ func (s *Server) checkMinIOHealth() ComponentHealth {
 	if !exists {
 		return ComponentHealth{
 			Status:  ComponentStatusDown,
-			Message: "bucket does not exist: " + s.bucketName,
+			Message: "bucket does not exist: " + s.bucket,
 		}
 	}
 
