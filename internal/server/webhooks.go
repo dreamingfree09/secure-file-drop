@@ -122,7 +122,7 @@ func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
 			return
 		}
 
-		log.Printf("WEBHOOK ERROR: %s returned status %d (attempt %d): %s", 
+		log.Printf("WEBHOOK ERROR: %s returned status %d (attempt %d): %s",
 			config.URL, resp.StatusCode, attempt+1, string(body))
 	}
 
@@ -164,5 +164,6 @@ func (s *Server) logWebhookDelivery(ctx context.Context, url string, payload Web
 	)
 
 	if err != nil {
-		log.Printf("WEBHOOK ERROR: Failed to log webhook delivery: %v", err)	}
+		log.Printf("WEBHOOK ERROR: Failed to log webhook delivery: %v", err)
+	}
 }
