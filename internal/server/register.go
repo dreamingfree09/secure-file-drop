@@ -445,6 +445,13 @@ func (cfg Config) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("reset-password: password reset successful for user %s", userID)
 
+	// Send password change notification
+	var username, email string
+	cfg.DB.QueryRow("SELECT username, email FROM users WHERE id = $1", userID).Scan(&username, &email)
+	if cfg.EmailSvc != nil && email != "" {
+		NotifyPasswordChanged(cfg.EmailSvc, username, email, getClientIP(r))
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "Password reset successfully"})

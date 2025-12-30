@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -27,12 +28,14 @@ import (
 // Unit tests can construct this directly. Database-backed user auth
 // is supported when DB is non-nil.
 type AuthConfig struct {
-	AdminUser     string
-	AdminPass     string
-	SessionSecret string
-	SessionTTL    time.Duration
-	CookieName    string
-	DB            *sql.DB // Database connection for user authentication
+	AdminUser      string
+	AdminPass      string
+	SessionSecret  string
+	SessionTTL     time.Duration
+	CookieName     string
+	DB             *sql.DB         // Database connection for user authentication
+	AccountLockout *AccountLockout // Account lockout manager
+	EmailService   *EmailService   // Email service for notifications
 }
 
 type sessionPayload struct {
@@ -134,6 +137,27 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
 			return
+		}
+
+		// Check if account is locked
+		if a.AccountLockout != nil {
+			locked, lockedUntil, attemptsRemaining := a.AccountLockout.IsLocked(body.Username)
+			if locked {
+				Info("login_attempt_locked", map[string]interface{}{
+					"username":     body.Username,
+					"ip":           getClientIP(r),
+					"locked_until": lockedUntil,
+				})
+				http.Error(w, fmt.Sprintf("Account locked until %s", lockedUntil.Format(time.RFC3339)), http.StatusTooManyRequests)
+				return
+			}
+			// Log remaining attempts if low
+			if attemptsRemaining <= 2 && attemptsRemaining > 0 {
+				Info("login_attempts_warning", map[string]interface{}{
+					"username":           body.Username,
+					"attempts_remaining": attemptsRemaining,
+				})
+			}
 		}
 
 		var authenticated bool

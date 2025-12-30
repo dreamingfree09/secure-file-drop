@@ -36,13 +36,44 @@ The repository contains `docker-compose.yml` intended for a simple deployment wi
 
 ## Production considerations
 
-- Make MinIO and Postgres accessible only to the backend service (private network).
-- Use logging collection and monitoring; ensure `/health` and `/ready` are wired into your orchestrator.
-- Rate limiting is built-in at the application level (see `docs/API.md`).
-- Tune `SFD_MAX_UPLOAD_BYTES` to control allowed file sizes (default: 50GB).
-- Configure SMTP for email notifications (registration verification, password resets, file notifications).
-- Monitor storage quotas - default is 10GB per user (configurable via admin panel).
-- Set up automatic file cleanup for expired files.
+### Configuration Validation
+- All configuration is validated at startup with detailed error messages
+- Required: `DATABASE_URL`, `SFD_SESSION_SECRET`, `SFD_ADMIN_PASS` (bcrypt hash)
+- The server will refuse to start with invalid or missing critical configuration
+- See [docs/PRODUCTION_ENHANCEMENTS.md](PRODUCTION_ENHANCEMENTS.md) for details
+
+### Security & Rate Limiting
+- Make MinIO and Postgres accessible only to the backend service (private network)
+- Per-endpoint rate limiting automatically protects against abuse:
+  - Auth endpoints: 10 req/min (brute-force protection)
+  - Uploads: 20/hour, Downloads: 100/hour
+  - Admin: 50 req/min, API: 300 req/min
+- Account lockout after 5 failed login attempts (15min lock)
+- CSRF protection and security headers enabled by default
+
+### Monitoring & Observability
+- Use logging collection and monitoring; ensure `/health` and `/ready` are wired into your orchestrator
+- Prometheus metrics available at `/metrics/prometheus` for scraping
+- Structured JSON logging enabled with `SFD_LOG_FORMAT=json`
+- Request tracing with correlation IDs for debugging
+- Circuit breakers protect against cascading failures (database, MinIO, SMTP)
+
+### Storage & Backups
+- Tune `SFD_MAX_UPLOAD_BYTES` to control allowed file sizes (default: 50GB)
+- Configure automated database backups with `SFD_BACKUP_ENABLED=true`
+- Monitor storage quotas - default is 10GB per user (configurable via admin panel)
+- Set up automatic file cleanup for expired files
+- Resumable uploads supported via TUS protocol at `/upload/resumable`
+
+### Email Notifications
+- Configure SMTP for email notifications (registration verification, password resets, file notifications)
+- Security event notifications: failed logins, account lockouts, password changes
+- See [docs/EMAIL_NOTIFICATIONS.md](EMAIL_NOTIFICATIONS.md) for SMTP setup details
+
+### Performance Optimization
+- Database connection pooling optimized (25 max, 5 idle, 5min lifetime)
+- HTTP response compression (gzip) enabled automatically
+- Streaming uploads/downloads for memory efficiency
 
 ## Rolling updates & backups
 

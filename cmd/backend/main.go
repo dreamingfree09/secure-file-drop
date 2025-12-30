@@ -20,6 +20,17 @@ import (
 )
 
 func main() {
+	// Validate all configuration before proceeding
+	log.Printf("service=backend msg=%q", "validating_configuration")
+	if err := server.ValidateAllConfiguration(); err != nil {
+		log.Printf("service=backend msg=%q err=%v", "configuration_validation_failed", err)
+		os.Exit(1)
+	}
+	log.Printf("service=backend msg=%q", "configuration_valid")
+
+	// Log warnings for optional missing configuration
+	server.WarnOnOptionalMissingConfig()
+
 	addr := getenvDefault("SFD_ADDR", ":8080")
 
 	build := server.BuildInfo{
@@ -82,6 +93,15 @@ func main() {
 	}
 	defer func() { _ = dbConn.Close() }()
 
+	// Optimize database connection pooling for production
+	dbConn.SetMaxOpenConns(25)                 // Maximum open connections
+	dbConn.SetMaxIdleConns(5)                  // Maximum idle connections
+	dbConn.SetConnMaxLifetime(5 * time.Minute) // Maximum connection lifetime
+	dbConn.SetConnMaxIdleTime(2 * time.Minute) // Maximum idle time before closing
+
+	log.Printf("service=backend msg=%q max_open=%d max_idle=%d max_lifetime=%s max_idle_time=%s",
+		"db_pool_configured", 25, 5, "5m", "2m")
+
 	// Run migrations
 	log.Printf("service=backend msg=%q", "running_migrations")
 	if err := db.RunMigrations(dbConn); err != nil {
@@ -90,15 +110,26 @@ func main() {
 	}
 	log.Printf("service=backend msg=%q", "migrations_complete")
 
-	// Add database to auth config for user authentication
-	auth.DB = dbConn
-
-	// Load email configuration
+	// Initialize email service
 	emailCfg := server.LoadEmailConfig()
 	emailSvc := server.NewEmailService(emailCfg)
 
+	// Initialize account lockout (5 attempts, 15min lockout, 10min window)
+	accountLockout := server.NewAccountLockout(5, 15*time.Minute, 10*time.Minute)
+
+	// Add database and services to auth config
+	auth.DB = dbConn
+	auth.AccountLockout = accountLockout
+	auth.EmailService = emailSvc
+
 	// Get public base URL for links (prefer SFD_PUBLIC_BASE_URL, fallback to SFD_BASE_URL)
 	baseURL := getenvDefault("SFD_PUBLIC_BASE_URL", getenvDefault("SFD_BASE_URL", "http://localhost:8080"))
+
+	// Initialize automated database backup system
+	backupCfg := server.LoadBackupConfig()
+	backupMgr := server.NewBackupManager(backupCfg, dbConn, emailSvc)
+	backupMgr.Start()
+	defer backupMgr.Stop()
 
 	srv := server.New(server.Config{
 		Addr:     addr,

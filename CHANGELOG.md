@@ -2,6 +2,60 @@
 
 All notable changes to Secure File Drop are documented in this file.
 
+## [2.1.0] - 2025-12-30
+
+### 🚀 Production Enhancements - 15 New Features
+
+#### Security Enhancements
+- ✅ **Account Lockout**: Automatic lockout after 5 failed login attempts (15min lock, 10min window)
+- ✅ **Per-Endpoint Rate Limiting**: Specialized limits for auth (10/min), upload (20/hr), download (100/hr), admin (50/min), API (300/min)
+- ✅ **Security Event Notifications**: Email alerts for failed logins, account lockouts, and password changes
+- ✅ **Comprehensive Audit Logging**: Database-backed audit trail with JSONB metadata and correlation IDs
+- ✅ **Configuration Validation**: Startup validation with detailed error messages for all environment variables
+
+#### Reliability & Performance
+- ✅ **Circuit Breaker Pattern**: Fail-fast protection for database (5 failures/30s), MinIO (5/30s), SMTP (3/60s)
+- ✅ **Automated Database Backups**: Scheduled PostgreSQL backups with gzip compression, retention policies, and S3 upload
+- ✅ **Optimized Connection Pooling**: Tuned settings (25 max, 5 idle, 5min lifetime, 2min idle timeout)
+- ✅ **HTTP Compression**: Automatic gzip compression for JSON/HTML responses
+- ✅ **Graceful Shutdown**: Clean shutdown with connection draining
+
+#### Observability
+- ✅ **Structured JSON Logging**: Production-ready logging with log levels (debug, info, warn, error)
+- ✅ **Request Tracing**: Correlation IDs via X-Correlation-ID header for distributed tracing
+- ✅ **Prometheus Metrics**: Detailed metrics at `/metrics/prometheus` (requests, uploads, downloads, storage, auth, uptime)
+- ✅ **Enhanced Health Checks**: Component-level status for PostgreSQL and MinIO with latency metrics
+
+#### Upload Improvements
+- ✅ **Resumable Uploads**: TUS protocol support at `/upload/resumable` for chunked uploads with progress tracking
+
+### Added - Database
+- Migration 000010: `resumable_uploads` table for TUS protocol support
+- Migration 000011: `audit_logs` table with indexes for security event tracking
+
+### Added - Monitoring
+- Prometheus exporter with 7 metric types (requests_total, uploads_total, downloads_total, storage_bytes, login metrics, uptime)
+- Request duration percentiles (p50, p95, p99) in Prometheus metrics
+- Circuit breaker statistics endpoint
+
+### Added - Configuration
+- 15+ new environment variables for backups, logging, monitoring (all optional with sensible defaults)
+- Configuration validation at startup with detailed error messages
+- Warnings for recommended but missing optional configuration
+
+### Changed
+- Middleware stack order optimized: Compression → Security Headers → Rate Limiting → Logging → Tracing
+- Database connection pool settings optimized for production workloads
+- Rate limiting now per-endpoint instead of global
+
+### Documentation
+- New [docs/PRODUCTION_ENHANCEMENTS.md](docs/PRODUCTION_ENHANCEMENTS.md) with complete feature guide
+- Updated [README.md](README.md) with production enhancement highlights
+- Updated [docs/FEATURES.md](docs/FEATURES.md) with all 15 new capabilities
+- Updated [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) with production best practices
+- Updated [.env.example](.env.example) with all new environment variables
+- Updated [docker-compose.yml](docker-compose.yml) with optional production settings
+
 ## [2.0.0] - 2025-12-28
 
 ### 🎉 Major Feature Release - 20 Enhancements

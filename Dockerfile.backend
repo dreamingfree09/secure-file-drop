@@ -21,6 +21,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./cmd/backend
 
 FROM alpine:3.20
 WORKDIR /app
+
+# Install PostgreSQL client tools for pg_dump (required for backups)
+RUN apk add --no-cache postgresql16-client
+
 COPY --from=build /out/backend /app/backend
 COPY --from=build /src/web /app/web
 COPY --from=build /out/sfd-hash /app/sfd-hash

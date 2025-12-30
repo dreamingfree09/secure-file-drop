@@ -14,8 +14,9 @@ Secure File Drop is a lightweight, self-hosted service for authenticated file up
 - **Admin Dashboard**: System metrics, file search/filtering, and manual cleanup
 - **Storage Quotas**: Per-user storage limits with real-time usage tracking
 - **Email Notifications**: SMTP support for upload, download, and deletion alerts
-- **Rate Limiting**: 100 requests/minute per IP with token bucket algorithm
-- **Health Monitoring**: Comprehensive health checks and request logging
+- **Advanced Rate Limiting**: Per-endpoint limits (auth, upload, download, admin) with intelligent throttling
+- **Health Monitoring**: Detailed health checks with component status and metrics
+- **Production Ready**: Circuit breakers, compression, audit logging, automated backups, and config validation
 
 ## Table of contents
 
@@ -49,8 +50,22 @@ Docs link health: links are checked in pre-commit (local Markdown link checker) 
 - Download statistics and tracking
 - File search and filtering
 - Email notifications (upload, download, deletion)
-- Rate limiting (100 req/min per IP)
+- Per-endpoint rate limiting (auth: 10/min, upload: 20/hr, download: 100/hr)
 - Comprehensive API documentation
+
+**Production Enhancements:**
+- Account lockout after failed login attempts
+- Structured JSON logging for production environments
+- Prometheus metrics exporter (/metrics/prometheus)
+- Security event notifications (email alerts)
+- Automated database backups with retention policies
+- Request tracing with correlation IDs
+- Resumable file uploads (TUS protocol)
+- Optimized database connection pooling
+- Configuration validation at startup
+- HTTP response compression (gzip)
+- Circuit breaker pattern for external dependencies
+- Comprehensive audit logging
 
 Built with Go, PostgreSQL, MinIO, and deployed via Docker Compose.
 
@@ -65,16 +80,34 @@ Built with Go, PostgreSQL, MinIO, and deployed via Docker Compose.
 
 ## Quickstart (Docker Compose)
 
-1. Copy `docker-compose.yml` and set required environment variables (see `docs/USAGE.md` for a full list).
-2. Start services:
+1. Copy `.env.example` to `.env` and configure required environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your secrets (see comments in file)
+   ```
 
-  docker compose up -d
+2. Start all services including monitoring stack:
+   ```bash
+   docker-compose up -d
+   ```
 
-3. Migrations apply automatically on backend startup. Verify readiness:
+3. Services will be available at:
+   - **Application**: http://localhost:8080
+   - **Prometheus**: http://localhost:9090
+   - **Grafana**: http://localhost:3000 (admin / your_password)
 
-  curl http://localhost:8080/ready
+4. Verify backend readiness:
+   ```bash
+   curl http://localhost:8080/ready
+   ```
 
-4. Visit the web UI (default: http://localhost:8080) and log in using `SFD_ADMIN_USER`/`SFD_ADMIN_PASS`.
+5. Log in using `SFD_ADMIN_USER`/`SFD_ADMIN_PASS` from your `.env` file
+
+**First-time setup notes**:
+- Migrations apply automatically on startup
+- Grafana dashboards are auto-provisioned
+- Prometheus metrics available at `/metrics/prometheus`
+- See [monitoring/README.md](monitoring/README.md) for dashboard details
 
 ## Development
 

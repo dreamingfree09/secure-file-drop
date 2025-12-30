@@ -70,11 +70,13 @@ This document provides an overview of all features implemented in the Secure Fil
 - ✅ Permissions-Policy
 
 ### Audit & Compliance
-- ✅ Comprehensive audit logging
-- ✅ Admin action tracking
-- ✅ File access logs
-- ✅ Download tracking
+- ✅ Comprehensive audit logging (database table with indexes)
+- ✅ Admin action tracking with metadata
+- ✅ File access logs with correlation IDs
+- ✅ Download tracking with statistics
 - ✅ User activity monitoring
+- ✅ Security event notifications (failed logins, lockouts, password changes)
+- ✅ Configuration validation at startup
 
 ## Production Features
 
@@ -86,25 +88,39 @@ This document provides an overview of all features implemented in the Secure Fil
 - ✅ Zero-downtime deployments
 
 ### Reliability
-- ✅ Automated database backups
+- ✅ Automated database backups with configurable:
+  - Backup interval (default: daily)
+  - Retention policy (default: 7 days)
+  - Gzip compression
+  - S3/MinIO upload support
+  - Email notifications on success/failure
 - ✅ MinIO/S3 backup scripts
 - ✅ Disaster recovery procedures
 - ✅ Database restoration tools
 - ✅ Backup encryption (GPG)
 - ✅ Remote backup upload (S3, B2)
+- ✅ Circuit breakers for database, MinIO, SMTP (fail-fast protection)
+- ✅ Graceful shutdown with connection draining
 
 ### Performance
-- ✅ Connection pooling
+- ✅ Optimized database connection pooling (25 max, 5 idle, 5min lifetime)
 - ✅ Caching strategies
 - ✅ Efficient database queries
 - ✅ Streaming file uploads/downloads
-- ✅ Gzip compression
+- ✅ HTTP response compression (gzip)
+- ✅ Resumable file uploads (TUS protocol)
+- ✅ Circuit breaker pattern for dependency failures
 
 ### Rate Limiting
 - ✅ Per-IP rate limiting
 - ✅ Per-user rate limiting
-- ✅ Auth endpoint protection (stricter limits)
-- ✅ Upload rate limiting
+- ✅ Per-endpoint specialized limits:
+  - Auth endpoints: 10 requests/minute (brute-force prevention)
+  - Upload endpoints: 20 uploads/hour
+  - Download endpoints: 100 downloads/hour
+  - Admin endpoints: 50 requests/minute
+  - General API: 300 requests/minute
+- ✅ Account lockout after 5 failed login attempts (15min lock)
 - ✅ Automatic limiter cleanup
 
 ## Development Features
@@ -192,11 +208,13 @@ This document provides an overview of all features implemented in the Secure Fil
   - Hash performance
 
 ### Logging
-- ✅ Structured logging
-- ✅ Request/response logging
-- ✅ Audit logs
-- ✅ Error tracking
+- ✅ Structured JSON logging (SFD_LOG_FORMAT=json)
+- ✅ Log levels: debug, info, warn, error
+- ✅ Request/response logging with correlation IDs
+- ✅ Comprehensive audit logs (database-backed)
+- ✅ Error tracking with stack traces
 - ✅ Webhook delivery logs
+- ✅ Request tracing with X-Correlation-ID headers
 
 ### Alerting
 - ✅ Prometheus alert rules

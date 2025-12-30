@@ -1,0 +1,21 @@
+# Prometheus Configuration for Secure File Drop
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'sfd-local'
+    environment: 'production'
+
+# Scrape configuration
+scrape_configs:
+  # Secure File Drop backend metrics
+  - job_name: 'sfd-backend'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['backend:8080']
+    metrics_path: '/metrics/prometheus'
+    
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

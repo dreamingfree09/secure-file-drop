@@ -46,14 +46,17 @@ type Config struct {
 // production entrypoint. The struct is intentionally simple; most logic
 // resides in handler functions to keep unit-testing straightforward.
 type Server struct {
-	httpServer  *http.Server
-	db          *sql.DB
-	minio       *minio.Client
-	bucket      string
-	cleanupDone chan struct{}
-	authCfg     AuthConfig // Store auth config for getCurrentUser
-	emailSvc    *EmailService
-	csrf        *CSRFProtection // CSRF token management
+	httpServer      *http.Server
+	db              *sql.DB
+	minio           *minio.Client
+	bucket          string
+	cleanupDone     chan struct{}
+	authCfg         AuthConfig // Store auth config for getCurrentUser
+	emailSvc        *EmailService
+	csrf            *CSRFProtection        // CSRF token management
+	accountLockout  *AccountLockout        // Account lockout manager
+	shutdownChan    chan struct{}          // Signal for graceful shutdown
+	circuitBreakers *CircuitBreakerManager // Circuit breakers for external dependencies
 }
 
 // New constructs and returns a Server, registers routes, and validates
@@ -64,6 +67,9 @@ func New(cfg Config) *Server {
 
 	// Initialize CSRF protection (24-hour token TTL)
 	csrf := NewCSRFProtection(24 * time.Hour)
+
+	// Initialize account lockout (5 attempts, 15min lockout, 10min window)
+	accountLockout := NewAccountLockout(5, 15*time.Minute, 10*time.Minute)
 
 	// Initialize email service if not provided
 	if cfg.EmailSvc == nil {
@@ -209,6 +215,9 @@ func New(cfg Config) *Server {
 		})
 	})
 
+	// Prometheus metrics endpoint (public for scraping by Prometheus)
+	mux.Handle("/metrics/prometheus", PrometheusMetricsHandler())
+
 	// Metrics endpoint (protected): includes disk usage stats in addition to
 	// in-memory application counters.
 	mux.Handle("/metrics", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -323,15 +332,22 @@ func New(cfg Config) *Server {
 	// Download file via signed token.
 	mux.Handle("/download", cfg.downloadHandler(cfg.DB, mc, bucket))
 
-	// Wrap middleware: requestID -> logging -> rate limiting -> security headers -> mux
-	// Apply global rate limit: 100 requests per minute per IP
-	rateLimiter := newRateLimiter(100, time.Minute)
+	// Wrap middleware stack (order matters - innermost to outermost):
+	// 1. Compression (compress responses)
+	// 2. Security headers (add security headers)
+	// 3. Per-endpoint rate limiting (specialized limits)
+	// 4. Global rate limiting (general limits)
+	// 5. Logging (log requests/responses)
+	// 6. Tracing (add correlation IDs)
+
+	endpointRateLimiter := NewEndpointRateLimiter()
 
 	var handler http.Handler = mux
+	handler = CompressionMiddleware(handler)
 	handler = securityHeadersMiddleware(handler)
-	handler = rateLimiter.middleware(handler)
+	handler = endpointRateLimiter.Middleware(handler)
 	handler = loggingMiddleware(handler)
-	handler = requestIDMiddleware(handler)
+	handler = TracingMiddleware(handler)
 
 	s := &http.Server{
 		Addr:              cfg.Addr,
@@ -339,16 +355,38 @@ func New(cfg Config) *Server {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
+	// Initialize circuit breakers for external dependencies
+	circuitBreakers := NewCircuitBreakerManager()
+	circuitBreakers.GetOrCreate("database", 5, 30*time.Second)
+	circuitBreakers.GetOrCreate("minio", 5, 30*time.Second)
+	circuitBreakers.GetOrCreate("smtp", 3, 60*time.Second)
+
 	srv := &Server{
-		httpServer:  s,
-		db:          cfg.DB,
-		minio:       mc,
-		bucket:      bucket,
-		cleanupDone: make(chan struct{}),
-		authCfg:     cfg.Auth,
-		emailSvc:    cfg.EmailSvc,
-		csrf:        csrf,
+		httpServer:      s,
+		db:              cfg.DB,
+		minio:           mc,
+		bucket:          bucket,
+		cleanupDone:     make(chan struct{}),
+		authCfg:         cfg.Auth,
+		emailSvc:        cfg.EmailSvc,
+		csrf:            csrf,
+		accountLockout:  accountLockout,
+		shutdownChan:    make(chan struct{}),
+		circuitBreakers: circuitBreakers,
 	}
+
+	// Resumable upload endpoints (TUS protocol) - registered after srv creation
+	mux.HandleFunc("/upload/resumable", srv.tusCreateHandler())
+	mux.HandleFunc("/upload/resumable/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPatch:
+			srv.tusPatchHandler()(w, r)
+		case http.MethodHead:
+			srv.tusHeadHandler()(w, r)
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
 
 	// Admin endpoints (protected) - only accessible by admin users
 	mux.Handle("/admin/files", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminListFilesHandler)))

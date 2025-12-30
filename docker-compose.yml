@@ -72,15 +72,27 @@ services:
       SFD_ADDR: ":8080"
       SFD_VERSION: "dev"
       SFD_COMMIT: "local"
-      SFD_ADMIN_USER: ${SFD_ADMIN_USER}
-      SFD_ADMIN_PASS: ${SFD_ADMIN_PASS}
-      SFD_SESSION_SECRET: ${SFD_SESSION_SECRET}
+      SFD_ADMIN_USER: ${SFD_ADMIN_USER:-admin}
+      SFD_ADMIN_PASS: ${SFD_ADMIN_PASS:-$$2b$$12$$mwAYLCuBKlQEf.t6uiJUUOTjKyJ/6Qyy/kH70RlAFjnKT.dYyH4RO}
+      SFD_SESSION_SECRET: ${SFD_SESSION_SECRET:-change-me-use-openssl-rand-hex-32}
       DATABASE_URL: ${DATABASE_URL}
       SFD_SMTP_HOST: ${SFD_SMTP_HOST}
       SFD_SMTP_PORT: ${SFD_SMTP_PORT}
       SFD_SMTP_USER: ${SFD_SMTP_USER}
       SFD_SMTP_PASS: ${SFD_SMTP_PASS}
       SFD_SMTP_FROM: ${SFD_SMTP_FROM}
+      # Production enhancements (enabled for production)
+      SFD_LOG_FORMAT: ${SFD_LOG_FORMAT:-json}
+      SFD_LOG_LEVEL: ${SFD_LOG_LEVEL:-info}
+      SFD_ENV: ${SFD_ENV:-production}
+      SFD_BACKUP_ENABLED: ${SFD_BACKUP_ENABLED:-true}
+      SFD_BACKUP_INTERVAL: ${SFD_BACKUP_INTERVAL:-24h}
+      SFD_BACKUP_RETENTION_DAYS: ${SFD_BACKUP_RETENTION_DAYS:-7}
+      SFD_BACKUP_DIR: ${SFD_BACKUP_DIR:-/var/backups/sfd}
+      SFD_BACKUP_COMPRESSION: ${SFD_BACKUP_COMPRESSION:-true}
+      SFD_BACKUP_S3_ENABLED: ${SFD_BACKUP_S3_ENABLED:-true}
+      SFD_BACKUP_S3_BUCKET: ${SFD_BACKUP_S3_BUCKET:-sfd-backups}
+      SFD_BACKUP_S3_PREFIX: ${SFD_BACKUP_S3_PREFIX:-db-backups}
     depends_on:
       postgres:
         condition: service_healthy
@@ -116,8 +128,48 @@ services:
       - "traefik.http.middlewares.sfd-buf.buffering.memRequestBodyBytes=10485760"
 
       - "traefik.http.routers.sfd.middlewares=sfd-sec,sfd-rl,sfd-buf"
+    volumes:
+      - sfd_backups:/var/backups/sfd
+    restart: unless-stopped
+
+  # Monitoring stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sfd_prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - sfd_prometheus_data:/prometheus
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sfd_grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3000:3000"
+    volumes:
+      - sfd_grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
     restart: unless-stopped
 
 volumes:
   sfd_pgdata:
   sfd_minio_data:
+  sfd_backups:
+  sfd_prometheus_data:
+  sfd_grafana_data:
