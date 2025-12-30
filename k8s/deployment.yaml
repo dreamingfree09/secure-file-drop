@@ -29,6 +29,10 @@ metadata:
   namespace: secure-file-drop
 type: Opaque
 stringData:
+  # ⚠️ SECURITY WARNING: Change ALL default values before deploying to production!
+  # These default values will cause the application to refuse to start.
+  # Use strong, randomly generated secrets (minimum 32 characters).
+  # Consider using external secret management (Sealed Secrets, External Secrets Operator, Vault).
   SFD_DB_PASSWORD: "change-me-postgres-password"
   SFD_MINIO_ACCESS_KEY: "change-me-minio-access-key"
   SFD_MINIO_SECRET_KEY: "change-me-minio-secret-key"

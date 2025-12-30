@@ -3,6 +3,8 @@ package server
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -131,11 +133,12 @@ func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
 	log.Printf("WEBHOOK ERROR: Failed after max retries to %s for event %s", config.URL, payload.Event)
 }
 
-// generateWebhookSignature creates an HMAC signature for the payload
+// generateWebhookSignature creates an HMAC-SHA256 signature for the payload
+// Returns signature in format: sha256=<hex-encoded-hmac>
 func (s *Server) generateWebhookSignature(payload []byte, secret string) string {
-	// Use the same HMAC logic as signed download links
-	// This would use crypto/hmac with SHA256
-	return fmt.Sprintf("sha256=%x", payload) // Placeholder
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write(payload)
+	return fmt.Sprintf("sha256=%x", h.Sum(nil))
 }
 
 // getWebhooksForEvent retrieves webhook configurations for a specific event

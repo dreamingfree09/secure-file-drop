@@ -122,6 +122,12 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 
 			filePart = part
 			contentType = part.Header.Get("Content-Type")
+
+			// Validate content type if provided
+			if contentType == "" {
+				contentType = "application/octet-stream"
+			}
+
 			break
 		}
 

@@ -53,6 +53,7 @@ type Server struct {
 	cleanupDone chan struct{}
 	authCfg     AuthConfig // Store auth config for getCurrentUser
 	emailSvc    *EmailService
+	csrf        *CSRFProtection // CSRF token management
 }
 
 // New constructs and returns a Server, registers routes, and validates
@@ -60,6 +61,9 @@ type Server struct {
 // are missing to avoid running in a half-configured state.
 func New(cfg Config) *Server {
 	mux := http.NewServeMux()
+
+	// Initialize CSRF protection (24-hour token TTL)
+	csrf := NewCSRFProtection(24 * time.Hour)
 
 	// Initialize email service if not provided
 	if cfg.EmailSvc == nil {
@@ -233,6 +237,27 @@ func New(cfg Config) *Server {
 	// Login endpoint (POST JSON {username,password})
 	mux.HandleFunc("/login", cfg.Auth.loginHandler())
 
+	// CSRF token endpoint (GET) - returns token for authenticated sessions
+	mux.Handle("/csrf-token", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("sfd_session")
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		token, err := csrf.GetToken(cookie.Value)
+		if err != nil {
+			http.Error(w, "failed to generate CSRF token", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"csrf_token": token,
+		})
+	})))
+
 	// Logout endpoint (POST) clears session cookie
 	mux.HandleFunc("/logout", cfg.Auth.logoutHandler())
 
@@ -294,11 +319,12 @@ func New(cfg Config) *Server {
 	// Download file via signed token.
 	mux.Handle("/download", cfg.downloadHandler(cfg.DB, mc, bucket))
 
-	// Wrap middleware: requestID -> logging -> rate limiting -> mux
+	// Wrap middleware: requestID -> logging -> rate limiting -> security headers -> mux
 	// Apply global rate limit: 100 requests per minute per IP
 	rateLimiter := newRateLimiter(100, time.Minute)
 
 	var handler http.Handler = mux
+	handler = securityHeadersMiddleware(handler)
 	handler = rateLimiter.middleware(handler)
 	handler = loggingMiddleware(handler)
 	handler = requestIDMiddleware(handler)
@@ -317,6 +343,7 @@ func New(cfg Config) *Server {
 		cleanupDone: make(chan struct{}),
 		authCfg:     cfg.Auth,
 		emailSvc:    cfg.EmailSvc,
+		csrf:        csrf,
 	}
 
 	// Admin endpoints (protected) - only accessible by admin users

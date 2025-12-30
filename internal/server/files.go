@@ -55,13 +55,19 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 			return
 		}
 
-		// Sanitize input by trimming whitespace
-		req.OrigName = strings.TrimSpace(req.OrigName)
+		// Sanitize input by trimming whitespace and sanitizing filename
+		req.OrigName = SanitizeFilename(strings.TrimSpace(req.OrigName))
 		req.ContentType = strings.TrimSpace(req.ContentType)
 
 		// Validate required fields and ensure size is non-negative
 		if req.OrigName == "" || req.ContentType == "" || req.SizeBytes < 0 {
 			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		// Validate file MIME type against extension
+		if err := ValidateUploadMimeType(req.OrigName, req.ContentType); err != nil {
+			http.Error(w, "file type not allowed: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 

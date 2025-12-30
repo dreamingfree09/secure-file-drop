@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -85,30 +86,30 @@ func (s *Server) GetAuditLogs(ctx context.Context, filters AuditFilters) ([]Audi
 	argCount := 1
 
 	if filters.Action != "" {
-		query += ` AND action = $` + string(rune('0'+argCount))
+		query += fmt.Sprintf(" AND action = $%d", argCount)
 		args = append(args, filters.Action)
 		argCount++
 	}
 
 	if filters.UserID != "" {
-		query += ` AND user_id = $` + string(rune('0'+argCount))
+		query += fmt.Sprintf(" AND user_id = $%d", argCount)
 		args = append(args, filters.UserID)
 		argCount++
 	}
 
 	if !filters.StartTime.IsZero() {
-		query += ` AND timestamp >= $` + string(rune('0'+argCount))
+		query += fmt.Sprintf(" AND timestamp >= $%d", argCount)
 		args = append(args, filters.StartTime)
 		argCount++
 	}
 
 	if !filters.EndTime.IsZero() {
-		query += ` AND timestamp <= $` + string(rune('0'+argCount))
+		query += fmt.Sprintf(" AND timestamp <= $%d", argCount)
 		args = append(args, filters.EndTime)
 		argCount++
 	}
 
-	query += ` ORDER BY timestamp DESC LIMIT $` + string(rune('0'+argCount))
+	query += fmt.Sprintf(" ORDER BY timestamp DESC LIMIT $%d", argCount)
 	args = append(args, filters.Limit)
 
 	rows, err := s.db.QueryContext(ctx, query, args...)

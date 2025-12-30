@@ -108,9 +108,9 @@ func generateVerificationToken() (string, error) {
 // sendVerificationEmail sends an email with verification link
 func sendVerificationEmail(emailSvc *EmailService, baseURL, email, token string) error {
 	if emailSvc == nil {
-		// Fallback to logging if no email service
-		log.Printf("EMAIL VERIFICATION: Send to %s - Token: %s", email, token)
-		log.Printf("Verification URL: %s/verify?token=%s", baseURL, token)
+		// Fallback logging without exposing the token (security risk)
+		log.Printf("EMAIL VERIFICATION: Email service not configured, verification email for %s not sent", email)
+		log.Printf("WARNING: Email verification required but no email service available")
 		return nil
 	}
 	return emailSvc.SendVerificationEmail(email, token, baseURL)
@@ -128,9 +128,9 @@ func generateResetToken() (string, error) {
 // sendPasswordResetEmail sends an email with password reset link
 func sendPasswordResetEmail(emailSvc *EmailService, baseURL, email, token string) error {
 	if emailSvc == nil {
-		// Fallback to logging if no email service
-		log.Printf("PASSWORD RESET: Send to %s - Token: %s", email, token)
-		log.Printf("Reset URL: %s/reset-password?token=%s", baseURL, token)
+		// Fallback logging without exposing the token (security risk)
+		log.Printf("PASSWORD RESET: Email service not configured, reset email for %s not sent", email)
+		log.Printf("WARNING: Password reset requested but no email service available")
 		return nil
 	}
 	return emailSvc.SendPasswordResetEmail(email, token, baseURL)

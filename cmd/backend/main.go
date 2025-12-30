@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -37,6 +38,30 @@ func main() {
 	// Safety: refuse to start if secrets are missing.
 	if auth.AdminPass == "" || auth.SessionSecret == "" {
 		log.Printf("service=backend msg=%q", "missing SFD_ADMIN_PASS or SFD_SESSION_SECRET")
+		os.Exit(1)
+	}
+
+	// Security: refuse to start with default/insecure secrets
+	insecureSecrets := []string{
+		"change-me",
+		"changeme",
+		"admin",
+		"password",
+		"secret",
+		"default",
+		"123456",
+	}
+	
+	sessionSecretLower := strings.ToLower(auth.SessionSecret)
+	for _, insecure := range insecureSecrets {
+		if strings.Contains(sessionSecretLower, insecure) {
+			log.Printf("service=backend msg=%q value=%q", "SECURITY ERROR: SFD_SESSION_SECRET contains insecure default value", insecure)
+			os.Exit(1)
+		}
+	}
+	
+	if len(auth.SessionSecret) < 32 {
+		log.Printf("service=backend msg=%q len=%d", "SECURITY ERROR: SFD_SESSION_SECRET too short (minimum 32 characters)", len(auth.SessionSecret))
 		os.Exit(1)
 	}
 
