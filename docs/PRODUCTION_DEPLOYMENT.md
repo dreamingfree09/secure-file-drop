@@ -1,6 +1,341 @@
 # Production Deployment Guide
 
-## Optional Configuration Enabled
+## Table of Contents
+- [Deploying to Proxmox/Remote Server](#deploying-to-proxmoxremote-server)
+- [Production Features Enabled](#production-features-enabled)
+- [Getting Started](#getting-started)
+- [Production Best Practices](#production-best-practices)
+
+---
+
+## Deploying to Proxmox/Remote Server
+
+### Complete Deployment Instructions
+
+This section provides step-by-step instructions for deploying Secure File Drop to a Proxmox hypervisor or any remote server.
+
+### Prerequisites
+
+**On your Proxmox server:**
+- Ubuntu 22.04 LTS or newer (recommended) or Debian 12
+- Minimum 2 CPU cores, 4GB RAM, 20GB disk
+- Root or sudo access
+- Internet connection
+
+### Step 1: Prepare Proxmox VM/Container
+
+#### Option A: Create LXC Container (Recommended - Lightweight)
+```bash
+# From Proxmox web UI:
+# 1. Create → CT (Container)
+# 2. Template: ubuntu-22.04-standard
+# 3. Resources: 2 cores, 4GB RAM, 20GB disk
+# 4. Network: Bridge, DHCP or static IP
+# 5. Start the container
+```
+
+#### Option B: Create VM
+```bash
+# From Proxmox web UI:
+# 1. Create → VM
+# 2. ISO: Ubuntu 22.04 Server
+# 3. Resources: 2 cores, 4GB RAM, 20GB disk
+# 4. Install Ubuntu with Docker option
+```
+
+### Step 2: Initial Server Setup
+
+SSH into your Proxmox container/VM:
+
+```bash
+# From your local machine
+ssh root@YOUR_PROXMOX_IP
+
+# Update system
+apt update && apt upgrade -y
+
+# Install required packages
+apt install -y git curl wget nano htop
+
+# Create app user (recommended for security)
+useradd -m -s /bin/bash sfd
+usermod -aG sudo sfd
+```
+
+### Step 3: Install Docker & Docker Compose
+
+```bash
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+# Add user to docker group (if using non-root user)
+usermod -aG docker sfd
+
+# Install Docker Compose
+apt install -y docker-compose-plugin
+
+# Verify installation
+docker --version
+docker compose version
+```
+
+### Step 4: Transfer Project to Server
+
+#### Method 1: Clone from GitHub (Recommended)
+```bash
+# Switch to app user
+su - sfd
+
+# Clone repository
+cd ~
+git clone https://github.com/dreamingfree09/secure-file-drop.git
+cd secure-file-drop
+
+# Switch to production branch
+git checkout feature/v2-enhancements
+```
+
+#### Method 2: Transfer via SCP (from your local machine)
+```bash
+# From your LOCAL machine (where you have the project)
+cd "/home/dreamingfree09/Secure File Drop"
+tar czf secure-file-drop.tar.gz .
+
+# Transfer to server
+scp secure-file-drop.tar.gz sfd@YOUR_PROXMOX_IP:~/
+
+# On the server
+ssh sfd@YOUR_PROXMOX_IP
+tar xzf secure-file-drop.tar.gz
+cd secure-file-drop
+```
+
+### Step 5: Configure Environment
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Generate secure secrets
+echo "SFD_SESSION_SECRET=$(openssl rand -hex 32)" >> .env.tmp
+echo "SFD_DOWNLOAD_SECRET=$(openssl rand -hex 32)" >> .env.tmp
+echo "POSTGRES_PASSWORD=$(openssl rand -base64 24)" >> .env.tmp
+echo "MINIO_ROOT_PASSWORD=$(openssl rand -base64 24)" >> .env.tmp
+echo "GRAFANA_ADMIN_PASSWORD=$(openssl rand -base64 16)" >> .env.tmp
+
+# Generate bcrypt hash for admin password
+ADMIN_HASH=$(python3 -c "import bcrypt; print(bcrypt.hashpw(b'YOUR_ADMIN_PASSWORD', bcrypt.gensalt(12)).decode())")
+echo "SFD_ADMIN_PASS=$ADMIN_HASH" >> .env.tmp
+
+# Edit .env with generated values
+nano .env
+
+# Update these values in .env:
+# - POSTGRES_PASSWORD (use generated value)
+# - MINIO_ROOT_PASSWORD (use generated value)
+# - SFD_ADMIN_PASS (use generated bcrypt hash)
+# - SFD_SESSION_SECRET (use generated value)
+# - SFD_DOWNLOAD_SECRET (use generated value)
+# - GRAFANA_ADMIN_PASSWORD (use generated value)
+# - SFD_PUBLIC_BASE_URL (set to your domain or IP)
+# - DATABASE_URL (update with POSTGRES_PASSWORD)
+
+# Example .env configuration:
+# POSTGRES_PASSWORD=Xy8zK9pLm3nQ2wR5vT7yU1aB4cD6eF8g
+# MINIO_ROOT_PASSWORD=Ab3dEf7gHi9jKl2mNp5qRs8tUv1wXy4z
+# SFD_ADMIN_PASS=$2b$12$abc123...xyz789
+# SFD_PUBLIC_BASE_URL=https://files.yourdomain.com
+```
+
+### Step 6: Configure Firewall (Optional but Recommended)
+
+```bash
+# Install UFW (Uncomplicated Firewall)
+apt install -y ufw
+
+# Allow SSH (important - don't lock yourself out!)
+ufw allow 22/tcp
+
+# Allow HTTP/HTTPS
+ufw allow 80/tcp
+ufw allow 443/tcp
+
+# Allow application ports (adjust as needed)
+ufw allow 8080/tcp   # Direct backend access
+ufw allow 9090/tcp   # Prometheus (consider restricting to internal network)
+ufw allow 3000/tcp   # Grafana (consider restricting to internal network)
+
+# Enable firewall
+ufw --force enable
+
+# Check status
+ufw status
+```
+
+### Step 7: Set Up HTTPS with Caddy (Recommended)
+
+```bash
+# Install Caddy
+apt install -y debian-keyring debian-archive-keyring apt-transport-https
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | tee /etc/apt/sources.list.d/caddy-stable.list
+apt update
+apt install -y caddy
+
+# Create Caddyfile
+nano /etc/caddy/Caddyfile
+
+# Add this configuration:
+# files.yourdomain.com {
+#     reverse_proxy localhost:8080
+#     tls your-email@example.com
+# }
+# 
+# grafana.yourdomain.com {
+#     reverse_proxy localhost:3000
+#     tls your-email@example.com
+# }
+
+# Reload Caddy
+systemctl reload caddy
+systemctl enable caddy
+```
+
+### Step 8: Deploy Application
+
+```bash
+# Navigate to project directory
+cd ~/secure-file-drop
+
+# Build and start services
+docker compose up -d
+
+# Wait for services to start (30-60 seconds)
+sleep 30
+
+# Check service status
+docker compose ps
+
+# View logs
+docker compose logs -f backend
+
+# Verify health
+curl http://localhost:8080/health
+```
+
+### Step 9: Verify Deployment
+
+```bash
+# Check all services are running
+docker compose ps
+
+# Test backend health
+curl http://localhost:8080/ready
+
+# Test Prometheus metrics
+curl http://localhost:8080/metrics/prometheus | head -20
+
+# Check backup was created
+docker exec sfd_backend ls -lh /var/backups/sfd/
+
+# View logs
+docker compose logs backend | tail -50
+```
+
+### Step 10: Access Your Application
+
+**Without HTTPS (local testing):**
+- Application: http://YOUR_SERVER_IP:8080
+- Grafana: http://YOUR_SERVER_IP:3000
+- Prometheus: http://YOUR_SERVER_IP:9090
+
+**With HTTPS (via Caddy):**
+- Application: https://files.yourdomain.com
+- Grafana: https://grafana.yourdomain.com
+
+### Troubleshooting Deployment
+
+#### Container won't start
+```bash
+# Check logs
+docker compose logs backend
+
+# Check if ports are available
+netstat -tlnp | grep -E '(8080|9090|3000)'
+
+# Restart services
+docker compose down
+docker compose up -d
+```
+
+#### Database connection errors
+```bash
+# Verify PostgreSQL is running
+docker compose ps postgres
+
+# Check DATABASE_URL matches POSTGRES_PASSWORD in .env
+grep -E "(DATABASE_URL|POSTGRES_PASSWORD)" .env
+
+# Restart postgres
+docker compose restart postgres
+```
+
+#### Permission errors
+```bash
+# Fix ownership
+chown -R sfd:sfd ~/secure-file-drop
+
+# Fix docker permissions
+usermod -aG docker sfd
+```
+
+### Updating Your Deployment
+
+```bash
+# Pull latest changes
+cd ~/secure-file-drop
+git pull origin feature/v2-enhancements
+
+# Rebuild containers
+docker compose build backend
+
+# Restart services (with zero downtime)
+docker compose up -d
+
+# Check logs
+docker compose logs -f backend
+```
+
+### Backup & Restore
+
+#### Manual Backup
+```bash
+# Backup database
+docker exec sfd_postgres pg_dump -U sfd sfd > backup-$(date +%Y%m%d).sql
+
+# Backup .env file
+cp .env .env.backup-$(date +%Y%m%d)
+
+# Backup Docker volumes
+docker run --rm -v securefiledrop_sfd_pgdata:/data -v $(pwd):/backup ubuntu tar czf /backup/pgdata-backup-$(date +%Y%m%d).tar.gz /data
+```
+
+#### Restore from Backup
+```bash
+# Restore database
+cat backup-20251230.sql | docker exec -i sfd_postgres psql -U sfd -d sfd
+
+# Restore .env
+cp .env.backup-20251230 .env
+
+# Restart services
+docker compose down && docker compose up -d
+```
+
+---
+
+## Production Features Enabled
 
 Your Secure File Drop instance is configured with the following production features:
 
