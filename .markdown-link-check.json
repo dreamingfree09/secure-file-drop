@@ -1,0 +1,10 @@
+{
+  "ignorePatterns": [
+    {
+      "pattern": "^https?://localhost(?::[0-9]+)?(?:/|$)"
+    },
+    {
+      "pattern": "^https://(?:your-host|host)(?:/|$)"
+    }
+  ]
+}
