@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-go@v4
+    - uses: actions/setup-go@v6
       with:
-        go-version: '1.20'
+        go-version-file: go.mod
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v4
+      uses: golangci/golangci-lint-action@v9
       with:
-        version: v1.54.0
-        args: --timeout 2m
+        version: v2.12.2
+        args: --timeout=5m
     - name: Run go tests
       run: go test ./...
 
@@ -39,11 +39,13 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v6
       with:
-        go-version: '1.20'
-    - name: Install dependencies
-      run: go mod tidy
+        go-version-file: go.mod
+    - name: Download dependencies
+      run: go mod download
+    - name: Verify dependencies
+      run: go mod verify
     - name: Run e2e tests
       run: go test ./tests/e2e -v -count=1
 
@@ -52,9 +54,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-go@v4
+    - uses: actions/setup-go@v6
       with:
-        go-version: '1.20'
+        go-version-file: go.mod
     - name: Run tests with coverage
       run: go test ./... -coverprofile=coverage.out || true
     - name: Upload coverage to Codecov
