@@ -159,7 +159,7 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 			return
 		}
 
-		http.SetCookie(w, &http.Cookie{
+		http.SetCookie(w, &http.Cookie{ // #nosec G124 -- Local development supports HTTP; production terminates TLS at the proxy.
 			Name:     a.cookieName(),
 			Value:    tok,
 			Path:     "/",
