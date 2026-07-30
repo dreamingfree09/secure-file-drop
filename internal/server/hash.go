@@ -40,7 +40,7 @@ func runHashTool(ctx context.Context, filePath string) (hashToolOutput, error) {
 	if toolPath == "" {
 		toolPath = "/app/sfd-hash"
 	}
-	cmd := exec.CommandContext(ctx, toolPath, filePath)
+	cmd := exec.CommandContext(ctx, toolPath, filePath) // #nosec G204 -- The trusted tool path is deployment configuration; no shell is invoked.
 	out, err := cmd.Output()
 	if err != nil {
 		return hashToolOutput{}, fmt.Errorf("hash tool failed: %w", err)
