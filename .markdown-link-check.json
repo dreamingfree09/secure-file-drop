@@ -1,10 +1,13 @@
 {
   "ignorePatterns": [
     {
-      "pattern": "^https?://localhost(?::[0-9]+)?(?:/|$)"
+      "pattern": "^http://localhost:8080/"
     },
     {
-      "pattern": "^https://(?:your-host|host)(?:/|$)"
+      "pattern": "^https://your-host/"
+    },
+    {
+      "pattern": "^https://host/"
     }
   ]
 }
