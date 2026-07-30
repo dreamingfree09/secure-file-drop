@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -234,12 +233,6 @@ func TestMaxUploadBytes_NotSet(t *testing.T) {
 	}
 }
 
-// Mock DB for integration-style test (without actual DB)
-type mockDB struct {
-	queryRowFunc func(query string, args ...any) *sql.Row
-	execFunc     func(query string, args ...any) (sql.Result, error)
-}
-
 func TestUploadValidationFlow(t *testing.T) {
 	// Test the validation flow without actual DB/MinIO
 	testID := uuid.New()
@@ -256,9 +249,16 @@ func TestUploadValidationFlow(t *testing.T) {
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
 
-		part, _ := writer.CreateFormFile("file", "test.pdf")
-		part.Write([]byte("fake pdf"))
-		writer.Close()
+		part, err := writer.CreateFormFile("file", "test.pdf")
+		if err != nil {
+			t.Fatalf("Failed to create form file: %v", err)
+		}
+		if _, err := part.Write([]byte("fake pdf")); err != nil {
+			t.Fatalf("Failed to write to form file: %v", err)
+		}
+		if err := writer.Close(); err != nil {
+			t.Fatalf("Failed to close multipart writer: %v", err)
+		}
 
 		req := httptest.NewRequest(http.MethodPost, "/upload", body)
 		req.Header.Set("Content-Type", writer.FormDataContentType())

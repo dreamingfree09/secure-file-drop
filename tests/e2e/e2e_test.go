@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -213,16 +214,29 @@ func main() {
 	// Export it for the server to use
 	env = append(env, "SFD_HASH_TOOL="+toolPath)
 
-	// Run server (go run) in background from the repo root
-	cmd := exec.CommandContext(context.Background(), "go", "run", "./cmd/backend")
+	// Build and run the backend binary directly. Using "go run" leaves its compiled
+	// child process holding the output pipes after the wrapper is killed.
+	backendPath := filepath.Join(t.TempDir(), "backend")
+	buildCmd := exec.Command("go", "build", "-o", backendPath, "./cmd/backend")
+	buildCmd.Dir = "../../"
+	if output, err := buildCmd.CombinedOutput(); err != nil {
+		t.Fatalf("failed to build server: %v\n%s", err, output)
+	}
+
+	serverCtx, stopServer := context.WithCancel(context.Background())
+	cmd := exec.CommandContext(serverCtx, backendPath)
 	cmd.Env = env
 	cmd.Dir = "../../"
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
+		stopServer()
 		t.Fatalf("failed to start server: %v", err)
 	}
-	defer cmd.Process.Kill()
+	t.Cleanup(func() {
+		stopServer()
+		_ = cmd.Wait()
+	})
 
 	// Wait for readiness (longer timeout for CI environments)
 	if err := retryHTTPGet("http://localhost:8080/ready", 90*time.Second); err != nil {

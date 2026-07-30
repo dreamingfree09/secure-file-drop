@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -43,7 +44,11 @@ func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("admin list files: rows close failed: %v", err)
+		}
+	}()
 
 	var files []FileInfo
 	for rows.Next() {
@@ -104,7 +109,7 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 			log.Printf("admin delete file: MinIO removal failed: %v", err)
 			// Continue with database deletion even if MinIO fails
 		} else {
-			log.Printf("admin delete file: removed from MinIO: %s", fileID)
+			log.Printf("admin delete file: removed from MinIO: %s", strconv.Quote(fileID))
 		}
 	}
 
@@ -122,7 +127,7 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	log.Printf("admin delete file: deleted file %s", fileID)
+	log.Printf("admin delete file: deleted file %s", strconv.Quote(fileID))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -164,7 +169,11 @@ func (s *Server) AdminManualCleanupHandler(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("admin manual cleanup: rows close failed: %v", err)
+		}
+	}()
 
 	var toDelete []struct {
 		ID     string
@@ -217,5 +226,7 @@ func (s *Server) AdminManualCleanupHandler(w http.ResponseWriter, r *http.Reques
 	log.Printf("admin manual cleanup: completed, deleted %d files", deletedCount)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(CleanupResult{DeletedCount: deletedCount})
+	if err := json.NewEncoder(w).Encode(CleanupResult{DeletedCount: deletedCount}); err != nil {
+		log.Printf("admin manual cleanup: encode failed: %v", err)
+	}
 }

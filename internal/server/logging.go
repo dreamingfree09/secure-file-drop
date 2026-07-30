@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -60,8 +61,14 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(lrw, r)
 
 		ms := time.Since(start).Milliseconds()
-		log.Printf("rid=%s method=%s path=%s status=%d ms=%d remote=%s ua=%q",
-			rid, r.Method, r.URL.Path, lrw.status, ms, r.RemoteAddr, r.UserAgent())
+		log.Printf("rid=%s method=%s path=%s status=%d ms=%d remote=%s ua=%s",
+			strconv.Quote(rid),
+			strconv.Quote(r.Method),
+			strconv.Quote(r.URL.Path),
+			lrw.status,
+			ms,
+			strconv.Quote(r.RemoteAddr),
+			strconv.Quote(r.UserAgent()))
 
 		// Record metrics
 		GetMetrics().RecordRequest(lrw.status)

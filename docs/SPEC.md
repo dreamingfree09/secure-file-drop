@@ -7,7 +7,7 @@
 - [High-level architecture](#high-level-architecture)
 - [Components](#components)
 - [Security constraints](#security-constraints)
-- [Environment variables (required/important)](#environment-variables-requiredimportant)
+- [Environment variables (required/important)](#environment-variables)
 - [Deployment (initial)](#deployment-initial)
 
 ## Purpose
@@ -68,7 +68,7 @@ This project is an educational exercise that combines a memory-safe backend (Go)
 - MinIO and Postgres must not be public
 - Limit upload sizes at both proxy and server
 
-## Environment variables (required / important)
+## Environment variables
 
 - SFD_ADMIN_USER, SFD_ADMIN_PASS
 - SFD_SESSION_SECRET

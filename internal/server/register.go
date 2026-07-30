@@ -162,11 +162,13 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Return success response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(RegisterResponse{
+	if err := json.NewEncoder(w).Encode(RegisterResponse{
 		ID:       userID.String(),
 		Email:    req.Email,
 		Username: req.Username,
-	})
+	}); err != nil {
+		log.Printf("register: encode failed: %v", err)
+	}
 }
 
 // authenticateUser checks credentials against the database
