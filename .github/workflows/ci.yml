@@ -29,8 +29,10 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: '24'
+    - name: Install markdown-link-check
+      run: npm install --global markdown-link-check@3.11.2
     - name: Run markdown-link-check
-      run: npx --yes markdown-link-check@3.11.2 docs --quiet
+      run: find docs -type f -name '*.md' -print0 | xargs -0 -r -n1 markdown-link-check --quiet
 
   e2e-tests:
     name: End-to-end (docker)
