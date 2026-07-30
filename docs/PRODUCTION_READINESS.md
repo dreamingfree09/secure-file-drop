@@ -16,12 +16,12 @@ This document summarizes the production-ready features that have been added to S
 - Migration history tracking in `schema_migrations` table
 
 **Files**:
-- [internal/db/migrate.go](internal/db/migrate.go) - Migration runner
-- [internal/db/migrations/000001_initial_schema.up.sql](internal/db/migrations/000001_initial_schema.up.sql)
-- [internal/db/migrations/000001_initial_schema.down.sql](internal/db/migrations/000001_initial_schema.down.sql)
-- [internal/db/migrations/000002_add_lifecycle_fields.up.sql](internal/db/migrations/000002_add_lifecycle_fields.up.sql)
-- [internal/db/migrations/000002_add_lifecycle_fields.down.sql](internal/db/migrations/000002_add_lifecycle_fields.down.sql)
-- [docs/MIGRATIONS.md](docs/MIGRATIONS.md) - Rollback procedures and best practices
+- [internal/db/migrate.go](../internal/db/migrate.go) - Migration runner
+- [internal/db/migrations/000001_initial_schema.up.sql](../internal/db/migrations/000001_initial_schema.up.sql)
+- [internal/db/migrations/000001_initial_schema.down.sql](../internal/db/migrations/000001_initial_schema.down.sql)
+- [internal/db/migrations/000002_add_lifecycle_fields.up.sql](../internal/db/migrations/000002_add_lifecycle_fields.up.sql)
+- [internal/db/migrations/000002_add_lifecycle_fields.down.sql](../internal/db/migrations/000002_add_lifecycle_fields.down.sql)
+- [docs/MIGRATIONS.md](MIGRATIONS.md) - Rollback procedures and best practices
 
 **Benefits**:
 - Zero manual schema application
@@ -40,10 +40,10 @@ This document summarizes the production-ready features that have been added to S
 - Total: 45+ unit tests across 6 test files
 
 **Files**:
-- [internal/server/upload_test.go](internal/server/upload_test.go) - Upload validation tests
-- [internal/server/download_test.go](internal/server/download_test.go) - Download token & flow tests
-- [internal/server/files_test.go](internal/server/files_test.go) - File creation tests
-- [internal/server/admin_test.go](internal/server/admin_test.go) - Admin endpoint tests
+- [internal/server/upload_test.go](../internal/server/upload_test.go) - Upload validation tests
+- [internal/server/download_test.go](../internal/server/download_test.go) - Download token & flow tests
+- [internal/server/files_test.go](../internal/server/files_test.go) - File creation tests
+- [internal/server/admin_test.go](../internal/server/admin_test.go) - Admin endpoint tests
 
 **Test Categories**:
 - HTTP method validation
@@ -70,8 +70,8 @@ This document summarizes the production-ready features that have been added to S
 - Color-coded output for quick scanning
 
 **Files**:
-- [scripts/validate-env.sh](scripts/validate-env.sh) - Validation script
-- [.env.example](.env.example) - Complete template with all variables
+- [scripts/validate-env.sh](../scripts/validate-env.sh) - Validation script
+- [.env.example](../.env.example) - Complete template with all variables
 
 **Usage**:
 ```bash
@@ -95,7 +95,7 @@ This document summarizes the production-ready features that have been added to S
 - Warning flags for code quality
 
 **Files**:
-- [native/Makefile](native/Makefile) - Build system
+- [native/Makefile](../native/Makefile) - Build system
 
 **Benefits**:
 - Reproducible builds
@@ -113,7 +113,7 @@ This document summarizes the production-ready features that have been added to S
 - Proper HTTP status codes (503 when not ready)
 
 **Files**:
-- [internal/server/server.go](internal/server/server.go#L70-L100) - Enhanced health check
+- [internal/server/server.go](../internal/server/server.go#L70-L100) - Enhanced health check
 
 **Benefits**:
 - Kubernetes/Docker readiness probes
@@ -151,7 +151,7 @@ This document summarizes the production-ready features that have been added to S
 - Troubleshooting guide
 
 **Files**:
-- [docs/MIGRATIONS.md](docs/MIGRATIONS.md) - Migration management guide
+- [docs/MIGRATIONS.md](MIGRATIONS.md) - Migration management guide
 
 **Benefits**:
 - Safe schema evolution
@@ -170,8 +170,8 @@ This document summarizes the production-ready features that have been added to S
 - Integrated into logging middleware for automatic request tracking
 
 **Files**:
-- [internal/server/metrics.go](internal/server/metrics.go) - Metrics system
-- [internal/server/logging.go](internal/server/logging.go#L35) - Automatic request recording
+- [internal/server/metrics.go](../internal/server/metrics.go) - Metrics system
+- [internal/server/logging.go](../internal/server/logging.go#L35) - Automatic request recording
 
 **Metrics Tracked**:
 - `total_uploads` - Number of successful uploads
@@ -204,8 +204,8 @@ This document summarizes the production-ready features that have been added to S
 - Manual cleanup trigger via admin endpoint
 
 **Files**:
-- [internal/server/cleanup.go](internal/server/cleanup.go) - Cleanup job implementation
-- [internal/server/server.go](internal/server/server.go#L180-L195) - Lifecycle integration
+- [internal/server/cleanup.go](../internal/server/cleanup.go) - Cleanup job implementation
+- [internal/server/server.go](../internal/server/server.go#L180-L195) - Lifecycle integration
 
 **Configuration** (`.env`):
 ```bash
@@ -233,8 +233,8 @@ SFD_CLEANUP_MAX_AGE=24h         # Delete files older than this (default: 24h)
 - **Auto-refresh**: Updates after upload/delete operations
 
 **Files**:
-- [web/static/index.html](web/static/index.html) - Enhanced UI with admin dashboard
-- [internal/server/admin.go](internal/server/admin.go) - Admin endpoints
+- [web/static/index.html](../web/static/index.html) - Enhanced UI with admin dashboard
+- [internal/server/admin.go](../internal/server/admin.go) - Admin endpoints
 
 **Admin Endpoints**:
 - `GET /admin/files` - List all files (up to 100, newest first)
