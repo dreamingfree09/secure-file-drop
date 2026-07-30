@@ -85,7 +85,7 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 		return "", nil, 0, errors.New("bucket/objectKey missing")
 	}
 
-	// Stream MinIO object to a temporary local file, then hash locally via the C utility.
+	// Stream MinIO object to a temporary file, then hash locally via the C utility.
 	tmp, err := os.CreateTemp("", "sfd-hash-*")
 	if err != nil {
 		return "", nil, 0, fmt.Errorf("create temp file: %w", err)
@@ -114,7 +114,7 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 
 	out, err := runHashTool(ctx, tmpPath)
 	if err != nil {
-		return hashToolOutput{}, fmt.Errorf("hash tool failed: %w", err)
+		return "", nil, 0, err
 	}
 
 	raw, err := hex.DecodeString(out.Hash)
