@@ -122,7 +122,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 - Embedded migration files in binary (no external dependencies)
 - Versioned schema with up/down migrations
 - Migration history tracking in `schema_migrations` table
-- Rollback procedures documented ([docs/MIGRATIONS.md](docs/MIGRATIONS.md))
+- Rollback procedures documented ([docs/MIGRATIONS.md](MIGRATIONS.md))
 
 #### Health Checks
 - `/ready` endpoint checks PostgreSQL + MinIO
@@ -145,7 +145,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 ### ✅ Observability
 
 #### Metrics Collection
-- **System Metrics** ([/metrics](internal/server/metrics.go)):
+- **System Metrics** ([/metrics](../internal/server/metrics.go)):
   - `total_uploads` - Successful file uploads
   - `total_downloads` - Successful file downloads
   - `successful_auths` / `failed_auths` - Authentication attempts
@@ -175,7 +175,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 ### ✅ Maintainability
 
 #### Automated Maintenance
-- **Cleanup Job** ([internal/server/cleanup.go](internal/server/cleanup.go)):
+- **Cleanup Job** ([internal/server/cleanup.go](../internal/server/cleanup.go)):
   - Runs on configurable interval (default: 1 hour)
   - Deletes files older than `SFD_CLEANUP_MAX_AGE` (default: 24 hours)
   - Targets `pending` and `failed` statuses only
@@ -185,28 +185,28 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
 
 #### Configuration Management
 - **Environment Variables**: All configuration via `.env`
-- **Validation Script** ([scripts/validate-env.sh](scripts/validate-env.sh)):
+- **Validation Script** ([scripts/validate-env.sh](../scripts/validate-env.sh)):
   - Checks required variables
   - Validates secret strength (min 16 chars for passwords, 32 for secrets)
   - DATABASE_URL format verification
   - Color-coded output
-- **Template** ([.env.example](.env.example)):
+- **Template** ([.env.example](../.env.example)):
   - Complete variable listing with descriptions
   - Secret generation instructions
   - Sane defaults for optional variables
 
 #### Documentation
 - **[CONTRIBUTING.md](CONTRIBUTING.md)**: Developer onboarding, code style, PR process
-- **[docs/MIGRATIONS.md](docs/MIGRATIONS.md)**: Migration rollback procedures
-- **[docs/SPEC.md](docs/SPEC.md)**: MVP specification and design decisions
-- **[docs/TRACKER.md](docs/TRACKER.md)**: Feature tracking and milestones
-- **[docs/PRODUCTION_READINESS.md](docs/PRODUCTION_READINESS.md)**: This document
-- **[README.md](README.md)**: Quick start, usage overview, admin features
+- **[docs/MIGRATIONS.md](MIGRATIONS.md)**: Migration rollback procedures
+- **[docs/SPEC.md](SPEC.md)**: MVP specification and design decisions
+- **[docs/TRACKER.md](TRACKER.md)**: Feature tracking and milestones
+- **[docs/PRODUCTION_READINESS.md](PRODUCTION_READINESS.md)**: This document
+- **[README.md](../README.md)**: Quick start, usage overview, admin features
 
 ### ✅ Testing
 
 #### Unit Tests (45+ tests)
-- **Upload Handler** ([internal/server/upload_test.go](internal/server/upload_test.go)):
+- **Upload Handler** ([internal/server/upload_test.go](../internal/server/upload_test.go)):
   - Invalid method validation
   - Missing/invalid UUID handling
   - Max bytes limit enforcement (valid, empty, invalid, negative)
@@ -214,7 +214,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
   - Status validation (pending/stored/hashed/failed)
   - Context timeout handling
 
-- **Download Handler** ([internal/server/download_test.go](internal/server/download_test.go)):
+- **Download Handler** ([internal/server/download_test.go](../internal/server/download_test.go)):
   - Token expiry validation
   - Valid token flow (end-to-end)
   - Status checks (ready/pending/stored/failed)
@@ -223,12 +223,12 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
   - Content-Disposition headers (filenames with spaces, quotes)
   - Token verification errors (malformed, empty, multiple dots)
 
-- **File Creation** ([internal/server/files_test.go](internal/server/files_test.go)):
+- **File Creation** ([internal/server/files_test.go](../internal/server/files_test.go)):
   - Success case
   - Invalid HTTP methods
   - Input validation (empty name/type, negative size, whitespace)
 
-- **Admin Endpoints** ([internal/server/admin_test.go](internal/server/admin_test.go)):
+- **Admin Endpoints** ([internal/server/admin_test.go](../internal/server/admin_test.go)):
   - List files invalid method
   - Delete file invalid method
   - Missing file ID
@@ -236,7 +236,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
   - JSON serialization (CleanupResult, FileInfo)
 
 #### Integration Tests
-- **E2E Test** ([tests/e2e/main_test.go](tests/e2e/main_test.go)):
+- **E2E Test** ([tests/e2e/main_test.go](../tests/e2e/main_test.go)):
   - Full stack Docker Compose environment
   - Login → Upload → Hash → Link → Download flow
   - Real PostgreSQL, MinIO, and C hash utility
@@ -506,7 +506,7 @@ Response: 200 OK
 4. **No usage quotas**: Users can upload unlimited files (within size limit)
 
 ### Future Work Items
-See [docs/TRACKER.md](docs/TRACKER.md) for full feature roadmap.
+See [docs/TRACKER.md](TRACKER.md) for full feature roadmap.
 
 ---
 
