@@ -28,9 +28,9 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '24'
     - name: Run markdown-link-check
-      run: npx markdown-link-check 'docs/**/*.md' --quiet || true
+      run: npx --yes markdown-link-check@3.11.2 docs --quiet
 
   e2e-tests:
     name: End-to-end (docker)
