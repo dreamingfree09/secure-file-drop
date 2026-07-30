@@ -236,7 +236,7 @@ Secure File Drop is a production-ready, self-hosted secure file transfer system 
   - JSON serialization (CleanupResult, FileInfo)
 
 #### Integration Tests
-- **E2E Test** ([tests/e2e/main_test.go](../tests/e2e/main_test.go)):
+- **E2E Test** ([tests/e2e/e2e_test.go](../tests/e2e/e2e_test.go)):
   - Full stack Docker Compose environment
   - Login → Upload → Hash → Link → Download flow
   - Real PostgreSQL, MinIO, and C hash utility
