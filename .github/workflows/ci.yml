@@ -32,7 +32,7 @@ jobs:
     - name: Install markdown-link-check
       run: npm install --global markdown-link-check@3.11.2
     - name: Run markdown-link-check
-      run: find docs -type f -name '*.md' -print0 | xargs -0 -r -n1 markdown-link-check --quiet
+      run: find docs -type f -name '*.md' -print0 | xargs -0 -r -n1 markdown-link-check --quiet --config .markdown-link-check.json
 
   e2e-tests:
     name: End-to-end (docker)
