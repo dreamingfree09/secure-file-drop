@@ -67,7 +67,11 @@ func runCleanup(ctx context.Context, cfg CleanupConfig) {
 		log.Printf("service=cleanup msg=%q err=%v", "query_failed", err)
 		return
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("service=cleanup msg=%q err=%v", "rows_close_failed", err)
+		}
+	}()
 
 	deleted := 0
 	for rows.Next() {
