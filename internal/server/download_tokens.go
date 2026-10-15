@@ -101,7 +101,7 @@ func verifyDownloadToken(token string, now time.Time) (downloadClaims, error) {
 		return c, errBadToken
 	}
 
-	if now.Unix() > c.Exp {
+	if now.Unix() >= c.Exp {
 		return c, errTokenExpired
 	}
 

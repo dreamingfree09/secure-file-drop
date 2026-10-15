@@ -10,6 +10,8 @@
 - [Environment variables (required/important)](#environment-variables-requiredimportant)
 - [Deployment (initial)](#deployment-initial)
 
+Current acceptance evidence is in [TRACKER.md](TRACKER.md) and the exact-revision [PR handover](https://github.com/dreamingfree09/secure-file-drop/pull/21). Security goals below are requirements, not a production-certification claim.
+
 ## Purpose
 
 Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. The system is designed to be safe to expose on the public internet from day one, while remaining simple and auditable.
@@ -73,8 +75,8 @@ This project is an educational exercise that combines a memory-safe backend (Go)
 - SFD_ADMIN_USER, SFD_ADMIN_PASS
 - SFD_SESSION_SECRET
 - SFD_DOWNLOAD_SECRET
-- SFD_MINIO_ENDPOINT, SFD_MINIO_ACCESS_KEY, SFD_MINIO_SECRET_KEY, SFD_MINIO_BUCKET
-- SFD_DB_DSN
+- SFD_S3_ENDPOINT, SFD_S3_ACCESS_KEY, SFD_S3_SECRET_KEY, SFD_BUCKET
+- DATABASE_URL
 - SFD_PUBLIC_BASE_URL (optional but recommended in deployments)
 - SFD_MAX_UPLOAD_BYTES (optional)
 

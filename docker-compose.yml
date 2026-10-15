@@ -3,13 +3,12 @@ name: securefiledrop
 services:
   postgres:
     image: postgres:16
-    container_name: sfd_postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - sfd_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -20,15 +19,17 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio:RELEASE.2024-01-31T20-20-33Z
-    container_name: sfd_minio
+    build:
+      context: .
+      dockerfile: Dockerfile.storage
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      SFD_BUCKET: ${SFD_BUCKET}
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - sfd_minio_data:/data
     healthcheck:
@@ -40,7 +41,6 @@ services:
 
   proxy:
     image: traefik:v2.11
-    container_name: sfd_proxy
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -48,8 +48,8 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--log.level=INFO"
     ports:
-      - "8081:80"
-      - "8443:443"
+      - "127.0.0.1:8081:80"
+      - "127.0.0.1:8443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     restart: unless-stopped
@@ -58,15 +58,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: sfd_backend
     ports:
-      - "8080:8080"  # Direct access to backend (bypasses Traefik for easier development)
+      - "127.0.0.1:8080:8080"  # Direct access to backend (bypasses Traefik for easier development)
     environment:
       SFD_BUCKET: ${SFD_BUCKET}
       SFD_S3_ENDPOINT: http://minio:9000
-      SFD_S3_ACCESS_KEY: minioadmin
-      SFD_S3_SECRET_KEY: CHANGE_THIS_LATER
+      SFD_S3_ACCESS_KEY: ${MINIO_ROOT_USER}
+      SFD_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
       SFD_MAX_UPLOAD_BYTES: ${SFD_MAX_UPLOAD_BYTES}
+      SFD_CLEANUP_ENABLED: ${SFD_CLEANUP_ENABLED:-true}
+      SFD_CLEANUP_INTERVAL: ${SFD_CLEANUP_INTERVAL:-1h}
+      SFD_CLEANUP_MAX_AGE: ${SFD_CLEANUP_MAX_AGE:-24h}
       SFD_DOWNLOAD_SECRET: ${SFD_DOWNLOAD_SECRET}
       SFD_PUBLIC_BASE_URL: ${SFD_PUBLIC_BASE_URL}
       SFD_ADDR: ":8080"

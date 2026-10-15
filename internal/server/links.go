@@ -43,14 +43,9 @@ func clampTTLSeconds(n int) int {
 }
 
 func requestOrigin(r *http.Request) string {
-	// Prefer reverse-proxy headers if present.
-	scheme := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto"))
-	host := strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
-
-	// Some proxies set X-Forwarded-Host as a comma-separated list.
-	if i := strings.IndexByte(host, ','); i >= 0 {
-		host = strings.TrimSpace(host[:i])
-	}
+	// Forwarded headers are client-controlled unless a trusted proxy validates them.
+	scheme := ""
+	host := r.Host
 
 	if scheme == "" {
 		if r.TLS != nil {
@@ -77,6 +72,7 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 			return
 		}
 
+		r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 		var req createLinkReq
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -98,7 +94,8 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 		// Ensure file exists and is in a state we allow for downloads.
 		// For now: require "hashed" (Milestone 5) so integrity is proven.
 		var status string
-		err = db.QueryRow(`SELECT status FROM files WHERE id = $1`, id).Scan(&status)
+		p := principal(r)
+		err = db.QueryRowContext(r.Context(), `SELECT status FROM files WHERE id = $1 AND ($2 OR user_id::text=$3)`, id, p.Admin, p.Sub).Scan(&status)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "not found", http.StatusNotFound)

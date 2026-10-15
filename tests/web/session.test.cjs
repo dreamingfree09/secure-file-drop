@@ -1,0 +1,68 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const { test } = require('node:test');
+
+function harness(fetch) {
+  const nodes = new Map();
+  function node(id) {
+    if (!nodes.has(id)) {
+      const classes = new Set();
+      nodes.set(id, { value: '', textContent: '', innerHTML: '', style: {}, files: [],
+        addEventListener() {},
+        classList: { add(x) { classes.add(x); }, remove(x) { classes.delete(x); },
+          toggle(x, value) { if (value) classes.add(x); else classes.delete(x); },
+          contains(x) { return classes.has(x); } } });
+    }
+    return nodes.get(id);
+  }
+  const context = vm.createContext({
+    document: { readyState: 'complete', getElementById: node, querySelectorAll: () => [] },
+    fetch, console, TextEncoder, setTimeout() {}
+  });
+  const html = fs.readFileSync(path.join(__dirname, '../../web/static/index.html'), 'utf8');
+  vm.runInContext(html.split('<script>')[1].split('</script>')[0], context);
+  return { context, node };
+}
+
+test('logout removes previous-account metadata and selected file', async () => {
+  const h = harness(async () => ({ ok: true, status: 204 }));
+  h.node('fileName').textContent = 'private-fixture.txt';
+  h.node('downloadLink').value = 'synthetic-bearer-link';
+  h.node('filesOutput').innerHTML = 'previous account file list';
+  h.node('filesOutput').textContent = 'previous account file list';
+  h.node('fileInput').value = 'fixture';
+  h.node('fileInfo').classList.add('show');
+  vm.runInContext('isLoggedIn=true; isAdmin=true; selectedFile={name:"fixture"}; sessionGeneration=3;', h.context);
+  await vm.runInContext('logout()', h.context);
+  assert.equal(h.node('fileName').textContent, '');
+  assert.equal(h.node('downloadLink').value, '');
+  assert.equal(h.node('fileInput').value, '');
+  assert.equal(h.node('filesOutput').textContent, '');
+  assert.equal(h.node('fileInfo').classList.contains('show'), false);
+  assert.equal(h.node('appScreen').classList.contains('hidden'), true);
+  assert.equal(vm.runInContext('selectedFile === null && !isLoggedIn && !isAdmin', h.context), true);
+});
+
+test('a delayed file-list response cannot render into a later session', async () => {
+  let deliver;
+  const delayed = new Promise(resolve => { deliver = resolve; });
+  const h = harness(async url => url === '/files' ? delayed : { ok: true, status: 204 });
+  vm.runInContext('isLoggedIn=true; isAdmin=false; sessionGeneration=7;', h.context);
+  const pending = vm.runInContext('loadFiles()', h.context);
+  await vm.runInContext('logout()', h.context);
+  // A different account logs in before the old response completes.
+  vm.runInContext('isLoggedIn=true; sessionGeneration++;', h.context);
+  deliver({ ok: true, async json() { return [{ orig_name: 'previous-private-file' }]; } });
+  await pending;
+  assert.equal(h.node('filesOutput').innerHTML, '');
+  assert.equal(h.node('filesOutput').textContent, '');
+});
+
+test('alerts escape untrusted server text', () => {
+  const h = harness(async () => { throw new Error('network must not be used'); });
+  vm.runInContext('showAlert(document.getElementById("registerAlert"), "<img src=x onerror=alert(1)>", "error")', h.context);
+  assert.match(h.node('registerAlert').innerHTML, /&lt;img/);
+  assert.doesNotMatch(h.node('registerAlert').innerHTML, /<img/);
+});

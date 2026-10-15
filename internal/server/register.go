@@ -38,8 +38,8 @@ func validatePassword(password string) (bool, string) {
 	if len(password) < 8 {
 		return false, "Password must be at least 8 characters long"
 	}
-	if len(password) > 128 {
-		return false, "Password must be less than 128 characters"
+	if len(password) > 72 {
+		return false, "Password must be at most 72 bytes"
 	}
 	// Check for at least one number
 	hasNumber := regexp.MustCompile(`[0-9]`).MatchString(password)
@@ -92,6 +92,7 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -101,11 +102,16 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Sanitize inputs
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	req.Username = strings.TrimSpace(req.Username)
-	req.Password = strings.TrimSpace(req.Password)
+	// Password bytes are preserved exactly; bcrypt accepts at most 72 bytes.
 
 	// Validate email
 	if !validateEmail(req.Email) {
 		http.Error(w, "Invalid email address", http.StatusBadRequest)
+		return
+	}
+
+	if len(req.Email) > 255 || strings.EqualFold(req.Username, cfg.Auth.AdminUser) {
+		http.Error(w, "Invalid or reserved account name", http.StatusBadRequest)
 		return
 	}
 
@@ -152,17 +158,21 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		VALUES ($1, $2, $3, $4)
 	`, userID, req.Email, req.Username, passwordHash)
 	if err != nil {
-		log.Printf("register: insert failed: %v", err)
+		if strings.Contains(err.Error(), "23505") {
+			http.Error(w, "Email or username already registered", http.StatusConflict)
+			return
+		}
+		log.Printf("register: insert failed")
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("register: created user %s (%s)", req.Username, req.Email)
+	log.Printf("register: account created")
 
 	// Return success response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(RegisterResponse{
+	_ = json.NewEncoder(w).Encode(RegisterResponse{
 		ID:       userID.String(),
 		Email:    req.Email,
 		Username: req.Username,
@@ -171,6 +181,9 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 // authenticateUser checks credentials against the database
 func authenticateUser(db *sql.DB, username, password string) (string, bool) {
+	if len(password) > 72 {
+		return "", false
+	}
 	var userID string
 	var passwordHash string
 

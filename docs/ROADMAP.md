@@ -1,3 +1,11 @@
+# Roadmap status — 2026-10-15
+
+Existing registration, private per-user file ownership, embedded migrations and CI are implemented; see [current tracker](TRACKER.md) for validation. Resumable uploads, scanning, encryption, richer roles/user management and deployment examples remain future ideas. The unmerged feature/v2-enhancements branch is preserved and is not part of this master-based review.
+
+The earlier planning list below is retained as history; check implementation before treating an item as future or complete.
+
+---
+
 # Roadmap
 
 This file describes intended next steps and possible future features.

@@ -1,109 +1,45 @@
 # Secure File Drop
 
-[![Docs](https://img.shields.io/badge/docs-up%E2%86%92-blue)](#docs)
-[![Status](https://img.shields.io/badge/status-active-brightgreen)](#status)
+Secure File Drop is a self-hosted Go application for registered-user uploads to private MinIO storage, native C SHA-256 verification and expiring bearer download links.
 
-Secure File Drop is a lightweight, self-hosted service for authenticated file uploads and short-lived, signed downloads. It's designed to be safe to expose on the public internet from day one while remaining small and auditable.
+Start with [continuity](docs/CONTINUITY.md), [GHP-01](docs/GHP-01.md), [agent instructions](AGENTS.md) and the [current review/validation tracker](docs/TRACKER.md). Historical readiness claims are not current production certification.
 
-## Quick summary
+## Behavior
 
-- Modern, WeTransfer-inspired UI with animated gradients and drag-and-drop file upload
-- User registration system with secure bcrypt password hashing
-- Users authenticate via username/password (session cookie) to upload files
-- Files are stored privately in S3-compatible object storage (MinIO)
-- The server verifies integrity using a native C hashing utility and stores SHA-256 metadata
-- Download links are signed and time-limited
+- Registration creates ordinary users with bcrypt passwords. They can create metadata, upload, list their own files and create links for their files.
+- The environment administrator can list/delete all files, inspect metrics and trigger cleanup. A registered username does not confer administration.
+- Sessions carry signed identity and role; PostgreSQL stores token hashes for logout revocation. Deactivated accounts lose access.
+- File bytes are bounded, stored under generated keys, hashed by the C utility and downloaded through signed, expiring links. Anyone possessing a valid link can download until expiry.
+- Old ownerless records remain administrator-only. Existing signed sessions require a new login after the session migration.
 
-## Table of contents
+## Development and validation
 
-- [Status](#status)
-- [Technology](#technology)
-- [Quickstart](#quickstart)
-- [Development](#development)
-- [Usage](#usage)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
+Use Go 1.26.9 (the module toolchain), GCC, OpenSSL development headers, Make and Python 3.
 
-## Status
+```sh
+go build -o /tmp/sfd-backend ./cmd/backend
+make -C native test
+go test ./... -v
+go vet ./...
+node --test tests/web/session.test.cjs
+go test -race ./internal/... ./cmd/... -count=1
+go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+```
 
-[![CI](https://github.com/dreamingfree09/secure-file-drop/actions/workflows/ci.yml/badge.svg)](https://github.com/dreamingfree09/secure-file-drop/actions)
-[![Coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)](https://codecov.io/gh/dreamingfree09/secure-file-drop)
+The full-stack package explicitly skips without opt-in; that skip is not acceptance. With a working **local** Docker engine:
 
-This repository contains an MVP-ready backend written in Go, a small web UI, a C-based hashing utility in `native/`, and deployment infrastructure using Docker Compose.
+```sh
+SFD_E2E=1 go test ./tests/e2e -v -count=1 -timeout 25m
+```
 
-## Technology
+This builds the real runtime image and C tool, creates unique disposable PostgreSQL/MinIO resources with loopback ports, verifies upload/hash/download bytes, negative authorization and expiry, migration upgrade/idempotency and cleanup. Ownership labels are checked before resource removal. It does not read your .env or use existing volumes. CI runs this separately with opt-in.
 
-- Backend: Go
-- Integrity utility: C (SHA-256)
-- Database: PostgreSQL
-- Object storage: MinIO (S3-compatible)
-- Reverse proxy: Caddy (recommended)
-- Deployment: Docker Compose
-
-## Quickstart (Docker Compose)
-
-1. Copy `docker-compose.yml` and set required environment variables (see `docs/USAGE.md` for a full list).
-2. Start services:
-
-   docker compose up -d
-
-3. Initialize database schema (example using `psql`):
-
-   psql -h localhost -U postgres -d sfd -f internal/db/schema.sql
-
-4. Visit the web UI (default: http://localhost:8080) and log in using `SFD_ADMIN_USER`/`SFD_ADMIN_PASS`.
-
-## Development
-
-- Build the backend locally:
-
-  go build ./cmd/backend
-
-- Build the hashing utility:
-
-  make -C native
-
-- Run the server locally with environment variables set; Docker Compose is useful for a full stack dev environment.
-
-## Usage (overview)
-
-### Authentication & Upload Flow
-- Register: POST /register with JSON {"email":"...","username":"...","password":"..."}
-- Authenticate: POST /login with JSON {"username":"...","password":"..."}
-- Create file metadata: POST /files (JSON with orig_name, content_type, size_bytes)
-- Upload: POST /upload?id=<file-id> as multipart form field `file`
-- Create link: POST /links with JSON {"id": "<file-id>", "ttl_seconds": 300}
-- Download: GET /download?token=<signed-token>
-
-### Admin Dashboard
-After logging in, the web UI provides an admin dashboard with:
-- **System Metrics**: View upload/download counts, authentication stats, and file lifecycle metrics
-- **File Management**: Browse all files with status, size, hash, and creation timestamps
-- **Manual Cleanup**: Trigger immediate cleanup of old pending/failed files
-- **File Deletion**: Delete individual files from both storage and database
-
-Admin endpoints (require authentication):
-- GET /admin/files - List all files
-- DELETE /admin/files/{id} - Delete specific file
-- POST /admin/cleanup - Run manual cleanup job
-- GET /metrics - View system metrics (JSON)
-
-### Background Jobs
-The server runs an automated cleanup job (configurable via environment):
-- `SFD_CLEANUP_ENABLED=true` - Enable/disable cleanup (default: true)
-- `SFD_CLEANUP_INTERVAL=1h` - How often to run (default: 1 hour)
-- `SFD_CLEANUP_MAX_AGE=24h` - Delete files older than this in pending/failed states (default: 24 hours)
-
-Refer to `docs/USAGE.md` and `docs/API.md` for detailed examples and request/response samples.
+For a fresh development stack, follow [deployment](docs/DEPLOYMENT.md). Never point startup migrations or cleanup at existing storage for tests. Compose uses persistent development volumes and is not the disposable test harness. Production needs a separately reviewed TLS/proxy and operations configuration.
 
 ## Documentation
 
-Primary docs live in `docs/` — see `docs/SPEC.md` for the MVP specification and `docs/ARCHITECTURE.md` for component-level notes.
-
-## Contributing
-
-Please read `docs/CONTRIBUTING.md` for development setup, coding style, and PR guidelines.
-
----
-
-If you'd like, I can open a branch and prepare a PR with a larger docs revision (adding `docs/ARCHITECTURE.md`, `docs/USAGE.md`, `docs/API.md`, and `docs/CONTRIBUTING.md`). Reply with permission to push and open the PR or say if you prefer to review drafts first.
+- [Specification](docs/SPEC.md), [architecture](docs/ARCHITECTURE.md)
+- [API](docs/API.md), [configuration and usage](docs/USAGE.md)
+- [Schema](docs/DB_SCHEMA.md), [migrations](docs/MIGRATIONS.md)
+- [Deployment](docs/DEPLOYMENT.md), [contributing](CONTRIBUTING.md)
+- [Roadmap](docs/ROADMAP.md), [dated development log](journal/DEVLOG.md)

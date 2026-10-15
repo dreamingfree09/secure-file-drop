@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"strings"
@@ -40,6 +41,7 @@ func runHashTool(ctx context.Context, filePath string) (hashToolOutput, error) {
 	if toolPath == "" {
 		toolPath = "/app/sfd-hash"
 	}
+	// #nosec G204 G702 -- Operator-configured executable, generated temp path, no shell.
 	cmd := exec.CommandContext(ctx, toolPath, filePath)
 	out, err := cmd.Output()
 	if err != nil {
@@ -102,8 +104,9 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 	}
 	defer func() { _ = obj.Close() }()
 
-	if _, err := io.Copy(tmp, obj); err != nil {
-		return "", nil, 0, fmt.Errorf("copy object to temp: %w", err)
+	copied, copyErr := io.Copy(tmp, obj)
+	if copyErr != nil {
+		return "", nil, 0, fmt.Errorf("copy object to temp: %w", copyErr)
 	}
 	if err := tmp.Sync(); err != nil {
 		return "", nil, 0, fmt.Errorf("sync temp: %w", err)
@@ -117,6 +120,9 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 		return "", nil, 0, err
 	}
 
+	if out.Bytes > math.MaxInt64 || int64(out.Bytes) != copied {
+		return "", nil, 0, errors.New("hash tool byte count mismatch")
+	}
 	raw, err := hex.DecodeString(out.Hash)
 	if err != nil {
 		return "", nil, 0, fmt.Errorf("decode sha256 hex: %w", err)

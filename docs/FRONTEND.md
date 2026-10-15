@@ -1,35 +1,13 @@
-# Frontend / Static site notes
+# Frontend / static UI
 
-The frontend features a modern, WeTransfer-inspired design and lives in `web/static/index.html`. The server mounts the `web/static/` directory at `/static/` and serves the index at `/`.
+The application serves web/static/index.html at / and the asset directory at /static/. SFD_WEB_DIR overrides the default repo-relative web/static directory; the container works from /app.
 
-## Current behavior
+The existing single-page interface provides registration, login, drag/drop upload with XMLHttpRequest progress, signed-link display and clipboard copy. Ordinary users see their own recent files. The environment administrator additionally sees global metrics, deletion and manual cleanup. Sign out revokes the server session and clears file/link/input state; delayed responses cannot render into a later session.
 
-- Modern single-page UI with:
-  - Animated gradient background (purple/pink theme)
-  - User registration with client-side validation (POST /register)
-  - Login screen (POST /login)
-  - Drag-and-drop file upload with visual feedback
-  - **Real-time upload progress tracking** with XMLHttpRequest
-    - Shows exact bytes transferred (e.g., "Uploading... 245.3MB / 512.0MB (48%)")
-    - Dynamic progress bar updates during upload
-    - Supports files up to 50GB (configurable via SFD_MAX_UPLOAD_BYTES)
-  - Progress bars with shimmer animations
-  - One-click copy-to-clipboard for download links
-  - Responsive mobile design
-  - Admin dashboard with metrics and file management
-- The UI relies on same-origin requests and session cookie authentication.
-- Uses Inter font from Google Fonts for professional typography
-- CSS custom properties for consistent theming
-- Native browser download progress (Content-Length headers enable browser's download UI)
+Registration checks the 8–72-byte bcrypt password bound in addition to matching passwords, username and email validation. Error text is escaped. The UI accurately describes private storage and SHA-256 integrity; it does not claim end-to-end encryption. Server-side authorization and limits remain authoritative.
 
-## How to extend
+Upload progress reports transferred bytes; it is not a hashing progress or capacity guarantee. The server has a configurable finite file limit, with a 50 GiB default and a smaller example configuration. Maximum-size throughput is not certified by this review.
 
-- Add CSS/JS assets into `web/static/` and reference them from `index.html`.
-- For larger frontends, consider adding a build step that outputs to `web/static/` (for example a small React/Vue app built into the `web/static` folder).
-- Keep authentication via the session cookie and avoid exposing the download-secret to the client.
+Run Node UI-session unit tests with node --test tests/web/session.test.cjs. These isolated script tests are distinct from actual browser observations and real storage acceptance. Browser checks observed login/registration rendering, empty-field rejection and 73-byte rejection. Authenticated browser upload remains locally blocked by Docker Desktop startup; actual API/native/container evidence and its exact revision are in [the PR handover](https://github.com/dreamingfree09/secure-file-drop/pull/21) and [tracker](TRACKER.md).
 
-## Deployment
-
-- Static files are served by the backend process in the container (see `New` in `internal/server/server.go`). In production, a reverse proxy can serve static assets directly for performance.
-
-If you'd like, I can convert the UI into a slightly larger front-end scaffold (with a build pipeline) and add a small set of end-to-end tests for the upload flow.
+Animated gradients, responsive styling and the Google Fonts Inter stylesheet are retained. This review does not introduce a frontend framework or build system.

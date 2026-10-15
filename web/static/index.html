@@ -599,7 +599,7 @@
   <header>
     <div class="logo">🔒 Secure File Drop</div>
     <div class="tagline">Share files securely with time-limited download links</div>
-    <div class="subtitle">End-to-end encrypted transfers with SHA-256 verification</div>
+    <div class="subtitle">Private file storage with SHA-256 verification</div>
   </header>
 
   <div class="container">
@@ -695,7 +695,7 @@
             <div class="link-title">✓ Upload Complete!</div>
             <div class="link-box">
               <input type="text" class="link-input" id="downloadLink" readonly>
-              <button class="btn-copy" onclick="copyLink()">Copy Link</button>
+              <button class="btn-copy" onclick="copyLink(event)">Copy Link</button>
             </div>
             <div class="link-expires" id="linkExpires"></div>
           </div>
@@ -706,13 +706,14 @@
 
       <!-- Admin Dashboard -->
       <div class="main-card" id="adminSection">
-        <div class="admin-nav">
+        <button class="btn btn-secondary" onclick="logout()">Sign out</button>
+        <div class="admin-nav admin-only">
           <button class="btn btn-secondary" onclick="loadMetrics()">📊 Refresh Metrics</button>
           <button class="btn btn-secondary" onclick="loadFiles()">📁 Refresh Files</button>
           <button class="btn btn-success" onclick="manualCleanup()">🧹 Run Cleanup</button>
         </div>
 
-        <div class="stats-grid" id="metricsOutput"></div>
+        <div class="stats-grid admin-only" id="metricsOutput"></div>
 
         <div class="files-section">
           <div class="section-title">Recent Files</div>
@@ -724,6 +725,8 @@
 
 <script>
 let isLoggedIn = false;
+let isAdmin = false;
+let sessionGeneration = 0;
 let selectedFile = null;
 
 // Login function
@@ -745,7 +748,11 @@ async function login() {
     });
     
     if (res.ok) {
+      const session = await res.json();
+      sessionGeneration++;
+      isAdmin = session.is_admin === true;
       isLoggedIn = true;
+      document.querySelectorAll(".admin-only").forEach(el => el.classList.toggle("hidden", !isAdmin));
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('appScreen').classList.remove('hidden');
       loadMetrics();
@@ -755,6 +762,33 @@ async function login() {
     }
   } catch (err) {
     showAlert(loginAlert, 'Connection error. Please try again.', 'error');
+  }
+}
+
+async function logout() {
+  try {
+    const res = await fetch('/logout', { method: 'POST' });
+    if (!res.ok && res.status !== 401) {
+      showAlert(document.getElementById('uploadAlert'), 'Sign out failed. Please try again.', 'error');
+      return;
+    }
+    sessionGeneration++;
+    isLoggedIn = false;
+    isAdmin = false;
+    selectedFile = null;
+    for (const id of ['username', 'password', 'fileInput', 'downloadLink']) {
+      document.getElementById(id).value = '';
+    }
+    for (const id of ['fileName', 'fileSize', 'linkExpires', 'filesOutput', 'metricsOutput', 'uploadAlert']) {
+      document.getElementById(id).textContent = '';
+    }
+    for (const id of ['fileInfo', 'linkContainer', 'progressContainer']) {
+      document.getElementById(id).classList.remove('show');
+    }
+    document.getElementById('appScreen').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+  } catch (err) {
+    showAlert(document.getElementById('uploadAlert'), 'Sign out failed. Please try again.', 'error');
   }
 }
 
@@ -783,7 +817,9 @@ function displayFileInfo(file) {
 
 // Upload file
 async function uploadFile() {
-  if (!selectedFile) return;
+  if (!selectedFile || !isLoggedIn) return;
+  const file = selectedFile;
+  const generation = sessionGeneration;
 
   const progressContainer = document.getElementById('progressContainer');
   const progressFill = document.getElementById('progressFill');
@@ -801,9 +837,9 @@ async function uploadFile() {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        orig_name: selectedFile.name,
-        content_type: selectedFile.type || 'application/octet-stream',
-        size_bytes: selectedFile.size
+        orig_name: file.name,
+        content_type: file.type || 'application/octet-stream',
+        size_bytes: file.size
       })
     });
 
@@ -812,13 +848,14 @@ async function uploadFile() {
     }
 
     const meta = await metaRes.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     
     progressFill.style.width = '50%';
     progressText.textContent = 'Uploading file...';
 
     // Step 2: Upload file with real progress tracking
     const fd = new FormData();
-    fd.append('file', selectedFile);
+    fd.append('file', file);
 
     const upRes = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -848,6 +885,7 @@ async function uploadFile() {
       xhr.send(fd);
     });
 
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!upRes.ok) {
       throw new Error('Failed to upload file');
     }
@@ -870,12 +908,14 @@ async function uploadFile() {
     }
 
     const linkJson = await linkRes.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
 
     progressFill.style.width = '100%';
     progressText.textContent = 'Complete!';
 
     // Show download link
     setTimeout(() => {
+      if (!isLoggedIn || generation !== sessionGeneration) return;
       progressContainer.classList.remove('show');
       displayDownloadLink(linkJson.url, linkJson.expires_at);
       
@@ -885,6 +925,7 @@ async function uploadFile() {
     }, 500);
 
   } catch (err) {
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     progressContainer.classList.remove('show');
     showAlert(uploadAlert, 'Upload failed: ' + err.message, 'error');
   }
@@ -902,7 +943,7 @@ function displayDownloadLink(url, expiresAt) {
 }
 
 // Copy link to clipboard
-function copyLink() {
+function copyLink(event) {
   const downloadLink = document.getElementById('downloadLink');
   downloadLink.select();
   document.execCommand('copy');
@@ -942,43 +983,46 @@ uploadArea.addEventListener('drop', (e) => {
 
 // Load metrics
 async function loadMetrics() {
+  if (!isAdmin) return;
+  const generation = sessionGeneration;
   try {
     const res = await fetch('/metrics');
     if (!res.ok) return;
     
     const metrics = await res.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     
     const html = `
       <div class="stat-card">
-        <div class="stat-value">${metrics.total_uploads || 0}</div>
+        <div class="stat-value">${metrics.uploads_total || 0}</div>
         <div class="stat-label">Total Uploads</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.total_downloads || 0}</div>
+        <div class="stat-value">${metrics.downloads_total || 0}</div>
         <div class="stat-label">Total Downloads</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.successful_auths || 0}</div>
+        <div class="stat-value">${metrics.login_success_total || 0}</div>
         <div class="stat-label">Successful Logins</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.failed_auths || 0}</div>
+        <div class="stat-value">${metrics.login_failures_total || 0}</div>
         <div class="stat-label">Failed Logins</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.files_ready || 0}</div>
-        <div class="stat-label">Files Ready</div>
+        <div class="stat-value">${metrics.files_hashed_total || 0}</div>
+        <div class="stat-label">Successful Hashes</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.files_pending || 0}</div>
-        <div class="stat-label">Files Pending</div>
+        <div class="stat-value">${metrics.files_pending_total || 0}</div>
+        <div class="stat-label">Metadata Records Created</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.files_failed || 0}</div>
-        <div class="stat-label">Files Failed</div>
+        <div class="stat-value">${metrics.files_failed_total || 0}</div>
+        <div class="stat-label">Processing Failures</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${metrics.total_requests || 0}</div>
+        <div class="stat-value">${metrics.requests_total || 0}</div>
         <div class="stat-label">Total Requests</div>
       </div>
     `;
@@ -991,11 +1035,13 @@ async function loadMetrics() {
 
 // Load files
 async function loadFiles() {
+  const generation = sessionGeneration;
   try {
-    const res = await fetch('/admin/files');
+    const res = await fetch(isAdmin ? '/admin/files' : '/files');
     if (!res.ok) return;
     
     const files = await res.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     
     if (!files || files.length === 0) {
       document.getElementById('filesOutput').innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No files found</p>';
@@ -1004,7 +1050,8 @@ async function loadFiles() {
 
     let html = '<table><thead><tr>';
     html += '<th>Original Name</th><th>Status</th><th>Size</th>';
-    html += '<th>Created</th><th>Actions</th>';
+    html += '<th>Created</th>';
+    if (isAdmin) html += '<th>Actions</th>';
     html += '</tr></thead><tbody>';
 
     files.forEach(f => {
@@ -1013,7 +1060,7 @@ async function loadFiles() {
       html += `<td><span class="status-badge status-${f.status}">${f.status}</span></td>`;
       html += `<td>${formatFileSize(f.size_bytes)}</td>`;
       html += `<td>${new Date(f.created_at).toLocaleString()}</td>`;
-      html += `<td><button class="btn btn-danger" onclick="deleteFile('${f.id}')">Delete</button></td>`;
+      if (isAdmin) html += `<td><button class="btn btn-danger" onclick="deleteFile('${f.id}')">Delete</button></td>`;
       html += '</tr>';
     });
 
@@ -1082,7 +1129,7 @@ function escapeHtml(text) {
 
 function showAlert(container, message, type) {
   const alertClass = type === 'error' ? 'alert-error' : type === 'success' ? 'alert-success' : 'alert-info';
-  container.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+  container.innerHTML = `<div class="alert ${alertClass}">${escapeHtml(String(message))}</div>`;
   setTimeout(() => {
     container.innerHTML = '';
   }, 5000);
@@ -1176,6 +1223,11 @@ async function register() {
     return;
   }
 
+  if (new TextEncoder().encode(password).length > 72) {
+    showAlert(registerAlert, 'Password must be at most 72 bytes', 'error');
+    return;
+  }
+
   if (password !== passwordConfirm) {
     showAlert(registerAlert, 'Passwords do not match', 'error');
     return;
@@ -1188,7 +1240,7 @@ async function register() {
       body: JSON.stringify({ email, username, password })
     });
 
-    const data = await res.json();
+    const data = res.ok ? await res.json() : { error: await res.text() };
 
     if (!res.ok) {
       showAlert(registerAlert, data.error || 'Registration failed', 'error');

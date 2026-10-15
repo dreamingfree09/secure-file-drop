@@ -1,3 +1,4 @@
+// Command backend starts Secure File Drop and applies its embedded migrations.
 package main
 
 import (
@@ -30,8 +31,8 @@ func main() {
 	}
 
 	// Safety: refuse to start if secrets are missing.
-	if auth.AdminPass == "" || auth.SessionSecret == "" {
-		log.Printf("service=backend msg=%q", "missing SFD_ADMIN_PASS or SFD_SESSION_SECRET")
+	if auth.AdminPass == "" || len(auth.SessionSecret) < 32 || len(os.Getenv("SFD_DOWNLOAD_SECRET")) < 32 {
+		log.Printf("service=backend msg=%q", "SFD_ADMIN_PASS required; signing secrets must be at least 32 bytes")
 		os.Exit(1)
 	}
 
@@ -39,7 +40,7 @@ func main() {
 	dsn := getenvDefault("DATABASE_URL", "")
 	dbConn, err := server.OpenDB(dsn)
 	if err != nil {
-		log.Printf("service=backend msg=%q err=%v", "db_connect_failed", err)
+		log.Printf("service=backend msg=%q", "db_connect_failed")
 		os.Exit(1)
 	}
 	defer func() { _ = dbConn.Close() }()

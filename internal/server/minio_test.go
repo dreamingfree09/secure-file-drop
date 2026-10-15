@@ -33,3 +33,22 @@ func TestNormaliseEndpoint(t *testing.T) {
 		}
 	}
 }
+
+func TestPrivateBucketPolicy(t *testing.T) {
+	for _, tt := range []struct {
+		policy  string
+		private bool
+	}{
+		{"", true},
+		{"invalid", false},
+		{`{"Statement":[{"Effect":"Allow","Principal":"*","Action":"s3:GetObject"}]}`, false},
+		{`{"Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]}}]}`, false},
+		{`{"Statement":[{"Effect":"Allow","Principal":{"AWS":["arn:aws:iam::123:user/backend"]}}]}`, true},
+		{`{"Statement":{"Effect":"Deny","Principal":"*"}}`, true},
+		{`{"Statement":{"Effect":"Allow","NotPrincipal":{"AWS":"arn:aws:iam::123:user/backend"}}}`, false},
+	} {
+		if got := privateBucketPolicy(tt.policy); got != tt.private {
+			t.Fatalf("policy privacy got %v want %v", got, tt.private)
+		}
+	}
+}
