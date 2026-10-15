@@ -434,6 +434,10 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 
 	assessBoundaries(ctx, t, conn, mc, bucket, base, admin, alice, request, create, upload)
 
+	t.Run("assessment-cancellation-and-locks", func(t *testing.T) {
+		assessCancellation(ctx, t, conn, base, alice, admin, create("canceled.bin", 3, alice))
+	})
+
 	// Run the same real image with an intentionally missing native executable.
 	// A hashing error must retain a failed record and never create a usable link.
 	badArgs := append([]string(nil), appArgs...)
