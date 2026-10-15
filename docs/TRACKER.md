@@ -1,3 +1,13 @@
+# Deep assessment — 2026-10-15
+
+Work ID: SFD-DEEP-REVIEW-20261015-CODEX. Affected accepted revision: `0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7`.
+
+See the canonical [deep assessment report](DEEP_REVIEW_20261015.md) for findings and the operating matrix; [PR #22](https://github.com/dreamingfree09/secure-file-drop/pull/22) is the exact-revision handover. Review tests/evidence only: production code and dependencies are unchanged. Truncated multipart and JSON-envelope regressions fail on the accepted implementation. Storage/advisory applicability, SQL cancellation, migration connections, stale artifacts and browser/diagnostic limitations are recorded without implying runtime exploitation.
+
+Assessment is complete pending Aether/Owner review of the proposed correction package. Implementation and master integration are not authorised. The following quality-closeout and milestone records are preserved as dated history; current acceptance is bounded by the new report.
+
+---
+
 # Quality closeout — 2026-10-15
 
 Work ID: SFD-QUALITY-CLOSEOUT-20261015-CODEX. Base: `1a0f7715faa89c53fcec266f59e43cad9b1a057b`. Producer: Codex; independent review: Aether in “GitHub workflow implementation”. See [continuity](CONTINUITY.md) for checkout preservation and decisions; the owned PR is the complete final-revision handover.

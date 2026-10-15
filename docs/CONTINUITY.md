@@ -1,5 +1,13 @@
 # Secure File Drop continuity
 
+## Deep assessment handover — 2026-10-15
+
+Work ID: SFD-DEEP-REVIEW-20261015-CODEX. Owner-authorised inspection, isolated validation, regression tests and findings publication only. Producer/branch owner: Codex; recipient: Aether in “GitHub workflow implementation”. Received/expected accepted master: `0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7`, verified root/origin/branch/worktree, clean receipt and matching remote master before creating `codex/sfd-deep-review-20261015`. The earlier producer branch and preserved checkouts/local work remain untouched.
+
+The canonical [deep assessment](DEEP_REVIEW_20261015.md) contains prioritised findings, reproduction evidence, advisory applicability, scenario verdicts and the recommended correction package. [PR #22](https://github.com/dreamingfree09/secure-file-drop/pull/22) carries the complete exact-revision publication handover and final CI readback. Assessment/publication is complete; production-code fixes, dependency updates and master integration remain pending Owner/Aether approval. Genuine failing input regressions are retained, not presented as green acceptance.
+
+The storage signature-bypass reproduction was not written, executed or published; source/advisory applicability is distinct from an unverified runtime exploit. Local Docker/authenticated-browser gaps, production-storage maintenance, existing-schema/ownership reconciliation, maximum-size capacity and deployment/recovery gates remain open. No public-production readiness is claimed. Next action: Aether independently reviews the exact published revision and correction package before implementation authority is granted.
+
 ## Completed assignment — 2026-10-15
 
 - Work ID: SFD-QUALITY-CLOSEOUT-20261015-CODEX.
