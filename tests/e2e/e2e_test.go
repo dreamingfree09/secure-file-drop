@@ -11,11 +11,13 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -347,7 +349,23 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	if json.Unmarshal(b, &link) != nil {
 		t.Fatal("invalid link response")
 	}
-	code, b, _ = request("GET", link.URL, nil, nil, nil)
+
+	download, downloadErr := client.Get(link.URL)
+	if downloadErr != nil {
+		t.Fatal(downloadErr)
+	}
+	code = download.StatusCode
+	disposition, params, parseErr := mime.ParseMediaType(download.Header.Get("Content-Disposition"))
+	if parseErr != nil || disposition != "attachment" || params["filename"] != name ||
+		download.Header.Get("Content-Length") != strconv.Itoa(len(fixture)) || download.Header.Get("X-Content-Type-Options") != "nosniff" {
+		download.Body.Close()
+		t.Fatal("unsafe download headers or incorrect byte length")
+	}
+	b, downloadErr = io.ReadAll(download.Body)
+	download.Body.Close()
+	if downloadErr != nil {
+		t.Fatal(downloadErr)
+	}
 	expect(code, 200)
 	if !bytes.Equal(b, fixture) {
 		t.Fatal("download bytes differ")
@@ -446,6 +464,14 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	// A real native hash failure must not yield a downloadable file.
 	// The runtime image runs the compiled C binary; success above has no fallback.
 	// Verify logout invalidates replay, not only the browser's cookie.
+	expiredSessionHash := sha256.Sum256([]byte(bob.Value))
+	if _, e = conn.Exec("UPDATE sessions SET expires_at=now()-interval '1 minute' WHERE token_hash=$1", hex.EncodeToString(expiredSessionHash[:])); e != nil {
+		t.Fatal(e)
+	}
+	code, _, _ = request("GET", base+"/me", nil, bob, nil)
+	expect(code, 401)
+	bob = login("bob", " SpacePass123 ")
+
 	old := *bob
 	code, _, cookies := request("POST", base+"/logout", nil, bob, nil)
 	expect(code, 204)

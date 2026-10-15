@@ -25,7 +25,7 @@ Work ID: SFD-QUALITY-CLOSEOUT-20261015-CODEX. Base: `1a0f7715faa89c53fcec266f59e
 - go vet ./..., go test -race ./internal/... ./cmd/... -count=1, backend compilation and make -C native test passed. Native checks assert empty, abc, multiblock, million-a and binary vectors plus CLI/I/O failures.
 - go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...: zero reachable vulnerabilities after fixes; 2 imported-package and 30 module-only advisories remain outside detected calls. This does not certify all dependencies or container images.
 - Baseline reachable advisories: [GO-2026-6629](https://pkg.go.dev/vuln/GO-2026-6629), [GO-2026-5970](https://pkg.go.dev/vuln/GO-2026-5970), [GO-2026-5004](https://pkg.go.dev/vuln/GO-2026-5004). Traces enter via pgx connection normalization / SQL sanitization. The HTTP SQL here is parameterized and does not use dollar-quoted literals; no remotely exploitable injection was demonstrated. Dependencies were patched rather than assuming those paths safe.
-- Browser observations: actual static login and registration screens rendered; empty registration rejected; corrected privacy wording verified. Successful login/upload/download through the browser is **blocked**, not inferred from static rendering.
+- Browser observations: actual static login and registration screens rendered; empty registration and 73-byte passwords rejected; corrected privacy wording verified. The temporary loopback server was verified by listener/process identity, then stopped. Successful login/upload/download through the browser is **blocked**, not inferred from static rendering.
 - Local opt-in full-stack execution was attempted and **failed before resource creation** because the local Docker Desktop engine pipe is absent. Starting the installed backend failed initializing its inference socket and then timed out. Host repair/settings changes are outside scope. No assignment database, bucket, volume or container was created locally.
 - golangci-lint v2.14.0: zero issues. Local Markdown target verification and Node syntax verification of the actual inline UI script passed; external URLs were not checked. Final GitHub container/full-stack results will be recorded in the PR before handover.
 
@@ -166,3 +166,7 @@ Acceptance criteria:
 - Behaviour verified via real requests
 - DEVLOG entry exists documenting configuration, validation, and any issues encountered
 
+
+### CI storage dependency follow-up
+
+[First CI at 91ca11c](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38797545857) passed Go/native/race/vulnerability/lint/docs, but full-stack setup failed to pull the historical MinIO image. Its cleanup correctly refused an invalid resource identity caused by mixed stdout/stderr; the harness now captures IDs from stdout only. That run's disposable hosted runner was discarded; no local resources were involved. [Official community sources](https://github.com/minio/minio) are source-only and archived. The pinned source image and pending production maintenance decision are recorded in continuity. Full-stack acceptance is still pending the corrected CI run; a failed setup is not an application pass.
