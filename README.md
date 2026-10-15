@@ -98,6 +98,8 @@ Refer to `docs/USAGE.md` and `docs/API.md` for detailed examples and request/res
 
 ## Documentation
 
+Start with [continuity](docs/CONTINUITY.md), the [GHP-01 collaboration method](docs/GHP-01.md), and [agent instructions](AGENTS.md) for current work, authority and handover evidence.
+
 Primary docs live in `docs/` — see `docs/SPEC.md` for the MVP specification and `docs/ARCHITECTURE.md` for component-level notes.
 
 ## Contributing
