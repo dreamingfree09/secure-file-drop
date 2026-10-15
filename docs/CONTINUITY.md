@@ -1,13 +1,13 @@
 # Secure File Drop continuity
 
-## Active assignment — 2026-10-15
+## Completed assignment — 2026-10-15
 
 - Work ID: SFD-QUALITY-CLOSEOUT-20261015-CODEX.
 - Producer/branch owner: Codex. Recipient: Aether; planning/review destination: “GitHub workflow implementation”.
 - Scope: Owner-authorised repository review, GHP-01 installation, confirmed defect correction, isolated validation and one PR. Significant design decisions stay with Owner/Aether.
 - Base: `1a0f7715faa89c53fcec266f59e43cad9b1a057b`, verified local master, fetched remote master and GitHub API.
-- Owned branch: `codex/sfd-quality-closeout-20261015`; target: master. Integration is not authorised.
-- Workflow installation is a separate documentation commit. Application review and validation follow.
+- Preserved producer branch: `codex/sfd-quality-closeout-20261015` at `c00d6c48d57082bce51d4ca6096d5cf9aab3705f`; target: master. The Owner subsequently approved exact-revision integration, local adoption and bounded audit closure, as recorded below.
+- Workflow installation remains a separate documentation commit in the accepted history. Application review and bounded validation are complete.
 - Current claims in historical readiness documents and test totals require fresh evidence.
 
 ## Checkout discovery and preservation
@@ -20,9 +20,9 @@ The Owner explicitly superseded the no-new-checkout restriction and authorised t
 
 ## Handover state
 
-Implementation: implemented. Publication: [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21), whose handover records final exact SHA, complete scope and final CI readback. Acknowledgement: pending Aether review at that SHA. Integration: pending review, not authorised.
+Implementation and bounded quality audit: complete. Publication: [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21), whose handover records the exact approved proposal, complete scope and final CI readback. Acknowledgement: [Aether accepted the exact revision within stated limits](https://github.com/dreamingfree09/secure-file-drop/pull/21#issuecomment-6201929960). Integration: completed by Aether after Owner approval; local adoption verified below.
 
-Next action after final publication verification: Aether independently reviews the exact PR revision and records acknowledgement/decisions; master integration still requires separate authorisation.
+Next action: Aether independently reads back the continuity-only completion commit and acknowledgement on PR #21. Outstanding operational and product decisions below require separately authorised work.
 
 ## Review decisions recorded before implementation
 
@@ -36,7 +36,7 @@ Baseline: Go 1.24.11 unit packages passed; go vet ./... and backend compilation 
 
 ## Producer review results
 
-Confirmed findings, fixes, reproduced baseline failures and distinct validation outcomes are maintained in [TRACKER.md](TRACKER.md). The final PR will carry the exact final SHA, full changed-file scope, publication/CI status and remaining blockers. Historical snapshots and future ideas are retained.
+Confirmed findings, fixes, reproduced baseline failures and distinct validation outcomes are maintained in [TRACKER.md](TRACKER.md). The published PR carries the exact proposal SHA, full changed-file scope, publication/CI status and remaining limitations. Historical snapshots and future ideas are retained.
 
 Go/CI/native configuration is aligned to supported Go 1.26.9 and Alpine 3.24. [Official Go releases](https://go.dev/dl/) and [Alpine support](https://alpinelinux.org/releases/) were checked on the assignment date. Reachable dependency advisories were patched; see the tracker for paths and limitations.
 
@@ -54,6 +54,25 @@ Browser follow-up: registration rejects a synthetic 73-byte password before netw
 
 The unused WSL checkout was restored to its original clean feature/v2-enhancements branch after verifying no intervening edits and the original commit. The unused local review ref remains, with no application changes or branch deletion. All implementation/publication occurs in the authorised sibling clone.
 
-Producer code and documentation are published in [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21). Its handover is authoritative for the final SHA, current CI outcome and completion state; recipient acknowledgement and integration remain pending Aether. No master integration is authorised.
+Producer code and documentation are published in [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21). Its handover is authoritative for the proposal SHA, scope and CI evidence; subsequent Aether acknowledgement and Owner-approved integration are recorded in the closure below.
 
 Real-container acceptance passed at 8668a727c2dbf7bcc7980c125934b371b980bd0e; [the tracker](TRACKER.md) links the successful CI run. Final revision/CI status is maintained in the PR to avoid self-referential commit hashes. Local Docker Desktop/authenticated-browser blockers and upstream storage-maintenance decisions remain distinct from CI acceptance.
+
+## Owner-approved integration and bounded audit closure — 2026-10-15
+
+The Owner explicitly approved PR #21 integration, local adoption and bounded quality-audit closure with the documented limitations retained. [Aether's independent review](https://github.com/dreamingfree09/secure-file-drop/pull/21#issuecomment-6201929960) accepted source/CI evidence at proposal `c00d6c48d57082bce51d4ca6096d5cf9aab3705f` as a development/test quality proposal. Aether then integrated [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21) on GitHub at 2026-10-15 20:48:36 UTC. Codex verified that existing integration; no second merge was performed.
+
+- Accepted merge: [`2125ff7a9d67a178c8acd6f7032d3f73e7457a92`](https://github.com/dreamingfree09/secure-file-drop/commit/2125ff7a9d67a178c8acd6f7032d3f73e7457a92).
+- Verified ordered parents: previous master `1a0f7715faa89c53fcec266f59e43cad9b1a057b`, then approved proposal `c00d6c48d57082bce51d4ca6096d5cf9aab3705f`.
+- Verified merge/proposal tree equality: `a354fc20961a7c52da02674ee8cc440715664fe8`.
+- Local adoption: verified root `E:\PROGRAMMING PROJECTS\secure-file-drop-quality-closeout-20261015-codex`, origin `https://github.com/dreamingfree09/secure-file-drop.git`, clean working tree, branch refs and sole worktree before mutation. Local master was exactly the previous master above. After fetching and checking the merge, `git switch master` and `git merge --ff-only 2125ff7a9d67a178c8acd6f7032d3f73e7457a92` succeeded; HEAD matched the accepted merge with a clean tree.
+- Producer branch remains at the approved proposal. The original no-origin Windows checkout and its local work, original WSL feature branch, and `C:\Dev\secure-file-drop/.qodo` remain preserved. Their reconciliation status above is unchanged; no project mapping or remotes changed.
+- Closure publication: one normal continuity-only completion commit on master, with the accepted merge as its sole parent. Its exact final SHA and publication verification belong in the PR #21 completion acknowledgement because a commit cannot contain its own SHA. Completion requires matching local HEAD, origin/master and remote master, whitespace/link checks and exact published-content readback.
+- The repository review, authorised fixes and development/test quality audit are explicitly closed within the accepted evidence and limitations. This is not public production readiness or a production release.
+
+Outstanding gates retained after audit closure:
+
+- Owner/Aether must decide production storage maintenance, vendor/version adoption and security support for the archived, pinned MinIO sources. Development/test reproducibility is not production maintenance approval or OS/storage-image vulnerability certification.
+- An authenticated browser upload journey remains unverified locally. Real full-stack API CI acceptance, script tests and partial browser observations do not close that gap. Windows Docker repair remains outside this closure.
+- Unknown existing/manual schemas, historical ownerless rows and any real-data ownership reconciliation require separate assessment and approval before migration or reassignment.
+- Public TLS/proxy and deployment configuration, backup/restore and recovery evidence, maximum-file throughput and operational release approval remain open deployment/recovery gates. No deployment, database/storage operation or Docker repair was performed by this closure step.
