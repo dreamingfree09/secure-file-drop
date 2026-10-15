@@ -14,7 +14,7 @@ import (
 
 // This reports vulnerability observations; findings are not converted into a
 // safety pass. It scans only binaries/packages in the parent-owned images.
-func assessRuntimeDependencies(t *testing.T, ctx context.Context, app, storage, run string, docker func(...string) string) {
+func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, run string, docker func(...string) string) {
 	t.Helper()
 	type secPackage struct {
 		Pkg struct {
@@ -23,7 +23,7 @@ func assessRuntimeDependencies(t *testing.T, ctx context.Context, app, storage, 
 		}
 	}
 	client := &http.Client{Timeout: 20 * time.Second}
-	all := []secPackage{}
+	all := make([]secPackage, 0, 1024)
 	for _, repo := range []string{"main", "community"} {
 		req, err := http.NewRequestWithContext(ctx, "GET", "https://secdb.alpinelinux.org/v3.24/"+repo+".json", nil)
 		if err != nil {
@@ -93,7 +93,8 @@ func assessRuntimeDependencies(t *testing.T, ctx context.Context, app, storage, 
 	docker("cp", storage+":/usr/local/bin/minio", binary)
 	scanCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(scanCtx, "go", "run", "golang.org/x/vuln/cmd/govulncheck@v1.9.0", "-mode=binary", binary)
+	cmd := exec.CommandContext(scanCtx, "go", "run", "golang.org/x/vuln/cmd/govulncheck@v1.9.0", "-mode=binary", "storage-server")
+	cmd.Dir = filepath.Dir(binary)
 	output, err := cmd.CombinedOutput()
 	text := strings.ReplaceAll(string(output), binary, "[owned temporary storage binary]")
 	if len(text) > 24000 {

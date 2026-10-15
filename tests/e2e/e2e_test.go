@@ -432,7 +432,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatalf("concurrent upload results: %v", statuses)
 	}
 
-	assessBoundaries(t, ctx, conn, mc, bucket, base, admin, alice, request, create, upload)
+	assessBoundaries(ctx, t, conn, mc, bucket, base, admin, alice, request, create, upload)
 
 	// Run the same real image with an intentionally missing native executable.
 	// A hashing error must retain a failed record and never create a usable link.
@@ -544,9 +544,9 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	code, _, _ = request("GET", base+"/", nil, nil, nil)
 	expect(code, 200)
 
-	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(t, ctx, app, mi, run, docker) })
+	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(ctx, t, app, mi, run, docker) })
 	t.Run("assessment-fixture-recovery", func(t *testing.T) {
-		assessFixtureRecovery(t, ctx, conn, mc, database, bucket, "uploads/"+concurrentID, pg, run, docker)
+		assessFixtureRecovery(ctx, t, conn, mc, database, bucket, "uploads/"+concurrentID, pg, run, docker)
 	})
 	t.Run("assessment-database-outage", func(t *testing.T) {
 		docker("stop", pg)

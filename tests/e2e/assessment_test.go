@@ -16,7 +16,7 @@ import (
 )
 
 // Uses only the parent test's fresh, verified disposable database and bucket.
-func assessBoundaries(t *testing.T, ctx context.Context, conn *sql.DB, mc *minio.Client, bucket, base string,
+func assessBoundaries(ctx context.Context, t *testing.T, conn *sql.DB, mc *minio.Client, bucket, base string,
 	admin, alice *http.Cookie,
 	request func(string, string, io.Reader, *http.Cookie, map[string]string) (int, []byte, []*http.Cookie),
 	create func(string, int, *http.Cookie) string,
@@ -102,16 +102,19 @@ func assessBoundaries(t *testing.T, ctx context.Context, conn *sql.DB, mc *minio
 	})
 	t.Run("assessment-commit-rejection", func(t *testing.T) {
 		id := create("commit-rejected.bin", 1, alice)
-		fn := "assessment_" + strings.ReplaceAll(uuid.NewString(), "-", "")
-		ddl := fmt.Sprintf("CREATE FUNCTION %s() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.id='%s'::uuid AND NEW.status='hashed' THEN RAISE EXCEPTION 'synthetic commit rejection'; END IF; RETURN NEW; END $$; CREATE CONSTRAINT TRIGGER %s AFTER UPDATE ON files DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION %s()", fn, id, fn, fn)
+
+		// A fixed trigger is safe here: the database is newly owned by this test,
+		// and this subtest has no concurrent upload. No input is interpolated in SQL.
+		const ddl = "CREATE FUNCTION assessment_commit_rejection() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.status='hashed' THEN RAISE EXCEPTION 'synthetic commit rejection'; END IF; RETURN NEW; END $$; CREATE CONSTRAINT TRIGGER assessment_commit_rejection AFTER UPDATE ON files DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION assessment_commit_rejection()"
 		if _, err := conn.ExecContext(ctx, ddl); err != nil {
 			t.Fatal(err)
 		}
 		defer func() {
-			if _, err := conn.ExecContext(ctx, "DROP TRIGGER "+fn+" ON files; DROP FUNCTION "+fn+"()"); err != nil {
+			if _, err := conn.ExecContext(ctx, "DROP TRIGGER assessment_commit_rejection ON files; DROP FUNCTION assessment_commit_rejection()"); err != nil {
 				t.Error(err)
 			}
 		}()
+
 		expect(upload(id, []byte("x"), alice), 500)
 		var key, status string
 		if err := conn.QueryRowContext(ctx, "SELECT object_key,status FROM files WHERE id=$1", id).Scan(&key, &status); err != nil || status != "failed" {

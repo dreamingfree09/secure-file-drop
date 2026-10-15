@@ -13,7 +13,7 @@ import (
 
 // Fixture recovery exercises pg_dump/psql and one synthetic object only; it
 // does not certify application disaster recovery or touch any real backup.
-func assessFixtureRecovery(t *testing.T, ctx context.Context, conn *sql.DB, mc *minio.Client,
+func assessFixtureRecovery(ctx context.Context, t *testing.T, conn *sql.DB, mc *minio.Client,
 	database, bucket, key, pg, run string, docker func(...string) string) {
 	t.Helper()
 	var current string

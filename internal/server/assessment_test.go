@@ -15,7 +15,7 @@ import (
 type assessmentConnector struct{ observed *context.Context }
 
 func (c assessmentConnector) Connect(context.Context) (driver.Conn, error) {
-	return assessmentConn{c.observed}, nil
+	return assessmentConn(c), nil
 }
 func (c assessmentConnector) Driver() driver.Driver { return assessmentDriver{} }
 
