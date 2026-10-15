@@ -118,6 +118,7 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 	}
 	decoder := json.NewDecoder(bytes.NewReader(output))
 	observed := map[string]string{}
+	levels := map[string]int{}
 	for {
 		var msg struct{ Finding *finding }
 		err := decoder.Decode(&msg)
@@ -133,7 +134,17 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 		f := msg.Finding
 		if len(f.Trace) > 0 {
 			v := f.Trace[0]
-			observed[f.OSV] = fmt.Sprintf("module=%s installed=%s package=%s symbol=%s fixed=%s", v.Module, v.Version, v.Package, v.Function, f.FixedVersion)
+			level := 1
+			if v.Package != "" {
+				level = 2
+			}
+			if v.Function != "" {
+				level = 3
+			}
+			if level >= levels[f.OSV] {
+				levels[f.OSV] = level
+				observed[f.OSV] = fmt.Sprintf("level=%d module=%s installed=%s package=%s symbol=%s fixed=%s", level, v.Module, v.Version, v.Package, v.Function, f.FixedVersion)
+			}
 		}
 	}
 	keys := make([]string, 0, len(observed))
@@ -144,5 +155,9 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 	for _, k := range keys {
 		t.Logf("STORAGE BINARY ADVISORY %s %s https://pkg.go.dev/vuln/%s", k, observed[k], k)
 	}
-	t.Logf("Storage binary scan complete: %d advisory IDs with binary findings; symbol presence is not application exploit reachability", len(keys))
+	counts := [4]int{}
+	for _, level := range levels {
+		counts[level]++
+	}
+	t.Logf("Storage binary scan complete: %d advisory IDs; symbol=%d package-only=%d module-only=%d; symbol presence is not application exploit reachability", len(keys), counts[3], counts[2], counts[1])
 }
