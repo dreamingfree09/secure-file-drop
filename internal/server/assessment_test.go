@@ -77,3 +77,16 @@ func TestAssessmentObservationDatabaseIgnoresCanceledRequest(t *testing.T) {
 		})
 	}
 }
+
+func TestAssessmentJSONEnvelopeRejectsOversizeAndTrailingData(t *testing.T) {
+	a := AuthConfig{AdminUser: "admin", AdminPass: "SyntheticPass123", SessionSecret: "synthetic-assessment-session-secret"}
+	valid := "{\"username\":\"admin\",\"password\":\"SyntheticPass123\"}"
+	for _, body := range []string{valid + strings.Repeat(" ", 17<<10), valid + "{}"} {
+		r := httptest.NewRequest("POST", "http://fixture.test/login", strings.NewReader(body))
+		w := httptest.NewRecorder()
+		a.loginHandler().ServeHTTP(w, r)
+		if w.Code < 400 {
+			t.Errorf("accepted invalid JSON envelope with HTTP %d: bytes=%d; expected 400/413", w.Code, len(body))
+		}
+	}
+}
