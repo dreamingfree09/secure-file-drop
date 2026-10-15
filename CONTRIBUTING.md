@@ -77,7 +77,7 @@ go test ./internal/server -v -run TestAuth
 
 Run end-to-end tests:
 ```bash
-SFD_E2E=1 go test ./tests/e2e -v -count=1 -timeout 15m
+SFD_E2E=1 go test ./tests/e2e -v -count=1 -timeout 25m
 ```
 
 The Docker package explicitly skips without SFD_E2E=1. A skip is not full-stack acceptance; use only the uniquely owned disposable harness and a local Docker engine, never existing data.

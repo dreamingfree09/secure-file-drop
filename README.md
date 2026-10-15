@@ -28,7 +28,7 @@ go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 The full-stack package explicitly skips without opt-in; that skip is not acceptance. With a working **local** Docker engine:
 
 ```sh
-SFD_E2E=1 go test ./tests/e2e -v -count=1 -timeout 15m
+SFD_E2E=1 go test ./tests/e2e -v -count=1 -timeout 25m
 ```
 
 This builds the real runtime image and C tool, creates unique disposable PostgreSQL/MinIO resources with loopback ports, verifies upload/hash/download bytes, negative authorization and expiry, migration upgrade/idempotency and cleanup. Ownership labels are checked before resource removal. It does not read your .env or use existing volumes. CI runs this separately with opt-in.

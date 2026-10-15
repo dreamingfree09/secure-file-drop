@@ -41,3 +41,9 @@ Confirmed findings, fixes, reproduced baseline failures and distinct validation 
 Go/CI/native configuration is aligned to supported Go 1.26.9 and Alpine 3.24. [Official Go releases](https://go.dev/dl/) and [Alpine support](https://alpinelinux.org/releases/) were checked on the assignment date. Reachable dependency advisories were patched; see the tracker for paths and limitations.
 
 Local Docker validation is blocked by Docker Desktop inference-socket startup failure. No settings were changed and no existing containers/volumes were used. The only local UI service is an assignment-owned static loopback server, which must be stopped after browser checks.
+
+## Storage dependency decision — before source-image implementation
+
+First CI at 91ca11c passed Go/native/race/vulnerability/lint/docs checks, but could not pull the historical minio/minio image. The official [MinIO server repository](https://github.com/minio/minio) is archived and documents source-only community distribution; the client is also archived. Do not silently switch storage vendors or paid services.
+
+The authorised test/development image will therefore build the same community product from exact verified official archive commits: server 7aac2a2c5b7c882e68c1ce017d8256be2feea27f and client 77f82e18b5401a65958f1619df6ebb994634bd88. These are newer sources than the unavailable 2024 image; no existing volume is upgraded or reused. Preserve upstream licenses and source identities in Dockerfile.storage. Production maintenance/vendor/version adoption remains an explicit Owner/Aether decision; the isolated build is not support or vulnerability certification. First CI also exposed mixed Docker pull stderr/container stdout in the harness; capture IDs from stdout only so ownership-checked cleanup can work.

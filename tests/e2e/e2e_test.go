@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -33,7 +34,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	if os.Getenv("SFD_E2E") != "1" {
 		t.Skip("full-stack Docker test requires SFD_E2E=1; not a full-stack pass")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Minute)
 	defer cancel()
 	cli := os.Getenv("SFD_TEST_DOCKER")
 	if cli == "" {
@@ -43,7 +44,13 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		// #nosec G204 G702 -- Test operator selects the Docker CLI; fixed arguments, no shell.
 		c := exec.CommandContext(ctx, cli, args...)
 		c.Dir = "../.."
-		b, e := c.CombinedOutput()
+		b, e := c.Output()
+		if e != nil {
+			var exit *exec.ExitError
+			if errors.As(e, &exit) {
+				b = append(b, exit.Stderr...)
+			}
+		}
 		return strings.TrimSpace(string(b)), e
 	}
 	docker := func(args ...string) string {
@@ -102,16 +109,19 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	miName := run + "-minio"
 	appName := run + "-app"
 	image := run + ":test"
+	storageImage := run + ":storage"
 	database := "sfd_quality_" + strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
 	password := "SyntheticPass123456"
 	secret := "synthetic-download-secret-for-isolated-tests"
+	docker("build", "--label", label, "-t", storageImage, "-f", "Dockerfile.storage", ".")
+	own("image", storageImage)
 	pg := docker("run", "-d", "--name", pgName, "--label", label, "--network", network, "--network-alias", "pg",
 		"-p", "127.0.0.1::5432", "-v", pgVol+":/var/lib/postgresql/data",
 		"-e", "POSTGRES_DB="+database, "-e", "POSTGRES_USER=sfd", "-e", "POSTGRES_PASSWORD="+password, "postgres:16")
 	own("container", pg)
 	mi := docker("run", "-d", "--name", miName, "--label", label, "--network", network, "--network-alias", "minio",
 		"-p", "127.0.0.1::9000", "-v", miVol+":/data", "-e", "MINIO_ROOT_USER=sfdtest", "-e", "MINIO_ROOT_PASSWORD="+password,
-		"minio/minio:RELEASE.2024-01-31T20-20-33Z", "server", "/data")
+		storageImage, "server", "/data")
 	own("container", mi)
 	port := func(id, p string) string {
 		out := docker("port", id, p)
