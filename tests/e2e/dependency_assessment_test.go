@@ -1,12 +1,16 @@
 package e2e
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -93,21 +97,52 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 	docker("cp", storage+":/usr/local/bin/minio", binary)
 	scanCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
-	cmd := exec.CommandContext(scanCtx, "go", "run", "golang.org/x/vuln/cmd/govulncheck@v1.9.0", "-mode=binary", "storage-server")
+
+	cmd := exec.CommandContext(scanCtx, "go", "run", "golang.org/x/vuln/cmd/govulncheck@v1.9.0", "-json", "-mode=binary", "storage-server")
 	cmd.Dir = filepath.Dir(binary)
-	output, err := cmd.CombinedOutput()
-	text := strings.ReplaceAll(string(output), binary, "[owned temporary storage binary]")
-	if len(text) > 24000 {
-		text = text[:24000] + "\n[output truncated; rerun binary scan for complete traces]"
+	output, scanErr := cmd.Output()
+	if scanCtx.Err() != nil {
+		t.Fatal("storage binary scan timed out")
 	}
-	if err != nil {
-		// govulncheck returns a nonzero vulnerability status; tool/setup failures
-		// remain failures instead of being mistaken for an advisory observation.
-		if !strings.Contains(text, "Vulnerability #") {
-			t.Fatalf("storage binary scan unavailable: %v\n%s", err, text)
+	if scanErr != nil {
+		var exit *exec.ExitError
+		if !errors.As(scanErr, &exit) || !strings.Contains(string(exit.Stderr), "exit status 3") {
+			t.Fatalf("storage binary scanner failed: %v", scanErr)
 		}
-		t.Logf("STORAGE BINARY VULNERABILITIES OBSERVED (not a security pass):\n%s", text)
-	} else {
-		t.Logf("Storage binary govulncheck observation:\n%s", text)
 	}
+	type frame struct{ Module, Version, Package, Function string }
+	type finding struct {
+		OSV          string
+		FixedVersion string `json:"fixed_version"`
+		Trace        []frame
+	}
+	decoder := json.NewDecoder(bytes.NewReader(output))
+	observed := map[string]string{}
+	for {
+		var msg struct{ Finding *finding }
+		err := decoder.Decode(&msg)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			t.Fatal("invalid scanner JSON")
+		}
+		if msg.Finding == nil {
+			continue
+		}
+		f := msg.Finding
+		if len(f.Trace) > 0 {
+			v := f.Trace[0]
+			observed[f.OSV] = fmt.Sprintf("module=%s installed=%s package=%s symbol=%s fixed=%s", v.Module, v.Version, v.Package, v.Function, f.FixedVersion)
+		}
+	}
+	keys := make([]string, 0, len(observed))
+	for k := range observed {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		t.Logf("STORAGE BINARY ADVISORY %s %s https://pkg.go.dev/vuln/%s", k, observed[k], k)
+	}
+	t.Logf("Storage binary scan complete: %d advisory IDs with binary findings; symbol presence is not application exploit reachability", len(keys))
 }

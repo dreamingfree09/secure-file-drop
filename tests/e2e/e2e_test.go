@@ -576,8 +576,15 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		if exit := docker("inspect", "--format", "{{.State.ExitCode}}", app); exit != "0" {
 			t.Fatalf("shutdown exit %s", exit)
 		}
-		logs := docker("logs", app)
-		if !strings.Contains(logs, "shutdown_complete") {
+		// Docker forwards application stderr on its own stderr; IDs still use
+		// stdout-only capture elsewhere. Never print raw application logs here.
+		// #nosec G204 G702 -- Parent-verified local Docker CLI, owned container ID, fixed logs subcommand.
+		logsCmd := exec.CommandContext(ctx, cli, "logs", app)
+		logs, logsErr := logsCmd.CombinedOutput()
+		if logsErr != nil {
+			t.Fatal("owned shutdown log read failed")
+		}
+		if !strings.Contains(string(logs), "shutdown_complete") {
 			t.Fatal("graceful shutdown not acknowledged")
 		}
 		docker("start", app)
