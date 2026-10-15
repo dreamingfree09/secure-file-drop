@@ -196,6 +196,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	if e = db.RunMigrations(legacyDB); e != nil {
 		t.Fatal(e)
 	}
+	t.Logf("MIGRATION CONNECTION OBSERVATION: after two completed calls, pool InUse=%d (expected 0); source driver retains dedicated connections", legacyDB.Stats().InUse)
 	if e = legacyDB.Close(); e != nil {
 		t.Fatal(e)
 	}
@@ -431,6 +432,8 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatalf("concurrent upload results: %v", statuses)
 	}
 
+	assessBoundaries(t, ctx, conn, mc, bucket, base, admin, alice, request, create, upload)
+
 	// Run the same real image with an intentionally missing native executable.
 	// A hashing error must retain a failed record and never create a usable link.
 	badArgs := append([]string(nil), appArgs...)
@@ -501,6 +504,10 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	}
 	// Simulate a storage outage using only this test's container; metadata must survive.
 	docker("stop", mi)
+	code, _, _ = request("GET", base+"/ready", nil, nil, nil)
+	expect(code, 503)
+	code, _, _ = request("GET", base+"/health", nil, nil, nil)
+	expect(code, 200)
 	code, _, _ = request("DELETE", base+"/admin/files/"+id, nil, admin, nil)
 	expect(code, 502)
 	var remains int
@@ -536,5 +543,52 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	}
 	code, _, _ = request("GET", base+"/", nil, nil, nil)
 	expect(code, 200)
+
+	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(t, ctx, app, mi, run, docker) })
+	t.Run("assessment-fixture-recovery", func(t *testing.T) {
+		assessFixtureRecovery(t, ctx, conn, mc, database, bucket, "uploads/"+concurrentID, pg, run, docker)
+	})
+	t.Run("assessment-database-outage", func(t *testing.T) {
+		docker("stop", pg)
+		code, _, _ = request("GET", base+"/health", nil, nil, nil)
+		expect(code, 200)
+		code, _, _ = request("GET", base+"/ready", nil, nil, nil)
+		expect(code, 503)
+		code, _, _ = request("GET", base+"/me", nil, alice, nil)
+		expect(code, 500)
+		docker("start", pg)
+		wait("database restart readiness", func() bool {
+			res, err := client.Get(base + "/ready")
+			if err != nil {
+				return false
+			}
+			defer func() { _ = res.Body.Close() }()
+			return res.StatusCode == 200
+		})
+		t.Log("PASS: process liveness distinct from readiness; DB outage fails closed; restart recovers readiness")
+	})
+	t.Run("assessment-idle-graceful-restart", func(t *testing.T) {
+		docker("stop", "--time", "10", app)
+		if exit := docker("inspect", "--format", "{{.State.ExitCode}}", app); exit != "0" {
+			t.Fatalf("shutdown exit %s", exit)
+		}
+		logs := docker("logs", app)
+		if !strings.Contains(logs, "shutdown_complete") {
+			t.Fatal("graceful shutdown not acknowledged")
+		}
+		docker("start", app)
+		base = "http://" + port(app, "8080/tcp")
+		wait("application restart readiness", func() bool {
+			res, err := client.Get(base + "/ready")
+			if err != nil {
+				return false
+			}
+			defer func() { _ = res.Body.Close() }()
+			return res.StatusCode == 200
+		})
+		code, _, _ = request("GET", base+"/me", nil, alice, nil)
+		expect(code, 200)
+		t.Log("PASS: idle SIGTERM exit 0, readiness and persisted session after restart; in-flight shutdown unverified")
+	})
 	t.Logf("real container/native full-stack flow and negative cases passed; disposable run %s", run)
 }

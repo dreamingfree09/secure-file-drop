@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: '24'
       - name: Browser-script session unit tests
-        run: node --test tests/web/session.test.cjs
+        run: node --test tests/web/*.test.cjs
       - name: Install native build dependencies
         run: sudo apt-get update && sudo apt-get install -y libssl-dev
       - name: Native SHA-256 vectors
