@@ -11,7 +11,7 @@ Read [deployment](DEPLOYMENT.md) before starting a stack and [API](API.md) for r
 | SFD_DOWNLOAD_SECRET | Required for signed links, at least 32 bytes |
 | SFD_S3_ENDPOINT | Required MinIO endpoint; http/https or host:port |
 | SFD_S3_ACCESS_KEY / SFD_S3_SECRET_KEY | Required storage credentials |
-| SFD_BUCKET | Required existing private bucket, with no bucket policy |
+| SFD_BUCKET | Required existing private bucket, without anonymous bucket-policy grants |
 | SFD_MAX_UPLOAD_BYTES | Positive maximum file bytes; default 50 GiB; example config uses 10 MiB |
 | SFD_PUBLIC_BASE_URL | Canonical public origin, e.g. https://files.example.test; configures secure cookies |
 | SFD_ADDR | Listen address; default :8080 |

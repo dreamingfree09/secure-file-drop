@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
@@ -76,8 +77,81 @@ func newMinioClient() (*minio.Client, string, error) {
 	}
 
 	policy, err := client.GetBucketPolicy(ctx, bucket)
-	if err != nil || strings.TrimSpace(policy) != "" {
-		return nil, "", fmt.Errorf("bucket must have no public policy")
+	if err != nil || !privateBucketPolicy(policy) {
+		return nil, "", fmt.Errorf("bucket policy must exclude anonymous access")
 	}
 	return client, bucket, nil
+}
+
+// privateBucketPolicy permits policies restricted to named principals, but
+// rejects anonymous grants, unknown principal forms and NotPrincipal allows.
+func privateBucketPolicy(policy string) bool {
+	if strings.TrimSpace(policy) == "" {
+		return true
+	}
+	type statement struct {
+		Effect       string
+		Principal    json.RawMessage
+		NotPrincipal json.RawMessage
+	}
+	var document struct{ Statement json.RawMessage }
+	if json.Unmarshal([]byte(policy), &document) != nil {
+		return false
+	}
+	var statements []statement
+	if json.Unmarshal(document.Statement, &statements) != nil {
+		var single statement
+		if json.Unmarshal(document.Statement, &single) != nil {
+			return false
+		}
+		statements = []statement{single}
+	}
+	if len(statements) == 0 {
+		return false
+	}
+	var named func(any) bool
+	named = func(value any) bool {
+		switch v := value.(type) {
+		case string:
+			return v != "" && !strings.Contains(v, "*")
+		case []any:
+			if len(v) == 0 {
+				return false
+			}
+			for _, item := range v {
+				if !named(item) {
+					return false
+				}
+			}
+			return true
+		case map[string]any:
+			if len(v) == 0 {
+				return false
+			}
+			for key, item := range v {
+				if key != "AWS" && key != "Service" && key != "CanonicalUser" {
+					return false
+				}
+				if !named(item) {
+					return false
+				}
+			}
+			return true
+		default:
+			return false
+		}
+	}
+	for _, s := range statements {
+		if s.Effect == "Deny" {
+			continue
+		}
+		if s.Effect != "Allow" || len(s.NotPrincipal) > 0 {
+			return false
+		}
+		var p any
+		if json.Unmarshal(s.Principal, &p) != nil || !named(p) {
+			return false
+		}
+	}
+	return true
 }
