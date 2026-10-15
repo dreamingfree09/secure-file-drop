@@ -23,3 +23,21 @@ The Owner explicitly superseded the no-new-checkout restriction and authorised t
 Implementation/validation: active. Publication: pending. Acknowledgement: pending Aether review at exact published SHA. Integration: pending review, not authorised. Final revision and full changed-file scope will be published in the PR handover after committing.
 
 Next action: inspect source and destructive test setup, establish baseline on disposable local resources, reproduce confirmed defects and add focused regressions.
+
+## Review decisions recorded before implementation
+
+The baseline supports public registration already; preserve it and enforce its intended private ownership. Environment administrator credentials retain administration. Registered UUID subjects are ordinary users; the administrator marker must be part of the signed session, never inferred from user-supplied names. Existing unowned rows remain administrator-only; ownership cannot safely be reconstructed.
+
+Use the existing PostgreSQL dependency for hashed session-token revocation so logout invalidates replay across processes; expire sessions by the same signed expiry. Add a forward migration rather than editing applied migrations. Use row locks and transactional pending → stored → hashed transitions to serialize upload, deletion and cleanup; avoid a new externally visible lifecycle state. Storage deletion must succeed before metadata is forgotten, preserving retryability.
+
+Keep bearer signed downloads usable without a session. Record actual uploaded/hash byte counts, enforce file limits independently of multipart overhead, sanitize filenames and format attachment headers. Local UI uses repo-relative assets with an explicit override. Retain the roadmap; do not import unmerged v2 features.
+
+Baseline: Go 1.24.11 unit packages passed; go vet ./... and backend compilation passed; native C build passed. Legacy e2e not executed: fixed ports, unbounded resource cleanup and native Go fallback violate isolated/native acceptance. Replacement will fail on missing dependencies when explicitly enabled, and report a clear skip otherwise.
+
+## Producer review results
+
+Confirmed findings, fixes, reproduced baseline failures and distinct validation outcomes are maintained in [TRACKER.md](TRACKER.md). The final PR will carry the exact final SHA, full changed-file scope, publication/CI status and remaining blockers. Historical snapshots and future ideas are retained.
+
+Go/CI/native configuration is aligned to supported Go 1.26.9 and Alpine 3.24. [Official Go releases](https://go.dev/dl/) and [Alpine support](https://alpinelinux.org/releases/) were checked on the assignment date. Reachable dependency advisories were patched; see the tracker for paths and limitations.
+
+Local Docker validation is blocked by Docker Desktop inference-socket startup failure. No settings were changed and no existing containers/volumes were used. The only local UI service is an assignment-owned static loopback server, which must be stopped after browser checks.

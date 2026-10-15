@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -99,7 +98,7 @@ func TestUploadHandler_MaxBytesValidation(t *testing.T) {
 		{
 			name:        "negative value",
 			envValue:    "-1",
-			shouldError: false, // parsed successfully, but semantically questionable
+			shouldError: true, // non-positive bounds must not disable limits
 		},
 	}
 
@@ -229,15 +228,9 @@ func TestMaxUploadBytes_NotSet(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	if limit != 0 {
-		t.Errorf("Expected limit 0 (no limit), got %d", limit)
+	if limit != 50<<30 {
+		t.Errorf("Expected finite 50 GiB default, got %d", limit)
 	}
-}
-
-// Mock DB for integration-style test (without actual DB)
-type mockDB struct {
-	queryRowFunc func(query string, args ...any) *sql.Row
-	execFunc     func(query string, args ...any) (sql.Result, error)
 }
 
 func TestUploadValidationFlow(t *testing.T) {

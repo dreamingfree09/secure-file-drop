@@ -4,8 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,189 +18,152 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-// uploadResp is the JSON response returned after a successful file upload.
-// It contains the file ID, the MinIO object key, and the updated status.
 type uploadResp struct {
 	ID        string `json:"id"`
 	ObjectKey string `json:"object_key"`
 	Status    string `json:"status"`
 }
 
-// maxUploadBytes reads the SFD_MAX_UPLOAD_BYTES environment variable and
-// returns the maximum allowed upload size in bytes. Returns 0 if not set
-// (meaning no limit). Returns an error if the value cannot be parsed.
 func maxUploadBytes() (int64, error) {
 	raw := os.Getenv("SFD_MAX_UPLOAD_BYTES")
 	if raw == "" {
-		return 0, nil // no limit configured
+		return 50 << 30, nil
 	}
-	return strconv.ParseInt(raw, 10, 64)
+	n, err := strconv.ParseInt(raw, 10, 64)
+	if err != nil || n <= 0 || n > math.MaxInt64-(1<<20) {
+		return 0, fmt.Errorf("invalid upload limit")
+	}
+	return n, nil
 }
-
-// uploadHandler handles POST /upload?id={uuid} requests for streaming file uploads to MinIO.
-// It validates the file ID exists in the database with status "pending", reads the multipart
-// form data, streams it directly to MinIO, then updates the database status to "stored".
-// After storage, it triggers asynchronous hashing of the file via the native C utility.
-//
-// Required query parameter: id (UUID of file record created via /files)
-// Required form field: file (the binary file data)
-// Authentication: Required (checked by requireAuth middleware)
 func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) http.Handler {
 	return cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Only accept POST requests
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
+		start := time.Now()
 		limit, err := maxUploadBytes()
 		if err != nil {
 			http.Error(w, "server misconfigured", http.StatusInternalServerError)
 			return
 		}
-		if limit > 0 {
-			r.Body = http.MaxBytesReader(w, r.Body, limit)
-		}
-
-		idStr := r.URL.Query().Get("id")
-		if idStr == "" {
-			http.Error(w, "missing id", http.StatusBadRequest)
-			return
-		}
-
-		id, err := uuid.Parse(idStr)
+		r.Body = http.MaxBytesReader(w, r.Body, limit+(1<<20))
+		id, err := uuid.Parse(r.URL.Query().Get("id"))
 		if err != nil {
 			http.Error(w, "bad id", http.StatusBadRequest)
 			return
 		}
-
-		var objectKey string
-		var status string
-		err = db.QueryRow(
-			`SELECT object_key, status FROM files WHERE id = $1`,
-			id,
-		).Scan(&objectKey, &status)
+		transactionCtx, transactionCancel := context.WithTimeout(context.Background(), 6*time.Minute)
+		defer transactionCancel()
+		tx, err := db.BeginTx(transactionCtx, nil)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				http.Error(w, "not found", http.StatusNotFound)
-				return
-			}
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-
+		defer func() { _ = tx.Rollback() }()
+		p := principal(r)
+		var key, status string
+		err = tx.QueryRowContext(r.Context(), `SELECT object_key,status FROM files WHERE id=$1 AND ($2 OR user_id::text=$3) FOR UPDATE`, id, p.Admin, p.Sub).Scan(&key, &status)
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
 		if status != "pending" {
 			http.Error(w, "invalid status", http.StatusConflict)
 			return
 		}
-
 		mr, err := r.MultipartReader()
 		if err != nil {
 			http.Error(w, "bad multipart", http.StatusBadRequest)
 			return
 		}
-
-		var filePart io.Reader
-		var contentType string
-
+		var file io.Reader
 		for {
-			part, err := mr.NextPart()
-			if err == io.EOF {
+			part, e := mr.NextPart()
+			if e == io.EOF {
 				break
 			}
-			if err != nil {
+			if e != nil {
 				http.Error(w, "bad multipart", http.StatusBadRequest)
 				return
 			}
-			defer func() { _ = part.Close() }()
-
-			if part.FormName() != "file" {
-				continue
+			if part.FormName() == "file" {
+				file = part
+				break
 			}
-
-			filePart = part
-			contentType = part.Header.Get("Content-Type")
-			break
+			_ = part.Close()
 		}
-
-		if filePart == nil {
+		if file == nil {
 			http.Error(w, "missing file", http.StatusBadRequest)
 			return
 		}
-
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
 		defer cancel()
-
-		_, err = mc.PutObject(
-			ctx,
-			bucket,
-			objectKey,
-			filePart,
-			-1,
-			minio.PutObjectOptions{ContentType: contentType},
-		)
-		if err != nil {
-			// Mark the file as failed in case of storage errors.
-			_, _ = db.Exec(
-				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'pending'`,
-				id,
-			)
-
-			rid := RequestIDFromContext(r.Context())
-			log.Printf("rid=%s msg=putobject err=%v", rid, err)
-
-			// If MaxBytesReader tripped, surface 413.
-			if r.Body != nil {
-				if _, ok := err.(*http.MaxBytesError); ok {
-					http.Error(w, "file too large", http.StatusRequestEntityTooLarge)
-					return
+		// Hold the row lock until storage and hashing finish. Competing uploads,
+		// admin deletion and cleanup cannot act on an in-flight file.
+		failed := true
+		defer func() {
+			if failed {
+				cleanupCtx, done := context.WithTimeout(context.Background(), 10*time.Second)
+				defer done()
+				// Keep metadata even if removal fails: cleanup can retry the exact key.
+				if e := mc.RemoveObject(cleanupCtx, bucket, key, minio.RemoveObjectOptions{}); e != nil {
+					// #nosec G706 -- Log fields are quoted with %q; the ID is also validated as UUID.
+					log.Printf("upload cleanup failed id=%q", id)
 				}
+				// Remove while the transaction still holds the file lock. A
+				// canceled HTTP request must not release it before cleanup.
+				_, stateErr := tx.ExecContext(cleanupCtx, "UPDATE files SET status='failed' WHERE id=$1", id)
+				if stateErr == nil {
+					stateErr = tx.Commit()
+				}
+				if stateErr != nil {
+					_ = tx.Rollback()
+					if _, e := db.ExecContext(cleanupCtx, "UPDATE files SET status='failed' WHERE id=$1 AND status='pending'", id); e != nil {
+						// #nosec G706 -- Validated UUID is quoted to prevent log control characters.
+						log.Printf("upload failure state failed id=%q", id)
+					}
+				}
+				GetMetrics().RecordUploadError()
+				GetMetrics().RecordFileStateTransition("failed")
 			}
-
+		}()
+		limited := &io.LimitedReader{R: file, N: limit + 1}
+		info, err := mc.PutObject(ctx, bucket, key, limited, -1, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+		var maxErr *http.MaxBytesError
+		if limited.N == 0 || errors.As(err, &maxErr) {
+			http.Error(w, "file too large", http.StatusRequestEntityTooLarge)
+			return
+		}
+		if err != nil {
 			http.Error(w, "upload failed", http.StatusBadGateway)
 			return
 		}
-
-		_, err = db.Exec(
-			`UPDATE files SET status = 'stored' WHERE id = $1 AND status = 'pending'`,
-			id,
-		)
-		if err != nil {
+		if _, err = tx.ExecContext(ctx, "UPDATE files SET status='stored',size_bytes=$2 WHERE id=$1", id, info.Size); err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-
-		shaHex, _, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
-		if herr != nil {
-			_, _ = db.Exec(
-				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'stored'`,
-				id,
-			)
-			rid := RequestIDFromContext(r.Context())
-			log.Printf("rid=%s msg=hashing_failed err=%v", rid, herr)
+		sha, _, count, err := sha256FromMinioObject(ctx, mc, bucket, key)
+		if err != nil || count > math.MaxInt64 || int64(count) != info.Size {
 			http.Error(w, "hashing failed", http.StatusBadGateway)
 			return
 		}
-
-		_, err = db.Exec(
-			`UPDATE files SET sha256_hex = $2, sha256_bytes = $3, status = 'hashed' WHERE id = $1 AND status = 'stored'`,
-			id,
-			shaHex,
-			hashBytes,
-		)
-		if err != nil {
-			rid := RequestIDFromContext(r.Context())
-			log.Printf("rid=%s msg=db_update_hash err=%v", rid, err)
+		if _, err = tx.ExecContext(ctx, "UPDATE files SET sha256_hex=$2,sha256_bytes=$3,status='hashed' WHERE id=$1", id, sha, count); err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-
+		if err = tx.Commit(); err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+		failed = false
+		GetMetrics().RecordUpload(info.Size, time.Since(start))
+		GetMetrics().RecordFileStateTransition("hashed")
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(uploadResp{
-			ID:        id.String(),
-			ObjectKey: objectKey,
-			Status:    "hashed",
-		})
+		_ = json.NewEncoder(w).Encode(uploadResp{id.String(), key, "hashed"})
 	}))
 }

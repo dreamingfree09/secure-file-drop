@@ -1,0 +1,14 @@
+.git
+.env
+.env.*
+!.env.example
+*.log
+*.txt
+credentials*
+**/credentials*
+backend
+native/*.o
+native/sfd-hash
+coverage*
+.qodo
+.vscode

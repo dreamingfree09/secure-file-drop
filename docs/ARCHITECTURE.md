@@ -1,48 +1,13 @@
 # Architecture
 
-This document describes the high-level components and responsibilities of Secure File Drop.
+The backend authenticates environment administrator credentials or database users. Sessions contain HMAC-signed subject, expiry, a random identifier and an explicit administrator marker. A session is also required to have an unexpired token-hash record in PostgreSQL. Logout removes that record; ordinary-user requests recheck active-account status. Roles come from authenticated credential sources, not usernames.
 
-## Components
+PostgreSQL stores users, sessions and file metadata. Ordinary files have user_id ownership; administrator-created and historical ownerless records remain accessible to the administrator. Row locks serialize uploads with deletion; cleanup skips locked rows. Upload updates pending → stored → hashed in a transaction. Processing failures remove stored objects and retain a failed record for cleanup. The externally visible successful upload state remains hashed; ready is also downloadable.
 
-- Reverse proxy (recommended: Caddy)
-  - Terminates TLS, enforces global rate limits, and provides an externally reachable hostname.
+The backend writes generated object keys to private MinIO storage. Startup requires an existing bucket with no bucket policy. It does not silently alter storage policy. Object removal precedes database deletion so a storage failure retains retryable metadata. Completed objects are streamed to a temporary local file for the real C/OpenSSL SHA-256 utility; both temporary and object byte counts must match. Hashing uses bounded memory but requires temporary disk space up to the configured upload limit.
 
-- Backend API (Go)
-  - Auth: simple admin username/password -> HMAC-signed session cookie
-  - File metadata management: PostgreSQL stores file records and lifecycle state
-  - Upload handling: POST /upload streams multipart file parts into MinIO
-  - Hashing: after upload, files are hashed (SHA-256) and metadata persisted
-  - Signed download: short-lived signed tokens for direct download via /download
+Signed download links are bearer authorization. HMAC verification and expiry are independent of session authentication. Metadata ownership is checked when generating a link; anyone holding it may download while valid. Deletion invalidates the file reference. Downloads use object-stat length and a safely formatted attachment filename.
 
-- Object storage (MinIO)
-  - Stores file blobs under internal keys (no user-provided paths)
-  - Must be private (not exposed to the public internet)
+Startup automatically applies embedded forward migrations before serving. Shutdown cancels and waits for cleanup. Assets default to web/static relative to the working directory, with SFD_WEB_DIR override. The container runs from /app as a non-root user and includes libcrypto3, CA certificates and the C executable.
 
-- Database (Postgres)
-  - `files` table tracks id, status (pending/stored/hashed/ready/failed), size, content type, sha256 metadata
-  - Migrations live in `internal/db/` (see `schema.sql` and `alter_001.sql`)
-
-- Native hashing utility (C)
-  - Computes SHA-256 over streamed objects and emits machine-readable outputs
-  - Useful for reproducible integrity checks and educational value
-
-## Data flow
-
-1. Authenticated user creates a file record (POST /files). A server-generated UUID and object key are returned.
-2. User uploads the file via POST /upload?id=<uuid> as multipart form with field `file`.
-3. Server streams the file into MinIO. On success, it computes SHA-256 (using MinIO get + local hashing helper) and stores results in the database.
-4. User requests a download link (POST /links with file id and TTL). Server signs a download token and returns a URL.
-5. Anyone with the link can GET /download?token=<token> until the token expires.
-
-## Security notes
-
-- Reverse proxy must enforce HTTPS and recommended security headers.
-- Keep MinIO and Postgres private to the backend network.
-- Secrets (admin credentials, session secret, download secret) must be provided through environment variables or secret management systems.
-
-## Operational notes
-
-- Reverse proxy health checks can use /health (process liveness) and /ready (dependency readiness).
-- Monitor DB connectivity and MinIO availability.
-
-For more details about the API, see `docs/API.md` and `docs/USAGE.md`.
+Production TLS termination, host routing and ingress rate limiting remain deployment responsibilities. Browser state-changing requests with an Origin must match the configured public origin; cookies are HttpOnly, SameSite=Lax and Secure for HTTPS configuration. Forwarded request headers are not trusted as a canonical public origin. See [usage](USAGE.md) and [current evidence](TRACKER.md).

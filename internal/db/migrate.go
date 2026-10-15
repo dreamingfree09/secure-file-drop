@@ -1,3 +1,4 @@
+// Package db applies the embedded, versioned Secure File Drop schema.
 package db
 
 import (

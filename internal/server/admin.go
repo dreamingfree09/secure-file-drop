@@ -2,16 +2,19 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
-	minio "github.com/minio/minio-go/v7"
+	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 )
 
-// FileInfo represents a file record for admin listing
+// FileInfo is the public metadata returned by file listings.
 type FileInfo struct {
 	ID          string    `json:"id"`
 	OrigName    string    `json:"orig_name"`
@@ -20,202 +23,112 @@ type FileInfo struct {
 	Status      string    `json:"status"`
 	SHA256Hex   string    `json:"sha256_hex,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// AdminListFilesHandler returns all files for admin dashboard
-func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	// Query all files ordered by creation time (newest first)
-	rows, err := s.db.Query(`
-		SELECT id, orig_name, content_type, size_bytes, status, 
-		       COALESCE(sha256_hex, '') as sha256_hex, created_at, updated_at
-		FROM files 
-		ORDER BY created_at DESC
-		LIMIT 100
-	`)
+func listFiles(w http.ResponseWriter, r *http.Request, db *sql.DB, all bool) {
+	p := principal(r)
+	rows, err := db.QueryContext(r.Context(), `SELECT id,orig_name,content_type,size_bytes,status,COALESCE(sha256_hex,''),created_at
+ FROM files WHERE $1 OR user_id::text=$2 OR ($3 AND user_id IS NULL AND created_by=$2)
+ ORDER BY created_at DESC LIMIT 100`, all, p.Sub, p.Admin)
 	if err != nil {
-		log.Printf("admin list files: query failed: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
-
-	var files []FileInfo
+	defer func() { _ = rows.Close() }()
+	files := make([]FileInfo, 0)
 	for rows.Next() {
 		var f FileInfo
-		if err := rows.Scan(&f.ID, &f.OrigName, &f.ContentType, &f.SizeBytes,
-			&f.Status, &f.SHA256Hex, &f.CreatedAt, &f.UpdatedAt); err != nil {
-			log.Printf("admin list files: scan failed: %v", err)
-			continue
+		if rows.Scan(&f.ID, &f.OrigName, &f.ContentType, &f.SizeBytes, &f.Status, &f.SHA256Hex, &f.CreatedAt) != nil {
+			http.Error(w, "database error", http.StatusInternalServerError)
+			return
 		}
 		files = append(files, f)
 	}
-
-	if err := rows.Err(); err != nil {
-		log.Printf("admin list files: rows error: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+	if rows.Err() != nil {
+		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(files); err != nil {
-		log.Printf("admin list files: encode failed: %v", err)
-	}
+	_ = json.NewEncoder(w).Encode(files)
 }
 
-// AdminDeleteFileHandler deletes a specific file from both MinIO and database
+// AdminListFilesHandler lists all files after route-level administrator checks.
+func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	listFiles(w, r, s.db, true)
+}
+
+// AdminDeleteFileHandler removes the exact stored object before its metadata.
 func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	// Extract file ID from URL path
-	// Expected: /admin/files/{id}
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/admin/files/"), "/")
-	if len(parts) == 0 || parts[0] == "" {
-		http.Error(w, "File ID required", http.StatusBadRequest)
+	id := strings.TrimPrefix(r.URL.Path, "/admin/files/")
+	if _, err := uuid.Parse(id); err != nil {
+		http.Error(w, "bad file id", http.StatusBadRequest)
 		return
 	}
-	fileID := parts[0]
-
-	// Get file info before deletion (for MinIO cleanup)
-	var status string
-	err := s.db.QueryRow("SELECT status FROM files WHERE id = $1", fileID).Scan(&status)
+	tx, err := s.db.BeginTx(r.Context(), nil)
 	if err != nil {
-		log.Printf("admin delete file: query failed: %v", err)
-		http.Error(w, "File not found", http.StatusNotFound)
+		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-
-	// Delete from MinIO if file was stored
-	if status != "pending" {
-		objectName := fileID
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		err := s.minio.RemoveObject(ctx, s.bucket, objectName, minio.RemoveObjectOptions{})
-		if err != nil {
-			log.Printf("admin delete file: MinIO removal failed: %v", err)
-			// Continue with database deletion even if MinIO fails
-		} else {
-			log.Printf("admin delete file: removed from MinIO: %s", fileID)
-		}
+	defer func() { _ = tx.Rollback() }()
+	var key string
+	err = tx.QueryRowContext(r.Context(), "SELECT object_key FROM files WHERE id=$1 FOR UPDATE", id).Scan(&key)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
 	}
-
-	// Delete from database
-	result, err := s.db.Exec("DELETE FROM files WHERE id = $1", fileID)
 	if err != nil {
-		log.Printf("admin delete file: db delete failed: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		http.Error(w, "File not found", http.StatusNotFound)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	if err = s.minio.RemoveObject(ctx, s.bucket, key, minio.RemoveObjectOptions{}); err != nil {
+		http.Error(w, "storage error", http.StatusBadGateway)
 		return
 	}
-
-	log.Printf("admin delete file: deleted file %s", fileID)
+	if _, err = tx.ExecContext(ctx, "DELETE FROM files WHERE id=$1", id); err == nil {
+		err = tx.Commit()
+	}
+	if err != nil {
+		http.Error(w, "database error", http.StatusInternalServerError)
+		return
+	}
+	// #nosec G706 -- Log fields are quoted with %q; the ID is also validated as UUID.
+	log.Printf("admin_delete id=%q", id)
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// CleanupResult represents the result of a cleanup operation
+// CleanupResult reports committed cleanup deletions.
 type CleanupResult struct {
 	DeletedCount int `json:"deleted_count"`
 }
 
-// AdminManualCleanupHandler triggers a manual cleanup of old pending/failed files
+// AdminManualCleanupHandler runs the same cleanup operation as the background job.
 func (s *Server) AdminManualCleanupHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	// Get cleanup config from environment
 	cfg := GetCleanupConfigFromEnv(s.db, s.minio, s.bucket)
-
 	if !cfg.Enabled {
-		log.Printf("admin manual cleanup: cleanup is disabled in config")
-		http.Error(w, "Cleanup is disabled", http.StatusServiceUnavailable)
+		http.Error(w, "cleanup disabled", http.StatusServiceUnavailable)
 		return
 	}
-
-	// Run cleanup synchronously for manual trigger
-	deletedCount := 0
-	cutoff := time.Now().Add(-cfg.MaxAge)
-
-	log.Printf("admin manual cleanup: scanning for files older than %s", cutoff.Format(time.RFC3339))
-
-	rows, err := s.db.Query(`
-		SELECT id, status 
-		FROM files 
-		WHERE status IN ('pending', 'failed') 
-		  AND created_at < $1
-	`, cutoff)
-	if err != nil {
-		log.Printf("admin manual cleanup: query failed: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	defer rows.Close()
-
-	var toDelete []struct {
-		ID     string
-		Status string
-	}
-
-	for rows.Next() {
-		var item struct {
-			ID     string
-			Status string
-		}
-		if err := rows.Scan(&item.ID, &item.Status); err != nil {
-			log.Printf("admin manual cleanup: scan failed: %v", err)
-			continue
-		}
-		toDelete = append(toDelete, item)
-	}
-
-	if err := rows.Err(); err != nil {
-		log.Printf("admin manual cleanup: rows error: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	// Delete each file
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
 	defer cancel()
-
-	for _, item := range toDelete {
-		// Remove from MinIO if not pending (pending files were never uploaded)
-		if item.Status != "pending" {
-			err := s.minio.RemoveObject(ctx, s.bucket, item.ID, minio.RemoveObjectOptions{})
-			if err != nil {
-				log.Printf("admin manual cleanup: MinIO removal failed for %s: %v", item.ID, err)
-			}
-		}
-
-		// Remove from database
-		_, err := s.db.Exec("DELETE FROM files WHERE id = $1", item.ID)
-		if err != nil {
-			log.Printf("admin manual cleanup: db delete failed for %s: %v", item.ID, err)
-			continue
-		}
-
-		deletedCount++
-		log.Printf("admin manual cleanup: deleted file %s (status=%s, age > %s)",
-			item.ID, item.Status, cfg.MaxAge)
+	n, err := runCleanup(ctx, cfg)
+	if err != nil {
+		http.Error(w, "cleanup failed", http.StatusBadGateway)
+		return
 	}
-
-	log.Printf("admin manual cleanup: completed, deleted %d files", deletedCount)
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(CleanupResult{DeletedCount: deletedCount})
+	_ = json.NewEncoder(w).Encode(CleanupResult{DeletedCount: n})
 }

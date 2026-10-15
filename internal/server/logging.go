@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -40,7 +41,7 @@ func generateRequestID() string {
 func requestIDMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rid := r.Header.Get("X-Request-Id")
-		if rid == "" {
+		if rid == "" || len(rid) > 128 || strings.IndexFunc(rid, func(r rune) bool { return r < 33 || r > 126 }) >= 0 {
 			rid = generateRequestID()
 		}
 		ctx := context.WithValue(r.Context(), requestIDKey, rid)
@@ -60,7 +61,8 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(lrw, r)
 
 		ms := time.Since(start).Milliseconds()
-		log.Printf("rid=%s method=%s path=%s status=%d ms=%d remote=%s ua=%q",
+		// #nosec G706 -- All request-controlled string fields are quoted with %q.
+		log.Printf("rid=%q method=%q path=%q status=%d ms=%d remote=%q ua=%q",
 			rid, r.Method, r.URL.Path, lrw.status, ms, r.RemoteAddr, r.UserAgent())
 
 		// Record metrics

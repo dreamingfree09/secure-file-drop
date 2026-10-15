@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -26,7 +27,7 @@ func normaliseEndpoint(raw string) (endpoint string, secure bool, err error) {
 		if err != nil {
 			return "", false, err
 		}
-		if u.Host == "" {
+		if u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
 			return "", false, fmt.Errorf("invalid endpoint")
 		}
 		if u.Path != "" && u.Path != "/" {
@@ -64,7 +65,9 @@ func newMinioClient() (*minio.Client, string, error) {
 	}
 
 	// Sanity check: bucket must exist.
-	exists, err := client.BucketExists(context.Background(), bucket)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	exists, err := client.BucketExists(ctx, bucket)
 	if err != nil {
 		return nil, "", err
 	}
@@ -72,5 +75,9 @@ func newMinioClient() (*minio.Client, string, error) {
 		return nil, "", fmt.Errorf("minio bucket does not exist: %s", bucket)
 	}
 
+	policy, err := client.GetBucketPolicy(ctx, bucket)
+	if err != nil || strings.TrimSpace(policy) != "" {
+		return nil, "", fmt.Errorf("bucket must have no public policy")
+	}
 	return client, bucket, nil
 }

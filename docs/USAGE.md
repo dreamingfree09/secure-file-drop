@@ -1,93 +1,30 @@
-# Usage
+# Configuration and usage
 
-This document provides step-by-step examples for common workflows: logging in, creating a file record, uploading content, creating a download link, and downloading a file.
+Read [deployment](DEPLOYMENT.md) before starting a stack and [API](API.md) for request contracts. The application does not load .env by itself; Compose interpolates it. Verify connection targets before startup because migrations run automatically and cleanup is enabled by default.
 
-> Note: the server expects authentication via a session cookie set by POST /login. All write actions require authentication.
+| Variable | Meaning/default |
+| --- | --- |
+| DATABASE_URL | Required PostgreSQL DSN; startup applies embedded migrations |
+| SFD_ADMIN_USER | Environment administrator name; default admin |
+| SFD_ADMIN_PASS | Required administrator password |
+| SFD_SESSION_SECRET | Required HMAC session secret, at least 32 bytes |
+| SFD_DOWNLOAD_SECRET | Required for signed links, at least 32 bytes |
+| SFD_S3_ENDPOINT | Required MinIO endpoint; http/https or host:port |
+| SFD_S3_ACCESS_KEY / SFD_S3_SECRET_KEY | Required storage credentials |
+| SFD_BUCKET | Required existing private bucket, with no bucket policy |
+| SFD_MAX_UPLOAD_BYTES | Positive maximum file bytes; default 50 GiB; example config uses 10 MiB |
+| SFD_PUBLIC_BASE_URL | Canonical public origin, e.g. https://files.example.test; configures secure cookies |
+| SFD_ADDR | Listen address; default :8080 |
+| SFD_HASH_TOOL | Native CLI path; default /app/sfd-hash |
+| SFD_WEB_DIR | Static asset directory; default web/static |
+| SFD_CLEANUP_ENABLED | true by default; false disables cleanup |
+| SFD_CLEANUP_INTERVAL | Positive duration; default 1h |
+| SFD_CLEANUP_MAX_AGE | Positive duration; default 24h |
+| SFD_CLEANUP_MAX_AGE_HOURS | Positive integer compatibility override |
+| SFD_VERSION / SFD_COMMIT | Build metadata returned by /version |
 
-## Environment variables (examples)
+SFD_DB_DSN and SFD_MINIO_* are historical documentation names; the backend reads DATABASE_URL and SFD_S3_* / SFD_BUCKET. Compose maps its MinIO root variables into the backend storage variables for local development. Production should use independently managed credentials.
 
-- SFD_ADMIN_USER (e.g. `admin`)
-- SFD_ADMIN_PASS (strong password)
-- SFD_SESSION_SECRET (random string for HMAC-signed sessions)
-- SFD_DOWNLOAD_SECRET (random string for signing download tokens)
-- SFD_MAX_UPLOAD_BYTES (max upload size in bytes, default: 50GB = 53687091200)
-- SFD_MINIO_ENDPOINT, SFD_MINIO_ACCESS_KEY, SFD_MINIO_SECRET_KEY, SFD_MINIO_BUCKET
-- SFD_DB_DSN (Postgres connection string)
-- SFD_PUBLIC_BASE_URL (optional; used to generate deterministic download links)
+Register an ordinary account, log in, create metadata, upload multipart file bytes, then create a signed link. The browser implements this sequence. Ordinary users see their files; the administrator additionally sees global counters, deletion and manual cleanup. Sign out calls the server and revokes the current session. Signed download links remain bearer links until expiry/deletion, independent of logout.
 
-## Login
-
-Request:
-
-curl -v -X POST -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"password"}' \
-  http://localhost:8080/login -c cookies.txt
-
-- The `-c cookies.txt` flag saves the session cookie for subsequent requests.
-
-## Create file metadata
-
-Request:
-
-curl -v -X POST -H "Content-Type: application/json" \
-  -d '{"orig_name":"example.txt","content_type":"text/plain","size_bytes":123}' \
-  http://localhost:8080/files -b cookies.txt
-
-Response (201):
-
-{
-  "id": "<uuid>",
-  "object_key": "uploads/<uuid>",
-  "status": "pending"
-}
-
-Save the returned `id` for the upload step.
-
-## Upload file
-
-Request (multipart form):
-
-curl -v -X POST -F "file=@./example.txt" \
-  "http://localhost:8080/upload?id=<uuid>" -b cookies.txt
-
-Notes:
-- The multipart field name must be `file`.
-- Default upload limit is 50GB. Configure via `SFD_MAX_UPLOAD_BYTES` environment variable.
-- Files larger than the limit will be rejected with HTTP 413.
-- The web UI shows real-time upload progress with bytes transferred and percentage.
-
-Response (200):
-
-{
-  "id": "<uuid>",
-  "object_key": "uploads/<uuid>",
-  "status": "hashed"
-}
-
-## Create a signed download link
-
-Request:
-
-curl -v -X POST -H "Content-Type: application/json" \
-  -d '{"id":"<uuid>","ttl_seconds":300}' \
-  http://localhost:8080/links -b cookies.txt
-
-Response (200):
-
-{
-  "url": "https://your-host/download?token=<signed-token>",
-  "expires_at": "2025-12-27T12:34:56Z"
-}
-
-## Download
-
-GET the provided URL (no authentication required if token is valid):
-
-curl -v "https://your-host/download?token=<signed-token>" -O
-
-## Troubleshooting
-
-- Check `/health` and `/ready` for service status.
-- Inspect `journal/DEVLOG.md` for development notes and known issues.
-
-For API request/response examples and details, see `docs/API.md`.
+Large-file behavior is bounded but this review does not certify a 50 GiB throughput or capacity target. Hashing requires temporary disk capacity for a complete object and has a 2-minute subprocess timeout within a 5-minute upload operation. Tune operational limits only after representative load tests. See [roadmap](ROADMAP.md) for future ideas.

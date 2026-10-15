@@ -4,8 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"io"
+	"log"
+	"mime"
 	"net/http"
 	"strconv"
 	"time"
@@ -87,7 +88,8 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 		defer func() { _ = obj.Close() }()
 
 		// Force an early error for missing object / auth issues.
-		if _, statErr := obj.Stat(); statErr != nil {
+		stat, statErr := obj.Stat()
+		if statErr != nil {
 			http.Error(w, "storage error", http.StatusBadGateway)
 			return
 		}
@@ -97,15 +99,24 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 		} else {
 			w.Header().Set("Content-Type", "application/octet-stream")
 		}
-		if sizeBytes > 0 {
+		sizeBytes = stat.Size
+		if sizeBytes >= 0 {
 			w.Header().Set("Content-Length", strconv.FormatInt(sizeBytes, 10))
 		}
 
 		// Encourage safe download behavior in browsers.
-		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, origName))
+		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": origName}))
 
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Cache-Control", "no-store")
 		w.WriteHeader(http.StatusOK)
 
-		_, _ = io.Copy(w, obj)
+		n, copyErr := io.Copy(w, obj)
+		if copyErr != nil {
+			GetMetrics().RecordDownloadError()
+			log.Printf("download interrupted rid=%s", RequestIDFromContext(r.Context()))
+			return
+		}
+		GetMetrics().RecordDownload(n, 0)
 	})
 }

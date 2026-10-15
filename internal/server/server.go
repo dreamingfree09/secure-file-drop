@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -36,18 +38,30 @@ type Config struct {
 // It exposes Start and Shutdown to manage lifecycle in tests and in the
 // production entrypoint.
 type Server struct {
-	httpServer  *http.Server
-	db          *sql.DB
-	minio       *minio.Client
-	bucket      string
-	cleanupDone chan struct{}
+	httpServer    *http.Server
+	db            *sql.DB
+	minio         *minio.Client
+	bucket        string
+	cleanupDone   chan struct{}
+	cleanupCtx    context.Context
+	cleanupCancel context.CancelFunc
 }
 
 // New constructs and returns an initialized Server wiring handlers and
 // dependencies (DB, MinIO). It panics early if required dependencies
 // are missing, to avoid running in a half-configured state.
 func New(cfg Config) *Server {
+	if _, err := maxUploadBytes(); err != nil {
+		panic("invalid SFD_MAX_UPLOAD_BYTES")
+	}
+	if cfg.Auth.DB == nil {
+		cfg.Auth.DB = cfg.DB
+	}
 	mux := http.NewServeMux()
+	webDir := os.Getenv("SFD_WEB_DIR")
+	if webDir == "" {
+		webDir = "web/static"
+	}
 
 	// Minimal web UI (Milestone 7)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -55,9 +69,10 @@ func New(cfg Config) *Server {
 			http.NotFound(w, r)
 			return
 		}
-		http.ServeFile(w, r, "/app/web/static/index.html")
+		// #nosec G703 -- Path is operator configuration plus a constant basename; request path is required to equal /.
+		http.ServeFile(w, r, filepath.Join(webDir, "index.html"))
 	})
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/app/web/static"))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(webDir))))
 
 	mc, bucket, err := newMinioClient()
 	if err != nil {
@@ -114,7 +129,7 @@ func New(cfg Config) *Server {
 	})
 
 	// Metrics endpoint (protected)
-	mux.Handle("/metrics", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	mux.Handle("/metrics", cfg.Auth.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		snapshot := GetMetrics().Snapshot()
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -126,14 +141,12 @@ func New(cfg Config) *Server {
 
 	// Register endpoint (POST JSON {email,username,password})
 	mux.HandleFunc("/register", cfg.RegisterHandler)
+	mux.Handle("/logout", cfg.Auth.logoutHandler())
 
 	// Protected endpoint for verification only
-	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"status": "ok",
-		})
+		_ = json.NewEncoder(w).Encode(map[string]any{"status": "ok", "is_admin": principal(r).Admin})
 	})))
 
 	// Create file record (metadata only; proves DB writes end-to-end)
@@ -150,6 +163,7 @@ func New(cfg Config) *Server {
 
 	// Wrap middleware: requestID -> logging -> mux
 	var handler http.Handler = mux
+	handler = sameOriginMiddleware(handler)
 	handler = loggingMiddleware(handler)
 	handler = requestIDMiddleware(handler)
 
@@ -159,7 +173,9 @@ func New(cfg Config) *Server {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
+	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
 	srv := &Server{
+		cleanupCtx: cleanupCtx, cleanupCancel: cleanupCancel,
 		httpServer:  s,
 		db:          cfg.DB,
 		minio:       mc,
@@ -168,11 +184,11 @@ func New(cfg Config) *Server {
 	}
 
 	// Admin endpoints (protected) - registered after Server creation
-	mux.Handle("/admin/files", cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminListFilesHandler)))
+	mux.Handle("/admin/files", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminListFilesHandler)))
 	mux.HandleFunc("/admin/files/", func(w http.ResponseWriter, r *http.Request) {
-		cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminDeleteFileHandler)).ServeHTTP(w, r)
+		cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminDeleteFileHandler)).ServeHTTP(w, r)
 	})
-	mux.Handle("/admin/cleanup", cfg.Auth.requireAuth(http.HandlerFunc(srv.AdminManualCleanupHandler)))
+	mux.Handle("/admin/cleanup", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminManualCleanupHandler)))
 
 	return srv
 }
@@ -182,22 +198,11 @@ func New(cfg Config) *Server {
 func (s *Server) Start() error {
 	// Start cleanup job in background
 	cleanupCfg := GetCleanupConfigFromEnv(s.db, s.minio, s.bucket)
-	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
-
-	go func() {
-		defer close(s.cleanupDone)
-		StartCleanupJob(cleanupCtx, cleanupCfg)
-	}()
-
-	// Store cancel func for shutdown
-	go func() {
-		<-s.cleanupDone
-		cleanupCancel()
-	}()
-
+	defer s.cleanupCancel()
+	go func() { defer close(s.cleanupDone); StartCleanupJob(s.cleanupCtx, cleanupCfg) }()
 	ln, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
-		cleanupCancel()
+		s.cleanupCancel()
 		return err
 	}
 	return s.httpServer.Serve(ln)
@@ -206,8 +211,12 @@ func (s *Server) Start() error {
 // Shutdown gracefully shuts down the HTTP server and background jobs
 // using the provided context (respecting the deadline/timeout supplied by the caller).
 func (s *Server) Shutdown(ctx context.Context) error {
-	// Signal cleanup job to stop (via cleanupDone channel close will happen)
-	// The cleanup job checks context.Done() which we handle in Start()
-
-	return s.httpServer.Shutdown(ctx)
+	s.cleanupCancel()
+	err := s.httpServer.Shutdown(ctx)
+	select {
+	case <-s.cleanupDone:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }

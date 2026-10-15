@@ -1,64 +1,53 @@
 name: CI
-
 on:
   push:
   pull_request:
-
+permissions:
+  contents: read
 jobs:
   test:
-    name: Lint & Go tests
+    name: Go, native and security checks
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v4
-      with:
-        go-version: '1.20'
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v4
-      with:
-        version: v1.54.0
-        args: --timeout 2m
-    - name: Run go tests
-      run: go test ./...
-
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Install native build dependencies
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev
+      - name: Native SHA-256 vectors
+        run: make -C native test
+      - name: Unit tests (full-stack test explicitly skipped here)
+        run: go test ./... -v -count=1 -coverprofile=coverage.out
+      - name: Vet and backend build
+        run: |
+          go vet ./...
+          go build -o /tmp/sfd-backend ./cmd/backend
+      - name: Race checks
+        run: go test -race ./internal/... ./cmd/... -count=1
+      - name: Dependency vulnerabilities
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.14.0
+          args: --timeout 5m
   docs-link-check:
-    name: Docs link check
+    name: Local documentation targets
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-    - name: Run markdown-link-check
-      run: npx markdown-link-check 'docs/**/*.md' --quiet || true
-
+      - uses: actions/checkout@v6
+      - run: python3 scripts/check-doc-links.py
   e2e-tests:
-    name: End-to-end (docker)
+    name: Real container upload, native hash and signed download
     runs-on: ubuntu-latest
-    services: {}
+    timeout-minutes: 20
     steps:
-    - uses: actions/checkout@v4
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.20'
-    - name: Install dependencies
-      run: go mod tidy
-    - name: Run e2e tests
-      run: go test ./tests/e2e -v -count=1
-
-  coverage:
-    name: Coverage
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-go@v4
-      with:
-        go-version: '1.20'
-    - name: Run tests with coverage
-      run: go test ./... -coverprofile=coverage.out || true
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        files: coverage.out
-        fail_ci_if_error: false
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Full-stack acceptance (no skipped Docker tests)
+        env:
+          SFD_E2E: '1'
+        run: go test ./tests/e2e -v -count=1 -timeout 15m

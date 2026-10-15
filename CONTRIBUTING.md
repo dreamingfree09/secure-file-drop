@@ -6,7 +6,7 @@ Thank you for considering contributing to Secure File Drop! This document provid
 
 ### Prerequisites
 
-- Go 1.24 or later
+- Go 1.26.9 (pinned module toolchain)
 - Docker and Docker Compose
 - GCC (for building the native C hash utility)
 - OpenSSL development headers (`libssl-dev` or `openssl-dev`)
@@ -77,8 +77,10 @@ go test ./internal/server -v -run TestAuth
 
 Run end-to-end tests:
 ```bash
-go test ./tests/e2e -v
+SFD_E2E=1 go test ./tests/e2e -v -count=1 -timeout 15m
 ```
+
+The Docker package explicitly skips without SFD_E2E=1. A skip is not full-stack acceptance; use only the uniquely owned disposable harness and a local Docker engine, never existing data.
 
 ### Code Quality
 
