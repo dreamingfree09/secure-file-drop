@@ -601,5 +601,5 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		expect(code, 200)
 		t.Log("PASS: idle SIGTERM exit 0, readiness and persisted session after restart; in-flight shutdown unverified")
 	})
-	t.Logf("real container/native full-stack flow and negative cases passed; disposable run %s", run)
+	t.Logf("real container/native flow completed; individual subtest results determine acceptance; disposable run %s", run)
 }
