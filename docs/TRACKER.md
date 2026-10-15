@@ -170,3 +170,9 @@ Acceptance criteria:
 ### CI storage dependency follow-up
 
 [First CI at 91ca11c](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38797545857) passed Go/native/race/vulnerability/lint/docs, but full-stack setup failed to pull the historical MinIO image. Its cleanup correctly refused an invalid resource identity caused by mixed stdout/stderr; the harness now captures IDs from stdout only. That run's disposable hosted runner was discarded; no local resources were involved. [Official community sources](https://github.com/minio/minio) are source-only and archived. The pinned source image and pending production maintenance decision are recorded in continuity. Full-stack acceptance is still pending the corrected CI run; a failed setup is not an application pass.
+
+### Full-stack restart and UI follow-up
+
+The corrected pinned-source run built the real storage/runtime images and passed the API/security flow through the intentional storage outage, then failed waiting on the pre-restart ephemeral host port. The harness now re-reads and verifies the owned container's loopback binding after restart instead of assuming an ephemeral port remains fixed. The failed run is retained as evidence, not represented as acceptance.
+
+Logout also clears previous file/link/input/metric UI state; generation checks prevent delayed list/upload responses from rendering into a later account. Dedicated Node session/escaping unit tests cover these contracts. They are distinct from actual browser and full-stack observations.

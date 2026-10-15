@@ -502,6 +502,13 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatal("metadata lost on storage failure")
 	}
 	docker("start", mi)
+	oldMiAddr := miAddr
+	miAddr = port(mi, "9000/tcp")
+	t.Logf("owned MinIO restart endpoint: %s -> %s", oldMiAddr, miAddr)
+	mc, e = minio.New(miAddr, &minio.Options{Creds: credentials.NewStaticV4("sfdtest", password, ""), Secure: false})
+	if e != nil {
+		t.Fatal(e)
+	}
 	wait("restarted minio", func() bool { _, e := mc.ListBuckets(ctx); return e == nil })
 	code, _, _ = request("DELETE", base+"/admin/files/"+id, nil, admin, nil)
 	expect(code, 204)
