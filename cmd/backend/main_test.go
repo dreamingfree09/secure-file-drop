@@ -38,13 +38,11 @@ func TestGetenvDefault(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup: clear env var first
-			os.Unsetenv(tt.key)
-
-			// Set env var if test requires it
-			if tt.envValue != "" {
-				os.Setenv(tt.key, tt.envValue)
-				defer os.Unsetenv(tt.key)
+			t.Setenv(tt.key, tt.envValue)
+			if tt.name == "env var not set" {
+				if err := os.Unsetenv(tt.key); err != nil {
+					t.Fatal(err)
+				}
 			}
 
 			got := getenvDefault(tt.key, tt.def)

@@ -250,8 +250,12 @@ func TestUploadValidationFlow(t *testing.T) {
 		writer := multipart.NewWriter(body)
 
 		part, _ := writer.CreateFormFile("file", "test.pdf")
-		part.Write([]byte("fake pdf"))
-		writer.Close()
+		if _, err := part.Write([]byte("fake pdf")); err != nil {
+			t.Fatal(err)
+		}
+		if err := writer.Close(); err != nil {
+			t.Fatal(err)
+		}
 
 		req := httptest.NewRequest(http.MethodPost, "/upload", body)
 		req.Header.Set("Content-Type", writer.FormDataContentType())

@@ -139,7 +139,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 	wait := func(name string, f func() bool) {
 		t.Helper()
 		deadline := time.Now().Add(90 * time.Second)
@@ -196,7 +196,9 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	if e = db.RunMigrations(legacyDB); e != nil {
 		t.Fatal(e)
 	}
-	legacyDB.Close()
+	if e = legacyDB.Close(); e != nil {
+		t.Fatal(e)
+	}
 
 	docker("build", "--label", label, "-t", image, "-f", "Dockerfile.backend", ".")
 	own("image", image)
@@ -227,7 +229,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		if e != nil {
 			t.Fatal(e)
 		}
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		b, e := io.ReadAll(res.Body)
 		if e != nil {
 			t.Fatal(e)
@@ -239,7 +241,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		if e != nil {
 			return false
 		}
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		return res.StatusCode == 200
 	})
 	var version int
@@ -339,7 +341,9 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	res.Body.Close()
+	if e = res.Body.Close(); e != nil {
+		t.Fatal(e)
+	}
 	expect(res.StatusCode, 403)
 	code, _, _ = request("GET", base+"/admin/files", nil, admin, nil)
 	expect(code, 200)
@@ -358,11 +362,13 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	disposition, params, parseErr := mime.ParseMediaType(download.Header.Get("Content-Disposition"))
 	if parseErr != nil || disposition != "attachment" || params["filename"] != name ||
 		download.Header.Get("Content-Length") != strconv.Itoa(len(fixture)) || download.Header.Get("X-Content-Type-Options") != "nosniff" {
-		download.Body.Close()
+		_ = download.Body.Close()
 		t.Fatal("unsafe download headers or incorrect byte length")
 	}
 	b, downloadErr = io.ReadAll(download.Body)
-	download.Body.Close()
+	if closeErr := download.Body.Close(); closeErr != nil {
+		t.Fatal(closeErr)
+	}
 	if downloadErr != nil {
 		t.Fatal(downloadErr)
 	}
@@ -442,7 +448,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		if e != nil {
 			return false
 		}
-		defer res.Body.Close()
+		defer func() { _ = res.Body.Close() }()
 		return res.StatusCode == 200
 	})
 	failedID := create("native-failure.txt", len(fixture), alice)

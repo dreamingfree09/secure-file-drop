@@ -21,6 +21,7 @@ go build -o /tmp/sfd-backend ./cmd/backend
 make -C native test
 go test ./... -v
 go vet ./...
+node --test tests/web/session.test.cjs
 go test -race ./internal/... ./cmd/... -count=1
 go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 ```

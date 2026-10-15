@@ -35,7 +35,7 @@ Existing ownerless files stay administrator-only; historical ownership cannot be
 
 No public deployment, large-file throughput claim, production TLS/proxy certification, backup restore, native library/OS advisory audit or roadmap feature delivery is claimed. The hashing subprocess uses temporary disk, a 2-minute timeout and a 5-minute upload deadline; representative maximum-size load validation remains required.
 
-Next action: finish final checks, publish one exact-revision draft PR, inspect its CI results and read back the remote SHA and complete handover. Aether then independently reviews that revision; master integration remains unauthorised.
+The draft [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21) is published; its handover carries the final full SHA, complete scope, latest CI outcome and producer completion state. Next action after successful publication readback is Aether's independent review at that exact revision. Master integration remains unauthorised.
 
 ## Historical milestone tracker received from the baseline
 
@@ -169,10 +169,12 @@ Acceptance criteria:
 
 ### CI storage dependency follow-up
 
-[First CI at 91ca11c](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38797545857) passed Go/native/race/vulnerability/lint/docs, but full-stack setup failed to pull the historical MinIO image. Its cleanup correctly refused an invalid resource identity caused by mixed stdout/stderr; the harness now captures IDs from stdout only. That run's disposable hosted runner was discarded; no local resources were involved. [Official community sources](https://github.com/minio/minio) are source-only and archived. The pinned source image and pending production maintenance decision are recorded in continuity. Full-stack acceptance is still pending the corrected CI run; a failed setup is not an application pass.
+[First CI at 91ca11c](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38797545857) passed Go/native/race/vulnerability/lint/docs, but full-stack setup failed to pull the historical MinIO image. Its cleanup correctly refused an invalid resource identity caused by mixed stdout/stderr; the harness now captures IDs from stdout only. That run's disposable hosted runner was discarded; no local resources were involved. [Official community sources](https://github.com/minio/minio) are source-only and archived. The pinned source image and pending production maintenance decision are recorded in continuity. At that checkpoint full-stack acceptance was still pending the corrected CI run; a failed setup is not an application pass. The [PR handover](https://github.com/dreamingfree09/secure-file-drop/pull/21) carries the final revision and latest acceptance result.
 
 ### Full-stack restart and UI follow-up
 
 The corrected pinned-source run built the real storage/runtime images and passed the API/security flow through the intentional storage outage, then failed waiting on the pre-restart ephemeral host port. The harness now re-reads and verifies the owned container's loopback binding after restart instead of assuming an ephemeral port remains fixed. The failed run is retained as evidence, not represented as acceptance.
 
 Logout also clears previous file/link/input/metric UI state; generation checks prevent delayed list/upload responses from rendering into a later account. Dedicated Node session/escaping unit tests cover these contracts. They are distinct from actual browser and full-stack observations.
+
+Final lint configuration also checks test files without an errcheck exclusion. Environment/multipart setup errors are checked; transfer/read errors remain assertions, with only routine teardown closes explicitly ignored.

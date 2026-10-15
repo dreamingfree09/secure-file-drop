@@ -40,7 +40,7 @@ Confirmed findings, fixes, reproduced baseline failures and distinct validation 
 
 Go/CI/native configuration is aligned to supported Go 1.26.9 and Alpine 3.24. [Official Go releases](https://go.dev/dl/) and [Alpine support](https://alpinelinux.org/releases/) were checked on the assignment date. Reachable dependency advisories were patched; see the tracker for paths and limitations.
 
-Local Docker validation is blocked by Docker Desktop inference-socket startup failure. No settings were changed and no existing containers/volumes were used. The only local UI service is an assignment-owned static loopback server, which must be stopped after browser checks.
+Local Docker validation is blocked by Docker Desktop inference-socket startup failure. No settings were changed and no existing containers/volumes were used. The assignment-owned static loopback server was stopped after browser checks.
 
 ## Storage dependency decision — before source-image implementation
 
@@ -51,3 +51,7 @@ The authorised test/development image will therefore build the same community pr
 Storage-policy refinement: retain valid policies restricted to named principals; reject anonymous Allow grants and fail closed on unsupported principal forms. Deny policies remain valid. This preserves private-bucket configurations while enforcing privacy.
 
 Browser follow-up: registration rejects a synthetic 73-byte password before network submission. The temporary browser tab was closed and the static server stopped after verifying its unique loopback listener and command line. No test accounts were created in an existing service.
+
+The unused WSL checkout was restored to its original clean feature/v2-enhancements branch after verifying no intervening edits and the original commit. The unused local review ref remains, with no application changes or branch deletion. All implementation/publication occurs in the authorised sibling clone.
+
+Producer code and documentation are published in [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21). Its handover is authoritative for the final SHA, current CI outcome and completion state; recipient acknowledgement and integration remain pending Aether. No master integration is authorised.

@@ -1,3 +1,9 @@
+# Historical comment inventory
+
+This baseline inventory is preserved as history. Its totals and sample comments are not a current coverage audit; upload hashing is synchronous, and current behavior is defined in [architecture](ARCHITECTURE.md), [API](API.md) and [tracker](TRACKER.md).
+
+---
+
 # Code Documentation Summary
 
 ## Overview
