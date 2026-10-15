@@ -20,9 +20,9 @@ The Owner explicitly superseded the no-new-checkout restriction and authorised t
 
 ## Handover state
 
-Implementation/validation: active. Publication: pending. Acknowledgement: pending Aether review at exact published SHA. Integration: pending review, not authorised. Final revision and full changed-file scope will be published in the PR handover after committing.
+Implementation: implemented. Publication: [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21), whose handover records final exact SHA, complete scope and final CI readback. Acknowledgement: pending Aether review at that SHA. Integration: pending review, not authorised.
 
-Next action: inspect source and destructive test setup, establish baseline on disposable local resources, reproduce confirmed defects and add focused regressions.
+Next action after final publication verification: Aether independently reviews the exact PR revision and records acknowledgement/decisions; master integration still requires separate authorisation.
 
 ## Review decisions recorded before implementation
 
@@ -55,3 +55,5 @@ Browser follow-up: registration rejects a synthetic 73-byte password before netw
 The unused WSL checkout was restored to its original clean feature/v2-enhancements branch after verifying no intervening edits and the original commit. The unused local review ref remains, with no application changes or branch deletion. All implementation/publication occurs in the authorised sibling clone.
 
 Producer code and documentation are published in [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21). Its handover is authoritative for the final SHA, current CI outcome and completion state; recipient acknowledgement and integration remain pending Aether. No master integration is authorised.
+
+Real-container acceptance passed at 8668a727c2dbf7bcc7980c125934b371b980bd0e; [the tracker](TRACKER.md) links the successful CI run. Final revision/CI status is maintained in the PR to avoid self-referential commit hashes. Local Docker Desktop/authenticated-browser blockers and upstream storage-maintenance decisions remain distinct from CI acceptance.

@@ -178,3 +178,7 @@ The corrected pinned-source run built the real storage/runtime images and passed
 Logout also clears previous file/link/input/metric UI state; generation checks prevent delayed list/upload responses from rendering into a later account. Dedicated Node session/escaping unit tests cover these contracts. They are distinct from actual browser and full-stack observations.
 
 Final lint configuration also checks test files without an errcheck exclusion. Environment/multipart setup errors are checked; transfer/read errors remain assertions, with only routine teardown closes explicitly ignored.
+
+### Verified real-container acceptance
+
+[CI run 38799681132](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38799681132) at `8668a727c2dbf7bcc7980c125934b371b980bd0e` completed all three jobs successfully: Go/native/UI unit/vet/build/race/vulnerability/lint checks, documentation targets, and the mandatory real-container upload/native-hash/signed-download flow. Full-stack negative cases include ownership/roles, tampered and expired links/sessions, concurrency, native-tool failure, private storage, outage/retry, cleanup and attachment headers. Resource cleanup returned without ownership errors. Later documentation/test error-checking changes do not alter production behavior; the PR handover records the final revision's CI readback.
