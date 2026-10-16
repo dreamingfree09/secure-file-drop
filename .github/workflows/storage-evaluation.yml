@@ -1,0 +1,42 @@
+name: Storage evaluation
+on:
+  push:
+    branches: [codex/sfd-storage-evaluation-20261016]
+  pull_request:
+    branches: [codex/sfd-deep-review-20261015]
+permissions:
+  contents: read
+concurrency:
+  group: storage-evaluation-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  candidate:
+    name: ${{ matrix.candidate }} isolated acceptance
+    strategy:
+      fail-fast: false
+      matrix:
+        candidate: [seaweedfs, rustfs]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Native C tool and known vectors
+        run: |
+          sudo apt-get update && sudo apt-get install -y libssl-dev
+          make -C native test
+      - name: Pinned sandboxed Chromium
+        run: |
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Candidate contract, real application/browser, permissions and recovery
+        env:
+          SFD_E2E: '1'
+          SFD_BROWSER: '1'
+          SFD_STORAGE_EVALUATION: ${{ matrix.candidate }}
+        run: go test ./tests/e2e -v -count=1 -timeout 25m

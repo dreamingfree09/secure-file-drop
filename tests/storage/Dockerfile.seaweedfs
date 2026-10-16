@@ -1,0 +1,5 @@
+# Evaluation only: official SeaweedFS 4.48 Linux amd64, not a production default.
+FROM chrislusf/seaweedfs@sha256:aba492e2a4e4c90bff795745e8e660affa1f09e7650f5981bd7bccd1a06cd931
+USER 1000:1000
+ENV GODEBUG=fips140=on
+ENTRYPOINT ["/usr/bin/weed", "-logtostderr=true"]

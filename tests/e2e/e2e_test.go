@@ -99,6 +99,8 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		})
 	}
 	network := run + "-net"
+	// A dedicated bridge permits the required loopback test bindings; Docker
+	// --internal networks suppress those bindings on the hosted engine.
 	docker("network", "create", "--label", label, network)
 	own("network", network)
 	pgVol := run + "-pgdata"
@@ -114,17 +116,33 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	storageImage := run + ":storage"
 	database := "sfd_quality_" + strings.ReplaceAll(uuid.NewString(), "-", "")[:12]
 	password := "SyntheticPass123456"
+	bucket := run + "-private"
+	storage := evaluationStorage(t, run, bucket, password)
 	secret := "synthetic-download-secret-for-isolated-tests"
-	docker("build", "--label", label, "-t", storageImage, "-f", "Dockerfile.storage", ".")
+	docker("build", "--label", label, "-t", storageImage, "-f", storage.dockerfile, ".")
 	own("image", storageImage)
 	pg := docker("run", "-d", "--name", pgName, "--label", label, "--network", network, "--network-alias", "pg",
 		"-p", "127.0.0.1::5432", "-v", pgVol+":/var/lib/postgresql/data",
 		"-e", "POSTGRES_DB="+database, "-e", "POSTGRES_USER=sfd", "-e", "POSTGRES_PASSWORD="+password, "postgres:16")
 	own("container", pg)
-	mi := docker("run", "-d", "--name", miName, "--label", label, "--network", network, "--network-alias", "minio",
-		"-p", "127.0.0.1::9000", "-v", miVol+":/data", "-e", "MINIO_ROOT_USER=sfdtest", "-e", "MINIO_ROOT_PASSWORD="+password,
-		storageImage, "server", "/data")
+	storageArgs := make([]string, 0, 14+len(storage.args)+1+len(storage.command))
+	storageArgs = append(storageArgs, "run", "-d", "--name", miName, "--label", label, "--network", network, "--network-alias", "minio",
+		"-p", "127.0.0.1::9000", "-v", miVol+":/data")
+	storageArgs = append(storageArgs, storage.args...)
+	storageArgs = append(storageArgs, storageImage)
+	storageArgs = append(storageArgs, storage.command...)
+	mi := docker(storageArgs...)
 	own("container", mi)
+	if storage.candidate == "seaweedfs" {
+		if docker("image", "inspect", "--format", "{{index .Config.Labels \"org.opencontainers.image.revision\"}}", storageImage) != "530be3e37337488ecc34d58441e0bc476e121c93" {
+			t.Fatal("candidate image source revision mismatch")
+		}
+		version := docker("exec", mi, "/usr/bin/weed", "version")
+		if !strings.Contains(version, "4.48") || !strings.Contains(version, "530be3e") {
+			t.Fatal("candidate binary version mismatch")
+		}
+		t.Logf("candidate actual binary identity: %s", version)
+	}
 	port := func(id, p string) string {
 		out := docker("port", id, p)
 		if !strings.HasPrefix(out, "127.0.0.1:") {
@@ -165,9 +183,21 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatal(e)
 	}
 	wait("fresh minio", func() bool { _, e := mc.ListBuckets(ctx); return e == nil })
-	bucket := run + "-private"
+	if storage.candidate == "seaweedfs" {
+		verifyCandidateBindings(t, mi, docker)
+	}
+	if storage.candidate == "rustfs" {
+		version := docker("exec", mi, "/usr/bin/rustfs", "--version")
+		if !strings.Contains(version, "1.0.2") {
+			t.Fatal("fallback binary version mismatch")
+		}
+		t.Logf("candidate actual binary identity: %s", version)
+	}
 	if e = mc.MakeBucket(ctx, bucket, minio.MakeBucketOptions{}); e != nil {
 		t.Fatal(e)
+	}
+	if storage.candidate == "rustfs" {
+		setupRustPrincipals(ctx, t, miAddr, bucket, run)
 	}
 
 	// Validate the real legacy schema upgrade and idempotent forward migration on
@@ -233,10 +263,15 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	own("image", image)
 	appArgs := []string{"run", "-d", "--name", appName, "--label", label, "--network", network, "-p", "127.0.0.1::8080",
 		"-e", "DATABASE_URL=postgres://sfd:" + password + "@pg:5432/" + database + "?sslmode=disable",
-		"-e", "SFD_S3_ENDPOINT=http://minio:9000", "-e", "SFD_S3_ACCESS_KEY=sfdtest", "-e", "SFD_S3_SECRET_KEY=" + password,
+		"-e", "SFD_S3_ENDPOINT=http://minio:9000", "-e", "SFD_S3_ACCESS_KEY=" + storage.appAccess, "-e", "SFD_S3_SECRET_KEY=" + password,
 		"-e", "SFD_BUCKET=" + bucket, "-e", "SFD_ADMIN_USER=admin", "-e", "SFD_ADMIN_PASS=" + password,
 		"-e", "SFD_SESSION_SECRET=synthetic-session-secret-for-isolated-tests", "-e", "SFD_DOWNLOAD_SECRET=" + secret,
 		"-e", "SFD_MAX_UPLOAD_BYTES=1024", "-e", "SFD_CLEANUP_ENABLED=true", "-e", "SFD_CLEANUP_INTERVAL=24h", image}
+	contractOK := true
+	if storage.candidate != "" {
+		contractOK = t.Run("candidate-s3-contract", func(t *testing.T) { verifyCandidateContract(ctx, t, mc, miAddr, bucket, password, storage.candidate) })
+		t.Run("candidate-private-startup", func(t *testing.T) { verifyCandidateStartup(ctx, t, mc, bucket, run, appArgs, docker, own) })
+	}
 	app := docker(appArgs...)
 	own("container", app)
 	base := "http://" + port(app, "8080/tcp")
@@ -613,7 +648,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	code, _, _ = request("GET", base+"/", nil, nil, nil)
 	expect(code, 200)
 
-	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(ctx, t, app, mi, run, docker) })
+	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(ctx, t, app, mi, run, storage.binary, docker, own) })
 	t.Run("assessment-fixture-recovery", func(t *testing.T) {
 		assessFixtureRecovery(ctx, t, conn, mc, database, bucket, "uploads/"+concurrentID, pg, run, docker)
 	})
@@ -666,5 +701,13 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		expect(code, 200)
 		t.Log("PASS: idle SIGTERM exit 0, readiness and persisted session after restart; active transfer tested separately")
 	})
+	if storage.candidate != "" {
+		t.Run("candidate-cold-storage-recovery", func(t *testing.T) {
+			if !contractOK {
+				t.Skip("candidate contract failed before recovery fixtures were complete; cold recovery unexecuted")
+			}
+			verifyCandidateRecovery(ctx, t, mi, miVol, run, label, storageArgs, storageImage, bucket, password, docker, own, port)
+		})
+	}
 	t.Logf("real container/native flow completed; individual subtest results determine acceptance; disposable run %s", run)
 }

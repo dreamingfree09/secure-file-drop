@@ -1,0 +1,4 @@
+# Evaluation-only official RustFS 1.0.2 Linux amd64 manifest; no adoption.
+FROM rustfs/rustfs@sha256:c917317a76af3df35b596612a32e297b6a31a5c815e023fdf62ca78c2cf84201
+USER 10001:10001
+ENTRYPOINT ["/usr/bin/rustfs"]

@@ -18,7 +18,7 @@ import (
 
 // This reports vulnerability observations; findings are not converted into a
 // safety pass. It scans only binaries/packages in the parent-owned images.
-func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, run string, docker func(...string) string) {
+func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, run, storageBinary string, docker func(...string) string, own func(string, string)) {
 	t.Helper()
 	type secPackage struct {
 		Pkg struct {
@@ -27,31 +27,37 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 		}
 	}
 	client := &http.Client{Timeout: 20 * time.Second}
-	all := make([]secPackage, 0, 1024)
-	for _, repo := range []string{"main", "community"} {
-		req, err := http.NewRequestWithContext(ctx, "GET", "https://secdb.alpinelinux.org/v3.24/"+repo+".json", nil)
-		if err != nil {
-			t.Fatal(err)
-		}
-		res, err := client.Do(req)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if res.StatusCode != 200 {
-			_ = res.Body.Close()
-			t.Fatalf("Alpine secdb HTTP %d", res.StatusCode)
-		}
-		var db struct{ Packages []secPackage }
-		err = json.NewDecoder(io.LimitReader(res.Body, 16<<20)).Decode(&db)
-		_ = res.Body.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
-		all = append(all, db.Packages...)
-	}
 	for _, id := range []string{app, storage} {
 		if docker("inspect", "--format", "{{index .Config.Labels \"sfd.quality-run\"}}", id) != run {
 			t.Fatal("scanner resource ownership mismatch")
+		}
+		release := strings.TrimSpace(docker("exec", id, "cat", "/etc/alpine-release"))
+		parts := strings.Split(release, ".")
+		if len(parts) < 2 || len(parts[0]) != 1 || len(parts[1]) != 2 {
+			t.Fatal("unsupported runtime distribution", release)
+		}
+		branch := parts[0] + "." + parts[1]
+		all := make([]secPackage, 0, 1024)
+		for _, repo := range []string{"main", "community"} {
+			req, err := http.NewRequestWithContext(ctx, "GET", "https://secdb.alpinelinux.org/v"+branch+"/"+repo+".json", nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			res, err := client.Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if res.StatusCode != 200 {
+				_ = res.Body.Close()
+				t.Fatalf("Alpine secdb HTTP %d", res.StatusCode)
+			}
+			var db struct{ Packages []secPackage }
+			err = json.NewDecoder(io.LimitReader(res.Body, 16<<20)).Decode(&db)
+			_ = res.Body.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
+			all = append(all, db.Packages...)
 		}
 		raw := docker("exec", id, "cat", "/lib/apk/db/installed")
 		found := 0
@@ -91,12 +97,18 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 				}
 			}
 		}
-		t.Logf("Alpine v3.24 main/community comparison: image=%s packages=%d advisory-matches=%d; version applicability only, not exploit reachability", docker("inspect", "--format", "{{.Image}}", id), packages, found)
+		t.Logf("Alpine %s main/community comparison: image=%s packages=%d advisory-matches=%d; version applicability only, not exploit reachability", release, docker("inspect", "--format", "{{.Image}}", id), packages, found)
 	}
 
 	for _, target := range []struct{ name, container, path string }{
-		{"Storage", storage, "/usr/local/bin/minio"}, {"Backend", app, "/app/backend"},
+		{"Storage", storage, storageBinary}, {"Backend", app, "/app/backend"},
 	} {
+		if target.path == "/usr/bin/rustfs" {
+			t.Logf("RustFS actual binary SHA-256: %s", docker("exec", storage, "sha256sum", "/usr/bin/rustfs"))
+			assessRustSBOM(ctx, t, run, docker, own)
+			t.Log("UNSUPPORTED: govulncheck does not analyze Rust binary symbols; upstream release SBOM is package-level evidence only")
+			continue
+		}
 		binary := filepath.Join(t.TempDir(), "scan-binary")
 		docker("cp", target.container+":"+target.path, binary)
 		scanCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
