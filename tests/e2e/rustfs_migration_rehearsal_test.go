@@ -136,6 +136,14 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 		f.t.Log("official manifest", preparationRustImage, "source 2b243d8659497778c2406cc844a490565ec13287; executed", version)
 		f.t.Log("executed binary", f.docker("exec", destination.id, "sha256sum", "/usr/bin/rustfs"))
 		f.restrictions(destination)
+		f.writeEvidence("runtime-images.json", map[string]string{
+			"rustfs_manifest":       preparationRustImage,
+			"rustfs_image_id":       f.docker("inspect", "--format", "{{.Image}}", destination.id),
+			"source_minio_image_id": f.docker("image", "inspect", "--format", "{{.Id}}", f.minioImage),
+			"backend_image_id":      f.docker("image", "inspect", "--format", "{{.Id}}", f.appImage),
+		})
+		f.t.Log("source MinIO image ID", f.docker("image", "inspect", "--format", "{{.Id}}", f.minioImage),
+			"backend image ID", f.docker("image", "inspect", "--format", "{{.Id}}", f.appImage))
 	})
 	phase("B-authenticated-source-and-checkpoint", func() {
 		sourceDB = f.database("source", "")
