@@ -18,7 +18,7 @@ import (
 
 // This reports vulnerability observations; findings are not converted into a
 // safety pass. It scans only binaries/packages in the parent-owned images.
-func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, run, storageBinary string, docker func(...string) string) {
+func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, run, storageBinary string, docker func(...string) string, own func(string, string)) {
 	t.Helper()
 	type secPackage struct {
 		Pkg struct {
@@ -103,6 +103,12 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 	for _, target := range []struct{ name, container, path string }{
 		{"Storage", storage, storageBinary}, {"Backend", app, "/app/backend"},
 	} {
+		if target.path == "/usr/bin/rustfs" {
+			t.Logf("RustFS actual binary SHA-256: %s", docker("exec", storage, "sha256sum", "/usr/bin/rustfs"))
+			assessRustSBOM(ctx, t, run, docker, own)
+			t.Log("UNSUPPORTED: govulncheck does not analyse Rust binary symbols; upstream release SBOM is package-level evidence only")
+			continue
+		}
 		binary := filepath.Join(t.TempDir(), "scan-binary")
 		docker("cp", target.container+":"+target.path, binary)
 		scanCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)

@@ -183,11 +183,21 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatal(e)
 	}
 	wait("fresh minio", func() bool { _, e := mc.ListBuckets(ctx); return e == nil })
-	if storage.candidate != "" {
+	if storage.candidate == "seaweedfs" {
 		verifyCandidateBindings(t, mi, docker)
+	}
+	if storage.candidate == "rustfs" {
+		version := docker("exec", mi, "/usr/bin/rustfs", "--version")
+		if !strings.Contains(version, "1.0.2") {
+			t.Fatal("fallback binary version mismatch")
+		}
+		t.Logf("candidate actual binary identity: %s", version)
 	}
 	if e = mc.MakeBucket(ctx, bucket, minio.MakeBucketOptions{}); e != nil {
 		t.Fatal(e)
+	}
+	if storage.candidate == "rustfs" {
+		setupRustPrincipals(ctx, t, miAddr, bucket, run)
 	}
 
 	// Validate the real legacy schema upgrade and idempotent forward migration on
@@ -637,7 +647,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	code, _, _ = request("GET", base+"/", nil, nil, nil)
 	expect(code, 200)
 
-	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(ctx, t, app, mi, run, storage.binary, docker) })
+	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(ctx, t, app, mi, run, storage.binary, docker, own) })
 	t.Run("assessment-fixture-recovery", func(t *testing.T) {
 		assessFixtureRecovery(ctx, t, conn, mc, database, bucket, "uploads/"+concurrentID, pg, run, docker)
 	})

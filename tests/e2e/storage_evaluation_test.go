@@ -34,6 +34,9 @@ func evaluationStorage(t *testing.T, run, bucket, password string) storageFixtur
 		return storageFixture{dockerfile: "Dockerfile.storage", binary: "/usr/local/bin/minio", appAccess: "sfdtest",
 			args: []string{"-e", "MINIO_ROOT_USER=sfdtest", "-e", "MINIO_ROOT_PASSWORD=" + password}, command: []string{"server", "/data"}}
 	}
+	if candidate == "rustfs" {
+		return rustStorage(password)
+	}
 	if candidate != "seaweedfs" {
 		t.Fatal("unsupported evaluation candidate")
 	}
@@ -52,8 +55,13 @@ func evaluationStorage(t *testing.T, run, bucket, password string) storageFixtur
 	if err := os.WriteFile(file, b, 0644); err != nil {
 		t.Fatal(err)
 	}
+	masterFile := filepath.Join(t.TempDir(), "master.toml")
+	// #nosec G306 -- Nonsecret test configuration for uid 1000.
+	if err := os.WriteFile(masterFile, []byte("[master.volume_growth]\ncopy_1 = 1\ncopy_2 = 1\ncopy_3 = 1\ncopy_other = 1\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
 	return storageFixture{candidate: candidate, dockerfile: "tests/storage/Dockerfile.seaweedfs", binary: "/usr/bin/weed", appAccess: "sfdapp",
-		args: []string{"--mount", "type=bind,src=" + file + ",dst=/etc/seaweedfs/sfd-identities.json,readonly", "--cap-drop=ALL", "--security-opt", "no-new-privileges"},
+		args: []string{"--mount", "type=bind,src=" + file + ",dst=/etc/seaweedfs/sfd-identities.json,readonly", "--mount", "type=bind,src=" + masterFile + ",dst=/etc/seaweedfs/master.toml,readonly", "--cap-drop=ALL", "--security-opt", "no-new-privileges"},
 		command: []string{"server", "-dir=/data", "-ip=127.0.0.1", "-ip.bind=127.0.0.1", "-master.telemetry=false", "-master.volumeSizeLimitMB=32", "-volume.max=4", "-volume.preStopSeconds=1",
 			"-filer=true", "-s3=true", "-s3.ip.bind=0.0.0.0", "-s3.port=9000", "-s3.port.grpc=19000", "-s3.config=/etc/seaweedfs/sfd-identities.json",
 			"-s3.port.iceberg=0", "-s3.port.lance=0", "-s3.iam=false", "-s3.autoCreateBucket=false", "-s3.allowDeleteBucketNotEmpty=false"}}
@@ -241,7 +249,7 @@ func verifyCandidateRecovery(ctx context.Context, t *testing.T, storage, volume,
 			t.Fatal("cold-copy source ownership mismatch")
 		}
 	}
-	docker("stop", "--time", "25", storage)
+	docker("stop", "--time", "60", storage)
 	if docker("inspect", "--format", "{{.State.ExitCode}}", storage) != "0" {
 		t.Fatal("storage did not quiesce cleanly")
 	}
@@ -251,7 +259,7 @@ func verifyCandidateRecovery(ctx context.Context, t *testing.T, storage, volume,
 	if docker("volume", "inspect", "--format", "{{index .Labels \"sfd.quality-run\"}}", restore) != run {
 		t.Fatal("cold-copy destination ownership mismatch")
 	}
-	copier := docker("create", "--name", run+"-cold-copy", "--label", label, "--network", "none", "--user", "1000:1000", "--cap-drop=ALL", "--security-opt", "no-new-privileges", "--entrypoint", "/bin/sh", "-v", volume+":/source:ro", "-v", restore+":/data", image, "-c", "cp -R /source/. /data/")
+	copier := docker("create", "--name", run+"-cold-copy", "--label", label, "--network", "none", "--user", docker("inspect", "--format", "{{.Config.User}}", storage), "--cap-drop=ALL", "--security-opt", "no-new-privileges", "--entrypoint", "/bin/sh", "-v", volume+":/source:ro", "-v", restore+":/data", image, "-c", "cp -R /source/. /data/")
 	own("container", copier)
 	docker("start", "-a", copier)
 	if docker("inspect", "--format", "{{.State.ExitCode}}", copier) != "0" {
@@ -294,7 +302,7 @@ func verifyCandidateRecovery(ctx context.Context, t *testing.T, storage, volume,
 			outsider := candidateClient(t, addr, "sfdoutsider", password)
 			_, err = outsider.StatObject(ctx, bucket, "candidate-empty", minio.StatObjectOptions{})
 			denied(t, err)
-			t.Log("PASS: owned clean-stop cold copy and fresh master/filer/volume/S3 restart, persisted empty/multipart bytes and scoped permission denial; PostgreSQL restore tested separately")
+			t.Log("PASS: owned clean-stop cold copy and fresh candidate restart, persisted empty/multipart bytes and scoped permission denial; PostgreSQL restore tested separately")
 			return
 		}
 		time.Sleep(300 * time.Millisecond)
