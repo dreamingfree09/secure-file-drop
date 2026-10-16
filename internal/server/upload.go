@@ -253,7 +253,13 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			http.Error(w, "upload byte count mismatch", http.StatusBadGateway)
 			return
 		}
-		if _, err = tx.ExecContext(ctx, "UPDATE files SET status='stored',size_bytes=$2 WHERE id=$1", id, info.Size); err != nil {
+		execSQL := func(query string, args ...any) error {
+			queryCtx, done := sqlContext(ctx)
+			defer done()
+			_, err := tx.ExecContext(queryCtx, query, args...)
+			return err
+		}
+		if err = execSQL("UPDATE files SET status='stored',size_bytes=$2 WHERE id=$1", id, info.Size); err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
@@ -262,7 +268,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			http.Error(w, "hashing failed", http.StatusBadGateway)
 			return
 		}
-		if _, err = tx.ExecContext(ctx, "UPDATE files SET sha256_hex=$2,sha256_bytes=$3,status='hashed' WHERE id=$1", id, sha, count); err != nil {
+		if err = execSQL("UPDATE files SET sha256_hex=$2,sha256_bytes=$3,status='hashed' WHERE id=$1", id, sha, count); err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
