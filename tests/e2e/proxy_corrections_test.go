@@ -46,6 +46,9 @@ func verifyProxy(ctx context.Context, t *testing.T, run, network, image string, 
 		t.Fatal("compose JSON", err)
 	}
 	labels := compose.Services["backend"].Labels
+	if labels["traefik.docker.network"] != run+"_default" {
+		t.Fatal("Compose project proxy network mismatch")
+	}
 	if labels["traefik.http.middlewares.sfd-buf.buffering.maxRequestBodyBytes"] != "1049600" ||
 		labels["traefik.http.middlewares.sfd-redirect-https.redirectscheme.port"] != "8443" ||
 		compose.Services["backend"].Environment["SFD_MAX_REQUEST_BYTES"] != "1049600" ||

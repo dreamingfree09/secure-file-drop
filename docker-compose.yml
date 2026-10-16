@@ -87,6 +87,7 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=${COMPOSE_PROJECT_NAME:-securefiledrop}_default"
 
       - "traefik.http.routers.sfd-web.rule=Host(`localhost`)"
       - "traefik.http.routers.sfd-web.entrypoints=web"
