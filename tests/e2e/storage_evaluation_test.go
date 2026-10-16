@@ -198,10 +198,10 @@ func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Cli
 	if err := core.AbortMultipartUpload(ctx, bucket, "candidate-aborted", abort); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := core.ListObjectParts(ctx, bucket, "candidate-aborted", abort, 0, 10); minio.ToErrorResponse(err).StatusCode != 404 {
+	if _, err := core.ListObjectParts(ctx, bucket, "candidate-aborted", abort, 0, 10); err == nil || app.wire.last.Load() != 404 {
 		t.Fatal("aborted upload parts remain addressable", err)
 	}
-	if _, err := app.StatObject(ctx, bucket, "candidate-aborted", minio.StatObjectOptions{}); minio.ToErrorResponse(err).StatusCode != 404 {
+	if _, err := app.StatObject(ctx, bucket, "candidate-aborted", minio.StatObjectOptions{}); err == nil || app.wire.last.Load() != 404 {
 		t.Fatal("aborted upload became an object", err)
 	}
 	if _, err := admin.PutObject(ctx, bucket, "denied-only/object", bytes.NewReader(data), int64(len(data)), minio.PutObjectOptions{}); err != nil {

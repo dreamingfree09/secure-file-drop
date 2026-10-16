@@ -63,7 +63,7 @@ func assessRustSBOM(ctx context.Context, t *testing.T, run string, docker func(.
 	}
 	id := docker("create", "--name", run+"-sbom-scanner", "--label", "sfd.quality-run="+run, "--network", run+"-net",
 		"--cap-drop=ALL", "--security-opt", "no-new-privileges", "--mount", "type=bind,src="+file+",dst=/scan/sbom.json,readonly",
-		"aquasec/trivy@sha256:166061a4a15c64a94a3aab430659e2c166dc0815fbc54a222c6d56d64132f552", "sbom", "--timeout", "3m", "--format", "json", "--output", "/tmp/result.json", "/scan/sbom.json")
+		"aquasec/trivy@sha256:166061a4a15c64a94a3aab430659e2c166dc0815fbc54a222c6d56d64132f552", "sbom", "--timeout", "3m", "--list-all-pkgs", "--format", "json", "--output", "/tmp/result.json", "/scan/sbom.json")
 	own("container", id)
 	docker("start", "-a", id)
 	if docker("inspect", "--format", "{{.State.ExitCode}}", id) != "0" {
@@ -78,11 +78,25 @@ func assessRustSBOM(ctx context.Context, t *testing.T, run string, docker func(.
 	}
 	type vulnerability struct{ VulnerabilityID, PkgName, InstalledVersion, FixedVersion, Severity string }
 	var report struct {
-		Results []struct{ Vulnerabilities []vulnerability }
+		Results []struct {
+			Type            string
+			Packages        []json.RawMessage
+			Vulnerabilities []vulnerability
+		}
 	}
 	if err := json.Unmarshal(raw, &report); err != nil {
 		t.Fatal(err)
 	}
+	recognized := 0
+	for _, target := range report.Results {
+		if target.Type == "cargo" {
+			recognized += len(target.Packages)
+		}
+	}
+	if recognized == 0 {
+		t.Fatal("SBOM scanner recognized no Cargo packages; no vulnerability result can be inferred")
+	}
+	t.Logf("RustFS release SBOM recognized Cargo packages=%d", recognized)
 	ids := map[string]bool{}
 	findings := []string{}
 	for _, result := range report.Results {
