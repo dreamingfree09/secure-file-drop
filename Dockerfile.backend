@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./cmd/backend
 
 FROM alpine:3.24
 WORKDIR /app
-RUN apk add --no-cache libcrypto3 ca-certificates && adduser -D -u 10001 sfd
+RUN apk upgrade --no-cache && apk add --no-cache libcrypto3 ca-certificates && adduser -D -u 10001 sfd
 COPY --from=build /out/backend /app/backend
 COPY --from=build /src/web /app/web
 COPY --from=build /out/sfd-hash /app/sfd-hash

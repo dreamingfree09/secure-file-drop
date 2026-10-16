@@ -98,6 +98,25 @@ func assessBoundaries(ctx context.Context, t *testing.T, conn *sql.DB, mc *minio
 		if err := conn.QueryRowContext(ctx, "SELECT status FROM files WHERE id=$1", id).Scan(&status); err != nil || status != "failed" {
 			t.Fatalf("truncated state %q, %v", status, err)
 		}
+
+		for _, malformed := range []string{
+			"--fixture\r\nContent-Disposition: form-data; name=\"field\"\r\n\r\nx\r\n--fixture--\r\n",
+			"--fixture\r\nContent-Disposition: form-data; name=\"file\"; filename=\"x\"\r\n\r\nx\r\n--fixture\r\nContent-Disposition: form-data; name=\"file\"; filename=\"y\"\r\n\r\ny\r\n--fixture--\r\n",
+			"--fixture\r\nContent-Disposition: form-data; name=\"file\"; filename=\"x\"\r\n\r\nx\r\n--fixture-bad",
+		} {
+			badID := create("multipart-policy.bin", 1, alice)
+			code, _, _ := request("POST", base+"/upload?id="+badID, body(malformed), alice, map[string]string{"Content-Type": "multipart/form-data; boundary=fixture"})
+			if code != 400 {
+				t.Fatalf("multipart policy HTTP %d", code)
+			}
+			var key, status string
+			if err := conn.QueryRowContext(ctx, "SELECT object_key,status FROM files WHERE id=$1", badID).Scan(&key, &status); err != nil || status != "failed" {
+				t.Fatal("malformed lifecycle", err, status)
+			}
+			if _, err := mc.StatObject(ctx, bucket, key, minio.StatObjectOptions{}); err == nil {
+				t.Fatal("malformed object retained")
+			}
+		}
 		t.Log("PASS: empty/exact-limit/declared-actual size and truncated-body lifecycle")
 	})
 	t.Run("assessment-commit-rejection", func(t *testing.T) {
@@ -123,7 +142,7 @@ func assessBoundaries(ctx context.Context, t *testing.T, conn *sql.DB, mc *minio
 		if _, err := mc.StatObject(ctx, bucket, key, minio.StatObjectOptions{}); err == nil {
 			t.Fatal("rejected commit object retained")
 		}
-		t.Log("PASS: known-rejected commit compensation; ambiguous COMMIT acknowledgement not tested")
+		t.Log("PASS: known-rejected commit compensation; separate fault fixtures cover ambiguous acknowledgement")
 	})
 	t.Run("assessment-session-and-request-bounds", func(t *testing.T) {
 		cookies := []*http.Cookie{}
@@ -152,6 +171,21 @@ func assessBoundaries(ctx context.Context, t *testing.T, conn *sql.DB, mc *minio
 			code, _, _ = request("POST", base+route, body("{\"padding\":\""+strings.Repeat("x", 17000)+"\"}"), c, nil)
 			if code < 400 {
 				t.Fatalf("oversized JSON accepted: %s", route)
+			}
+		}
+
+		for _, route := range []string{"/login", "/register", "/files", "/links"} {
+			c := alice
+			if route == "/login" || route == "/register" {
+				c = nil
+			}
+			for _, suffix := range []string{"{}", "!", strings.Repeat(" ", 17<<10)} {
+				code, _, _ := request("POST", base+route, body("{}"+suffix), c, nil)
+				want := 400
+				if len(suffix) > 16<<10 {
+					want = 413
+				}
+				expect(code, want)
 			}
 		}
 		for _, origin := range []string{"null", "https://foreign.example.test"} {

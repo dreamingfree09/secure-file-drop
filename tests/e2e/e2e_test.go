@@ -190,13 +190,41 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 			t.Fatal(e)
 		}
 	}
+	legacyDB.SetMaxOpenConns(1)
 	if e = db.RunMigrations(legacyDB); e != nil {
 		t.Fatal(e)
 	}
 	if e = db.RunMigrations(legacyDB); e != nil {
 		t.Fatal(e)
 	}
-	t.Logf("MIGRATION CONNECTION OBSERVATION: after two completed calls, pool InUse=%d (expected 0); source driver retains dedicated connections", legacyDB.Stats().InUse)
+
+	for i := 0; i < 5; i++ {
+		if err := db.RunMigrations(legacyDB); err != nil {
+			t.Fatal(err)
+		}
+		if legacyDB.Stats().InUse != 0 {
+			t.Fatal("migration retained connection")
+		}
+	}
+	if _, err := legacyDB.Exec("UPDATE schema_migrations SET dirty=true"); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.RunMigrations(legacyDB); err == nil {
+		t.Fatal("expected dirty-schema error")
+	}
+	if legacyDB.Stats().InUse != 0 {
+		t.Fatal("migration error retained connection")
+	}
+	if err := legacyDB.PingContext(ctx); err != nil {
+		t.Fatal("migration closed shared pool", err)
+	}
+	if _, err := legacyDB.Exec("UPDATE schema_migrations SET dirty=false"); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.RunMigrations(legacyDB); err != nil {
+		t.Fatal(err)
+	}
+	t.Log("PASS: repeated legacy migrations, MaxOpenConns=1, dirty-error cleanup and usable shared pool")
 	if e = legacyDB.Close(); e != nil {
 		t.Fatal(e)
 	}
@@ -432,6 +460,41 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatalf("concurrent upload results: %v", statuses)
 	}
 
+	t.Run("sql-cancellation", func(t *testing.T) { verifySQLCancellation(ctx, t, conn, base, link.URL) })
+	t.Run("ambiguous-commit", func(t *testing.T) {
+		if docker("inspect", "--format", "{{index .Config.Labels \"sfd.quality-run\"}}", pg) != run ||
+			docker("inspect", "--format", "{{index .Config.Labels \"sfd.quality-run\"}}", mi) != run {
+			t.Fatal("fault fixture ownership mismatch")
+		}
+		tool, err := filepath.Abs("../../native/sfd-hash")
+		if err != nil {
+			t.Fatal(err)
+		}
+		cmd := exec.CommandContext(ctx, "go", "test", "./internal/server", "-run", "^TestDisposableCommitFaults$", "-count=1", "-v")
+		cmd.Dir = "../.."
+		cmd.Env = append(os.Environ(), "SFD_CORRECTION_FIXTURE_DSN="+dsn, "SFD_CORRECTION_EXPECTED_DB="+database, "SFD_CORRECTION_RUN="+run, "SFD_CORRECTION_BUCKET="+bucket, "SFD_CORRECTION_STORAGE="+miAddr, "SFD_HASH_TOOL="+tool, "SFD_MAX_UPLOAD_BYTES=1024")
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("COMMIT fault fixtures: %v %s", err, out)
+		} else {
+			t.Log(string(out))
+		}
+	})
+	t.Run("active-transfer-shutdown", func(t *testing.T) {
+		verifyActiveShutdown(ctx, t, run, appArgs, conn, alice, create, docker, own, port)
+	})
+	t.Run("authenticated-browser", func(t *testing.T) {
+		if os.Getenv("SFD_BROWSER") != "1" {
+			t.Skip("real browser requires SFD_BROWSER=1; not a browser pass")
+		}
+		// #nosec G204 G702 -- Constant script, verified synthetic loopback target; no shell.
+		cmd := exec.CommandContext(ctx, "node", "../browser/journey.cjs", base)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("real browser: %v %s", err, out)
+		} else {
+			t.Log(string(out))
+		}
+	})
+	t.Run("actual-proxy", func(t *testing.T) { verifyProxy(ctx, t, run, network, image, appArgs, docker, own, port) })
 	assessBoundaries(ctx, t, conn, mc, bucket, base, admin, alice, request, create, upload)
 
 	t.Run("assessment-cancellation-and-locks", func(t *testing.T) {
@@ -451,13 +514,15 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	own("container", badApp)
 	badBase := "http://" + port(badApp, "8080/tcp")
 	wait("negative hash backend", func() bool {
-		res, e := client.Get(badBase + "/ready")
+		res, e := client.Get(badBase + "/health")
 		if e != nil {
 			return false
 		}
 		defer func() { _ = res.Body.Close() }()
 		return res.StatusCode == 200
 	})
+	code, _, _ = request("GET", badBase+"/ready", nil, nil, nil)
+	expect(code, 503)
 	failedID := create("native-failure.txt", len(fixture), alice)
 	code, _, _ = request("POST", badBase+"/upload?id="+failedID, bytes.NewReader(multipartBody.Bytes()), alice, map[string]string{"Content-Type": mw.FormDataContentType()})
 	expect(code, 502)

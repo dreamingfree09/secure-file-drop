@@ -19,7 +19,7 @@ function harness(fetch) {
   }
   const context = vm.createContext({
     document: { readyState: 'complete', getElementById: node, querySelectorAll: () => [] },
-    fetch, console, TextEncoder, setTimeout() {}
+    fetch, console, AbortController, clearTimeout, TextEncoder, setTimeout() {}
   });
   const html = fs.readFileSync(path.join(__dirname, '../../web/static/index.html'), 'utf8');
   vm.runInContext(html.split('<script>')[1].split('</script>')[0], context);

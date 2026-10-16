@@ -32,11 +32,11 @@ check_required() {
     if [ -z "$var_value" ]; then
         if [ "$allow_empty" = "false" ]; then
             echo "❌ $var_name is not set or empty"
-            ((ERRORS++))
+            ERRORS=$((ERRORS + 1))
         fi
     elif [[ "$var_value" == *"CHANGE"* ]]; then
-        echo "❌ $var_name still contains placeholder: $var_value"
-        ((ERRORS++))
+        echo "❌ $var_name still contains a placeholder"
+        ERRORS=$((ERRORS + 1))
     else
         echo "✅ $var_name is set"
     fi
@@ -54,7 +54,7 @@ check_secret_strength() {
     
     if [ ${#var_value} -lt $min_length ]; then
         echo "⚠️  $var_name is shorter than recommended ($min_length chars)"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
 }
 
@@ -99,7 +99,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # Check DATABASE_URL format
 if [[ ! "$DATABASE_URL" =~ ^postgres(ql)?:// ]]; then
     echo "⚠️  DATABASE_URL does not start with postgres:// or postgresql://"
-    ((WARNINGS++))
+    WARNINGS=$((WARNINGS + 1))
 else
     echo "✅ DATABASE_URL format looks correct"
 fi
@@ -109,16 +109,16 @@ if [[ "$DATABASE_URL" == *"$POSTGRES_USER"* ]] && [[ "$DATABASE_URL" == *"$POSTG
     echo "✅ DATABASE_URL contains matching credentials"
 else
     echo "⚠️  DATABASE_URL credentials may not match POSTGRES_USER/POSTGRES_PASSWORD"
-    ((WARNINGS++))
+    WARNINGS=$((WARNINGS + 1))
 fi
 
 # Check SFD_MAX_UPLOAD_BYTES is a number if set
 if [ -n "$SFD_MAX_UPLOAD_BYTES" ]; then
     if [[ "$SFD_MAX_UPLOAD_BYTES" =~ ^[0-9]+$ ]]; then
-        echo "✅ SFD_MAX_UPLOAD_BYTES is a valid number: $SFD_MAX_UPLOAD_BYTES"
+        echo "✅ SFD_MAX_UPLOAD_BYTES is a valid number"
     else
-        echo "❌ SFD_MAX_UPLOAD_BYTES must be a number: $SFD_MAX_UPLOAD_BYTES"
-        ((ERRORS++))
+        echo "❌ SFD_MAX_UPLOAD_BYTES must be a number"
+        ERRORS=$((ERRORS + 1))
     fi
 fi
 
@@ -128,7 +128,7 @@ if [ -n "$SFD_PUBLIC_BASE_URL" ]; then
         echo "✅ SFD_PUBLIC_BASE_URL is a valid URL"
     else
         echo "⚠️  SFD_PUBLIC_BASE_URL should start with http:// or https://"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
 fi
 

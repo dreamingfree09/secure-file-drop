@@ -32,8 +32,11 @@ int main(int argc, char **argv) {
     sfd_hex_encode_lower(hash, SFD_SHA256_LEN, hex);
 
     /* Deterministic JSON output (stdout) */
-    printf("{\"algorithm\":\"sha256\",\"hash\":\"%s\",\"bytes\":%llu}\n",
-           hex, (unsigned long long)bytes);
+    if (printf("{\"algorithm\":\"sha256\",\"hash\":\"%s\",\"bytes\":%llu}\n",
+           hex, (unsigned long long)bytes) < 0 || fflush(stdout) == EOF) {
+        fprintf(stderr, "Output I/O error\n");
+        return 2;
+    }
 
     return 0;
 }

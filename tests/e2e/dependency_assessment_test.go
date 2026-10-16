@@ -93,71 +93,76 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 		}
 		t.Logf("Alpine v3.24 main/community comparison: image=%s packages=%d advisory-matches=%d; version applicability only, not exploit reachability", docker("inspect", "--format", "{{.Image}}", id), packages, found)
 	}
-	binary := filepath.Join(t.TempDir(), "storage-server")
-	docker("cp", storage+":/usr/local/bin/minio", binary)
-	scanCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
-	defer cancel()
 
-	cmd := exec.CommandContext(scanCtx, "go", "run", "golang.org/x/vuln/cmd/govulncheck@v1.9.0", "-json", "-mode=binary", "storage-server")
-	cmd.Dir = filepath.Dir(binary)
-	output, scanErr := cmd.Output()
-	if scanCtx.Err() != nil {
-		t.Fatal("storage binary scan timed out")
-	}
-	if scanErr != nil {
-		var exit *exec.ExitError
-		if !errors.As(scanErr, &exit) || !strings.Contains(string(exit.Stderr), "exit status 3") {
-			t.Fatalf("storage binary scanner failed: %v", scanErr)
+	for _, target := range []struct{ name, container, path string }{
+		{"Storage", storage, "/usr/local/bin/minio"}, {"Backend", app, "/app/backend"},
+	} {
+		binary := filepath.Join(t.TempDir(), "scan-binary")
+		docker("cp", target.container+":"+target.path, binary)
+		scanCtx, cancel := context.WithTimeout(ctx, 3*time.Minute)
+		defer cancel()
+
+		cmd := exec.CommandContext(scanCtx, "go", "run", "golang.org/x/vuln/cmd/govulncheck@v1.9.0", "-json", "-mode=binary", "scan-binary")
+		cmd.Dir = filepath.Dir(binary)
+		output, scanErr := cmd.Output()
+		if scanCtx.Err() != nil {
+			t.Fatal("storage binary scan timed out")
 		}
-	}
-	type frame struct{ Module, Version, Package, Function string }
-	type finding struct {
-		OSV          string
-		FixedVersion string `json:"fixed_version"`
-		Trace        []frame
-	}
-	decoder := json.NewDecoder(bytes.NewReader(output))
-	observed := map[string]string{}
-	levels := map[string]int{}
-	for {
-		var msg struct{ Finding *finding }
-		err := decoder.Decode(&msg)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			t.Fatal("invalid scanner JSON")
-		}
-		if msg.Finding == nil {
-			continue
-		}
-		f := msg.Finding
-		if len(f.Trace) > 0 {
-			v := f.Trace[0]
-			level := 1
-			if v.Package != "" {
-				level = 2
-			}
-			if v.Function != "" {
-				level = 3
-			}
-			if level >= levels[f.OSV] {
-				levels[f.OSV] = level
-				observed[f.OSV] = fmt.Sprintf("level=%d module=%s installed=%s package=%s symbol=%s fixed=%s", level, v.Module, v.Version, v.Package, v.Function, f.FixedVersion)
+		if scanErr != nil {
+			var exit *exec.ExitError
+			if !errors.As(scanErr, &exit) || !strings.Contains(string(exit.Stderr), "exit status 3") {
+				t.Fatalf("storage binary scanner failed: %v", scanErr)
 			}
 		}
+		type frame struct{ Module, Version, Package, Function string }
+		type finding struct {
+			OSV          string
+			FixedVersion string `json:"fixed_version"`
+			Trace        []frame
+		}
+		decoder := json.NewDecoder(bytes.NewReader(output))
+		observed := map[string]string{}
+		levels := map[string]int{}
+		for {
+			var msg struct{ Finding *finding }
+			err := decoder.Decode(&msg)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				t.Fatal("invalid scanner JSON")
+			}
+			if msg.Finding == nil {
+				continue
+			}
+			f := msg.Finding
+			if len(f.Trace) > 0 {
+				v := f.Trace[0]
+				level := 1
+				if v.Package != "" {
+					level = 2
+				}
+				if v.Function != "" {
+					level = 3
+				}
+				if level >= levels[f.OSV] {
+					levels[f.OSV] = level
+					observed[f.OSV] = fmt.Sprintf("level=%d module=%s installed=%s package=%s symbol=%s fixed=%s", level, v.Module, v.Version, v.Package, v.Function, f.FixedVersion)
+				}
+			}
+		}
+		keys := make([]string, 0, len(observed))
+		for k := range observed {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			t.Logf("%s BINARY ADVISORY %s %s https://pkg.go.dev/vuln/%s", target.name, k, observed[k], k)
+		}
+		counts := [4]int{}
+		for _, level := range levels {
+			counts[level]++
+		}
+		t.Logf("%s binary scan complete: %d advisory IDs; symbol=%d package-only=%d module-only=%d; symbol presence is not application exploit reachability", target.name, len(keys), counts[3], counts[2], counts[1])
 	}
-	keys := make([]string, 0, len(observed))
-	for k := range observed {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
-		t.Logf("STORAGE BINARY ADVISORY %s %s https://pkg.go.dev/vuln/%s", k, observed[k], k)
-	}
-	counts := [4]int{}
-	for _, level := range levels {
-		counts[level]++
-	}
-	t.Logf("Storage binary scan complete: %d advisory IDs; symbol=%d package-only=%d module-only=%d; symbol presence is not application exploit reachability", len(keys), counts[3], counts[2], counts[1])
 }

@@ -35,9 +35,8 @@ func (c assessmentConn) QueryContext(ctx context.Context, _ string, _ []driver.N
 	return nil, errors.New("synthetic database failure")
 }
 
-// These assertions intentionally record the CURRENT defect. They are evidence,
-// not tests claiming request cancellation is safe; reverse them when fixing F2.
-func TestAssessmentObservationDatabaseIgnoresCanceledRequest(t *testing.T) {
+// Canceled requests must not issue SQL with a live background context.
+func TestCanceledRequestDoesNotIssueUncancelableSQL(t *testing.T) {
 	for _, route := range []string{"registration", "login", "download"} {
 		t.Run(route, func(t *testing.T) {
 			var observed context.Context
@@ -64,16 +63,13 @@ func TestAssessmentObservationDatabaseIgnoresCanceledRequest(t *testing.T) {
 				r = httptest.NewRequest("GET", "http://fixture.test/download?token="+tok, nil).WithContext(ctx)
 				cfg.downloadHandler(db, nil, "").ServeHTTP(w, r)
 			}
-			if observed == nil {
-				t.Fatal("fixture did not reach database")
+			if observed != nil && observed.Err() == nil {
+				t.Fatal("SQL lost request cancellation")
 			}
-			if observed.Err() != nil {
-				t.Fatal("behavior changed: reassess cancellation finding")
-			}
-			if w.Code != 500 && w.Code != 401 {
+			if w.Code != 500 {
 				t.Fatalf("unexpected HTTP %d", w.Code)
 			}
-			t.Log("CONFIRMED CURRENT DEFECT: canceled HTTP request reached SQL with uncanceled context; mock-driver observation, not a full-stack timeout test")
+
 		})
 	}
 }
