@@ -99,7 +99,9 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		})
 	}
 	network := run + "-net"
-	docker("network", "create", "--internal", "--label", label, network)
+	// A dedicated bridge permits the required loopback test bindings; Docker
+	// --internal networks suppress those bindings on the hosted engine.
+	docker("network", "create", "--label", label, network)
 	own("network", network)
 	pgVol := run + "-pgdata"
 	miVol := run + "-objects"
