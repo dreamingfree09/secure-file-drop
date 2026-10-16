@@ -267,8 +267,9 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		"-e", "SFD_BUCKET=" + bucket, "-e", "SFD_ADMIN_USER=admin", "-e", "SFD_ADMIN_PASS=" + password,
 		"-e", "SFD_SESSION_SECRET=synthetic-session-secret-for-isolated-tests", "-e", "SFD_DOWNLOAD_SECRET=" + secret,
 		"-e", "SFD_MAX_UPLOAD_BYTES=1024", "-e", "SFD_CLEANUP_ENABLED=true", "-e", "SFD_CLEANUP_INTERVAL=24h", image}
+	contractOK := true
 	if storage.candidate != "" {
-		t.Run("candidate-s3-contract", func(t *testing.T) { verifyCandidateContract(ctx, t, mc, miAddr, bucket, password, storage.candidate) })
+		contractOK = t.Run("candidate-s3-contract", func(t *testing.T) { verifyCandidateContract(ctx, t, mc, miAddr, bucket, password, storage.candidate) })
 		t.Run("candidate-private-startup", func(t *testing.T) { verifyCandidateStartup(ctx, t, mc, bucket, run, appArgs, docker, own) })
 	}
 	app := docker(appArgs...)
@@ -702,6 +703,9 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	})
 	if storage.candidate != "" {
 		t.Run("candidate-cold-storage-recovery", func(t *testing.T) {
+			if !contractOK {
+				t.Skip("candidate contract failed before recovery fixtures were complete; cold recovery unexecuted")
+			}
 			verifyCandidateRecovery(ctx, t, mi, miVol, run, label, storageArgs, storageImage, bucket, password, docker, own, port)
 		})
 	}

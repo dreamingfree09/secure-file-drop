@@ -26,6 +26,7 @@ func setupRustPrincipals(ctx context.Context, t *testing.T, addr, bucket, run st
 	t.Helper()
 	// Isolated tool module: signed admin operations only, to parent-owned S3,
 	// without adding administration dependencies to the application module.
+	// #nosec G204 G702 -- Fixed test module, no shell; parent-owned loopback target also checked inside the tool.
 	cmd := exec.CommandContext(ctx, "go", "run", ".", addr, bucket, run)
 	cmd.Dir = "../storage/iam"
 	out, err := cmd.CombinedOutput()
@@ -62,7 +63,7 @@ func assessRustSBOM(ctx context.Context, t *testing.T, run string, docker func(.
 	}
 	id := docker("create", "--name", run+"-sbom-scanner", "--label", "sfd.quality-run="+run, "--network", run+"-net",
 		"--cap-drop=ALL", "--security-opt", "no-new-privileges", "--mount", "type=bind,src="+file+",dst=/scan/sbom.json,readonly",
-		"aquasec/trivy@sha256:166061a4a15c64a94a3aab430659e2c166dc0815fbc54a222c6d56d64132f552", "sbom", "--format", "json", "--output", "/tmp/result.json", "/scan/sbom.json")
+		"aquasec/trivy@sha256:166061a4a15c64a94a3aab430659e2c166dc0815fbc54a222c6d56d64132f552", "sbom", "--timeout", "3m", "--format", "json", "--output", "/tmp/result.json", "/scan/sbom.json")
 	own("container", id)
 	docker("start", "-a", id)
 	if docker("inspect", "--format", "{{.State.ExitCode}}", id) != "0" {
@@ -70,6 +71,7 @@ func assessRustSBOM(ctx context.Context, t *testing.T, run string, docker func(.
 	}
 	result := filepath.Join(t.TempDir(), "result.json")
 	docker("cp", id+":/tmp/result.json", result)
+	// #nosec G304 -- Constant basename within t.TempDir; copied only from the owned scanner container.
 	raw, err := os.ReadFile(result)
 	if err != nil {
 		t.Fatal(err)

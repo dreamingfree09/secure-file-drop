@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -66,18 +67,43 @@ func evaluationStorage(t *testing.T, run, bucket, password string) storageFixtur
 			"-filer=true", "-s3=true", "-s3.ip.bind=0.0.0.0", "-s3.port=9000", "-s3.port.grpc=19000", "-s3.config=/etc/seaweedfs/sfd-identities.json",
 			"-s3.port.iceberg=0", "-s3.port.lance=0", "-s3.iam=false", "-s3.autoCreateBucket=false", "-s3.allowDeleteBucketNotEmpty=false"}}
 }
-func candidateClient(t *testing.T, addr, access, password string) *minio.Client {
+
+type candidateWire struct {
+	base http.RoundTripper
+	last atomic.Int64
+}
+
+func (w *candidateWire) RoundTrip(r *http.Request) (*http.Response, error) {
+	res, err := w.base.RoundTrip(r)
+	if res != nil {
+		w.last.Store(int64(res.StatusCode))
+	}
+	return res, err
+}
+
+type candidateS3 struct {
+	*minio.Client
+	wire *candidateWire
+}
+
+func candidateClient(t *testing.T, addr, access, password string) *candidateS3 {
 	t.Helper()
-	mc, err := minio.New(addr, &minio.Options{Creds: credentials.NewStaticV4(access, password, ""), Secure: false, Region: "us-east-1", BucketLookup: minio.BucketLookupPath})
+	wire := &candidateWire{base: http.DefaultTransport}
+	mc, err := minio.New(addr, &minio.Options{Creds: credentials.NewStaticV4(access, password, ""), Secure: false, Region: "us-east-1", BucketLookup: minio.BucketLookupPath, Transport: wire})
 	if err != nil {
 		t.Fatal(err)
 	}
-	return mc
+	return &candidateS3{mc, wire}
 }
-func denied(t *testing.T, err error) {
+func denied(t *testing.T, client *candidateS3, err error) {
 	t.Helper()
-	if minio.ToErrorResponse(err).StatusCode != http.StatusForbidden {
-		t.Fatalf("expected signed permission denial; got %v", err)
+	response := minio.ToErrorResponse(err)
+	status := client.wire.last.Load()
+	if err == nil || status != http.StatusForbidden {
+		t.Fatalf("expected wire HTTP 403; got wire=%d SDK=%d code=%s error=%v", status, response.StatusCode, response.Code, err)
+	}
+	if response.StatusCode != http.StatusForbidden {
+		t.Logf("wire HTTP 403 verified; SDK error represents status=%d code=%s", response.StatusCode, response.Code)
 	}
 }
 func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Client, addr, bucket, password, candidate string) {
@@ -86,9 +112,17 @@ func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Cli
 	reader := candidateClient(t, addr, "sfdreader", password)
 	outsider := candidateClient(t, addr, "sfdoutsider", password)
 	unknown := candidateClient(t, addr, "unknown", password)
-	anonymous, err := minio.New(addr, &minio.Options{Secure: false, BucketLookup: minio.BucketLookupPath})
-	if err != nil {
+	anonymous := candidateClient(t, addr, "", "")
+	var err error
+	other := strings.TrimSuffix(bucket, "-private") + "-other"
+	if err := admin.MakeBucket(ctx, other, minio.MakeBucketOptions{}); err != nil {
 		t.Fatal(err)
+	}
+	if _, err := outsider.PutObject(ctx, other, "own-scope", bytes.NewReader([]byte("own")), 3, minio.PutObjectOptions{}); err != nil {
+		t.Fatal("outsider own-scope PUT", err)
+	}
+	if _, err := outsider.StatObject(ctx, other, "own-scope", minio.StatObjectOptions{}); err != nil {
+		t.Fatal("outsider own-scope stat", err)
 	}
 	key := "candidate-contract"
 	data := []byte("synthetic storage principal fixture")
@@ -107,16 +141,16 @@ func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Cli
 	if err != nil || !bytes.Equal(got, data) {
 		t.Fatal("reader bytes differ", err)
 	}
-	for _, client := range []*minio.Client{reader, outsider, unknown, anonymous} {
+	for _, client := range []*candidateS3{reader, outsider, unknown, anonymous} {
 		_, err := client.PutObject(ctx, bucket, key, bytes.NewReader([]byte("denied")), 6, minio.PutObjectOptions{})
-		denied(t, err)
-		denied(t, client.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{}))
+		denied(t, client, err)
+		denied(t, client, client.RemoveObject(ctx, bucket, key, minio.RemoveObjectOptions{}))
 	}
-	for _, client := range []*minio.Client{outsider, unknown, anonymous} {
+	for _, client := range []*candidateS3{outsider, unknown, anonymous} {
 		_, err := client.StatObject(ctx, bucket, key, minio.StatObjectOptions{})
-		denied(t, err)
+		denied(t, client, err)
 	}
-	denied(t, reader.SetBucketPolicy(ctx, bucket, privateDenyPolicy(bucket)))
+	denied(t, reader, reader.SetBucketPolicy(ctx, bucket, privateDenyPolicy(bucket)))
 	if _, err := app.PutObject(ctx, bucket, "candidate-empty", bytes.NewReader(nil), -1, minio.PutObjectOptions{}); err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +159,7 @@ func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Cli
 		t.Fatal("empty object", err)
 	}
 	// Two parts total only 5 MiB plus a tiny final part; no maximum-size claim.
-	core := minio.Core{Client: app}
+	core := minio.Core{Client: app.Client}
 	uploadID, err := core.NewMultipartUpload(ctx, bucket, "candidate-multipart", minio.PutObjectOptions{})
 	if err != nil {
 		t.Fatal(err)
@@ -164,6 +198,9 @@ func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Cli
 	if err := core.AbortMultipartUpload(ctx, bucket, "candidate-aborted", abort); err != nil {
 		t.Fatal(err)
 	}
+	if _, err := core.ListObjectParts(ctx, bucket, "candidate-aborted", abort, 0, 10); minio.ToErrorResponse(err).StatusCode != 404 {
+		t.Fatal("aborted upload parts remain addressable", err)
+	}
 	if _, err := app.StatObject(ctx, bucket, "candidate-aborted", minio.StatObjectOptions{}); minio.ToErrorResponse(err).StatusCode != 404 {
 		t.Fatal("aborted upload became an object", err)
 	}
@@ -177,7 +214,7 @@ func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Cli
 		t.Fatal("scoped policy GET", err)
 	}
 	_, err = reader.StatObject(ctx, bucket, "denied-only/object", minio.StatObjectOptions{})
-	denied(t, err)
+	denied(t, reader, err)
 	if err := admin.SetBucketPolicy(ctx, bucket, ""); err != nil {
 		t.Fatal("policy DELETE", err)
 	}
@@ -301,7 +338,7 @@ func verifyCandidateRecovery(ctx context.Context, t *testing.T, storage, volume,
 			}
 			outsider := candidateClient(t, addr, "sfdoutsider", password)
 			_, err = outsider.StatObject(ctx, bucket, "candidate-empty", minio.StatObjectOptions{})
-			denied(t, err)
+			denied(t, outsider, err)
 			t.Log("PASS: owned clean-stop cold copy and fresh candidate restart, persisted empty/multipart bytes and scoped permission denial; PostgreSQL restore tested separately")
 			return
 		}

@@ -106,7 +106,7 @@ func assessRuntimeDependencies(ctx context.Context, t *testing.T, app, storage, 
 		if target.path == "/usr/bin/rustfs" {
 			t.Logf("RustFS actual binary SHA-256: %s", docker("exec", storage, "sha256sum", "/usr/bin/rustfs"))
 			assessRustSBOM(ctx, t, run, docker, own)
-			t.Log("UNSUPPORTED: govulncheck does not analyse Rust binary symbols; upstream release SBOM is package-level evidence only")
+			t.Log("UNSUPPORTED: govulncheck does not analyze Rust binary symbols; upstream release SBOM is package-level evidence only")
 			continue
 		}
 		binary := filepath.Join(t.TempDir(), "scan-binary")
