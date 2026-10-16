@@ -285,3 +285,10 @@ Helper tests explicitly report no Go test files; vet/module verification and thr
 Original DEVLOG preservation anchor: blob 4f976745c6ab14e8ad79963ba81eb5075e35444c, exact 14,783-byte prefix retained byte-for-byte; appended only after real implementation commits and verification. Original/WSL checkouts, .qodo, remotes and protected refs preserved. No bypass reproduction, real-data operation, deployment or integration. Sanitized evidence retained 14 days; raw checkpoints/secrets/volumes remain ephemeral runner-local.
 
 Producer preparation acceptance is complete; final draft-PR SHA/CI/readback handover and independent Aether acknowledgement remain separate. Production S3 TLS, capacity/maximum size, topology/maturity, security-update ownership/rotation, historical data/schema/owners, combined cross-host DR, production cutover/migration, public deployment, protected integration and final vendor adoption remain open. No production readiness claim.
+
+
+### 2026-10-16 — Complete runtime identity evidence
+
+After successful bounded acceptance, evidence-only implementation 4167a233aaaf7e8ead64564a28b71005672a2c4f records exact built source-MinIO/backend/RustFS image IDs in the sanitized rehearsal artifact. It changes only the authorised test path and does not change runtime behavior or acceptance assertions. Fixture compilation and zero-issue lint passed before the implementation commit; exact final-head hosted reruns/readback are in draft PR #24's GHP-01 handover.
+
+This entry is appended after that real implementation hash. All preceding 17,867 bytes and the original 14,783-byte preservation anchor remain byte-identical. Production/reconciliation/transport/capacity/recovery/adoption gates and independent Aether review remain open.
