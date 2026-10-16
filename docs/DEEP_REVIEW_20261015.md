@@ -56,7 +56,7 @@ Recommendation: explicitly own/release a migration connection and source on succ
 
 ### F6 — P2 / medium impact, high confidence: tracked backend artifact bypasses accepted rebuild
 
-Affected: tracked [backend](../backend), Docker/build distribution hygiene. Safe trigger: `go version -m backend` and static `govulncheck -mode=binary backend`; never execute it. Actual: Go 1.24.11, dirty older build metadata, pgx v5.7.6 and x/text v0.31.0; scanner reports 33 advisory IDs with vulnerable symbols, versus zero reachable findings for current source on Go 1.26.9.
+Affected: tracked [backend at the assessed revision](https://github.com/dreamingfree09/secure-file-drop/blob/0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7/backend), Docker/build distribution hygiene. Safe trigger: `go version -m backend` and static `govulncheck -mode=binary backend`; never execute it. Actual: Go 1.24.11, dirty older build metadata, pgx v5.7.6 and x/text v0.31.0; scanner reports 33 advisory IDs with vulnerable symbols, versus zero reachable findings for current source on Go 1.26.9.
 
 Examples: [GO-2026-6629](https://pkg.go.dev/vuln/GO-2026-6629) (x/text, fixed v0.41.0), [GO-2026-5004](https://pkg.go.dev/vuln/GO-2026-5004) (pgx, fixed v5.9.2), and standard-library advisories fixed by supported Go releases. Binary symbol presence is not proof each issue is reachable through this application.
 
