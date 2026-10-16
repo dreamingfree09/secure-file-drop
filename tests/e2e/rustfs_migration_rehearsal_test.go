@@ -43,7 +43,6 @@ type rehearsal struct {
 }
 type rehearsalStore struct {
 	id, alias, volume, image, addr string
-	rust                           bool
 	client, read                   *minio.Client
 }
 type rehearsalDB struct {
@@ -212,6 +211,7 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 		if os.Getenv("SFD_BROWSER") != "1" {
 			f.t.Fatal("restored-pair browser acceptance required")
 		}
+		// #nosec G204 G702 -- Fixed browser script; argument is the verified owned loopback port, no shell.
 		cmd := exec.CommandContext(ctx, "node", "tests/browser/journey.cjs", restoredApp.base)
 		cmd.Dir = "../.."
 		cmd.Env = os.Environ()
@@ -271,6 +271,7 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 			f.t.Fatal("rollback resurrected deleted bytes", err)
 		}
 		f.equalBytes(baselineBytes, f.storageBytes(source.read, baseline))
+		// #nosec G304 -- Immutable checkpoint generated in this fixture-owned unique evidence directory.
 		raw, err := os.ReadFile(checkpoint)
 		if err != nil {
 			f.t.Fatal(err)
@@ -431,6 +432,7 @@ func (f *rehearsal) store(suffix string, rust bool, volume string) rehearsalStor
 		}
 		f.verify("container", s.id)
 		f.verify("volume", s.volume)
+		// #nosec G204 G702 -- Fixed synthetic helper; verified owned container/volume and loopback endpoint, no shell.
 		cmd := exec.CommandContext(f.ctx, "go", "run", ".", s.addr, f.run+"-private", f.run, "generated")
 		cmd.Dir = "../storage/iam"
 		cmd.Env = append(os.Environ(), "SFD_IAM_RUN="+f.run, "SFD_IAM_ROOT_KEY="+f.root, "SFD_IAM_ROOT_SECRET="+f.rootSecret, "SFD_IAM_APP_KEY="+f.app, "SFD_IAM_APP_SECRET="+f.appSecret, "SFD_IAM_READER_KEY="+f.reader, "SFD_IAM_READER_SECRET="+f.readerSecret, "SFD_IAM_OUTSIDER_KEY="+f.outsider, "SFD_IAM_OUTSIDER_SECRET="+f.outsiderSecret)
@@ -472,7 +474,8 @@ func (f *rehearsal) database(suffix, checkpoint string) rehearsalDB {
 	return d
 }
 func (f *rehearsal) application(suffix string, d rehearsalDB, s rehearsalStore) rehearsalApp {
-	args := []string{"run", "-d", "--name", f.run + "-" + suffix + "-app", "--label", f.label, "--network", f.network, "-p", "127.0.0.1::8080", "--cap-drop=ALL", "--security-opt", "no-new-privileges"}
+	args := make([]string, 0, 64)
+	args = append(args, "run", "-d", "--name", f.run+"-"+suffix+"-app", "--label", f.label, "--network", f.network, "-p", "127.0.0.1::8080", "--cap-drop=ALL", "--security-opt", "no-new-privileges")
 	env := map[string]string{"DATABASE_URL": "postgres://sfd:" + f.pgSecret + "@" + d.alias + ":5432/" + d.name + "?sslmode=disable", "SFD_S3_ENDPOINT": "http://" + s.alias + ":9000", "SFD_S3_ACCESS_KEY": f.app, "SFD_S3_SECRET_KEY": f.appSecret, "SFD_BUCKET": f.run + "-private", "SFD_ADMIN_USER": "admin", "SFD_ADMIN_PASS": f.adminSecret, "SFD_SESSION_SECRET": f.sessionSecret, "SFD_DOWNLOAD_SECRET": f.downloadSecret, "SFD_MAX_UPLOAD_BYTES": "6291456", "SFD_MAX_REQUEST_BYTES": "7340032", "SFD_CLEANUP_ENABLED": "false"}
 	for k, v := range env {
 		args = append(args, "-e", k+"="+v)
@@ -556,7 +559,7 @@ func (f *rehearsal) login(a rehearsalApp, user string) *http.Cookie {
 	}
 	return r.cookies[0]
 }
-func (f *rehearsal) upload(a rehearsalApp, name string, data []byte, cookie *http.Cookie) string {
+func (f *rehearsal) upload(a rehearsalApp, name string, data []byte, cookie *http.Cookie) {
 	r := f.request(a, "POST", "/files", f.json(map[string]any{"orig_name": name, "content_type": "application/octet-stream", "size_bytes": len(data)}), cookie, "")
 	f.expect(r.code, 201)
 	var meta struct{ ID string }
@@ -582,7 +585,6 @@ func (f *rehearsal) upload(a rehearsalApp, name string, data []byte, cookie *htt
 	if err = a.db.conn.QueryRowContext(f.ctx, "SELECT sha256_hex,size_bytes,sha256_bytes FROM files WHERE id=$1", meta.ID).Scan(&hash, &size, &n); err != nil || hash != hex.EncodeToString(sum[:]) || size != int64(len(data)) || n != size {
 		f.t.Fatal("native upload integrity mismatch")
 	}
-	return meta.ID
 }
 
 func (f *rehearsal) manifest(d rehearsalDB, s rehearsalStore) ([]rehearsalFile, map[string][]byte) {
@@ -666,7 +668,7 @@ func (f *rehearsal) copyObject(source, dest *minio.Client, key string, want []by
 		if err != nil {
 			f.t.Fatal(err)
 		}
-		parts := []minio.CompletePart{}
+		parts := make([]minio.CompletePart, 0, 2)
 		for i, chunk := range [][]byte{raw[:5<<20], raw[5<<20:]} {
 			p, err := core.PutObjectPart(f.ctx, f.run+"-private", key, upload, i+1, bytes.NewReader(chunk), int64(len(chunk)), minio.PutObjectPartOptions{})
 			if err != nil {
@@ -731,6 +733,7 @@ func (f *rehearsal) checkpoint(d rehearsalDB, suffix string) (string, string) {
 	if err := os.Chmod(file, 0600); err != nil {
 		f.t.Fatal(err)
 	}
+	// #nosec G304 -- Fixed checkpoint basename in the fixture-owned unique evidence directory.
 	raw, err := os.ReadFile(file)
 	if err != nil {
 		f.t.Fatal(err)
@@ -820,7 +823,7 @@ func (f *rehearsal) writeEvidence(name string, value any) {
 func (f *rehearsal) configuration() {
 	env := map[string]string{"SFD_PREPARATION_RUN": f.run, "SFD_PREPARATION_DB": "sfd_configuration", "SFD_ROOT_KEY": f.root, "SFD_ROOT_SECRET": f.rootSecret, "SFD_APP_KEY": f.app, "SFD_APP_SECRET": f.appSecret, "SFD_PG_SECRET": f.pgSecret, "SFD_ADMIN_SECRET": f.adminSecret, "SFD_SESSION_SECRET": f.sessionSecret, "SFD_DOWNLOAD_SECRET": f.downloadSecret}
 	file := filepath.Join(f.evidence, "configuration.env")
-	keys := []string{}
+	keys := make([]string, 0, len(env))
 	for k := range env {
 		keys = append(keys, k)
 	}
