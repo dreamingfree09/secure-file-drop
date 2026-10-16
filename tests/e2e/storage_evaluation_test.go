@@ -6,16 +6,18 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 // Opt-in only. Production source and storage defaults remain unchanged.
@@ -53,12 +55,12 @@ func evaluationStorage(t *testing.T, run, bucket, password string) storageFixtur
 	return storageFixture{candidate: candidate, dockerfile: "tests/storage/Dockerfile.seaweedfs", binary: "/usr/bin/weed", appAccess: "sfdapp",
 		args: []string{"--mount", "type=bind,src=" + file + ",dst=/etc/seaweedfs/sfd-identities.json,readonly", "--cap-drop=ALL", "--security-opt", "no-new-privileges"},
 		command: []string{"server", "-dir=/data", "-ip=127.0.0.1", "-ip.bind=127.0.0.1", "-master.telemetry=false", "-master.volumeSizeLimitMB=32", "-volume.max=4", "-volume.preStopSeconds=1",
-			"-filer=true", "-s3=true", "-s3.ip.bind=0.0.0.0", "-s3.port=9000", "-s3.config=/etc/seaweedfs/sfd-identities.json",
+			"-filer=true", "-s3=true", "-s3.ip.bind=0.0.0.0", "-s3.port=9000", "-s3.port.grpc=19000", "-s3.config=/etc/seaweedfs/sfd-identities.json",
 			"-s3.port.iceberg=0", "-s3.port.lance=0", "-s3.iam=false", "-s3.autoCreateBucket=false", "-s3.allowDeleteBucketNotEmpty=false"}}
 }
-func candidateClient(t *testing.T, addr, access, password, region string) *minio.Client {
+func candidateClient(t *testing.T, addr, access, password string) *minio.Client {
 	t.Helper()
-	mc, err := minio.New(addr, &minio.Options{Creds: credentials.NewStaticV4(access, password, ""), Secure: false, Region: region, BucketLookup: minio.BucketLookupPath})
+	mc, err := minio.New(addr, &minio.Options{Creds: credentials.NewStaticV4(access, password, ""), Secure: false, Region: "us-east-1", BucketLookup: minio.BucketLookupPath})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,10 +74,10 @@ func denied(t *testing.T, err error) {
 }
 func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Client, addr, bucket, password, candidate string) {
 	t.Helper()
-	app := candidateClient(t, addr, "sfdapp", password, "us-east-1")
-	reader := candidateClient(t, addr, "sfdreader", password, "us-east-1")
-	outsider := candidateClient(t, addr, "sfdoutsider", password, "us-east-1")
-	unknown := candidateClient(t, addr, "unknown", password, "us-east-1")
+	app := candidateClient(t, addr, "sfdapp", password)
+	reader := candidateClient(t, addr, "sfdreader", password)
+	outsider := candidateClient(t, addr, "sfdoutsider", password)
+	unknown := candidateClient(t, addr, "unknown", password)
 	anonymous, err := minio.New(addr, &minio.Options{Secure: false, BucketLookup: minio.BucketLookupPath})
 	if err != nil {
 		t.Fatal(err)
@@ -122,7 +124,7 @@ func verifyCandidateContract(ctx context.Context, t *testing.T, admin *minio.Cli
 	}
 	first := bytes.Repeat([]byte{0x53}, 5<<20)
 	last := []byte("small-final-part!")
-	parts := []minio.CompletePart{}
+	parts := make([]minio.CompletePart, 0, 2)
 	for i, body := range [][]byte{first, last} {
 		part, err := core.PutObjectPart(ctx, bucket, "candidate-multipart", uploadID, i+1, bytes.NewReader(body), int64(len(body)), minio.PutObjectPartOptions{})
 		if err != nil {
@@ -271,7 +273,7 @@ func verifyCandidateRecovery(ctx context.Context, t *testing.T, storage, volume,
 	recovered := docker(recoveredArgs...)
 	own("container", recovered)
 	addr := port(recovered, "9000/tcp")
-	client := candidateClient(t, addr, "sfdapp", password, "us-east-1")
+	client := candidateClient(t, addr, "sfdapp", password)
 	deadline := time.Now().Add(90 * time.Second)
 	for time.Now().Before(deadline) {
 		if stat, err := client.StatObject(ctx, bucket, "candidate-empty", minio.StatObjectOptions{}); err == nil && stat.Size == 0 {
@@ -289,7 +291,7 @@ func verifyCandidateRecovery(ctx context.Context, t *testing.T, storage, volume,
 			if policy, err := client.GetBucketPolicy(ctx, bucket); err != nil || !strings.Contains(policy, "Deny") {
 				t.Fatal("recovered private policy", err)
 			}
-			outsider := candidateClient(t, addr, "sfdoutsider", password, "us-east-1")
+			outsider := candidateClient(t, addr, "sfdoutsider", password)
 			_, err = outsider.StatObject(ctx, bucket, "candidate-empty", minio.StatObjectOptions{})
 			denied(t, err)
 			t.Log("PASS: owned clean-stop cold copy and fresh master/filer/volume/S3 restart, persisted empty/multipart bytes and scoped permission denial; PostgreSQL restore tested separately")
@@ -298,4 +300,46 @@ func verifyCandidateRecovery(ctx context.Context, t *testing.T, storage, volume,
 		time.Sleep(300 * time.Millisecond)
 	}
 	t.Fatal("cold-recovered storage unavailable")
+}
+
+// Inspect only the owned container's network namespace; never host sockets.
+func verifyCandidateBindings(t *testing.T, id string, docker func(...string) string) {
+	t.Helper()
+	published := docker("port", id)
+	if !strings.HasPrefix(published, "9000/tcp -> 127.0.0.1:") || strings.Contains(published, "\n") {
+		t.Fatal("unexpected candidate host publication")
+	}
+	controls := map[int]bool{9333: false, 19333: false, 8888: false, 18888: false, 8080: false, 18080: false}
+	for _, file := range []string{"/proc/net/tcp", "/proc/net/tcp6"} {
+		raw := docker("exec", id, "cat", file)
+		for _, line := range strings.Split(raw, "\n") {
+			fields := strings.Fields(line)
+			if len(fields) < 4 || fields[3] != "0A" {
+				continue
+			}
+			address := strings.Split(fields[1], ":")
+			if len(address) != 2 {
+				continue
+			}
+			port, err := strconv.ParseInt(address[1], 16, 32)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, ok := controls[int(port)]; ok {
+				if address[0] != "0100007F" && address[0] != "00000000000000000000000001000000" {
+					t.Fatal("internal component control listener is not loopback")
+				}
+				controls[int(port)] = true
+			}
+			if port == 8181 || port == 9101 || port == 8733 || port == 7333 || port == 2022 {
+				t.Fatal("unused optional service is listening")
+			}
+		}
+	}
+	for port, seen := range controls {
+		if !seen {
+			t.Fatalf("expected component listener %d missing", port)
+		}
+	}
+	t.Log("PASS: master/filer/volume HTTP+gRPC bind container loopback; only S3 HTTP is host-published on loopback; S3 control gRPC 19000 remains on the trusted owned bridge, never host-published")
 }

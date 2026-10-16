@@ -125,8 +125,9 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		"-p", "127.0.0.1::5432", "-v", pgVol+":/var/lib/postgresql/data",
 		"-e", "POSTGRES_DB="+database, "-e", "POSTGRES_USER=sfd", "-e", "POSTGRES_PASSWORD="+password, "postgres:16")
 	own("container", pg)
-	storageArgs := []string{"run", "-d", "--name", miName, "--label", label, "--network", network, "--network-alias", "minio",
-		"-p", "127.0.0.1::9000", "-v", miVol + ":/data"}
+	storageArgs := make([]string, 0, 14+len(storage.args)+1+len(storage.command))
+	storageArgs = append(storageArgs, "run", "-d", "--name", miName, "--label", label, "--network", network, "--network-alias", "minio",
+		"-p", "127.0.0.1::9000", "-v", miVol+":/data")
 	storageArgs = append(storageArgs, storage.args...)
 	storageArgs = append(storageArgs, storageImage)
 	storageArgs = append(storageArgs, storage.command...)
@@ -182,6 +183,9 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		t.Fatal(e)
 	}
 	wait("fresh minio", func() bool { _, e := mc.ListBuckets(ctx); return e == nil })
+	if storage.candidate != "" {
+		verifyCandidateBindings(t, mi, docker)
+	}
 	if e = mc.MakeBucket(ctx, bucket, minio.MakeBucketOptions{}); e != nil {
 		t.Fatal(e)
 	}
