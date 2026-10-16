@@ -208,13 +208,21 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 		file := &multipartRead{Reader: part}
 		limited := &io.LimitedReader{R: file, N: limit + 1}
 		info, err := mc.PutObject(ctx, bucket, key, limited, -1, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+		if err == nil {
+			// Independently finish the reader even if an SDK stops consuming early.
+			_, err = io.Copy(io.Discard, limited)
+		}
 		var maxErr *http.MaxBytesError
 		if limited.N == 0 || errors.As(err, &maxErr) {
 			http.Error(w, "file too large", http.StatusRequestEntityTooLarge)
 			return
 		}
 		if file.err != nil {
-			http.Error(w, "bad multipart", http.StatusBadRequest)
+			code := http.StatusBadRequest
+			if errors.As(file.err, &maxErr) {
+				code = http.StatusRequestEntityTooLarge
+			}
+			http.Error(w, "bad multipart", code)
 			return
 		}
 		if err != nil {
@@ -225,7 +233,11 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 		// MIME epilogue is permitted, but counts against the envelope limit.
 		_, framingErr := mr.NextPart()
 		if framingErr != io.EOF {
-			http.Error(w, "bad multipart", http.StatusBadRequest)
+			code := http.StatusBadRequest
+			if errors.As(framingErr, &maxErr) {
+				code = http.StatusRequestEntityTooLarge
+			}
+			http.Error(w, "bad multipart", code)
 			return
 		}
 		if _, err = io.Copy(io.Discard, r.Body); err != nil {
@@ -235,6 +247,10 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 				code = http.StatusRequestEntityTooLarge
 			}
 			http.Error(w, "bad multipart", code)
+			return
+		}
+		if info.Size != limit+1-limited.N {
+			http.Error(w, "upload byte count mismatch", http.StatusBadGateway)
 			return
 		}
 		if _, err = tx.ExecContext(ctx, "UPDATE files SET status='stored',size_bytes=$2 WHERE id=$1", id, info.Size); err != nil {

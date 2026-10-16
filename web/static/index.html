@@ -808,8 +808,7 @@ async function logout() {
     const res = await sessionFetch('/logout', { method: 'POST' });
     if (generation !== sessionGeneration) return;
     if (!res.ok && res.status !== 401) {
-      if (generation !== sessionGeneration) return;
-    showAlert(document.getElementById('uploadAlert'), 'Sign out failed. Please try again.', 'error');
+      showAlert(document.getElementById('uploadAlert'), 'Sign out failed. Please try again.', 'error');
       return;
     }
     clearCredentials();

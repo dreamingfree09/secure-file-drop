@@ -48,10 +48,12 @@ test('logout removes previous-account metadata and selected file', async () => {
 test('a delayed file-list response cannot render into a later session', async () => {
   let deliver;
   const delayed = new Promise(resolve => { deliver = resolve; });
-  const h = harness(async url => url === '/files' ? delayed : { ok: true, status: 204 });
+  let signal;
+  const h = harness(async (url, options) => { if (url === '/files') { signal = options.signal; return delayed; } return {ok: true, status: 204}; });
   vm.runInContext('isLoggedIn=true; isAdmin=false; sessionGeneration=7;', h.context);
   const pending = vm.runInContext('loadFiles()', h.context);
   await vm.runInContext('logout()', h.context);
+  assert.equal(signal.aborted, true);
   // A different account logs in before the old response completes.
   vm.runInContext('isLoggedIn=true; sessionGeneration++;', h.context);
   deliver({ ok: true, async json() { return [{ orig_name: 'previous-private-file' }]; } });
@@ -65,4 +67,25 @@ test('alerts escape untrusted server text', () => {
   vm.runInContext('showAlert(document.getElementById("registerAlert"), "<img src=x onerror=alert(1)>", "error")', h.context);
   assert.match(h.node('registerAlert').innerHTML, /&lt;img/);
   assert.doesNotMatch(h.node('registerAlert').innerHTML, /<img/);
+});
+
+test('successful login clears login and registration credentials', async () => {
+  const h = harness(async url => ({ok: true, json: async () => url === '/login' ? {is_admin: false} : []}));
+  h.node('username').value = 'fixture';
+  h.node('password').value = 'SyntheticPass123';
+  h.node('regPassword').value = 'OldRegistration123';
+  h.node('regPasswordConfirm').value = 'OldRegistration123';
+  await vm.runInContext('login()', h.context);
+  for (const id of ['username','password','regPassword','regPasswordConfirm']) assert.equal(h.node(id).value, '');
+  assert.equal(vm.runInContext('isLoggedIn && !isAdmin',h.context), true);
+});
+
+test('successful registration clears all submitted fields', async () => {
+  const h = harness(async () => ({ok: true, json: async () => ({id: 'synthetic'})}));
+  h.node('regEmail').value = 'fixture@example.test';
+  h.node('regUsername').value = 'fixture';
+  h.node('regPassword').value = 'SyntheticPass123';
+  h.node('regPasswordConfirm').value = 'SyntheticPass123';
+  await vm.runInContext('register()',h.context);
+  for (const id of ['regEmail','regUsername','regPassword','regPasswordConfirm']) assert.equal(h.node(id).value, '');
 });

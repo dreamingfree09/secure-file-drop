@@ -81,6 +81,7 @@ check_required "SFD_DOWNLOAD_SECRET"
 # Optional
 check_required "SFD_PUBLIC_BASE_URL" "true"
 check_required "SFD_MAX_UPLOAD_BYTES" "true"
+check_required "SFD_MAX_REQUEST_BYTES"
 
 echo ""
 echo "🔐 Secret Strength Checks:"
@@ -120,6 +121,27 @@ if [ -n "$SFD_MAX_UPLOAD_BYTES" ]; then
         echo "❌ SFD_MAX_UPLOAD_BYTES must be a number"
         ERRORS=$((ERRORS + 1))
     fi
+fi
+
+# Compose uses the same explicit envelope as the backend. Check arithmetic
+# only after validating bounded decimal operands; never print their values.
+if [[ "${SFD_MAX_UPLOAD_BYTES:-}" =~ ^[0-9]+$ ]] && [[ "${SFD_MAX_REQUEST_BYTES:-}" =~ ^[0-9]+$ ]]; then
+    file_limit="$SFD_MAX_UPLOAD_BYTES"
+    request_limit="$SFD_MAX_REQUEST_BYTES"
+    while [[ ${#file_limit} -gt 1 && "$file_limit" == 0* ]]; do file_limit="${file_limit#0}"; done
+    while [[ ${#request_limit} -gt 1 && "$request_limit" == 0* ]]; do request_limit="${request_limit#0}"; done
+    if [[ ${#file_limit} -gt 19 || ${#request_limit} -gt 19 ||
+          ( ${#file_limit} -eq 19 && "$file_limit" > "9223372036853727231" ) ||
+          ( ${#request_limit} -eq 19 && "$request_limit" > "9223372036854775807" ) ]]; then
+        echo "❌ Upload/envelope limit is outside the supported integer range"
+        ERRORS=$((ERRORS + 1))
+    elif (( 10#$file_limit <= 0 || 10#$request_limit != 10#$file_limit + 1048576 )); then
+        echo "❌ SFD_MAX_REQUEST_BYTES must equal SFD_MAX_UPLOAD_BYTES plus 1048576"
+        ERRORS=$((ERRORS + 1))
+    fi
+elif [ -n "${SFD_MAX_REQUEST_BYTES:-}" ] && [[ ! "$SFD_MAX_REQUEST_BYTES" =~ ^[0-9]+$ ]]; then
+    echo "❌ SFD_MAX_REQUEST_BYTES must be a number"
+    ERRORS=$((ERRORS + 1))
 fi
 
 # Check SFD_PUBLIC_BASE_URL is a valid URL if set

@@ -35,4 +35,6 @@ errors = run({"SFD_ADMIN_PASS": "CHANGE_ME_SENTINEL_PRIVATE_VALUE",
 assert errors.returncode == 1 and "2 error(s)" in errors.stdout
 assert "PRIVATE_NONNUMBER_SENTINEL" not in errors.stdout
 assert "Advanced Checks" in errors.stdout
+assert run({"SFD_MAX_REQUEST_BYTES": "1024"}).returncode == 1
+assert run({"SFD_MAX_UPLOAD_BYTES": "999999999999999999999999"}).returncode == 1
 print("PASS: validator success, warning continuation, accumulated errors and redacted values")
