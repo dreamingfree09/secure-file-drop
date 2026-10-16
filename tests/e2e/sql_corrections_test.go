@@ -70,5 +70,33 @@ func verifySQLCancellation(ctx context.Context, t *testing.T, db *sql.DB, base, 
 			t.Fatal("pool unusable after cancellation", err)
 		}
 	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = tx.Rollback() }()
+	if _, err = tx.ExecContext(ctx, "LOCK TABLE users IN ACCESS EXCLUSIVE MODE"); err != nil {
+		t.Fatal(err)
+	}
+	started := time.Now()
+	req, err := http.NewRequestWithContext(ctx, "POST", base+"/login", strings.NewReader(`{"username":"alice","password":" SpacePass123 "}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{Timeout: 8 * time.Second}
+	res, err := client.Do(req)
+	if err != nil {
+		t.Fatal("server SQL deadline failed", err)
+	}
+	_ = res.Body.Close()
+	if res.StatusCode != 500 || time.Since(started) > 7*time.Second {
+		t.Fatal("unbounded SQL wait", res.StatusCode, time.Since(started))
+	}
+	_ = tx.Rollback()
+	if err = db.PingContext(ctx); err != nil {
+		t.Fatal("pool unusable after SQL timeout", err)
+	}
 	t.Log("PASS: real registration/login/download metadata cancellation releases locked PostgreSQL queries")
 }

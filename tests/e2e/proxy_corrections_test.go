@@ -237,5 +237,28 @@ func verifyProxy(ctx context.Context, t *testing.T, run, network, image string, 
 	if code != 200 || !bytes.Equal(b, data) {
 		t.Fatal("proxy downloaded bytes mismatch")
 	}
+
+	for _, size := range []int{1025, 1049601} {
+		code, b, _ = request("POST", "/files", strings.NewReader(`{"orig_name":"too-large.bin","content_type":"application/octet-stream","size_bytes":1}`), cookie, "application/json")
+		if code != 201 || json.Unmarshal(b, &meta) != nil {
+			t.Fatal("proxy oversize fixture metadata")
+		}
+		body.Reset()
+		mw = multipart.NewWriter(&body)
+		p, err = mw.CreateFormFile("file", "too-large.bin")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err = p.Write(bytes.Repeat([]byte("x"), size)); err != nil {
+			t.Fatal(err)
+		}
+		if err = mw.Close(); err != nil {
+			t.Fatal(err)
+		}
+		code, _, _ = request("POST", "/upload?id="+meta.ID, &body, cookie, mw.FormDataContentType())
+		if code != 413 {
+			t.Fatal("proxy/backend oversized envelope accepted", size, code)
+		}
+	}
 	t.Log("PASS: real Traefik TLS, actual Compose envelope/redirect settings, Secure cookie, exact-file-limit multipart upload and canonical byte-equal download")
 }

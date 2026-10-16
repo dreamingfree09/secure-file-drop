@@ -125,8 +125,8 @@ fi
 
 # Compose uses the same explicit envelope as the backend. Check arithmetic
 # only after validating bounded decimal operands; never print their values.
-if [[ "${SFD_MAX_UPLOAD_BYTES:-}" =~ ^[0-9]+$ ]] && [[ "${SFD_MAX_REQUEST_BYTES:-}" =~ ^[0-9]+$ ]]; then
-    file_limit="$SFD_MAX_UPLOAD_BYTES"
+if [[ "${SFD_MAX_UPLOAD_BYTES:-53687091200}" =~ ^[0-9]+$ ]] && [[ "${SFD_MAX_REQUEST_BYTES:-}" =~ ^[0-9]+$ ]]; then
+    file_limit="${SFD_MAX_UPLOAD_BYTES:-53687091200}"
     request_limit="$SFD_MAX_REQUEST_BYTES"
     while [[ ${#file_limit} -gt 1 && "$file_limit" == 0* ]]; do file_limit="${file_limit#0}"; done
     while [[ ${#request_limit} -gt 1 && "$request_limit" == 0* ]]; do request_limit="${request_limit#0}"; done
