@@ -1,0 +1,78 @@
+# Opt-in, fresh synthetic resources only. Never combine with docker-compose.yml.
+services:
+  rustfs:
+    profiles: [preparation]
+    image: rustfs/rustfs@sha256:c917317a76af3df35b596612a32e297b6a31a5c815e023fdf62ca78c2cf84201
+    platform: linux/amd64
+    user: "10001:10001"
+    entrypoint: ["/usr/bin/rustfs"]
+    command: ["/data"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    stop_grace_period: 60s
+    labels:
+      sfd.quality-run: ${SFD_PREPARATION_RUN:?fresh rehearsal run required}
+    environment:
+      RUSTFS_ACCESS_KEY: ${SFD_ROOT_KEY:?generated root key required}
+      RUSTFS_SECRET_KEY: ${SFD_ROOT_SECRET:?generated root secret required}
+      RUSTFS_ADDRESS: "0.0.0.0:9000"
+      RUSTFS_CONSOLE_ENABLE: "false"
+      RUSTFS_FTP_ENABLE: "false"
+      RUSTFS_FTPS_ENABLE: "false"
+      RUSTFS_SFTP_ENABLE: "false"
+      RUSTFS_WEBDAV_ENABLE: "false"
+      RUSTFS_OBS_LOG_DIRECTORY: ""
+    ports: ["127.0.0.1::9000"]
+    networks: [preparation]
+    volumes: [objects:/data]
+  postgres:
+    profiles: [preparation]
+    image: postgres:16
+    labels:
+      sfd.quality-run: ${SFD_PREPARATION_RUN:?fresh rehearsal run required}
+    environment:
+      POSTGRES_DB: ${SFD_PREPARATION_DB:?fresh database required}
+      POSTGRES_USER: sfd
+      POSTGRES_PASSWORD: ${SFD_PG_SECRET:?generated database secret required}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    networks: [preparation]
+  backend:
+    profiles: [preparation]
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    stop_grace_period: 25s
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    labels:
+      sfd.quality-run: ${SFD_PREPARATION_RUN:?fresh rehearsal run required}
+    environment:
+      DATABASE_URL: postgres://sfd:${SFD_PG_SECRET:?}@postgres:5432/${SFD_PREPARATION_DB:?}?sslmode=disable
+      SFD_S3_ENDPOINT: http://rustfs:9000
+      SFD_BUCKET: ${SFD_PREPARATION_RUN:?}-private
+      SFD_S3_ACCESS_KEY: ${SFD_APP_KEY:?scoped application key required}
+      SFD_S3_SECRET_KEY: ${SFD_APP_SECRET:?distinct scoped application secret required}
+      SFD_ADMIN_USER: admin
+      SFD_ADMIN_PASS: ${SFD_ADMIN_SECRET:?generated synthetic administrator secret required}
+      SFD_SESSION_SECRET: ${SFD_SESSION_SECRET:?generated session secret required}
+      SFD_DOWNLOAD_SECRET: ${SFD_DOWNLOAD_SECRET:?generated download secret required}
+      SFD_MAX_UPLOAD_BYTES: "6291456"
+      SFD_MAX_REQUEST_BYTES: "7340032"
+      SFD_CLEANUP_ENABLED: "false"
+    ports: ["127.0.0.1::8080"]
+    networks: [preparation]
+networks:
+  preparation:
+    name: ${SFD_PREPARATION_RUN:?}-net
+    # Dedicated bridge required for loopback test bindings; no unrelated peers.
+    labels:
+      sfd.quality-run: ${SFD_PREPARATION_RUN:?}
+volumes:
+  objects:
+    name: ${SFD_PREPARATION_RUN:?}-objects
+    labels:
+      sfd.quality-run: ${SFD_PREPARATION_RUN:?}
+  pgdata:
+    name: ${SFD_PREPARATION_RUN:?}-pgdata
+    labels:
+      sfd.quality-run: ${SFD_PREPARATION_RUN:?}

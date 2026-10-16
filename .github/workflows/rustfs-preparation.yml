@@ -1,0 +1,127 @@
+name: RustFS preparation
+on:
+  push:
+    branches: [codex/sfd-rustfs-adoption-preparation-20261016]
+  pull_request:
+    branches: [codex/sfd-storage-evaluation-20261016]
+permissions:
+  contents: read
+concurrency:
+  group: rustfs-preparation-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  iam:
+    name: Nested IAM tests, guards and advisory classification
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: tests/storage/iam/go.mod
+      - name: Explicit nested-module verification
+        working-directory: tests/storage/iam
+        run: |
+          go test ./... -v -count=1
+          go vet ./...
+          go mod verify
+          python3 - <<'PY'
+          import subprocess
+          run = "sfd-quality-" + "0" * 16
+          cases = [[], ["198.51.100.1:9000", run+"-private", run], ["127.0.0.1:1", "unowned", run]]
+          for args in cases:
+              result = subprocess.run(["go", "run", ".", *args], capture_output=True, text=True)
+              assert result.returncode != 0
+              assert "expected owned" in result.stderr or "unexpected disposable" in result.stderr
+          print("PASS: 3 administrative target/ownership rejection cases; no network target used")
+          PY
+      - name: Source advisory scan (JSON retained, no suppression)
+        working-directory: tests/storage/iam
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 -json ./... > "$RUNNER_TEMP/iam-vuln.json"
+          python3 - <<'PY'
+          import json, os, collections
+          raw = open(os.environ["RUNNER_TEMP"]+"/iam-vuln.json").read()
+          decoder = json.JSONDecoder()
+          levels = {}
+          while raw.strip():
+              item, end = decoder.raw_decode(raw.lstrip())
+              raw = raw.lstrip()[end:]
+              if "finding" not in item:
+                  continue
+              finding = item["finding"]
+              frame = finding["trace"][0]
+              level = 3 if frame.get("function") else 2 if frame.get("package") else 1
+              levels[finding["osv"]] = max(level, levels.get(finding["osv"], 0))
+              print(finding["osv"], {1:"module-only",2:"package-only",3:"symbol/initialization"}[level], frame, "fixed", finding.get("fixed_version"))
+          print("Advisory reachability totals:", dict(collections.Counter(levels.values())))
+          assert all(level == 1 for level in levels.values()), "imported-package or symbol/initialization finding requires decision"
+          print("No imported affected package or symbol trace observed; module findings remain, not vulnerability-free certification")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nested-iam-advisory-inventory
+          path: ${{ runner.temp }}/iam-vuln.json
+          if-no-files-found: error
+          retention-days: 14
+  runtime:
+    name: ${{ matrix.suite }} required isolated acceptance
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [contract, rehearsal]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Native vectors and sandboxed Chromium
+        run: |
+          sudo apt-get update && sudo apt-get install -y libssl-dev
+          make -C native test
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Mandatory actual execution with no skipped scenarios
+        env:
+          SFD_E2E: '1'
+          SFD_BROWSER: '1'
+          SFD_STORAGE_EVALUATION: rustfs
+          SFD_RUSTFS_REHEARSAL: '1'
+          SFD_REHEARSAL_REQUIRED: '1'
+          SFD_REHEARSAL_EVIDENCE: ${{ runner.temp }}/sfd-preparation-evidence
+          SFD_SUITE: ${{ matrix.suite }}
+        run: |
+          mkdir "$SFD_REHEARSAL_EVIDENCE"
+          if [ "$SFD_SUITE" = rehearsal ]; then
+            test_name=TestRustFSMigrationRehearsal
+            expected=6
+          else
+            test_name=TestUploadHashDownloadFlow
+            expected=18
+          fi
+          go test ./tests/e2e -json -v -run "^$test_name$" -count=1 -timeout 29m | tee "$RUNNER_TEMP/runtime-test.json"
+          python3 - "$test_name" "$expected" <<'PY'
+          import json, os, sys
+          events = [json.loads(line) for line in open(os.environ["RUNNER_TEMP"]+"/runtime-test.json")]
+          assert not [e for e in events if e.get("Action") in ("skip", "fail")], "failure/skip is not acceptance"
+          passed = [e for e in events if e.get("Action") == "pass" and e.get("Test","").startswith(sys.argv[1]+"/")]
+          assert len(passed) == int(sys.argv[2]), (len(passed), sys.argv[2])
+          assert any(e.get("Action")=="pass" and e.get("Test")==sys.argv[1] for e in events), "mandatory parent did not pass"
+          print("REQUIRED EXECUTION:", len(passed), "scenarios, failures=0, skips=0")
+          PY
+      - name: Retain sanitized manifests and actual test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.suite }}-preparation-evidence
+          path: |
+            ${{ runner.temp }}/runtime-test.json
+            ${{ runner.temp }}/sfd-preparation-evidence/**/*.json
+          if-no-files-found: error
+          retention-days: 14

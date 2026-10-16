@@ -270,3 +270,25 @@ The application now supports enterprise-scale file transfers with professional p
 ## 2026-10-15 — SFD-QUALITY-CLOSEOUT-20261015-CODEX
 
 Owner-authorised master-based review found ordinary-session access to administrative functions and missing file ownership enforcement, alongside session, expiry, lifecycle and configuration defects. Baseline security regressions reproduce the affected boundaries. Fixes and actual outcomes are maintained in [the current tracker](../docs/TRACKER.md); [continuity](../docs/CONTINUITY.md) records the preserved older checkout, workflow installation, source-only MinIO decision and recovery state. The owned [PR #21](https://github.com/dreamingfree09/secure-file-drop/pull/21) is the exact-revision handover and final validation evidence. No master merge or public deployment occurred.
+
+
+## 2026-10-16 — RustFS preparation and synthetic migration rehearsal
+
+Work ID SFD-RUSTFS-ADOPTION-20261016-CODEX; Owner-approved bounded 12-path implementation subject to Aether's PR #23 conditions. Exact base 0349bc0c8f6b7f9b34dc8b68d850efa946c79950; separate producer branch codex/sfd-rustfs-adoption-preparation-20261016 targets the existing evaluation branch. Implementation 92cba68c2dd6969fccbe58337218d874d8d3c2a5; separate workflow installation db87d5c37000d33c4f7560436063fae7e8a798c3; lint refinement ec1e47f7fb01656eb0f65f1dbee374c7cb861f82.
+
+Added immutable-pinned RustFS 1.0.2 preparation configuration, independently generated scoped identities and bucket policy, nested-helper dependency hygiene and mandatory isolated migration/restored-pair/rollback CI. No application/native/schema/UI/root-dependency/default-Compose/existing-acceptance changes. Read docs/CONTINUITY.md and docs/DEPLOYMENT.md for current evidence, operations and limits.
+
+At exact implementation head ec1e47f7fb01656eb0f65f1dbee374c7cb861f82, preparation CI 38968347629 passed nested IAM, 18 candidate contract scenarios (124.87s) and all six migration phases (240.95s), with zero failures/skips in dedicated runtime jobs. Four-file source, coherent checkpoint, exact-byte/scoped logical copy, pre-write rollback, actual unchanged app against restored PG + cold-restored RustFS, real Chromium/new upload and six-file coherent post-write/delete rollback passed. Endpoint-only reversal failed reconciliation as expected (three missing additions, stale deleted object); baseline checkpoint/object bytes remained unchanged. Existing CI 38968347529 passed Go/native/race/security/lint/docs and 15 default-MinIO scenarios; its separate new opt-in rehearsal skip is not migration evidence. Local Docker remains unavailable.
+
+Helper tests explicitly report no Go test files; vet/module verification and three guard rejection cases passed, with real IAM provisioning/denials in the fixture. Source scan retains one unimported module-only OpenPGP advisory GO-2026-5932/no fix, zero imported-package/symbol/initialization traces. Runtime OS/SBOM inventories do not certify vulnerability absence or Rust binary-symbol reachability.
+
+Original DEVLOG preservation anchor: blob 4f976745c6ab14e8ad79963ba81eb5075e35444c, exact 14,783-byte prefix retained byte-for-byte; appended only after real implementation commits and verification. Original/WSL checkouts, .qodo, remotes and protected refs preserved. No bypass reproduction, real-data operation, deployment or integration. Sanitized evidence retained 14 days; raw checkpoints/secrets/volumes remain ephemeral runner-local.
+
+Producer preparation acceptance is complete; final draft-PR SHA/CI/readback handover and independent Aether acknowledgement remain separate. Production S3 TLS, capacity/maximum size, topology/maturity, security-update ownership/rotation, historical data/schema/owners, combined cross-host DR, production cutover/migration, public deployment, protected integration and final vendor adoption remain open. No production readiness claim.
+
+
+### 2026-10-16 — Complete runtime identity evidence
+
+After successful bounded acceptance, evidence-only implementation 4167a233aaaf7e8ead64564a28b71005672a2c4f records exact built source-MinIO/backend/RustFS image IDs in the sanitized rehearsal artifact. It changes only the authorised test path and does not change runtime behavior or acceptance assertions. Fixture compilation and zero-issue lint passed before the implementation commit; exact final-head hosted reruns/readback are in draft PR #24's GHP-01 handover.
+
+This entry is appended after that real implementation hash. All preceding 17,867 bytes and the original 14,783-byte preservation anchor remain byte-identical. Production/reconciliation/transport/capacity/recovery/adoption gates and independent Aether review remain open.
