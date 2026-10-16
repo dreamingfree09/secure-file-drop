@@ -20,6 +20,8 @@ jobs:
         run: node --test tests/web/*.test.cjs
       - name: Install native build dependencies
         run: sudo apt-get update && sudo apt-get install -y libssl-dev
+      - name: Synthetic environment-validator regressions
+        run: python3 scripts/test-validate-env.py
       - name: Native SHA-256 vectors
         run: make -C native test
       - name: Unit tests (full-stack test explicitly skipped here)
@@ -52,7 +54,19 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Native tool for isolated COMMIT fault fixtures
+        run: |
+          sudo apt-get update && sudo apt-get install -y libssl-dev
+          make -C native test
+      - name: Pinned real Chromium
+        run: |
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
       - name: Full-stack acceptance (no skipped Docker tests)
         env:
           SFD_E2E: '1'
+          SFD_BROWSER: '1'
         run: go test ./tests/e2e -v -count=1 -timeout 25m
