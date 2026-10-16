@@ -133,3 +133,23 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 
 	return out.Hash, raw, out.Bytes, nil
 }
+
+// Native readiness executes a known empty-file vector, not just a path lookup.
+func hashToolReady(ctx context.Context) error {
+	f, err := os.CreateTemp("", "sfd-ready-*")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = os.Remove(f.Name()) }()
+	if err = f.Close(); err != nil {
+		return err
+	}
+	out, err := runHashTool(ctx, f.Name())
+	if err != nil {
+		return err
+	}
+	if out.Bytes != 0 || out.Hash != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" {
+		return errors.New("native readiness vector mismatch")
+	}
+	return nil
+}

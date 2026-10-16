@@ -13,6 +13,7 @@ Read [deployment](DEPLOYMENT.md) before starting a stack and [API](API.md) for r
 | SFD_S3_ACCESS_KEY / SFD_S3_SECRET_KEY | Required storage credentials |
 | SFD_BUCKET | Required existing private bucket, without anonymous bucket-policy grants |
 | SFD_MAX_UPLOAD_BYTES | Positive maximum file bytes; default 50 GiB; example config uses 10 MiB |
+| SFD_MAX_REQUEST_BYTES | Required in Compose: file-byte limit plus 1048576; omitted in direct backend runs computes that same envelope |
 | SFD_PUBLIC_BASE_URL | Canonical public origin, e.g. https://files.example.test; configures secure cookies |
 | SFD_ADDR | Listen address; default :8080 |
 | SFD_HASH_TOOL | Native CLI path; default /app/sfd-hash |
@@ -28,3 +29,5 @@ SFD_DB_DSN and SFD_MINIO_* are historical documentation names; the backend reads
 Register an ordinary account, log in, create metadata, upload multipart file bytes, then create a signed link. The browser implements this sequence. Ordinary users see their files; the administrator additionally sees global counters, deletion and manual cleanup. Sign out calls the server and revokes the current session. Signed download links remain bearer links until expiry/deletion, independent of logout.
 
 Large-file behavior is bounded but this review does not certify a 50 GiB throughput or capacity target. Hashing requires temporary disk capacity for a complete object and has a 2-minute subprocess timeout within a 5-minute upload operation. Tune operational limits only after representative load tests. See [roadmap](ROADMAP.md) for future ideas.
+
+Use the canonical origin consistently, including its external port; paths, queries, fragments and user information are invalid. The backend uses direct TLS/configuration for cookie security and ignores arbitrary forwarding headers. Compose keeps storage on an internal network with no host ports; only the backend joins it. Shutdown requires the configured 25-second Compose grace period to allow bounded active-upload cancellation and compensation.

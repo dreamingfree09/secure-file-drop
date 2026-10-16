@@ -53,12 +53,14 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			sizeBytes   int64
 		)
 
-		err = db.QueryRow(
+		queryCtx, queryCancel := sqlContext(r.Context())
+		err = db.QueryRowContext(queryCtx,
 			`SELECT object_key, status, content_type, orig_name, size_bytes
 			 FROM files
 			 WHERE id = $1`,
 			claims.FileID,
 		).Scan(&objectKey, &status, &contentType, &origName, &sizeBytes)
+		queryCancel()
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "not found", http.StatusNotFound)

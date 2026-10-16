@@ -40,6 +40,8 @@ func StartCleanupJob(ctx context.Context, cfg CleanupConfig) {
 	}
 }
 func runCleanup(ctx context.Context, cfg CleanupConfig) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
 	tx, err := cfg.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return 0, err

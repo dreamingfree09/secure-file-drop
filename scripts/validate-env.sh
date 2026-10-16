@@ -32,11 +32,11 @@ check_required() {
     if [ -z "$var_value" ]; then
         if [ "$allow_empty" = "false" ]; then
             echo "❌ $var_name is not set or empty"
-            ((ERRORS++))
+            ERRORS=$((ERRORS + 1))
         fi
     elif [[ "$var_value" == *"CHANGE"* ]]; then
-        echo "❌ $var_name still contains placeholder: $var_value"
-        ((ERRORS++))
+        echo "❌ $var_name still contains a placeholder"
+        ERRORS=$((ERRORS + 1))
     else
         echo "✅ $var_name is set"
     fi
@@ -54,7 +54,7 @@ check_secret_strength() {
     
     if [ ${#var_value} -lt $min_length ]; then
         echo "⚠️  $var_name is shorter than recommended ($min_length chars)"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
 }
 
@@ -81,6 +81,7 @@ check_required "SFD_DOWNLOAD_SECRET"
 # Optional
 check_required "SFD_PUBLIC_BASE_URL" "true"
 check_required "SFD_MAX_UPLOAD_BYTES" "true"
+check_required "SFD_MAX_REQUEST_BYTES"
 
 echo ""
 echo "🔐 Secret Strength Checks:"
@@ -99,7 +100,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 # Check DATABASE_URL format
 if [[ ! "$DATABASE_URL" =~ ^postgres(ql)?:// ]]; then
     echo "⚠️  DATABASE_URL does not start with postgres:// or postgresql://"
-    ((WARNINGS++))
+    WARNINGS=$((WARNINGS + 1))
 else
     echo "✅ DATABASE_URL format looks correct"
 fi
@@ -109,17 +110,38 @@ if [[ "$DATABASE_URL" == *"$POSTGRES_USER"* ]] && [[ "$DATABASE_URL" == *"$POSTG
     echo "✅ DATABASE_URL contains matching credentials"
 else
     echo "⚠️  DATABASE_URL credentials may not match POSTGRES_USER/POSTGRES_PASSWORD"
-    ((WARNINGS++))
+    WARNINGS=$((WARNINGS + 1))
 fi
 
 # Check SFD_MAX_UPLOAD_BYTES is a number if set
 if [ -n "$SFD_MAX_UPLOAD_BYTES" ]; then
     if [[ "$SFD_MAX_UPLOAD_BYTES" =~ ^[0-9]+$ ]]; then
-        echo "✅ SFD_MAX_UPLOAD_BYTES is a valid number: $SFD_MAX_UPLOAD_BYTES"
+        echo "✅ SFD_MAX_UPLOAD_BYTES is a valid number"
     else
-        echo "❌ SFD_MAX_UPLOAD_BYTES must be a number: $SFD_MAX_UPLOAD_BYTES"
-        ((ERRORS++))
+        echo "❌ SFD_MAX_UPLOAD_BYTES must be a number"
+        ERRORS=$((ERRORS + 1))
     fi
+fi
+
+# Compose uses the same explicit envelope as the backend. Check arithmetic
+# only after validating bounded decimal operands; never print their values.
+if [[ "${SFD_MAX_UPLOAD_BYTES:-53687091200}" =~ ^[0-9]+$ ]] && [[ "${SFD_MAX_REQUEST_BYTES:-}" =~ ^[0-9]+$ ]]; then
+    file_limit="${SFD_MAX_UPLOAD_BYTES:-53687091200}"
+    request_limit="$SFD_MAX_REQUEST_BYTES"
+    while [[ ${#file_limit} -gt 1 && "$file_limit" == 0* ]]; do file_limit="${file_limit#0}"; done
+    while [[ ${#request_limit} -gt 1 && "$request_limit" == 0* ]]; do request_limit="${request_limit#0}"; done
+    if [[ ${#file_limit} -gt 19 || ${#request_limit} -gt 19 ||
+          ( ${#file_limit} -eq 19 && "$file_limit" > "9223372036853727231" ) ||
+          ( ${#request_limit} -eq 19 && "$request_limit" > "9223372036854775807" ) ]]; then
+        echo "❌ Upload/envelope limit is outside the supported integer range"
+        ERRORS=$((ERRORS + 1))
+    elif (( 10#$file_limit <= 0 || 10#$request_limit != 10#$file_limit + 1048576 )); then
+        echo "❌ SFD_MAX_REQUEST_BYTES must equal SFD_MAX_UPLOAD_BYTES plus 1048576"
+        ERRORS=$((ERRORS + 1))
+    fi
+elif [ -n "${SFD_MAX_REQUEST_BYTES:-}" ] && [[ ! "$SFD_MAX_REQUEST_BYTES" =~ ^[0-9]+$ ]]; then
+    echo "❌ SFD_MAX_REQUEST_BYTES must be a number"
+    ERRORS=$((ERRORS + 1))
 fi
 
 # Check SFD_PUBLIC_BASE_URL is a valid URL if set
@@ -128,7 +150,7 @@ if [ -n "$SFD_PUBLIC_BASE_URL" ]; then
         echo "✅ SFD_PUBLIC_BASE_URL is a valid URL"
     else
         echo "⚠️  SFD_PUBLIC_BASE_URL should start with http:// or https://"
-        ((WARNINGS++))
+        WARNINGS=$((WARNINGS + 1))
     fi
 fi
 

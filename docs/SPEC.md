@@ -10,11 +10,11 @@
 - [Environment variables (required/important)](#environment-variables-requiredimportant)
 - [Deployment (initial)](#deployment-initial)
 
-Current acceptance evidence is in [TRACKER.md](TRACKER.md) and the exact-revision [PR handover](https://github.com/dreamingfree09/secure-file-drop/pull/21). Security goals below are requirements, not a production-certification claim.
+Current acceptance evidence is in [TRACKER.md](TRACKER.md) and the exact-revision [PR handover](https://github.com/dreamingfree09/secure-file-drop/pull/22). Security goals below are requirements, not a production-certification claim.
 
 ## Purpose
 
-Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. The system is designed to be safe to expose on the public internet from day one, while remaining simple and auditable.
+Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. Public deployment is a design goal; the current archived-storage, reconciliation, capacity and recovery gates must be resolved before exposure.
 
 This project is an educational exercise that combines a memory-safe backend (Go) with a small C utility for efficient, low-level hashing.
 
@@ -78,11 +78,12 @@ This project is an educational exercise that combines a memory-safe backend (Go)
 - SFD_S3_ENDPOINT, SFD_S3_ACCESS_KEY, SFD_S3_SECRET_KEY, SFD_BUCKET
 - DATABASE_URL
 - SFD_PUBLIC_BASE_URL (optional but recommended in deployments)
-- SFD_MAX_UPLOAD_BYTES (optional)
+- SFD_MAX_UPLOAD_BYTES (optional file-byte limit)
+- SFD_MAX_REQUEST_BYTES (Compose envelope: file limit plus 1048576)
 
 ## Deployment (initial)
 
-- Docker Compose (development and simple production)
+- Docker Compose (isolated development; production requires separate review)
 - Use a reverse proxy (Caddy, Nginx, Traefik) to manage TLS and public endpoints
 - In production, consider secret management for credentials and secrets
 

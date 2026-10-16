@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -71,14 +70,13 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
-		r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 		var req createLinkReq
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
+		if !decodeJSON(w, r, &req) {
 			return
 		}
 
+		ctx, cancel := sqlContext(r.Context())
+		defer cancel()
 		req.ID = strings.TrimSpace(req.ID)
 		if req.ID == "" {
 			http.Error(w, "missing id", http.StatusBadRequest)
@@ -95,7 +93,7 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 		// For now: require "hashed" (Milestone 5) so integrity is proven.
 		var status string
 		p := principal(r)
-		err = db.QueryRowContext(r.Context(), `SELECT status FROM files WHERE id = $1 AND ($2 OR user_id::text=$3)`, id, p.Admin, p.Sub).Scan(&status)
+		err = db.QueryRowContext(ctx, `SELECT status FROM files WHERE id = $1 AND ($2 OR user_id::text=$3)`, id, p.Admin, p.Sub).Scan(&status)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "not found", http.StatusNotFound)
@@ -125,8 +123,11 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 
 		// Milestone 8: prefer configured public base URL for deterministic links.
 		// This is critical when deployed behind reverse proxies (e.g., Proxmox + Nginx/Traefik/Caddy).
-		base := strings.TrimSpace(os.Getenv("SFD_PUBLIC_BASE_URL"))
-		base = strings.TrimRight(base, "/")
+		base, err := publicOrigin()
+		if err != nil {
+			http.Error(w, "server misconfigured", http.StatusInternalServerError)
+			return
+		}
 		if base == "" {
 			base = requestOrigin(r)
 		}

@@ -1,5 +1,25 @@
 # Secure File Drop continuity
 
+## Focused corrections — 2026-10-16
+
+Work ID: SFD-DEEP-CORRECTIONS-20261016-CODEX. The Owner approved focused application/runtime corrections and bounded validation following [Aether's assessment acknowledgement](https://github.com/dreamingfree09/secure-file-drop/pull/22#issuecomment-6204810242). Producer/branch owner: Codex; recipient: Aether in “GitHub workflow implementation”. Received assessment: `1f30bb374420d3285ebdaac0c192240897c5d0f4`; accepted master remains `0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7`. Work continues on existing `codex/sfd-deep-review-20261015` / [PR #22](https://github.com/dreamingfree09/secure-file-drop/pull/22); assessment commits and dated findings remain history.
+
+F2/F3/F4/F5/F6/F8/F9/F10 corrections, compatible application/runtime remediation, conservative COMMIT handling and bounded native-readiness/transfer-shutdown corrections are implemented. The canonical [assessment correction appendix and operating matrix](DEEP_REVIEW_20261015.md#approved-correction-status--2026-10-16) records finding status, actual checks, source revisions and limits. Correction code/test/CI revision `709942ee7a490a9d36c647760a21c4c74bd2c51c` passed all jobs in both push and PR CI, including all 15 real-stack scenarios, the authenticated Chromium journey and actual proxy. Producer implementation/validation is complete; storage and integration decisions remain open. The final full SHA, complete scope, exact CI readback and independent-review state belong to the PR handover.
+
+F1 and storage's part of F7 remain awaiting decision. Recommendation: separately authorise a SeaweedFS Community compatibility/security evaluation, with RustFS as an alternative; no replacement or migration is authorised here. Private-network/no-host-port isolation is temporary containment, not a MinIO patch. The bypass reproduction remains excluded and unexecuted. Existing-schema/ownership reconciliation, representative maximum-size/slow-client capacity, production storage, public TLS/ingress and whole-service recovery remain gates. No public-production readiness is claimed.
+
+Original no-origin checkout at `853b865e30872964a556c225335eb2191928972b` retains one tracked-change entry and four untracked entries without exposing their contents. WSL `feature/v2-enhancements` remains clean at `2b8e56de4b79e2508125ca02c18455ae88dee7f6`. The previous producer branch remains `c00d6c48d57082bce51d4ca6096d5cf9aab3705f`; unrelated .qodo, remotes and project mapping were not changed. Normal commits/pushes only; no master write, merge, deployment, existing-data operation or host repair.
+
+Producer completion/publication and independent acknowledgement are separate. Aether's exact-final-revision acknowledgement and Owner's later integration approval remain pending. Next action: independently review the published correction SHA and decide the separate storage evaluation; do not merge or deploy solely from this handover.
+
+## Deep assessment handover — 2026-10-15
+
+Work ID: SFD-DEEP-REVIEW-20261015-CODEX. Owner-authorised inspection, isolated validation, regression tests and findings publication only. Producer/branch owner: Codex; recipient: Aether in “GitHub workflow implementation”. Received/expected accepted master: `0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7`, verified root/origin/branch/worktree, clean receipt and matching remote master before creating `codex/sfd-deep-review-20261015`. The earlier producer branch and preserved checkouts/local work remain untouched.
+
+The canonical [deep assessment](DEEP_REVIEW_20261015.md) contains prioritised findings, reproduction evidence, advisory applicability, scenario verdicts and the recommended correction package. [PR #22](https://github.com/dreamingfree09/secure-file-drop/pull/22) carries the complete exact-revision publication handover and final CI readback. Assessment/publication is complete; production-code fixes, dependency updates and master integration remain pending Owner/Aether approval. Genuine failing input regressions are retained, not presented as green acceptance.
+
+The storage signature-bypass reproduction was not written, executed or published; source/advisory applicability is distinct from an unverified runtime exploit. Local Docker/authenticated-browser gaps, production-storage maintenance, existing-schema/ownership reconciliation, maximum-size capacity and deployment/recovery gates remain open. No public-production readiness is claimed. Next action: Aether independently reviews the exact published revision and correction package before implementation authority is granted.
+
 ## Completed assignment — 2026-10-15
 
 - Work ID: SFD-QUALITY-CLOSEOUT-20261015-CODEX.

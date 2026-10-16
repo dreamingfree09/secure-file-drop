@@ -27,7 +27,9 @@ type FileInfo struct {
 
 func listFiles(w http.ResponseWriter, r *http.Request, db *sql.DB, all bool) {
 	p := principal(r)
-	rows, err := db.QueryContext(r.Context(), `SELECT id,orig_name,content_type,size_bytes,status,COALESCE(sha256_hex,''),created_at
+	ctx, cancel := sqlContext(r.Context())
+	defer cancel()
+	rows, err := db.QueryContext(ctx, `SELECT id,orig_name,content_type,size_bytes,status,COALESCE(sha256_hex,''),created_at
  FROM files WHERE $1 OR user_id::text=$2 OR ($3 AND user_id IS NULL AND created_by=$2)
  ORDER BY created_at DESC LIMIT 100`, all, p.Sub, p.Admin)
 	if err != nil {
@@ -72,14 +74,16 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "bad file id", http.StatusBadRequest)
 		return
 	}
-	tx, err := s.db.BeginTx(r.Context(), nil)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
 	defer func() { _ = tx.Rollback() }()
 	var key string
-	err = tx.QueryRowContext(r.Context(), "SELECT object_key FROM files WHERE id=$1 FOR UPDATE", id).Scan(&key)
+	err = tx.QueryRowContext(ctx, "SELECT object_key FROM files WHERE id=$1 FOR UPDATE", id).Scan(&key)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
@@ -88,8 +92,6 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-	defer cancel()
 	if err = s.minio.RemoveObject(ctx, s.bucket, key, minio.RemoveObjectOptions{}); err != nil {
 		http.Error(w, "storage error", http.StatusBadGateway)
 		return

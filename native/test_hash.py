@@ -19,4 +19,11 @@ with tempfile.TemporaryDirectory(prefix="sfd-native-vectors-") as temp:
     assert subprocess.run([tool], capture_output=True).returncode == 1
     assert subprocess.run([tool, str(path.parent / "missing")], capture_output=True).returncode == 2
     assert subprocess.run([tool, str(path.parent)], capture_output=True).returncode == 2
+    if pathlib.Path("/dev/full").exists():
+        with open("/dev/full", "wb") as output:
+            result = subprocess.run([tool, str(path)], stdout=output, stderr=subprocess.PIPE)
+        assert result.returncode == 2
+        assert b"Output I/O error" in result.stderr
+    else:
+        print("BLOCKED: /dev/full output-failure regression unavailable")
 print("PASS: 5 native SHA-256 vectors, byte counts, usage and I/O failures")

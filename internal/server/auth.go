@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -108,9 +107,10 @@ func sessionHash(token string) string {
 	return hex.EncodeToString(h[:])
 }
 func (a AuthConfig) cookie(r *http.Request, value string, expiry time.Time) *http.Cookie {
+	base, _ := publicOrigin()
 	// #nosec G124 -- Secure follows trusted HTTPS config/TLS; HTTP is supported for loopback development.
 	return &http.Cookie{Name: a.cookieName(), Value: value, Path: "/", Expires: expiry, HttpOnly: true, SameSite: http.SameSiteLaxMode,
-		Secure: r.TLS != nil || strings.HasPrefix(os.Getenv("SFD_PUBLIC_BASE_URL"), "https://")}
+		Secure: r.TLS != nil || strings.HasPrefix(base, "https://")}
 }
 func (a AuthConfig) loginHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -122,15 +122,20 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 			Username string `json:"username"`
 			Password string `json:"password"`
 		}
-		r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
-		if json.NewDecoder(r.Body).Decode(&body) != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
+		if !decodeJSON(w, r, &body) {
 			return
 		}
+		ctx, cancel := sqlContext(r.Context())
+		defer cancel()
 		var authenticated, admin bool
+		var authErr error
 		var userID string
 		if a.DB != nil {
-			userID, authenticated = authenticateUser(a.DB, body.Username, body.Password)
+			userID, authenticated, authErr = authenticateUser(ctx, a.DB, body.Username, body.Password)
+		}
+		if authErr != nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
 		}
 		if !authenticated && a.AdminUser != "" && a.AdminPass != "" {
 			pw := sha256.Sum256([]byte(body.Password))
@@ -148,7 +153,7 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		}
 		tok, exp, err := a.makeSessionToken(userID, admin)
 		if err == nil && a.DB != nil {
-			_, err = a.DB.ExecContext(r.Context(), "INSERT INTO sessions (token_hash, expires_at) VALUES ($1,$2)", sessionHash(tok), exp)
+			_, err = a.DB.ExecContext(ctx, "INSERT INTO sessions (token_hash, expires_at) VALUES ($1,$2)", sessionHash(tok), exp)
 		}
 		if err != nil {
 			http.Error(w, "server error", http.StatusInternalServerError)
@@ -173,8 +178,10 @@ func (a AuthConfig) requireAuth(next http.Handler) http.Handler {
 			return
 		}
 		if a.DB != nil {
+			ctx, cancel := sqlContext(r.Context())
+			defer cancel()
 			var valid bool
-			err = a.DB.QueryRowContext(r.Context(), "SELECT EXISTS(SELECT 1 FROM sessions WHERE token_hash=$1 AND expires_at > CURRENT_TIMESTAMP)", sessionHash(c.Value)).Scan(&valid)
+			err = a.DB.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM sessions WHERE token_hash=$1 AND expires_at > CURRENT_TIMESTAMP)", sessionHash(c.Value)).Scan(&valid)
 			if err != nil {
 				http.Error(w, "server error", http.StatusInternalServerError)
 				return
@@ -184,7 +191,7 @@ func (a AuthConfig) requireAuth(next http.Handler) http.Handler {
 				return
 			}
 			if !p.Admin {
-				err = a.DB.QueryRowContext(r.Context(), "SELECT EXISTS(SELECT 1 FROM users WHERE id::text=$1 AND is_active=TRUE)", p.Sub).Scan(&valid)
+				err = a.DB.QueryRowContext(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE id::text=$1 AND is_active=TRUE)", p.Sub).Scan(&valid)
 				if err != nil {
 					http.Error(w, "server error", http.StatusInternalServerError)
 					return
@@ -214,8 +221,10 @@ func (a AuthConfig) logoutHandler() http.Handler {
 			return
 		}
 		c, _ := r.Cookie(a.cookieName())
+		ctx, cancel := sqlContext(r.Context())
+		defer cancel()
 		if a.DB != nil {
-			if _, err := a.DB.ExecContext(r.Context(), "DELETE FROM sessions WHERE token_hash=$1", sessionHash(c.Value)); err != nil {
+			if _, err := a.DB.ExecContext(ctx, "DELETE FROM sessions WHERE token_hash=$1", sessionHash(c.Value)); err != nil {
 				http.Error(w, "server error", http.StatusInternalServerError)
 				return
 			}

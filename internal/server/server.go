@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -45,14 +46,21 @@ type Server struct {
 	cleanupDone   chan struct{}
 	cleanupCtx    context.Context
 	cleanupCancel context.CancelFunc
+	requestCancel context.CancelFunc
+	requests      sync.WaitGroup
+	requestMu     sync.Mutex
+	closing       bool
 }
 
 // New constructs and returns an initialized Server wiring handlers and
 // dependencies (DB, MinIO). It panics early if required dependencies
 // are missing, to avoid running in a half-configured state.
 func New(cfg Config) *Server {
-	if _, err := maxUploadBytes(); err != nil {
-		panic("invalid SFD_MAX_UPLOAD_BYTES")
+	if _, err := maxRequestBytes(); err != nil {
+		panic("invalid upload envelope configuration")
+	}
+	if _, err := publicOrigin(); err != nil {
+		panic("invalid SFD_PUBLIC_BASE_URL")
 	}
 	if cfg.Auth.DB == nil {
 		cfg.Auth.DB = cfg.DB
@@ -90,12 +98,12 @@ func New(cfg Config) *Server {
 	})
 
 	// Ready endpoint: dependencies are reachable (Postgres and MinIO).
-	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
 		if cfg.DB == nil {
 			http.Error(w, "db not configured", http.StatusServiceUnavailable)
 			return
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
 		defer cancel()
 
 		// Check Postgres
@@ -108,6 +116,11 @@ func New(cfg Config) *Server {
 		exists, err := mc.BucketExists(ctx, bucket)
 		if err != nil || !exists {
 			http.Error(w, "minio not ready", http.StatusServiceUnavailable)
+			return
+		}
+
+		if hashToolReady(ctx) != nil {
+			http.Error(w, "native hash not ready", http.StatusServiceUnavailable)
 			return
 		}
 
@@ -171,6 +184,9 @@ func New(cfg Config) *Server {
 		Addr:              cfg.Addr,
 		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       5 * time.Minute,
+		WriteTimeout:      31 * time.Minute,
+		IdleTimeout:       time.Minute,
 	}
 
 	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
@@ -182,6 +198,22 @@ func New(cfg Config) *Server {
 		bucket:      bucket,
 		cleanupDone: make(chan struct{}),
 	}
+
+	requestCtx, requestCancel := context.WithCancel(context.Background())
+	srv.requestCancel = requestCancel
+	s.BaseContext = func(net.Listener) context.Context { return requestCtx }
+	s.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		srv.requestMu.Lock()
+		if srv.closing {
+			srv.requestMu.Unlock()
+			http.Error(w, "shutting down", http.StatusServiceUnavailable)
+			return
+		}
+		srv.requests.Add(1)
+		srv.requestMu.Unlock()
+		defer srv.requests.Done()
+		handler.ServeHTTP(w, r)
+	})
 
 	// Admin endpoints (protected) - registered after Server creation
 	mux.Handle("/admin/files", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminListFilesHandler)))
@@ -212,10 +244,28 @@ func (s *Server) Start() error {
 // using the provided context (respecting the deadline/timeout supplied by the caller).
 func (s *Server) Shutdown(ctx context.Context) error {
 	s.cleanupCancel()
-	err := s.httpServer.Shutdown(ctx)
+	// Allow short transfers to drain, then cancel active handlers and leave the
+	// caller's remaining budget for upload compensation and background cleanup.
+	grace, cancel := context.WithTimeout(ctx, 5*time.Second)
+	err := s.httpServer.Shutdown(grace)
+	cancel()
+	s.requestMu.Lock()
+	s.closing = true
+	s.requestMu.Unlock()
+	s.requestCancel()
+	if err != nil {
+		_ = s.httpServer.Close()
+	}
+	done := make(chan struct{})
+	go func() { s.requests.Wait(); close(done) }()
+	select {
+	case <-done:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 	select {
 	case <-s.cleanupDone:
-		return err
+		return nil
 	case <-ctx.Done():
 		return ctx.Err()
 	}

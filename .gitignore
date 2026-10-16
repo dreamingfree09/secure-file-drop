@@ -22,3 +22,8 @@ native/*.o
 
 # Local curl cookie jar
 cookies.txt
+
+# Build backend from source; never commit the local executable.
+/backend
+
+/tests/browser/node_modules/

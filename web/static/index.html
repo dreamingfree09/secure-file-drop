@@ -728,9 +728,42 @@ let isLoggedIn = false;
 let isAdmin = false;
 let sessionGeneration = 0;
 let selectedFile = null;
+const ownedRequests = new Set();
+const ownedUploads = new Set();
+function invalidateSession() {
+  sessionGeneration++;
+  for (const controller of ownedRequests) controller.abort();
+  ownedRequests.clear();
+  for (const xhr of ownedUploads) xhr.abort();
+  ownedUploads.clear();
+}
+function clearCredentials() {
+  for (const id of ['username', 'password', 'regEmail', 'regUsername', 'regPassword', 'regPasswordConfirm']) {
+    document.getElementById(id).value = '';
+  }
+}
+// Keep ownership through response-body consumption, with a bounded small-request timeout.
+async function sessionFetch(url, options = {}) {
+  const controller = new AbortController();
+  ownedRequests.add(controller);
+  const timer = setTimeout(() => { controller.abort(); release(); }, 30000);
+  function release() { clearTimeout(timer); ownedRequests.delete(controller); }
+  try {
+    const res = await fetch(url, {...options, signal: controller.signal});
+    for (const method of ['json', 'text']) {
+      if (typeof res[method] !== 'function') continue;
+      const read = res[method].bind(res);
+      res[method] = async () => { try { return await read(); } finally { release(); } };
+    }
+    if (res.status === 204) release();
+    return res;
+  } catch (err) { release(); throw err; }
+}
 
 // Login function
 async function login() {
+  invalidateSession();
+  const generation = sessionGeneration;
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   const loginAlert = document.getElementById('loginAlert');
@@ -741,7 +774,7 @@ async function login() {
   }
 
   try {
-    const res = await fetch('/login', {
+    const res = await sessionFetch('/login', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ username, password })
@@ -749,7 +782,8 @@ async function login() {
     
     if (res.ok) {
       const session = await res.json();
-      sessionGeneration++;
+      if (generation !== sessionGeneration) return;
+      clearCredentials();
       isAdmin = session.is_admin === true;
       isLoggedIn = true;
       document.querySelectorAll(".admin-only").forEach(el => el.classList.toggle("hidden", !isAdmin));
@@ -758,21 +792,26 @@ async function login() {
       loadMetrics();
       loadFiles();
     } else {
+      if (generation !== sessionGeneration) return;
       showAlert(loginAlert, 'Invalid username or password', 'error');
     }
   } catch (err) {
+    if (generation !== sessionGeneration) return;
     showAlert(loginAlert, 'Connection error. Please try again.', 'error');
   }
 }
 
 async function logout() {
+  invalidateSession();
+  const generation = sessionGeneration;
   try {
-    const res = await fetch('/logout', { method: 'POST' });
+    const res = await sessionFetch('/logout', { method: 'POST' });
+    if (generation !== sessionGeneration) return;
     if (!res.ok && res.status !== 401) {
       showAlert(document.getElementById('uploadAlert'), 'Sign out failed. Please try again.', 'error');
       return;
     }
-    sessionGeneration++;
+    clearCredentials();
     isLoggedIn = false;
     isAdmin = false;
     selectedFile = null;
@@ -788,6 +827,7 @@ async function logout() {
     document.getElementById('appScreen').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
   } catch (err) {
+    if (generation !== sessionGeneration) return;
     showAlert(document.getElementById('uploadAlert'), 'Sign out failed. Please try again.', 'error');
   }
 }
@@ -833,7 +873,7 @@ async function uploadFile() {
     progressText.textContent = 'Creating file record...';
 
     // Step 1: Create file metadata
-    const metaRes = await fetch('/files', {
+    const metaRes = await sessionFetch('/files', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -859,8 +899,10 @@ async function uploadFile() {
 
     const upRes = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
+      ownedUploads.add(xhr);
       
       xhr.upload.addEventListener('progress', (e) => {
+        if (!isLoggedIn || generation !== sessionGeneration) return;
         if (e.lengthComputable) {
           const percentComplete = Math.round((e.loaded / e.total) * 30) + 50; // 50% to 80%
           progressFill.style.width = percentComplete + '%';
@@ -870,7 +912,9 @@ async function uploadFile() {
         }
       });
       
+      xhr.addEventListener('loadend', () => ownedUploads.delete(xhr));
       xhr.addEventListener('load', () => {
+        ownedUploads.delete(xhr);
         if (xhr.status >= 200 && xhr.status < 300) {
           resolve({ ok: true });
         } else {
@@ -894,7 +938,7 @@ async function uploadFile() {
     progressText.textContent = 'Generating download link...';
 
     // Step 3: Create download link
-    const linkRes = await fetch('/links', {
+    const linkRes = await sessionFetch('/links', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -986,7 +1030,7 @@ async function loadMetrics() {
   if (!isAdmin) return;
   const generation = sessionGeneration;
   try {
-    const res = await fetch('/metrics');
+    const res = await sessionFetch('/metrics');
     if (!res.ok) return;
     
     const metrics = await res.json();
@@ -1037,7 +1081,7 @@ async function loadMetrics() {
 async function loadFiles() {
   const generation = sessionGeneration;
   try {
-    const res = await fetch(isAdmin ? '/admin/files' : '/files');
+    const res = await sessionFetch(isAdmin ? '/admin/files' : '/files');
     if (!res.ok) return;
     
     const files = await res.json();
@@ -1073,10 +1117,13 @@ async function loadFiles() {
 
 // Delete file
 async function deleteFile(id) {
+  if (!isLoggedIn || !isAdmin) return;
+  const generation = sessionGeneration;
   if (!confirm(`Delete file ${id}?`)) return;
   
   try {
-    const res = await fetch(`/admin/files/${id}`, { method: 'DELETE' });
+    const res = await sessionFetch(`/admin/files/${id}`, { method: 'DELETE' });
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     if (res.ok) {
       loadFiles();
       loadMetrics();
@@ -1084,18 +1131,23 @@ async function deleteFile(id) {
       alert('Failed to delete file');
     }
   } catch (err) {
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     alert('Error: ' + err.message);
   }
 }
 
 // Manual cleanup
 async function manualCleanup() {
+  if (!isLoggedIn || !isAdmin) return;
+  const generation = sessionGeneration;
   if (!confirm('Run cleanup job to delete old pending/failed files?')) return;
   
   try {
-    const res = await fetch('/admin/cleanup', { method: 'POST' });
+    const res = await sessionFetch('/admin/cleanup', { method: 'POST' });
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     if (res.ok) {
       const result = await res.json();
+      if (!isLoggedIn || generation !== sessionGeneration) return;
       alert(`Cleanup complete. Deleted ${result.deleted_count || 0} files.`);
       loadFiles();
       loadMetrics();
@@ -1103,6 +1155,7 @@ async function manualCleanup() {
       alert('Cleanup failed');
     }
   } catch (err) {
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     alert('Error: ' + err.message);
   }
 }
@@ -1180,6 +1233,8 @@ function showLoginForm() {
 
 // Register new user
 async function register() {
+  if (isLoggedIn) return;
+  const generation = sessionGeneration;
   const email = document.getElementById('regEmail').value.trim();
   const username = document.getElementById('regUsername').value.trim();
   const password = document.getElementById('regPassword').value;
@@ -1234,28 +1289,32 @@ async function register() {
   }
 
   try {
-    const res = await fetch('/register', {
+    const res = await sessionFetch('/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, username, password })
     });
 
     const data = res.ok ? await res.json() : { error: await res.text() };
+    if (generation !== sessionGeneration || isLoggedIn) return;
 
     if (!res.ok) {
       showAlert(registerAlert, data.error || 'Registration failed', 'error');
       return;
     }
 
+    clearCredentials();
     showAlert(registerAlert, 'Account created successfully! Please sign in.', 'success');
     
     // Switch to login form after 2 seconds
     setTimeout(() => {
+      if (generation !== sessionGeneration || isLoggedIn) return;
       document.getElementById('username').value = username;
       showLoginForm();
     }, 2000);
 
   } catch (err) {
+    if (generation !== sessionGeneration || isLoggedIn) return;
     showAlert(registerAlert, 'Registration failed: ' + err.message, 'error');
   }
 }</script>

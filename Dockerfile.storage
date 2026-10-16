@@ -18,7 +18,7 @@ RUN git init . && git remote add origin https://github.com/minio/mc.git && \
 RUN CGO_ENABLED=0 go build -o /out/mc .
 
 FROM alpine:3.24
-RUN apk add --no-cache ca-certificates && adduser -D -u 10001 minio && \
+RUN apk upgrade --no-cache && apk add --no-cache ca-certificates && adduser -D -u 10001 minio && \
     mkdir /data && chown minio:minio /data
 COPY --from=minio-build /out/minio /usr/local/bin/minio
 COPY --from=mc-build /out/mc /usr/local/bin/mc

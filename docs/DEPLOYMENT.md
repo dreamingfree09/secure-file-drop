@@ -5,7 +5,7 @@ The checked-in Compose file is a local development configuration. Its published 
 ## Fresh local development only
 
 1. Copy .env.example to .env and replace placeholders with independently generated strong passwords/secrets. Set a free, unique Compose project name with -p for the fresh stack. Do not start against an existing database/storage unintentionally.
-2. Start only dependencies: docker compose -p YOUR_UNIQUE_PROJECT up -d --build postgres minio.
+2. Set SFD_MAX_REQUEST_BYTES to SFD_MAX_UPLOAD_BYTES plus 1048576 (sample 11534336 / 10485760); run scripts/validate-env.sh against the synthetic/fresh configuration. Start only dependencies: docker compose -p YOUR_UNIQUE_PROJECT up -d --build postgres minio.
 3. On that verified fresh MinIO, create the private bucket:
 
 ```sh
@@ -26,3 +26,5 @@ The runtime uses Go 1.26.9 and Alpine 3.24 with the real OpenSSL-linked C utilit
 ## Community storage maintenance decision
 
 The historical MinIO image is no longer publicly pullable. Development/tests build [Dockerfile.storage](../Dockerfile.storage) from exact official community source commits, with licenses retained. Both upstream community repositories are archived. This preserves S3/MinIO validation without changing vendor or requiring paid services, but production maintenance and version adoption require an Owner/Aether decision. No existing storage was upgraded.
+
+Storage remains affected and is permitted only for trusted isolated synthetic development pending the [storage decision](DEEP_REVIEW_20261015.md#storage-decision-required--sourceadvisory-review-2026-10-16). Its API and console have no host ports; do not add routes or untrusted members to the internal storage network. Traefik explicitly selects the project default network for the backend. Compose allows 25 seconds for the application's bounded shutdown. None of these changes upgrade an existing installation or constitute a storage patch.

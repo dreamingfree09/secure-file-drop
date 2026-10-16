@@ -79,3 +79,5 @@ func (w *loggingResponseWriter) WriteHeader(code int) {
 	w.status = code
 	w.ResponseWriter.WriteHeader(code)
 }
+
+func (w *loggingResponseWriter) Unwrap() http.ResponseWriter { return w.ResponseWriter }

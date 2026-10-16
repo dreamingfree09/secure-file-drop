@@ -1,3 +1,36 @@
+# Focused corrections — 2026-10-16
+
+Work ID: SFD-DEEP-CORRECTIONS-20261016-CODEX. Owner-approved implementation following [Aether's assessment review](https://github.com/dreamingfree09/secure-file-drop/pull/22#issuecomment-6204810242). Base master: `0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7`; received assessment: `1f30bb374420d3285ebdaac0c192240897c5d0f4`. [PR #22](https://github.com/dreamingfree09/secure-file-drop/pull/22) carries the exact final-revision handover; the [canonical correction appendix](DEEP_REVIEW_20261015.md#approved-correction-status--2026-10-16) supplies evidence and limits.
+
+| Finding | Current disposition |
+| --- | --- |
+| F1 | Awaiting storage decision; confirmed affected source, runtime bypass unexecuted |
+| F2 | Fixed: complete single-file multipart framing, error latch, bounded cleanup; empty/actual-size contract retained |
+| F3 | Fixed: entire 16 KiB JSON envelope and one-value validation on all four endpoints |
+| F4 | Fixed: request cancellation and bounded affected SQL, verified with real PostgreSQL fixtures |
+| F5 | Fixed: migration-owned resources released, shared pool preserved; repeated/small-pool/error tests |
+| F6 | Fixed: obsolete root executable removed normally, ignored future output, documented source build |
+| F7 | Application/runtime remediation verified; archived storage advisories remain unresolved |
+| F8 | Fixed within tested scope: actual proxy limits/TLS/canonical origin/port and explicit network |
+| F9 | Fixed: clear credential fields, abort owned requests, reject stale callbacks; seven script tests and real browser |
+| F10 | Fixed: accumulating/redacted validator and native stdout failure handling, synthetic/vector/sanitizer regressions |
+
+Verified code/test/CI revision `709942ee7a490a9d36c647760a21c4c74bd2c51c`: both [push](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38830402197) and [PR](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38830407424) CI passed all jobs; all 15 real-stack scenarios ran, including real Chromium, proxy, native byte equality and PostgreSQL fault/pool/cancellation checks. Local Go/race/vet/lint/native/sanitizer/script checks passed. Actual application binary: zero symbol/package findings and one unused-module finding; actual storage: 75 advisory IDs (51 symbol, 4 package-only, 20 module-only). Both rebuilt Alpine inventories had zero queried secfix matches. Bounded COMMIT uncertainty, native readiness and active-transfer shutdown checks are documented in the canonical appendix. Local Docker remains unavailable; CI supplies the real disposable stack/browser evidence. No bypass test, existing-data operation, master integration or deployment.
+
+Outstanding decisions/gates: maintained free/open-source storage (recommend a separate SeaweedFS Community evaluation, RustFS alternative), candidate qualification/migration/rollback, existing-schema/ownership reconciliation, maximum-size/slow-client capacity, public TLS/ingress and whole-service recovery. Temporary storage isolation does not close F1/F7. Independent acknowledgement and later integration remain pending. Earlier records below are dated history.
+
+---
+
+# Deep assessment — 2026-10-15
+
+Work ID: SFD-DEEP-REVIEW-20261015-CODEX. Affected accepted revision: `0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7`.
+
+See the canonical [deep assessment report](DEEP_REVIEW_20261015.md) for findings and the operating matrix; [PR #22](https://github.com/dreamingfree09/secure-file-drop/pull/22) is the exact-revision handover. Review tests/evidence only: production code and dependencies are unchanged. Truncated multipart and JSON-envelope regressions fail on the accepted implementation. Storage/advisory applicability, SQL cancellation, migration connections, stale artifacts and browser/diagnostic limitations are recorded without implying runtime exploitation.
+
+Assessment is complete pending Aether/Owner review of the proposed correction package. Implementation and master integration are not authorised. The following quality-closeout and milestone records are preserved as dated history; current acceptance is bounded by the new report.
+
+---
+
 # Quality closeout — 2026-10-15
 
 Work ID: SFD-QUALITY-CLOSEOUT-20261015-CODEX. Base: `1a0f7715faa89c53fcec266f59e43cad9b1a057b`. Producer: Codex; independent review: Aether in “GitHub workflow implementation”. See [continuity](CONTINUITY.md) for checkout preservation and decisions; the owned PR is the complete final-revision handover.

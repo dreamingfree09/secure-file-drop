@@ -45,12 +45,12 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 		var req createFileReq
-		if json.NewDecoder(r.Body).Decode(&req) != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
+		if !decodeJSON(w, r, &req) {
 			return
 		}
+		ctx, cancel := sqlContext(r.Context())
+		defer cancel()
 		var ok bool
 		req.OrigName, ok = safeFilename(req.OrigName)
 		req.ContentType = strings.TrimSpace(req.ContentType)
@@ -74,7 +74,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		if !p.Admin {
 			owner = p.Sub
 		}
-		_, err = db.ExecContext(r.Context(), `INSERT INTO files (id,object_key,orig_name,content_type,size_bytes,created_by,user_id,status)
+		_, err = db.ExecContext(ctx, `INSERT INTO files (id,object_key,orig_name,content_type,size_bytes,created_by,user_id,status)
    VALUES ($1,$2,$3,$4,$5,$6,$7,'pending')`, id, key, req.OrigName, req.ContentType, req.SizeBytes, p.Sub, owner)
 		if err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)

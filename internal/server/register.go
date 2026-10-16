@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"log"
@@ -91,14 +92,13 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 	var req RegisterRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+	if !decodeJSON(w, r, &req) {
 		return
 	}
 
+	ctx, cancel := sqlContext(r.Context())
+	defer cancel()
 	// Sanitize inputs
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	req.Username = strings.TrimSpace(req.Username)
@@ -129,7 +129,7 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user already exists
 	var exists bool
-	err := cfg.DB.QueryRow(
+	err := cfg.DB.QueryRowContext(ctx,
 		"SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 OR username = $2)",
 		req.Email, req.Username,
 	).Scan(&exists)
@@ -153,7 +153,7 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create user
 	userID := uuid.New()
-	_, err = cfg.DB.Exec(`
+	_, err = cfg.DB.ExecContext(ctx, `
 		INSERT INTO users (id, email, username, password_hash)
 		VALUES ($1, $2, $3, $4)
 	`, userID, req.Email, req.Username, passwordHash)
@@ -180,32 +180,33 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // authenticateUser checks credentials against the database
-func authenticateUser(db *sql.DB, username, password string) (string, bool) {
+func authenticateUser(ctx context.Context, db *sql.DB, username, password string) (string, bool, error) {
 	if len(password) > 72 {
-		return "", false
+		return "", false, nil
 	}
 	var userID string
 	var passwordHash string
 
-	err := db.QueryRow(
+	err := db.QueryRowContext(ctx,
 		"SELECT id, password_hash FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE",
 		username,
 	).Scan(&userID, &passwordHash)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", false
+			return "", false, nil
 		}
-		log.Printf("auth: db query failed: %v", err)
-		return "", false
+		return "", false, err
 	}
 
 	if !verifyPassword(password, passwordHash) {
-		return "", false
+		return "", false, nil
 	}
 
 	// Update last login
-	_, _ = db.Exec("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1", userID)
+	if _, err := db.ExecContext(ctx, "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1", userID); err != nil {
+		return "", false, err
+	}
 
-	return userID, true
+	return userID, true, nil
 }
