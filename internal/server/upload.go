@@ -186,6 +186,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 				}
 				if stateErr != nil {
 					_ = tx.Rollback()
+					_ = conn.Close()
 					if _, e := db.ExecContext(cleanupCtx, "UPDATE files SET status='failed' WHERE id=$1 AND status='pending'", id); e != nil {
 						// #nosec G706 -- Validated UUID is quoted to prevent log control characters.
 						log.Printf("upload failure state failed id=%q", id)
@@ -201,7 +202,16 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 		part, err := mr.NextPart()
-		if err != nil || part.FormName() != "file" || part.FileName() == "" {
+		if err != nil {
+			code := http.StatusBadRequest
+			var large *http.MaxBytesError
+			if errors.As(err, &large) {
+				code = http.StatusRequestEntityTooLarge
+			}
+			http.Error(w, "bad multipart", code)
+			return
+		}
+		if part.FormName() != "file" || part.FileName() == "" {
 			http.Error(w, "expected one file part", http.StatusBadRequest)
 			return
 		}
