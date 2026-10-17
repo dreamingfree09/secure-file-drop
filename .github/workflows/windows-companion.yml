@@ -1,0 +1,153 @@
+name: Windows companion
+on:
+  push:
+    branches: [master, codex/sfd-windows-companion-20261017]
+    paths:
+      - desktop/**
+      - tests/e2e/**
+      - internal/**
+      - cmd/**
+      - go.mod
+      - go.sum
+      - .github/workflows/windows-companion.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - desktop/**
+      - tests/e2e/**
+      - internal/**
+      - cmd/**
+      - go.mod
+      - go.sum
+      - .github/workflows/windows-companion.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: windows-companion-§{{ github.ref }}
+  cancel-in-progress: false
+env:
+  DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: 'true'
+jobs:
+  windows:
+    name: Native Windows build, security and lifecycle
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build and execute owned Windows checks
+        shell: pwsh
+        run: |
+          ./desktop/windows/build.ps1
+          ./desktop/windows/tests/test.ps1 | Tee-Object -FilePath "$env:RUNNER_TEMP/windows-results.txt"
+          $text = Get-Content -LiteralPath "$env:RUNNER_TEMP/windows-results.txt" -Raw
+          if (-not $text.Contains("WINDOWS CHECKS PASSED: 26") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 10) { throw "Mandatory Windows checks did not execute" }
+          $evidence = @{
+            revision = (git rev-parse HEAD)
+            os = [Environment]::OSVersion.VersionString
+            runtime = [Environment]::Version.ToString()
+            executable_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/dist/SecureFileDrop.exe -Algorithm SHA256).Hash
+            client_source_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/Client.cs -Algorithm SHA256).Hash
+            interactive_gui = "unexecuted; programmatic owned tray context only"
+          }
+          $evidence | ConvertTo-Json | Set-Content -LiteralPath "$env:RUNNER_TEMP/windows-identity.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-companion-preview-and-checks
+          path: |
+            desktop/windows/dist/SecureFileDrop.exe
+            desktop/windows/dist/SecureFileDrop.exe.config
+            docs/WINDOWS_COMPANION.md
+            ${{ runner.temp }}/windows-results.txt
+            ${{ runner.temp }}/windows-identity.json
+          if-no-files-found: error
+          retention-days: 14
+  backend:
+    name: Actual HTTPS backend and portable desktop client
+    runs-on: ubuntu-22.04
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Build client harness, native vectors and pinned Chromium
+        run: |
+          sudo apt-get update && sudo apt-get install -y libssl-dev
+          dotnet build desktop/windows/tests/Client.Contract.csproj --configuration Release --nologo
+          make -C native test
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Require fresh owned namespace
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          inventory = {}
+          for kind in ["container", "network", "volume", "image"]:
+              args = ["docker", kind, "ls", "--filter", "label=sfd.quality-run", "--quiet"]
+              if kind == "container":
+                  args.append("--all")
+              inventory[kind] = subprocess.check_output(args, text=True).split()
+          pathlib.Path(os.environ["RUNNER_TEMP"], "ownership-before.json").write_text(json.dumps(inventory))
+          assert not any(inventory.values()), "pre-existing quality resources"
+          PY
+      - name: Execute unchanged core assertions and actual desktop client
+        env:
+          SFD_E2E: '1'
+          SFD_BROWSER: '1'
+          SFD_DESKTOP_CLIENT: '1'
+        run: |
+          go test ./tests/e2e -json -v -run '^TestUploadHashDownloadFlow$' -count=1 -timeout 27m | tee "$RUNNER_TEMP/desktop-runtime.json"
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          events = [json.loads(line) for line in pathlib.Path(os.environ["RUNNER_TEMP"], "desktop-runtime.json").read_text().splitlines()]
+          assert not [e for e in events if e.get("Action") in ("skip", "fail")], "failure/skip is not acceptance"
+          passed = [e for e in events if e.get("Action") == "pass" and e.get("Test", "").startswith("TestUploadHashDownloadFlow/")]
+          assert len(passed) == 15, len(passed)
+          assert any(e.get("Action") == "pass" and e.get("Test") == "TestUploadHashDownloadFlow" for e in events)
+          output = "".join(e.get("Output", "") for e in events)
+          assert "DESKTOP REAL BACKEND CHECKS PASSED: 17" in output, "desktop did not execute all real-backend checks"
+          assert output.count("DESKTOP PASS:") == 17
+          revision = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          pathlib.Path(os.environ["RUNNER_TEMP"], "desktop-identity.json").write_text(json.dumps({"revision": revision, "default_scenarios": 15, "desktop_checks": 17, "failures": 0, "skips": 0}))
+          print("REQUIRED EXECUTION: 15 core scenarios + 17 actual desktop checks; failures=0, skips=0")
+          PY
+      - name: Verify owned cleanup independently
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          inventory = {}
+          for kind in ["container", "network", "volume", "image"]:
+              args = ["docker", kind, "ls", "--filter", "label=sfd.quality-run", "--quiet"]
+              if kind == "container":
+                  args.append("--all")
+              inventory[kind] = subprocess.check_output(args, text=True).split()
+          pathlib.Path(os.environ["RUNNER_TEMP"], "ownership-after.json").write_text(json.dumps(inventory))
+          print(json.dumps(inventory))
+          assert not any(inventory.values()), "owned resources remain; no broad cleanup"
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-real-backend-evidence
+          path: |
+            ${{ runner.temp }}/desktop-runtime.json
+            ${{ runner.temp }}/desktop-identity.json
+            ${{ runner.temp }}/ownership-before.json
+            ${{ runner.temp }}/ownership-after.json
+          if-no-files-found: error
+          retention-days: 14
