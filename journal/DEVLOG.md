@@ -303,3 +303,45 @@ Hosted run https://github.com/dreamingfree09/secure-file-drop/actions/runs/38982
 M24 default-MinIO 15/15 and root/browser/native/security/lint/docs evidence, plus passing workflow-proposal CI, support bounded core development closure. Existing MinIO 75 binary advisory IDs and backend/nested module-only finding remain; no production storage clearance. Continuity/tracker record full evidence and retained production TLS, capacity, operational ownership/rotation, schema/ownership reconciliation, cross-host DR, migration and deployment gates. Aether acknowledgement/integration of the new proposal is pending.
 
 Next authorised stage: separate lightweight native Windows companion, existing authenticated API, streaming progress, TLS validation and protected session storage. Compose 10 MiB default and five-minute upload/two-minute hash bounds remain; no arbitrary multi-GiB or resumable claim. Preserved checkouts, branches, local work, .qodo and unrelated environments remain untouched. This entry appends to all received DEVLOG bytes.
+
+
+## 2026-10-17 — Delegated native Windows companion implementation
+
+SFD-OWNER-DELEGATED-COMPLETION-20261017 phase three follows verified integrated M24 RustFS 18/18, migration 6/6 and bounded core closeout. Codex created separate stacked codex/sfd-windows-companion-20261017 from core proposal 6f7c57dada6bac670baa0d676c7ac025f69a3f98. Existing master/branches/checkouts/data remain preserved; independent Aether acceptance and integration are pending.
+
+Native .NET Framework Windows Forms implements tray Quick Send, current cookie authentication, bounded streaming/progress, local/server SHA-256 equality, current expiring HTTPS links, health status, protected remembered sessions, safe per-user Explorer command/IPC, cancellation/uncertain-outcome reconciliation and companion-only exit. No backend protocol, schema, vendor, root dependency or service-control change. The portable real-client harness is opt-in inside the actual isolated TLS/backend fixture; normal suite assertions are retained. Workflow installation remains separate.
+
+Actual local execution: 26 Windows platform/security/lifecycle checks and 10 HTTP protocol checks passed, including Unicode argument/MIME handling, DPAPI/tamper/origin isolation, owned registry and IPC, in-flight cancellation/reconciliation and redirect credential isolation. Go tests/vet/race and five native vectors passed. First SDK use generated one untrusted development certificate; exact metadata/time were verified and only that newly created certificate/private key was removed; no trusted root or existing certificate changed. Subsequent builds disable SDK certificate generation.
+
+Hosted real HTTPS/backend client execution and final-head readback are pending. Visual tray, picker, Explorer, clipboard, real-user-profile startup and complete Windows Framework HTTPS deployment journeys remain unexecuted; no false GUI acceptance. Documentation records existing 10 MiB Compose/five-minute upload bounds and no arbitrary multi-GiB or resume promise. Production storage/security/TLS/capacity/ownership/reconciliation/cross-host DR/migration/deployment gates remain open. This entry is strictly appended to all received DEVLOG bytes.
+
+
+## 2026-10-17 — Companion validation refinement
+
+Initial hosted Windows build/26 platform plus 10 protocol checks passed at ffef0bafa7d64f617fc5cd4058590b8127b77826. Initial root CI reported one unused Go helper parameter; the actual desktop/backend job reported an incorrect relative harness DLL path because Go executes tests from tests/e2e. Corrected the parameter and resolve the repository root explicitly for the child process and source identity. Failed runs remain visible; no assertion or lint rule was disabled.
+
+Returned-link validation now also rejects control/whitespace, extra query parameters and malformed bearer-token grammar, with six additional focused regressions. Actual local Windows result is 32 platform/security/lifecycle checks plus 10 protocol checks; GUI/manual gates remain distinct. Final hosted exact-revision results belong in PR #26. All received DEVLOG bytes remain unchanged.
+
+
+## 2026-10-17 — Companion asynchronous view isolation
+
+Source review corrected stale progress/readiness callbacks across transfers/backend changes by binding results to the initiating operation/client. Configuration changes now retain an actionable warning when complete sign-out from the previous service cannot be confirmed. Local Windows 32 platform/security/lifecycle and 10 protocol checks still pass; these do not substitute for the explicitly unexecuted visual settings/progress journeys. The final published revision and hosted evidence remain authoritative in PR #26. No backend, storage or deployment change.
+
+
+## 2026-10-17 — Companion independent automated-review disposition
+
+Confirmed the configuration timeout issue: sign-out now returns an explicit incomplete result on an old-backend timeout, permits saving the replacement address, retains the warning and still propagates explicit cancellation. A remembered but unverified session is also signed out/cleared. Actual Windows protocol regressions now total 14, alongside 32 platform/security/lifecycle checks; the native test executable reports CLR 4.0.30319.42000. Visible GUI/full Windows HTTPS deployment acceptance remains unexecuted.
+
+Confirmed the concurrency placeholder issue; its expression sigil is corrected in a separate workflow-only commit. The reported workflow/application commit mixing is not reproducible: initial application 1126fc923e2618f90c71e85fcdbbcf1f138287fe excludes workflows; installation ffef0bafa7d64f617fc5cd4058590b8127b77826 changes only the workflow; later count corrections are separate. Preserve normal history; do not rewrite it to satisfy that false positive. Exact CI/proposal and review dispositions are recorded in PR #26; Aether acceptance remains pending.
+
+
+## 2026-10-17 — Shipping HTTPS boundary
+
+Aligned the companion with the Owner's no-TLS-bypass requirement: removed the user-facing HTTP option. The shipping client is HTTPS-only. Plain HTTP is available solely under SFD_SYNTHETIC_TESTS for owned protocol/readiness fixtures, absent from release compilation and non-serializable. Three independently compiled release-policy checks prove valid HTTPS, rejection of configuration-injected HTTP flags, and absence of the synthetic capability. Native Windows 32 platform/security/lifecycle plus 14 protocol checks and all three policy checks passed; release build passed with warnings as errors. Existing backend HTTP development behavior is unchanged. This is a stricter client boundary, not a production storage/deployment approval.
+
+
+## 2026-10-17 — Final desktop review and integration preparation
+
+Owner-approved SFD-DESKTOP-FINAL-REVIEW-20261017. Codex reviewed all four core proposal paths at aa784cab5b32860a72958e35b0b89085ff65de72 and all 22 Windows proposal paths at received 8f55c9deb24b477ecfc516bb67ee8078bb9ad0f8, with M24 master unchanged. No new confirmed product defect; source and real test assertions reviewed rather than test labels alone. Fresh artifact/log readback verifies exact M24 RustFS 18/18, rehearsal 6/6, explicit nested IAM guards/module-only limitation, and Windows 32 + 14 + 3 versus portable real backend 15 + 17 with no mandatory failures/skips and empty owned inventories. Product executable/config/licence/provenance verified, including normal Git-to-Windows CRLF conversion; unsigned preview remains a test candidate at its actual received build revision.
+
+Prepared a precise fifteen-step actual-Windows operator checklist. Every interactive step remains unexecuted; no profile installation/Explorer registration, certificate/security/Docker/WSL alteration, service control or new bypass experiment. Conflict-free merge trees and normal-merge availability were checked without integration. Aether exact-head acknowledgement/GHP-01 gate remain outstanding; master and source branches preserved. GitHub protection lacks required status/review rules, so those gates need explicit verification. Final-review publication/CI evidence belongs in PR #26's exact-final-revision handover. All original checkout/local work/.qodo/DnD, previous branches and prior DEVLOG bytes remain preserved. Production storage/maintenance/TLS/capacity/reconciliation/cross-host recovery/migration/deployment gates remain open.
