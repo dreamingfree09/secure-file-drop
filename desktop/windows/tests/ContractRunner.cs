@@ -40,6 +40,7 @@ namespace SecureFileDrop.Contract
                 throw new Exception("Owned loopback HTTPS fixtures required.");
             string suffix = Guid.NewGuid().ToString("N");
             string root = Path.Combine(Path.GetTempPath(), "sfd-desktop-contract-" + suffix);
+            if (Directory.Exists(root)) throw new Exception("Synthetic file namespace already exists; preserved.");
             Directory.CreateDirectory(root); File.WriteAllText(Path.Combine(root, "owner"), suffix);
             try
             {
