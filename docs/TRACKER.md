@@ -1,6 +1,6 @@
 ## Windows companion — 2026-10-17
 
-Owner-authorised implementation is on separate codex/sfd-windows-companion-20261017, received core proposal 6f7c57dada6bac670baa0d676c7ac025f69a3f98. [Companion scope, architecture, limits and acceptance](WINDOWS_COMPANION.md). Local Windows: 32 platform/security/lifecycle checks plus 10 HTTP protocol checks passed; Go/vet/race/native checks passed. Hosted actual TLS/backend results and exact revisions are in [PR #26](https://github.com/dreamingfree09/secure-file-drop/pull/26); visual tray/file-picker/Explorer/clipboard journeys remain unexecuted. Independent Aether review, integration and full interactive Windows acceptance are outstanding. No public-production or arbitrary large-file claim.
+Owner-authorised implementation is on separate codex/sfd-windows-companion-20261017, received core proposal 6f7c57dada6bac670baa0d676c7ac025f69a3f98. [Companion scope, architecture, limits and acceptance](WINDOWS_COMPANION.md). Local Windows: 32 platform/security/lifecycle checks plus 14 HTTP protocol checks passed; Go/vet/race/native checks passed. Hosted actual TLS/backend results and exact revisions are in [PR #26](https://github.com/dreamingfree09/secure-file-drop/pull/26); visual tray/file-picker/Explorer/clipboard journeys remain unexecuted. Independent Aether review, integration and full interactive Windows acceptance are outstanding. No public-production or arbitrary large-file claim.
 
 
 ## Delegated core acceptance closure — 2026-10-17

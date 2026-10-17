@@ -23,6 +23,7 @@ namespace SecureFileDrop.Tests
         {
             Console.OutputEncoding = new UTF8Encoding(false);
             if (args.Length == 2 && args[0] == "--send") { Console.WriteLine(args[1]); return 0; }
+            Console.WriteLine("WINDOWS TEST RUNTIME: " + Environment.Version.ToString());
             string owner = Guid.NewGuid().ToString("N");
             string root = Path.Combine(Path.GetTempPath(), "sfd-desktop-test-" + owner);
             string registryRoot = @"Software\SecureFileDrop.Tests\" + owner;

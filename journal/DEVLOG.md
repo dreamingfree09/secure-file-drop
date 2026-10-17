@@ -326,3 +326,10 @@ Returned-link validation now also rejects control/whitespace, extra query parame
 ## 2026-10-17 — Companion asynchronous view isolation
 
 Source review corrected stale progress/readiness callbacks across transfers/backend changes by binding results to the initiating operation/client. Configuration changes now retain an actionable warning when complete sign-out from the previous service cannot be confirmed. Local Windows 32 platform/security/lifecycle and 10 protocol checks still pass; these do not substitute for the explicitly unexecuted visual settings/progress journeys. The final published revision and hosted evidence remain authoritative in PR #26. No backend, storage or deployment change.
+
+
+## 2026-10-17 — Companion independent automated-review disposition
+
+Confirmed the configuration timeout issue: sign-out now returns an explicit incomplete result on an old-backend timeout, permits saving the replacement address, retains the warning and still propagates explicit cancellation. A remembered but unverified session is also signed out/cleared. Actual Windows protocol regressions now total 14, alongside 32 platform/security/lifecycle checks; the native test executable reports CLR 4.0.30319.42000. Visible GUI/full Windows HTTPS deployment acceptance remains unexecuted.
+
+Confirmed the concurrency placeholder issue; its expression sigil is corrected in a separate workflow-only commit. The reported workflow/application commit mixing is not reproducible: initial application 1126fc923e2618f90c71e85fcdbbcf1f138287fe excludes workflows; installation ffef0bafa7d64f617fc5cd4058590b8127b77826 changes only the workflow; later count corrections are separate. Preserve normal history; do not rewrite it to satisfy that false positive. Exact CI/proposal and review dispositions are recorded in PR #26; Aether acceptance remains pending.

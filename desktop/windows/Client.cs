@@ -247,6 +247,21 @@ namespace SecureFileDrop.Desktop
             try { await Request("logout", HttpMethod.Post, null, token, 12).ConfigureAwait(false); }
             finally { Forget(); LastAttempt = null; }
         }
+        internal async Task<bool> SignOutForConfiguration(CancellationToken token)
+        {
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                Cookie remembered = cookies.GetCookies(Origin)["sfd_session"];
+                if (Authenticated || (remembered != null && !remembered.Expired))
+                    await Logout(token).ConfigureAwait(false);
+                else { Forget(); LastAttempt = null; }
+                return true;
+            }
+            catch (ClientFault) { token.ThrowIfCancellationRequested(); return false; }
+            catch (OperationCanceledException) { token.ThrowIfCancellationRequested(); return false; }
+            catch (IOException) { token.ThrowIfCancellationRequested(); return false; }
+        }
         public async Task<TransferAttempt> Upload(string path, Action<long, long> progress, CancellationToken token)
         {
             LastAttempt = null;

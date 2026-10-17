@@ -304,9 +304,7 @@ namespace SecureFileDrop.Desktop
                 Run(async delegate
                 {
                     ClearClipboard();
-                    bool incompleteSignOut = false;
-                    try { if (client.Authenticated) await client.Logout(Token); }
-                    catch (ClientFault) { incompleteSignOut = true; }
+                    bool incompleteSignOut = !await client.SignOutForConfiguration(Token);
                     client.Dispose();
                     settings = next; client = new SfdClient(settings, new ProtectedSessions(root)); service.Text = "Service: checking";
                     string target = Path.Combine(root, "settings.json"), temp = target + "." + Guid.NewGuid().ToString("N") + ".tmp";

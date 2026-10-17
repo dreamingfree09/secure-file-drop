@@ -49,9 +49,39 @@ namespace SecureFileDrop.Tests
                     var recovered = await client.Reconcile(CancellationToken.None);
                     Check(recovered.Confirmed, "uncertain response reconciles existing hashed bytes without resend or deletion");
                 }
+                server.Expired = false; server.DeferLogout = true; server.LogoutStarted.Reset();
+                Check(!await client.SignOutForConfiguration(CancellationToken.None) && !client.Authenticated, "old-backend logout timeout returns an incomplete result so configuration can continue");
+                server.ReleaseLogout.Set();
+                using (var replacement = new SfdClient(new Settings { Backend = other.Address, AllowLoopbackHttp = true }))
+                    Check(await replacement.Probe(CancellationToken.None), "replacement backend is reachable after old-backend timeout");
+                server.Expired = false; server.DeferLogout = false;
+                await client.Login("synthetic", "Synthetic1", CancellationToken.None);
+                server.DeferLogout = true; server.ReleaseLogout.Reset(); server.LogoutStarted.Reset();
+                using (var cancelledConfiguration = new CancellationTokenSource())
+                {
+                    Task<bool> changing = client.SignOutForConfiguration(cancelledConfiguration.Token);
+                    if (!server.LogoutStarted.Wait(5000)) throw new Exception("Owned logout fixture was not contacted.");
+                    cancelledConfiguration.Cancel();
+                    bool explicitCancel = false; try { await changing; } catch (OperationCanceledException) { explicitCancel = true; }
+                    Check(explicitCancel, "explicit user cancellation still aborts reconfiguration");
+                    server.ReleaseLogout.Set();
+                }
+                server.DeferLogout = false; server.Expired = false;
+                await client.Login("synthetic", "Synthetic1", CancellationToken.None);
+                Interlocked.Exchange(ref other.Requests, 0);
                 server.Redirect = other.Address;
                 bool redirect = false; try { await client.Login("synthetic", "Synthetic1", CancellationToken.None); } catch (ClientFault e) { redirect = e.Status == 302; }
                 Check(redirect && other.Requests == 0, "redirect never receives password, cookie or file bytes");
+                server.Redirect = null; server.Expired = false; server.DeferLogout = false; server.LogoutStarted.Reset();
+                var protectedStore = new ProtectedSessions(Path.Combine(root, "unverified-session"));
+                var rememberedOrigin = new Uri(server.Address);
+                protectedStore.Save(rememberedOrigin, new Cookie("sfd_session", "SYNTHETIC_ONLY", "/") { HttpOnly = true, Expires = DateTime.UtcNow.AddMinutes(10) });
+                using (var restored = new SfdClient(new Settings { Backend = server.Address, AllowLoopbackHttp = true, RememberSession = true }, protectedStore))
+                {
+                    bool signedOut = await restored.SignOutForConfiguration(CancellationToken.None);
+                    Check(signedOut && server.LogoutStarted.IsSet && protectedStore.Load(rememberedOrigin) == null, "unverified remembered session is signed out and removed before reconfiguration");
+                }
+
             }
             using (var down = new Fixture())
             {
@@ -68,11 +98,13 @@ namespace SecureFileDrop.Tests
             string id = Guid.NewGuid().ToString(), hash = "";
             public string FilenameHeader = "";
             public volatile string Redirect;
-            public volatile bool Expired, Defer;
+            public volatile bool Expired, Defer, DeferLogout;
             public long Bytes;
             public int Requests;
             public readonly ManualResetEventSlim Uploaded = new ManualResetEventSlim();
             public readonly ManualResetEventSlim Release = new ManualResetEventSlim();
+            public readonly ManualResetEventSlim LogoutStarted = new ManualResetEventSlim();
+            public readonly ManualResetEventSlim ReleaseLogout = new ManualResetEventSlim();
             public readonly string Address;
             public Fixture()
             {
@@ -137,7 +169,11 @@ namespace SecureFileDrop.Tests
                         }
                         else if (path == "/files") data = Json.Encode(new FileRow[] { new FileRow { Id = id, Status = "hashed", Hash = hash, Size = Bytes } });
                         else if (path == "/links") data = Json.Encode(new Link { Url = Address + "download?token=SYNTHETIC", ExpiresAt = DateTime.UtcNow.AddMinutes(5).ToString("o") });
-                        else if (path == "/logout") Expired = true;
+                        else if (path == "/logout")
+                        {
+                            Expired = true; LogoutStarted.Set();
+                            if (DeferLogout) ReleaseLogout.Wait(20000);
+                        }
                         byte[] prefix = Encoding.ASCII.GetBytes("HTTP/1.1 " + status + " Test\r\nContent-Type: application/json\r\nConnection: close\r\nContent-Length: " + data.Length + "\r\n" + extra + "\r\n");
                         stream.Write(prefix, 0, prefix.Length); stream.Write(data, 0, data.Length);
                     }
@@ -153,7 +189,7 @@ namespace SecureFileDrop.Tests
             }
             public void Dispose()
             {
-                if (stopping) return; stopping = true; Release.Set(); listener.Stop(); listening.Wait(5000);
+                if (stopping) return; stopping = true; Release.Set(); ReleaseLogout.Set(); listener.Stop(); listening.Wait(5000);
             }
         }
     }
