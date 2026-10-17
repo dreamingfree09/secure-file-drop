@@ -1,5 +1,16 @@
 # Secure File Drop continuity
 
+## Delegated Windows companion — implementation and acceptance pending, 2026-10-17
+
+SFD-OWNER-DELEGATED-COMPLETION-20261017 phase three. After exact-M24 contract 18/18, rehearsal 6/6 and bounded core acceptance below, Codex created codex/sfd-windows-companion-20261017 from phase-one/core proposal 6f7c57dada6bac670baa0d676c7ac025f69a3f98. The separate stacked PR targets codex/sfd-integrated-acceptance-20261017; master and earlier workers are preserved. Independent security-sensitive Aether review/integration remain pending.
+
+The [Windows companion](WINDOWS_COMPANION.md) implements native tray/file selection, current authenticated API, streamed progress/local-server SHA-256 verification, fresh expiring HTTPS link copying, service status, cancellation/reconciliation, current-user DPAPI remembered sessions, current-user/session IPC, explicit per-user Explorer registration and clean companion-only exit. No backend API, default vendor, schema or root dependency change. The integration hook is opt-in inside the existing owned actual TLS-proxy fixture; ordinary acceptance assertions remain intact. Workflow installation is a separate commit.
+
+Actual local Windows execution passed 26 platform/security/lifecycle checks plus 10 real HTTP protocol checks. Go tests/vet/race and five native vectors passed locally; opt-in Docker suites were not run locally. The portable real-HTTPS/backend client contract and hosted Windows checks are pending at this entry; exact final CI/artifact readback belongs to the companion PR handover. Programmatic NotifyIcon creation/exit, owned test-registry/argument execution and local streaming are actual evidence; visual tray/file-picker/Explorer interaction, clipboard UI, real-user-profile startup and the full Windows Framework HTTPS deployment journey remain unexecuted and must not be marked accepted.
+
+Existing Compose 10 MiB file/11 MiB envelope, five-minute upload budget and two-minute native hash budget remain; 64 MiB counting-sink streaming is not server capacity evidence. No multi-GiB/resumable claim. [Companion documentation](WINDOWS_COMPANION.md) records the native-runtime decision, trust/session/path model, tested boundaries, tooling certificate cleanup and retained production gates. Next: verify hosted exact proposal, publish complete GHP-01 handover, obtain Aether review and complete the explicitly visible Windows journeys before daily-use acceptance/integration. No automatic installation, service control, Docker repair, real-data migration or deployment.
+
+
 ## Delegated completion: integrated acceptance and bounded core closure — 2026-10-17
 
 SFD-OWNER-DELEGATED-COMPLETION-20261017. Owner Konstantinos Aidinidis delegated engineering completion, CI repair, corrections/testing/docs and the later Windows tray companion; security-sensitive integration retains independent Aether acceptance. Producer/branch owner: Codex; recipient: Aether. Canonical master is the already integrated M24, 8d54031c26ec10027ecebadd754f34996d55e8dd; PRs #22/#23/#24 are merged and must not be repeated. [Integration evidence](https://github.com/dreamingfree09/secure-file-drop/pull/24#issuecomment-6226576200) preserves their ordered parents, trees and all 33 received commits.

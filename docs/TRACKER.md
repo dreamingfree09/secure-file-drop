@@ -1,5 +1,10 @@
 ## RustFS preparation and synthetic migration — 2026-10-16
 
+## Windows companion — 2026-10-17
+
+Owner-authorised implementation is on separate codex/sfd-windows-companion-20261017, received core proposal 6f7c57dada6bac670baa0d676c7ac025f69a3f98. [Companion scope, architecture, limits and acceptance](WINDOWS_COMPANION.md). Local Windows: 26 platform/security/lifecycle checks plus 10 HTTP protocol checks passed; Go/vet/race/native checks passed. Hosted actual TLS/backend evidence is pending, and visual tray/file-picker/Explorer/clipboard journeys remain unexecuted. Independent Aether review, integration and full interactive Windows acceptance are outstanding. No public-production or arbitrary large-file claim.
+
+
 ## Delegated core acceptance closure — 2026-10-17
 
 SFD-OWNER-DELEGATED-COMPLETION-20261017; [PR #25](https://github.com/dreamingfree09/secure-file-drop/pull/25). Exact integrated source: 8d54031c26ec10027ecebadd754f34996d55e8dd. [Continuity](CONTINUITY.md#delegated-completion-integrated-acceptance-and-bounded-core-closure--2026-10-17) records immutable execution, retained artifacts, preservation and open production gates.
