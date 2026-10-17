@@ -24,7 +24,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: windows-companion-§{{ github.ref }}
+  group: windows-companion-${{ github.ref }}
   cancel-in-progress: false
 env:
   DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
@@ -45,26 +45,56 @@ jobs:
           ./desktop/windows/build.ps1
           ./desktop/windows/tests/test.ps1 | Tee-Object -FilePath "$env:RUNNER_TEMP/windows-results.txt"
           $text = Get-Content -LiteralPath "$env:RUNNER_TEMP/windows-results.txt" -Raw
-          if (-not $text.Contains("WINDOWS CHECKS PASSED: 32") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 10) { throw "Mandatory Windows checks did not execute" }
+          if (-not $text.Contains("WINDOWS CHECKS PASSED: 32") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 14) { throw "Mandatory Windows checks did not execute" }
           $evidence = @{
             revision = (git rev-parse HEAD)
             os = [Environment]::OSVersion.VersionString
-            runtime = [Environment]::Version.ToString()
+            host_shell_runtime = [Environment]::Version.ToString()
+            test_process_runtime = ($text.Split([char]10) | Where-Object { $_.StartsWith("WINDOWS TEST RUNTIME:") } | Select-Object -First 1).Trim()
+            framework_release = (Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -Name Release).Release
+            product_target = ".NET Framework 4.8"
             executable_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/dist/SecureFileDrop.exe -Algorithm SHA256).Hash
             client_source_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/Client.cs -Algorithm SHA256).Hash
             interactive_gui = "unexecuted; programmatic owned tray context only"
           }
           $evidence | ConvertTo-Json | Set-Content -LiteralPath "$env:RUNNER_TEMP/windows-identity.json"
+      - name: Stage the unsigned preview with provenance
+        if: always()
+        shell: pwsh
+        run: |
+          $package = Join-Path $env:RUNNER_TEMP ("sfd-windows-preview-" + $env:GITHUB_RUN_ID + "-" + $env:GITHUB_RUN_ATTEMPT)
+          if (Test-Path -LiteralPath $package) { throw "Preview namespace already exists; preserved" }
+          $null = New-Item -ItemType Directory -Path $package
+          $files = @(
+            @{ From = "./desktop/windows/dist/SecureFileDrop.exe"; Name = "SecureFileDrop.exe" }
+            @{ From = "./desktop/windows/dist/SecureFileDrop.exe.config"; Name = "SecureFileDrop.exe.config" }
+            @{ From = "$env:RUNNER_TEMP/windows-results.txt"; Name = "windows-results.txt" }
+            @{ From = "$env:RUNNER_TEMP/windows-identity.json"; Name = "windows-identity.json" }
+            @{ From = "./LICENSE"; Name = "LICENSE.txt" }
+          )
+          foreach ($file in $files) {
+            if (Test-Path -LiteralPath $file.From) { Copy-Item -LiteralPath $file.From -Destination (Join-Path $package $file.Name) }
+          }
+          $revision = git rev-parse HEAD
+          @(
+            "Secure File Drop - unsigned development preview."
+            "Source revision: $revision"
+            "Independent Aether review and visible Windows acceptance remain pending; consult the PR and CI outcome."
+            "Keep SecureFileDrop.exe and SecureFileDrop.exe.config together in a permanent folder."
+            "Configure the backend HTTPS origin in Settings. No Docker, WSL or backend service is started or reconfigured."
+            "Explorer integration is opt-in for the current user in Settings; Windows 11 uses Show more options."
+            "Documentation: https://github.com/dreamingfree09/secure-file-drop/blob/$revision/docs/WINDOWS_COMPANION.md"
+          ) | Set-Content -LiteralPath (Join-Path $package "README.txt") -Encoding utf8
+          $hashes = foreach ($name in @("SecureFileDrop.exe", "SecureFileDrop.exe.config")) {
+            $item = Join-Path $package $name
+            if (Test-Path -LiteralPath $item) { (Get-FileHash -LiteralPath $item -Algorithm SHA256).Hash + "  " + $name }
+          }
+          $hashes | Set-Content -LiteralPath (Join-Path $package "SHA256SUMS.txt") -Encoding utf8
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: windows-companion-preview-and-checks
-          path: |
-            desktop/windows/dist/SecureFileDrop.exe
-            desktop/windows/dist/SecureFileDrop.exe.config
-            docs/WINDOWS_COMPANION.md
-            ${{ runner.temp }}/windows-results.txt
-            ${{ runner.temp }}/windows-identity.json
+          path: ${{ runner.temp }}/sfd-windows-preview-${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: error
           retention-days: 14
   backend:
