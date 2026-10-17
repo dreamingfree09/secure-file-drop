@@ -305,15 +305,27 @@ namespace SecureFileDrop.Desktop
         {
             if (LastAttempt == null || !LastAttempt.Confirmed) throw new ClientFault("A verified completed upload is required before copying a link.");
             Link link = Json.Decode<Link>(await Request("links", HttpMethod.Post, Body(new LinkBody { Id = LastAttempt.Id }), token, 12).ConfigureAwait(false));
-            Uri uri; DateTimeOffset expiry;
-            if (link == null || !Uri.TryCreate(link.Url, UriKind.Absolute, out uri) || uri.Scheme != "https" ||
-                uri.UserInfo.Length != 0 || uri.Fragment.Length != 0 || uri.AbsolutePath != "/download" ||
-                !String.Equals(uri.GetLeftPart(UriPartial.Authority), Origin.GetLeftPart(UriPartial.Authority), StringComparison.OrdinalIgnoreCase) ||
-                !uri.Query.StartsWith("?token=", StringComparison.Ordinal) ||
-                !DateTimeOffset.TryParse(link.ExpiresAt, out expiry) ||
-                expiry <= DateTimeOffset.UtcNow || expiry > DateTimeOffset.UtcNow.AddMinutes(6))
-                throw new ClientFault("The backend must return a current HTTPS download link for the configured host. Check its canonical public URL.");
+            ValidateLink(link, Origin);
             return link;
+        }
+        internal static void ValidateLink(Link link, Uri origin)
+        {
+            Uri uri; DateTimeOffset expiry;
+            bool valid = link != null && !String.IsNullOrEmpty(link.Url) && link.Url.Length <= 8192 &&
+                !link.Url.Any(char.IsWhiteSpace) && !link.Url.Any(char.IsControl) &&
+                Uri.TryCreate(link.Url, UriKind.Absolute, out uri) && uri.Scheme == "https" &&
+                uri.UserInfo.Length == 0 && uri.Fragment.Length == 0 && uri.AbsolutePath == "/download" &&
+                String.Equals(uri.GetLeftPart(UriPartial.Authority), origin.GetLeftPart(UriPartial.Authority), StringComparison.OrdinalIgnoreCase) &&
+                ValidTokenQuery(uri.Query) && DateTimeOffset.TryParse(link.ExpiresAt, out expiry) &&
+                expiry > DateTimeOffset.UtcNow && expiry <= DateTimeOffset.UtcNow.AddMinutes(6);
+            if (!valid) throw new ClientFault("The backend must return a current HTTPS download link for the exact configured origin. Check its canonical public URL.");
+        }
+        static bool ValidTokenQuery(string query)
+        {
+            if (query.Length > 4096 || !query.StartsWith("?token=", StringComparison.Ordinal)) return false;
+            string[] parts = query.Substring(7).Split('.');
+            return parts.Length == 2 && parts.All(part => part.Length > 0 && part.All(c =>
+                (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-'));
         }
         public void Dispose() { http.Dispose(); }
     }

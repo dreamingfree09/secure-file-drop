@@ -314,3 +314,10 @@ Native .NET Framework Windows Forms implements tray Quick Send, current cookie a
 Actual local execution: 26 Windows platform/security/lifecycle checks and 10 HTTP protocol checks passed, including Unicode argument/MIME handling, DPAPI/tamper/origin isolation, owned registry and IPC, in-flight cancellation/reconciliation and redirect credential isolation. Go tests/vet/race and five native vectors passed. First SDK use generated one untrusted development certificate; exact metadata/time were verified and only that newly created certificate/private key was removed; no trusted root or existing certificate changed. Subsequent builds disable SDK certificate generation.
 
 Hosted real HTTPS/backend client execution and final-head readback are pending. Visual tray, picker, Explorer, clipboard, real-user-profile startup and complete Windows Framework HTTPS deployment journeys remain unexecuted; no false GUI acceptance. Documentation records existing 10 MiB Compose/five-minute upload bounds and no arbitrary multi-GiB or resume promise. Production storage/security/TLS/capacity/ownership/reconciliation/cross-host DR/migration/deployment gates remain open. This entry is strictly appended to all received DEVLOG bytes.
+
+
+## 2026-10-17 — Companion validation refinement
+
+Initial hosted Windows build/26 platform plus 10 protocol checks passed at ffef0bafa7d64f617fc5cd4058590b8127b77826. Initial root CI reported one unused Go helper parameter; the actual desktop/backend job reported an incorrect relative harness DLL path because Go executes tests from tests/e2e. Corrected the parameter and resolve the repository root explicitly for the child process and source identity. Failed runs remain visible; no assertion or lint rule was disabled.
+
+Returned-link validation now also rejects control/whitespace, extra query parameters and malformed bearer-token grammar, with six additional focused regressions. Actual local Windows result is 32 platform/security/lifecycle checks plus 10 protocol checks; GUI/manual gates remain distinct. Final hosted exact-revision results belong in PR #26. All received DEVLOG bytes remain unchanged.

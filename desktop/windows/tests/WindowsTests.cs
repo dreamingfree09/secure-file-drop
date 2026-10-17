@@ -78,6 +78,15 @@ namespace SecureFileDrop.Tests
                     second.Forward(file);
                     Check(received.Wait(5000) && path == file, "current-user/session pipe roundtrip preserves selected path");
                 }
+                var linkOrigin = new Uri("https://example.test:8443/");
+                string expiry = DateTime.UtcNow.AddMinutes(5).ToString("o");
+                SfdClient.ValidateLink(new Link { Url = "https://example.test:8443/download?token=abc.DEF_123", ExpiresAt = expiry }, linkOrigin);
+                Check(true, "valid bounded HTTPS bearer-link schema accepted");
+                Reject(delegate { SfdClient.ValidateLink(new Link { Url = "https://example.test:9443/download?token=abc.def", ExpiresAt = expiry }, linkOrigin); }, "different link authority/port rejected");
+                Reject(delegate { SfdClient.ValidateLink(new Link { Url = "https://example.test:8443/download?token=abc.def", ExpiresAt = DateTime.UtcNow.AddSeconds(-1).ToString("o") }, linkOrigin); }, "expired download link rejected");
+                Reject(delegate { SfdClient.ValidateLink(new Link { Url = "https://example.test:8443/download?token=abc.def" + (char)13 + (char)10 + "extra", ExpiresAt = expiry }, linkOrigin); }, "clipboard link control characters rejected");
+                Reject(delegate { SfdClient.ValidateLink(new Link { Url = "https://example.test:8443/download?token=abc.def&next=other", ExpiresAt = expiry }, linkOrigin); }, "extra signed-link query parameters rejected");
+                Reject(delegate { SfdClient.ValidateLink(new Link { Url = "https://user:password@example.test:8443/download?token=abc.def", ExpiresAt = expiry }, linkOrigin); }, "credential-bearing download link rejected");
                 TestStreaming(root).GetAwaiter().GetResult();
                 ProtocolTests.Run(root).GetAwaiter().GetResult();
                 Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);

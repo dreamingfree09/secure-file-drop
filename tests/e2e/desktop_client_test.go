@@ -29,7 +29,7 @@ func verifyDesktopClient(ctx context.Context, t *testing.T, base, run, certifica
 		t.Fatal("unexpected desktop fixture ownership")
 	}
 	var untrustedCalls atomic.Int32
-	untrusted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	untrusted := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		untrustedCalls.Add(1)
 		_, _ = io.WriteString(w, "{}")
 	}))
@@ -51,9 +51,17 @@ func verifyDesktopClient(ctx context.Context, t *testing.T, base, run, certifica
 	}()
 	deadline, cancel := context.WithTimeout(ctx, 3*time.Minute)
 	defer cancel()
-	dll := filepath.Join("desktop", "windows", "tests", "bin", "Release", "net10.0", "Client.Contract.dll")
+	root, err := filepath.Abs("../..")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dll := filepath.Join(root, "desktop", "windows", "tests", "bin", "Release", "net10.0", "Client.Contract.dll")
+	if _, err := os.Stat(dll); err != nil {
+		t.Fatal("desktop harness was not built", err)
+	}
 	// #nosec G204 G702 -- Fixed test executable and validated fresh loopback fixture arguments, no shell.
 	cmd := exec.CommandContext(deadline, "dotnet", dll, base, run, untrusted.URL, "http://"+listener.Addr().String())
+	cmd.Dir = root
 	cmd.Env = append(os.Environ(), "SSL_CERT_FILE="+certificate, "SFD_DESKTOP_RUN="+run)
 	output, err := cmd.CombinedOutput()
 	t.Log(string(output))
@@ -66,7 +74,7 @@ func verifyDesktopClient(ctx context.Context, t *testing.T, base, run, certifica
 	if untrustedCalls.Load() != 0 {
 		t.Fatal("desktop client accepted the untrusted TLS fixture")
 	}
-	raw, err := os.ReadFile(filepath.Join("desktop", "windows", "Client.cs"))
+	raw, err := os.ReadFile(filepath.Join(root, "desktop", "windows", "Client.cs"))
 	if err != nil {
 		t.Fatal(err)
 	}
