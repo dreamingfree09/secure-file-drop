@@ -321,3 +321,8 @@ Hosted real HTTPS/backend client execution and final-head readback are pending. 
 Initial hosted Windows build/26 platform plus 10 protocol checks passed at ffef0bafa7d64f617fc5cd4058590b8127b77826. Initial root CI reported one unused Go helper parameter; the actual desktop/backend job reported an incorrect relative harness DLL path because Go executes tests from tests/e2e. Corrected the parameter and resolve the repository root explicitly for the child process and source identity. Failed runs remain visible; no assertion or lint rule was disabled.
 
 Returned-link validation now also rejects control/whitespace, extra query parameters and malformed bearer-token grammar, with six additional focused regressions. Actual local Windows result is 32 platform/security/lifecycle checks plus 10 protocol checks; GUI/manual gates remain distinct. Final hosted exact-revision results belong in PR #26. All received DEVLOG bytes remain unchanged.
+
+
+## 2026-10-17 — Companion asynchronous view isolation
+
+Source review corrected stale progress/readiness callbacks across transfers/backend changes by binding results to the initiating operation/client. Configuration changes now retain an actionable warning when complete sign-out from the previous service cannot be confirmed. Local Windows 32 platform/security/lifecycle and 10 protocol checks still pass; these do not substitute for the explicitly unexecuted visual settings/progress journeys. The final published revision and hosted evidence remain authoritative in PR #26. No backend, storage or deployment change.

@@ -30,6 +30,8 @@ Match the companion's file limit to the configured backend/proxy. Sign in using 
 
 Explorer integration is opt-in through Settings, scoped to HKCU\Software\Classes\*\shell\SecureFileDrop.Send and does not require administrator rights. The static verb appears under **Show more options** on Windows 11. The command quotes the full executable and selected file path, invokes the executable directly, and never invokes a command shell. A current-user/session-restricted named pipe forwards later invocations to the existing tray instance. An unrelated registry entry is preserved. Removal checks the companion ownership marker.
 
+Progress callbacks are bound to their initiating operation, and readiness replies to their initiating backend client. Late results cannot update a newer transfer or configuration. An incomplete sign-out warning remains visible after saving a new configuration.
+
 Only one transfer/account operation runs at a time; a second file is rejected with a busy indication, not silently queued. Local drive paths with spaces and Unicode are supported. Direct network/device/ADS arguments, directories and reparse-point file placeholders are rejected. The existing backend's filename contract (255 UTF-8 bytes, no controls, basename normalization) remains authoritative.
 
 ## Authentication, confidentiality and TLS

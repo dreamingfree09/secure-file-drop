@@ -146,10 +146,11 @@ namespace SecureFileDrop.Desktop
         readonly ToolStripMenuItem recover = new ToolStripMenuItem("Check last transfer");
         readonly CancellationTokenSource lifetime = new CancellationTokenSource();
         CancellationTokenSource transfer;
-        SfdClient client;
+        SfdClient client, probingClient;
         Settings settings;
         Task active, listener;
-        bool closing, probing, running, initializing = true;
+        bool closing, running, initializing = true;
+        int operationNumber;
         string pendingFile;
         string copied;
         DateTime copiedUntil;
@@ -214,17 +215,19 @@ namespace SecureFileDrop.Desktop
         }
         async Task Probe()
         {
-            if (closing || probing) return;
-            probing = true;
-            try { bool ready = await client.Probe(lifetime.Token); if (!closing) service.Text = ready ? "Service: ready" : "Service: unavailable"; }
-            catch (Exception) { if (!closing) service.Text = "Service: unavailable"; }
-            finally { probing = false; }
+            if (closing) return;
+            SfdClient target = client;
+            if (Object.ReferenceEquals(probingClient, target)) return;
+            probingClient = target;
+            try { bool ready = await target.Probe(lifetime.Token); if (!closing && Object.ReferenceEquals(client, target)) service.Text = ready ? "Service: ready" : "Service: unavailable"; }
+            catch (Exception) { if (!closing && Object.ReferenceEquals(client, target)) service.Text = "Service: unavailable"; }
+            finally { if (Object.ReferenceEquals(probingClient, target)) probingClient = null; }
             if (copied != null && DateTime.UtcNow >= copiedUntil) ClearClipboard();
         }
         void Run(Func<Task> operation)
         {
             if (closing || running || initializing) { tray.ShowBalloonTip(3000, "Secure File Drop", "A transfer or account operation is active. Try again when it finishes.", ToolTipIcon.Info); return; }
-            running = true; Update(); active = Execute(operation);
+            operationNumber++; running = true; Update(); active = Execute(operation);
         }
         async Task Execute(Func<Task> operation)
         {
@@ -258,10 +261,11 @@ namespace SecureFileDrop.Desktop
                 view.Show(); view.Activate(); view.Progress.Value = 0;
                 SetStatus("Sending file…");
                 DateTime next = DateTime.MinValue;
+                int generation = operationNumber;
                 CancellationToken operationToken = Token;
                 var report = new Progress<Tuple<long, long>>(delegate(Tuple<long, long> value)
                 {
-                    if (closing || !running || operationToken.IsCancellationRequested || (client.LastAttempt != null && client.LastAttempt.Confirmed)) return;
+                    if (closing || !running || generation != operationNumber || operationToken.IsCancellationRequested || (client.LastAttempt != null && client.LastAttempt.Confirmed)) return;
                     long done = value.Item1, total = value.Item2;
                     if (DateTime.UtcNow < next && done != total) return;
                     next = DateTime.UtcNow.AddMilliseconds(100);
@@ -300,14 +304,16 @@ namespace SecureFileDrop.Desktop
                 Run(async delegate
                 {
                     ClearClipboard();
+                    bool incompleteSignOut = false;
                     try { if (client.Authenticated) await client.Logout(Token); }
-                    catch (ClientFault) { SetStatus("Old service could not confirm logout. The local session is removed; sign out in its web interface when available."); }
+                    catch (ClientFault) { incompleteSignOut = true; }
                     client.Dispose();
-                    settings = next; client = new SfdClient(settings, new ProtectedSessions(root));
+                    settings = next; client = new SfdClient(settings, new ProtectedSessions(root)); service.Text = "Service: checking";
                     string target = Path.Combine(root, "settings.json"), temp = target + "." + Guid.NewGuid().ToString("N") + ".tmp";
                     try { File.WriteAllBytes(temp, Json.Encode(settings)); if (File.Exists(target)) File.Replace(temp, target, null); else File.Move(temp, target); }
                     finally { if (File.Exists(temp)) File.Delete(temp); }
-                    await Probe(); SetStatus("Settings saved. Sign in to the configured service before sending.");
+                    await Probe();
+                    SetStatus(incompleteSignOut ? "Settings saved; complete sign-out from the previous service could not be confirmed. Check its web interface and protected-session file permissions." : "Settings saved. Sign in to the configured service before sending.");
                 });
             }
         }
