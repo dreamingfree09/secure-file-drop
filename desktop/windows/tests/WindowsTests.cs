@@ -25,7 +25,9 @@ namespace SecureFileDrop.Tests
             if (args.Length == 2 && args[0] == "--send") { Console.WriteLine(args[1]); return 0; }
             string owner = Guid.NewGuid().ToString("N");
             string root = Path.Combine(Path.GetTempPath(), "sfd-desktop-test-" + owner);
-            string reg = @"Software\SecureFileDrop.Tests\" + owner;
+            string registryRoot = @"Software\SecureFileDrop.Tests\" + owner;
+            string reg = registryRoot + @"\verb";
+            bool registryOwned = false;
             if (Directory.Exists(root)) return 2;
             Directory.CreateDirectory(root); File.WriteAllText(Path.Combine(root, "owner"), owner);
             try
@@ -53,6 +55,10 @@ namespace SecureFileDrop.Tests
                 Check(sessions.Load(origin) == null, "tampered DPAPI session rejected");
                 sessions.Save(origin, cookie); sessions.Clear(origin);
                 Check(Directory.GetFiles(Path.Combine(root, "sessions")).Length == 0, "specific protected session removed");
+                using (var existingRoot = Registry.CurrentUser.OpenSubKey(registryRoot))
+                    if (existingRoot != null) throw new Exception("Test registry namespace already exists; preserved.");
+                using (var ownedRoot = Registry.CurrentUser.CreateSubKey(registryRoot)) ownedRoot.SetValue("TestOwner", owner);
+                registryOwned = true;
                 string exe = Process.GetCurrentProcess().MainModule.FileName;
                 ExplorerVerb.InstallAt(reg, exe);
                 using (var command = Registry.CurrentUser.OpenSubKey(reg + @"\command"))
@@ -133,7 +139,13 @@ namespace SecureFileDrop.Tests
             finally
             {
                 // This key and directory were created fresh with a unique test ID; never enumerate or delete user application data.
-                if (reg.StartsWith(@"Software\SecureFileDrop.Tests\", StringComparison.Ordinal)) Registry.CurrentUser.DeleteSubKeyTree(reg, false);
+                if (registryOwned)
+                {
+                    bool owned;
+                    using (var ownedRoot = Registry.CurrentUser.OpenSubKey(registryRoot))
+                        owned = ownedRoot != null && (string)ownedRoot.GetValue("TestOwner") == owner;
+                    if (owned) Registry.CurrentUser.DeleteSubKeyTree(registryRoot, false);
+                }
                 if (Path.GetFullPath(root).StartsWith(Path.GetFullPath(Path.GetTempPath()), StringComparison.OrdinalIgnoreCase) &&
                     File.Exists(Path.Combine(root, "owner")) && File.ReadAllText(Path.Combine(root, "owner")) == owner) Directory.Delete(root, true);
             }
