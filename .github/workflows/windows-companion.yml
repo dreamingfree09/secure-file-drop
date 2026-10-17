@@ -45,7 +45,7 @@ jobs:
           ./desktop/windows/build.ps1
           ./desktop/windows/tests/test.ps1 | Tee-Object -FilePath "$env:RUNNER_TEMP/windows-results.txt"
           $text = Get-Content -LiteralPath "$env:RUNNER_TEMP/windows-results.txt" -Raw
-          if (-not $text.Contains("WINDOWS CHECKS PASSED: 32") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 14) { throw "Mandatory Windows checks did not execute" }
+          if (-not $text.Contains("PRODUCT POLICY CHECKS PASSED: 3") -or -not $text.Contains("WINDOWS CHECKS PASSED: 32") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 14) { throw "Mandatory Windows checks did not execute" }
           $evidence = @{
             revision = (git rev-parse HEAD)
             os = [Environment]::OSVersion.VersionString
@@ -53,6 +53,7 @@ jobs:
             test_process_runtime = ($text.Split([char]10) | Where-Object { $_.StartsWith("WINDOWS TEST RUNTIME:") } | Select-Object -First 1).Trim()
             framework_release = (Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -Name Release).Release
             product_target = ".NET Framework 4.8"
+            release_https_policy_checks = 3
             executable_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/dist/SecureFileDrop.exe -Algorithm SHA256).Hash
             client_source_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/Client.cs -Algorithm SHA256).Hash
             interactive_gui = "unexecuted; programmatic owned tray context only"
