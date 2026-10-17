@@ -45,7 +45,7 @@ jobs:
           ./desktop/windows/build.ps1
           ./desktop/windows/tests/test.ps1 | Tee-Object -FilePath "$env:RUNNER_TEMP/windows-results.txt"
           $text = Get-Content -LiteralPath "$env:RUNNER_TEMP/windows-results.txt" -Raw
-          if (-not $text.Contains("WINDOWS CHECKS PASSED: 26") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 10) { throw "Mandatory Windows checks did not execute" }
+          if (-not $text.Contains("WINDOWS CHECKS PASSED: 32") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 10) { throw "Mandatory Windows checks did not execute" }
           $evidence = @{
             revision = (git rev-parse HEAD)
             os = [Environment]::OSVersion.VersionString
