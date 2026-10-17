@@ -1,3 +1,21 @@
+## Delegated core acceptance closure — 2026-10-17
+
+SFD-OWNER-DELEGATED-COMPLETION-20261017; [PR #25](https://github.com/dreamingfree09/secure-file-drop/pull/25). Exact integrated source: 8d54031c26ec10027ecebadd754f34996d55e8dd. [Continuity](CONTINUITY.md#delegated-completion-integrated-acceptance-and-bounded-core-closure--2026-10-17) records immutable execution, retained artifacts, preservation and open production gates.
+
+| Supported behavior | Actual bounded evidence |
+| --- | --- |
+| Login, active/revoked sessions, owner isolation, administrator controls | M24 default 15 and RustFS 18, route/owner/session subtests and root unit/race checks |
+| Multipart validation, size/request envelope, empty/truncated uploads, byte/hash integrity | Existing actual backend/native flows, boundary/negative cases and five native vectors |
+| Signed links/expiry, real browser upload/download/logout, actual proxy TLS and request limits | M24 default/RustFS suites; seven script tests additionally verify session UI isolation |
+| SQL cancellation, concurrency locks, COMMIT uncertainty, active/idle shutdown and restart | Explicit default/RustFS subtests; four real synthetic COMMIT acknowledgement fault cases |
+| Bounded checkpoint/copy/cold restore, pre-write and coherent post-write rollback | Exact-M24 six-phase rehearsal, no failed/skipped phase, four source/six rollback files |
+| Scoped storage identities, denials and cleanup | RustFS S3 contract and rehearsal; every deletion checks labels; independent before/after labelled-resource inventories are empty |
+| Dependency inventory and build quality | Source scans, retained nested IAM JSON, native/build/vet/race/lint/docs passed; runtime advisories remain as documented |
+
+[Exact-M24 acceptance](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38982360717): contract 18/18, rehearsal 6/6, zero failures/skips; hosted IAM vet/mod verify/three pre-network guards passed, go test reports no test files. [M24 default CI](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38980742094): 15/15. Historical PR-only acceptance is not used as integrated evidence. The workflow-only proposal has passing [push](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38982360670) and [PR](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38982399215) CI.
+
+Bounded development-side core closeout is complete as producer evidence; Aether independent acknowledgement and PR #25 integration are pending. The Windows tray companion is the next authorised stage and is not complete. No large-file capacity or public-production readiness claim: default-MinIO advisories, backend-storage TLS, capacity/slow-client tests, operations/security ownership/rotation, historical schema/ownership, combined cross-host recovery, real-data migration and deployment gates remain open.
+
 ## RustFS preparation and synthetic migration — 2026-10-16
 
 SFD-RUSTFS-ADOPTION-20261016-CODEX. Producer/branch owner: Codex; recipient/independent reviewer: Aether. The Owner authorised this exact 12-path package, subject to [Aether's conditions](https://github.com/dreamingfree09/secure-file-drop/pull/23#issuecomment-6223093103), following the [producer decision package](https://github.com/dreamingfree09/secure-file-drop/pull/23#issuecomment-6222462366). New worker branch codex/sfd-rustfs-adoption-preparation-20261016 starts at exact evaluation 0349bc0c8f6b7f9b34dc8b68d850efa946c79950; its draft PR targets codex/sfd-storage-evaluation-20261016. Accepted master 0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7, PR #22 head 4a9b6c5ee9a7b0f6390e62f0465636daa42a2a23 and PR #23 head/base remain unchanged.
