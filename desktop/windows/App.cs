@@ -90,7 +90,6 @@ namespace SecureFileDrop.Desktop
     sealed class SettingsDialog : Form
     {
         readonly TextBox backend = new TextBox { Width = 400 };
-        readonly CheckBox http = new CheckBox { Text = "Allow isolated development HTTP on literal loopback IPs", Width = 420 };
         readonly CheckBox remember = new CheckBox { Text = "Remember this session using Windows protection (no password)", Width = 420 };
         readonly NumericUpDown limit = new NumericUpDown { Minimum = 1, Maximum = 51200, Width = 150 };
         readonly Label error = new Label { Width = 420, Height = 60 };
@@ -100,11 +99,11 @@ namespace SecureFileDrop.Desktop
             Text = "Secure File Drop — Settings"; Width = 480; Height = 440;
             FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = false; MinimizeBox = false;
             StartPosition = FormStartPosition.CenterScreen;
-            backend.Text = current.Backend; http.Checked = current.AllowLoopbackHttp; remember.Checked = current.RememberSession;
+            backend.Text = current.Backend; remember.Checked = current.RememberSession;
             limit.Value = Math.Max(1, Math.Min(51200, current.MaxUploadBytes / 1048576m));
             var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, Padding = new Padding(12), WrapContents = false };
             panel.Controls.Add(new Label { Text = "Backend HTTPS origin (local or remote)", AutoSize = true }); panel.Controls.Add(backend);
-            panel.Controls.Add(http); panel.Controls.Add(remember);
+            panel.Controls.Add(remember);
             panel.Controls.Add(new Label { Text = "Companion file limit in MiB (match the server)", AutoSize = true }); panel.Controls.Add(limit);
             panel.Controls.Add(new Label { Text = "Transfers have a five-minute server budget. Raising this limit does not establish large-file capacity.", Width = 420, Height = 40 });
             var save = new Button { Text = "Save settings", AutoSize = true }; panel.Controls.Add(save);
@@ -113,7 +112,7 @@ namespace SecureFileDrop.Desktop
             panel.Controls.Add(error); Controls.Add(panel);
             save.Click += delegate
             {
-                try { var value = new Settings { Backend = backend.Text.Trim(), AllowLoopbackHttp = http.Checked, RememberSession = remember.Checked, MaxUploadBytes = Decimal.ToInt64(limit.Value * 1048576) }; value.Origin(); Result = value; DialogResult = DialogResult.OK; Close(); }
+                try { var value = new Settings { Backend = backend.Text.Trim(), RememberSession = remember.Checked, MaxUploadBytes = Decimal.ToInt64(limit.Value * 1048576) }; value.Origin(); Result = value; DialogResult = DialogResult.OK; Close(); }
                 catch (ClientFault e) { error.Text = e.Message; }
             };
             install.Click += delegate
@@ -154,11 +153,21 @@ namespace SecureFileDrop.Desktop
         string pendingFile;
         string copied;
         DateTime copiedUntil;
-        public TrayContext(string directory, SingleInstance single, string initialFile)
+        public TrayContext(string directory, SingleInstance single, string initialFile) : this(directory, single, initialFile, null) { }
+#if SFD_SYNTHETIC_TESTS
+        internal
+#else
+        private
+#endif
+        TrayContext(string directory, SingleInstance single, string initialFile, Settings fixtureSettings)
         {
             root = directory; instance = single; pendingFile = initialFile; Directory.CreateDirectory(root);
-            try { settings = Json.Decode<Settings>(File.ReadAllBytes(Path.Combine(root, "settings.json"))); settings.Origin(); }
-            catch (Exception) { settings = new Settings(); }
+            if (fixtureSettings != null) settings = fixtureSettings;
+            else
+            {
+                try { settings = Json.Decode<Settings>(File.ReadAllBytes(Path.Combine(root, "settings.json"))); settings.Origin(); }
+                catch (Exception) { settings = new Settings(); }
+            }
             client = new SfdClient(settings, new ProtectedSessions(root));
             var handle = dispatch.Handle;
             var menu = new ContextMenuStrip();

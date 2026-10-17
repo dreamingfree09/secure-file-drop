@@ -17,7 +17,9 @@ namespace SecureFileDrop.Desktop
     public sealed class Settings
     {
         [DataMember] public string Backend = "https://localhost:8443";
-        [DataMember] public bool AllowLoopbackHttp;
+#if SFD_SYNTHETIC_TESTS
+        internal bool AllowSyntheticLoopbackHttp = false;
+#endif
         [DataMember] public bool RememberSession;
         [DataMember] public long MaxUploadBytes = 10485760;
         public Uri Origin()
@@ -27,10 +29,13 @@ namespace SecureFileDrop.Desktop
                 uri.UserInfo.Length != 0 || uri.Query.Length != 0 || uri.Fragment.Length != 0 ||
                 uri.AbsolutePath != "/" || (uri.Scheme != "https" && uri.Scheme != "http"))
                 throw new ClientFault("Enter an HTTPS backend origin without a path, password or query.");
+            bool fixtureHttp = false;
+#if SFD_SYNTHETIC_TESTS
             IPAddress ip;
-            bool loopback = IPAddress.TryParse(uri.Host.Trim('[', ']'), out ip) && IPAddress.IsLoopback(ip);
-            if (uri.Scheme != "https" && !(AllowLoopbackHttp && loopback))
-                throw new ClientFault("HTTPS is required. Explicit development HTTP is limited to literal loopback IPs.");
+            fixtureHttp = AllowSyntheticLoopbackHttp && IPAddress.TryParse(uri.Host.Trim('[', ']'), out ip) && IPAddress.IsLoopback(ip);
+#endif
+            if (uri.Scheme != "https" && !fixtureHttp)
+                throw new ClientFault("HTTPS is required. Configure a valid certificate; there is no insecure fallback.");
             if (MaxUploadBytes < 1 || MaxUploadBytes > (50L << 30))
                 throw new ClientFault("Choose a file limit from 1 byte to 50 GiB, matching your backend. Capacity above tested sizes remains unverified.");
             return new Uri(uri.GetLeftPart(UriPartial.Authority) + "/");

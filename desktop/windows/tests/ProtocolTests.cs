@@ -17,7 +17,7 @@ namespace SecureFileDrop.Tests
         {
             using (var server = new Fixture())
             using (var other = new Fixture())
-            using (var client = new SfdClient(new Settings { Backend = server.Address, AllowLoopbackHttp = true, MaxUploadBytes = 2097152 }))
+            using (var client = new SfdClient(new Settings { Backend = server.Address, AllowSyntheticLoopbackHttp = true, MaxUploadBytes = 2097152 }))
             {
                 await client.Login("synthetic", "Synthetic1", CancellationToken.None);
                 Check(client.Authenticated, "Windows HTTP cookie login and strict /me readback");
@@ -52,7 +52,7 @@ namespace SecureFileDrop.Tests
                 server.Expired = false; server.DeferLogout = true; server.LogoutStarted.Reset();
                 Check(!await client.SignOutForConfiguration(CancellationToken.None) && !client.Authenticated, "old-backend logout timeout returns an incomplete result so configuration can continue");
                 server.ReleaseLogout.Set();
-                using (var replacement = new SfdClient(new Settings { Backend = other.Address, AllowLoopbackHttp = true }))
+                using (var replacement = new SfdClient(new Settings { Backend = other.Address, AllowSyntheticLoopbackHttp = true }))
                     Check(await replacement.Probe(CancellationToken.None), "replacement backend is reachable after old-backend timeout");
                 server.Expired = false; server.DeferLogout = false;
                 await client.Login("synthetic", "Synthetic1", CancellationToken.None);
@@ -76,7 +76,7 @@ namespace SecureFileDrop.Tests
                 var protectedStore = new ProtectedSessions(Path.Combine(root, "unverified-session"));
                 var rememberedOrigin = new Uri(server.Address);
                 protectedStore.Save(rememberedOrigin, new Cookie("sfd_session", "SYNTHETIC_ONLY", "/") { HttpOnly = true, Expires = DateTime.UtcNow.AddMinutes(10) });
-                using (var restored = new SfdClient(new Settings { Backend = server.Address, AllowLoopbackHttp = true, RememberSession = true }, protectedStore))
+                using (var restored = new SfdClient(new Settings { Backend = server.Address, AllowSyntheticLoopbackHttp = true, RememberSession = true }, protectedStore))
                 {
                     bool signedOut = await restored.SignOutForConfiguration(CancellationToken.None);
                     Check(signedOut && server.LogoutStarted.IsSet && protectedStore.Load(rememberedOrigin) == null, "unverified remembered session is signed out and removed before reconfiguration");
@@ -86,7 +86,7 @@ namespace SecureFileDrop.Tests
             using (var down = new Fixture())
             {
                 string address = down.Address; down.Dispose();
-                using (var client = new SfdClient(new Settings { Backend = address, AllowLoopbackHttp = true }))
+                using (var client = new SfdClient(new Settings { Backend = address, AllowSyntheticLoopbackHttp = true }))
                     Check(!await client.Probe(CancellationToken.None), "Windows unavailable backend is reported unavailable");
             }
         }

@@ -37,7 +37,7 @@ namespace SecureFileDrop.Tests
                 Reject(delegate { new Settings { Backend = "https://user:password@example.test" }.Origin(); }, "credential-bearing backend rejected");
                 Reject(delegate { new Settings { Backend = "https://example.test/path" }.Origin(); }, "non-origin backend rejected");
                 Reject(delegate { new Settings { Backend = "https://example.test/?token=secret" }.Origin(); }, "query-bearing backend rejected");
-                Check(new Settings { Backend = "http://127.0.0.1:1234", AllowLoopbackHttp = true }.Origin().Scheme == "http", "explicit literal loopback development HTTP");
+                Check(new Settings { Backend = "http://127.0.0.1:1234", AllowSyntheticLoopbackHttp = true }.Origin().Scheme == "http", "explicit test-build-only literal loopback HTTP");
                 string file = Path.Combine(root, "Δοκιμή 世界 space & $(noop).txt"); File.WriteAllText(file, "synthetic bytes");
                 Check(WindowsFiles.Validate(file) == file, "spaces and Unicode filename validated");
                 Reject(delegate { WindowsFiles.Validate(file + ":hidden"); }, "alternate data stream rejected");
@@ -115,9 +115,9 @@ namespace SecureFileDrop.Tests
                     catch (SocketException) { }
                 });
                 Directory.CreateDirectory(Path.Combine(root, "ui"));
-                File.WriteAllBytes(Path.Combine(root, "ui", "settings.json"), Json.Encode(new Settings { Backend = "http://127.0.0.1:" + ownedPort, AllowLoopbackHttp = true }));
+                File.WriteAllBytes(Path.Combine(root, "ui", "settings.json"), Json.Encode(new Settings { Backend = "http://127.0.0.1:" + ownedPort, AllowSyntheticLoopbackHttp = true }));
                 using (var single = new SingleInstance("-ui-test-" + owner))
-                using (var context = new TrayContext(Path.Combine(root, "ui"), single, ""))
+                using (var context = new TrayContext(Path.Combine(root, "ui"), single, "", new Settings { Backend = "http://127.0.0.1:" + ownedPort, AllowSyntheticLoopbackHttp = true }))
                 {
                     var trayField = typeof(TrayContext).GetField("tray", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                     var icon = (NotifyIcon)trayField.GetValue(context);

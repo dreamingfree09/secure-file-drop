@@ -98,7 +98,7 @@ namespace SecureFileDrop.Contract
                 }
                 using (var bad = new SfdClient(new Settings { Backend = untrusted.AbsoluteUri }))
                     Check(!await bad.Probe(CancellationToken.None), "untrusted real TLS certificate rejected; no validation bypass");
-                using (var down = new SfdClient(new Settings { Backend = unavailable.AbsoluteUri, AllowLoopbackHttp = true }))
+                using (var down = new SfdClient(new Settings { Backend = unavailable.AbsoluteUri, AllowSyntheticLoopbackHttp = true }))
                     Check(!await down.Probe(CancellationToken.None), "owned unavailable backend produces unavailable status");
                 secret = null;
             }
