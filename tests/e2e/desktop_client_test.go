@@ -74,7 +74,7 @@ func verifyDesktopClient(ctx context.Context, t *testing.T, base, run, certifica
 	if untrustedCalls.Load() != 0 {
 		t.Fatal("desktop client accepted the untrusted TLS fixture")
 	}
-	raw, err := os.ReadFile(filepath.Join(root, "desktop", "windows", "Client.cs"))
+	raw, err := os.ReadFile("../../desktop/windows/Client.cs")
 	if err != nil {
 		t.Fatal(err)
 	}
