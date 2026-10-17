@@ -1,5 +1,3 @@
-## RustFS preparation and synthetic migration — 2026-10-16
-
 ## Delegated core acceptance closure — 2026-10-17
 
 SFD-OWNER-DELEGATED-COMPLETION-20261017; [PR #25](https://github.com/dreamingfree09/secure-file-drop/pull/25). Exact integrated source: 8d54031c26ec10027ecebadd754f34996d55e8dd. [Continuity](CONTINUITY.md#delegated-completion-integrated-acceptance-and-bounded-core-closure--2026-10-17) records immutable execution, retained artifacts, preservation and open production gates.
@@ -18,6 +16,7 @@ SFD-OWNER-DELEGATED-COMPLETION-20261017; [PR #25](https://github.com/dreamingfre
 
 Bounded development-side core closeout is complete as producer evidence; Aether independent acknowledgement and PR #25 integration are pending. The Windows tray companion is the next authorised stage and is not complete. No large-file capacity or public-production readiness claim: default-MinIO advisories, backend-storage TLS, capacity/slow-client tests, operations/security ownership/rotation, historical schema/ownership, combined cross-host recovery, real-data migration and deployment gates remain open.
 
+## RustFS preparation and synthetic migration — 2026-10-16
 
 SFD-RUSTFS-ADOPTION-20261016-CODEX. Producer/branch owner: Codex; recipient/independent reviewer: Aether. The Owner authorised this exact 12-path package, subject to [Aether's conditions](https://github.com/dreamingfree09/secure-file-drop/pull/23#issuecomment-6223093103), following the [producer decision package](https://github.com/dreamingfree09/secure-file-drop/pull/23#issuecomment-6222462366). New worker branch codex/sfd-rustfs-adoption-preparation-20261016 starts at exact evaluation 0349bc0c8f6b7f9b34dc8b68d850efa946c79950; its draft PR targets codex/sfd-storage-evaluation-20261016. Accepted master 0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7, PR #22 head 4a9b6c5ee9a7b0f6390e62f0465636daa42a2a23 and PR #23 head/base remain unchanged.
 
