@@ -15,7 +15,12 @@ def main():
         checks.append(name)
     def command(argv,**kw):
         r=subprocess.run(argv,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=kw.pop('timeout',90),**kw)
-        if r.returncode:raise RuntimeError('fixture command failed: '+pathlib.Path(argv[0]).name+' '+argv[1])
+        if r.returncode:
+            if argv[0]=='node':
+                for line in r.stderr.decode(errors='replace').splitlines():
+                    if line.startswith('BROWSER DIAGNOSTIC: '):
+                        diagnostic=json.loads(line.split(': ',1)[1]);result['browser_diagnostic']=diagnostic
+            raise RuntimeError('fixture command failed: '+pathlib.Path(argv[0]).name+' '+argv[1])
         return r.stdout.decode().strip()
     def docker(*argv,**kw):return command(['docker',*argv],**kw)
     def owned(kind,ident):

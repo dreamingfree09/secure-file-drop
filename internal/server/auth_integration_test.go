@@ -4,9 +4,6 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
-	"github.com/google/uuid"
-	_ "github.com/lib/pq"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -14,10 +11,14 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // This suite only accepts a fresh local database with an explicit fixture marker.
-// The harness creates and removes its own labelled PostgreSQL container/volume.
+// The harness creates and removes its own labeled PostgreSQL container/volume.
 func TestAuthenticatedIdentities(t *testing.T) {
 	dsn := os.Getenv("SFD_AUTH_TEST_DSN")
 	if dsn == "" {
@@ -31,7 +32,11 @@ func TestAuthenticatedIdentities(t *testing.T) {
 	if err != nil {
 		t.Fatal("open fixture database")
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			t.Error("close fixture database")
+		}
+	}()
 	var marker string
 	if err := db.QueryRow("SELECT owner FROM sfd_test_owner").Scan(&marker); err != nil || marker != os.Getenv("SFD_AUTH_TEST_OWNER") {
 		t.Fatal("fixture ownership mismatch")
@@ -109,9 +114,9 @@ func TestAuthenticatedIdentities(t *testing.T) {
 		if _, err = db.Exec("INSERT INTO auth_sessions(token_hash,expires_at) VALUES($1,$2)", sessionHash(tok), exp); err != nil {
 			t.Fatal("fixture session insert")
 		}
-		return &http.Cookie{Name: a.cookieName(), Value: tok}
+		return &http.Cookie{Name: a.cookieName(), Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode, Value: tok}
 	}
-	adminRoute := a.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(204) }))
+	adminRoute := a.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(204) }))
 	t.Run("environment administrator identity and permission", func(t *testing.T) {
 		// Database-first login preserves the established credential precedence.
 		// A distinct environment password proves that the fallback issued the marker.
@@ -157,12 +162,13 @@ func TestAuthenticatedIdentities(t *testing.T) {
 			expect(request(adminRoute, "GET", c, ""), want)
 		}
 	})
-	t.Run("invalid unknown expired tampered and legacy sessions", func(t *testing.T) {
+	t.Run("invalid unknown expired tampered and legacy sessions", func(_ *testing.T) {
 		valid := grant(ordinary, false, time.Hour)
-		cases := []*http.Cookie{nil, {Name: a.cookieName(), Value: "invalid"}, {Name: a.cookieName(), Value: valid.Value + "x"}, grant(uuid.NewString(), false, time.Hour), grant("not-a-uuid", false, time.Hour), grant(inactive, false, time.Hour), grant(unverified, false, time.Hour), grant(ordinary, false, -time.Hour)}
+		cases := make([]*http.Cookie, 0, 10)
+		cases = append(cases, nil, &http.Cookie{Name: a.cookieName(), Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode, Value: "invalid"}, &http.Cookie{Name: a.cookieName(), Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode, Value: valid.Value + "x"}, grant(uuid.NewString(), false, time.Hour), grant("not-a-uuid", false, time.Hour), grant(inactive, false, time.Hour), grant(unverified, false, time.Hour), grant(ordinary, false, -time.Hour))
 		// Authenticated legacy payloads are intentionally invalidated by the migration.
 		encoded, _ := encodeSession(sessionPayload{Sub: "admin", Exp: time.Now().Add(time.Hour).Unix()})
-		cases = append(cases, &http.Cookie{Name: a.cookieName(), Value: encoded + "." + signPayload(a.secretBytes(), encoded)})
+		cases = append(cases, &http.Cookie{Name: a.cookieName(), Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode, Value: encoded + "." + signPayload(a.secretBytes(), encoded)})
 		// A marker cannot promote a different subject even if that subject is a user.
 		cases = append(cases, grant(ordinary, true, time.Hour))
 		for _, c := range cases {
@@ -235,7 +241,7 @@ func TestAuthenticatedIdentities(t *testing.T) {
 		c := grant(ordinary, false, time.Hour)
 		originalName := a.AdminUser
 		a.AdminUser = ordinary
-		expect(request(a.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(204) })), "GET", c, ""), 403)
+		expect(request(a.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(204) })), "GET", c, ""), 403)
 		a.AdminUser = originalName
 		if _, err := db.Exec("UPDATE auth_sessions SET expires_at=CURRENT_TIMESTAMP-INTERVAL '1 second' WHERE token_hash=$1", sessionHash(c.Value)); err != nil {
 			t.Fatal("expire synthetic session")

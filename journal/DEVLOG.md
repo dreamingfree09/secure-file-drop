@@ -301,3 +301,13 @@ Superseded CI runs 39172914130 and 39172916797 built the actual images and passe
 ### Synthetic BYTEA fixture correction
 
 The numeric-layout full-stack suite passed 27 checks. The fresh BYTEA fixture stopped before application startup because the numeric migration check (sha256_bytes >= 0) cannot apply to BYTEA. Remove that numeric-only check solely while constructing the empty owned BYTEA fixture, then seed non-null preservation metadata and repeat acceptance. This is test-only DDL on disposable databases; no live constraint or data is changed.
+
+
+### Final local acceptance and strict legacy lint gate
+
+Dual-layout source-built acceptance passed 27 checks per layout, preserving non-null existing fixture metadata and verifying digest/byte-count writes. The unchanged f196... Windows executable passed nine normal TLS/revocation login/me/readiness/logout checks against the final application and BYTEA fixture. All owned cleanup/live preservation checks passed. Strict linter v2.14.0 with frozen reviewed config fails: 79 base findings and 79 proposal findings, none on added/modified Go lines after correcting new test issues and quoting identity diagnostics. Preserve the full failure, not a fabricated lint pass; independent Aether review and mandatory gate reconciliation remain outstanding.
+
+
+### Browser cleanup diagnostic correction
+
+CI at 2a683fd28ea54a9f069fbe9962f1da229d4e3de2 passed 27 API/full-stack/security checks and normal CI fixture trust setup, then failed its browser command. Source inspection found the cleanup step attempting a visibility-waiting fill on the now-hidden password field. Clear that owned field directly after the actual visible login assertions, and emit only sanitized phase/error-type diagnostics on failure. Do not bypass TLS, revocation, CSP or UI login. Repeat mandatory exact-head CI; no browser pass is claimed yet.

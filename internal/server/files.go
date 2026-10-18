@@ -92,7 +92,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		`, userID).Scan(&quota, &currentUsage)
 
 		if err != nil {
-			log.Printf("create file: failed to get user info for %s: %v", userID, err)
+			log.Printf("create file: failed to read authenticated account quota")
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
