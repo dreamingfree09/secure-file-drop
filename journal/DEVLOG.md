@@ -291,3 +291,8 @@ Address automated review finding discussion_r4309050562: reclaim at most 256 exp
 ### Live hash metadata schema reconciliation
 
 Read-only actual metadata confirms schema version 11 clean, users UUID/roles and files.user_id UUID, but files.sha256_bytes is BYTEA rather than the embedded BIGINT definition. Preserve the live type and all stored values. Resolve the actual column type before upload side effects; write raw digest for BYTEA, byte count for BIGINT, reject unknown types. Require both isolated layouts with non-null sentinel file/user/hash preservation checks. No live migration, data conversion or backend recreation occurred.
+
+
+### PostgreSQL fixture readiness correction
+
+Superseded CI runs 39172914130 and 39172916797 built the actual images and passed Windows/static/vulnerability gates, but hit the PostgreSQL initialization Unix-socket readiness race before migrations. The temporary initialization server exits before the final TCP server starts. Require pg_isready on 127.0.0.1 TCP before issuing fixture DDL; do not retry partially applied DDL or suppress acceptance. Cleanup/preservation passed; repeat both layouts at the successor SHA.

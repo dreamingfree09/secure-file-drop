@@ -52,7 +52,7 @@ def main():
         for service,v in values.items():(root/(service+'.env')).write_text(''.join(k+'='+x+'\n' for k,x in v.items()))
         pg=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-pg','--network',network,'--env-file',str(root/'pg.env'),'-p','127.0.0.1::5432','-v',volumes[0]+':/var/lib/postgresql/data',args.postgres_image);created.append(pg);pginfo=owned('container',pg)
         for _ in range(60):
-            r=subprocess.run(['docker','exec',pg,'pg_isready','-U','fixture','-d',dbname],capture_output=True)
+            r=subprocess.run(['docker','exec',pg,'pg_isready','-h','127.0.0.1','-U','fixture','-d',dbname],capture_output=True)
             if r.returncode==0:break
             time.sleep(.5)
         assert r.returncode==0, "PostgreSQL readiness"
