@@ -46,11 +46,13 @@ jobs:
       - name: Require owned real PostgreSQL, native hash and HTTPS session acceptance
         run: |
           python3 -B tests/auth/acceptance.py --backend-image sfd-auth-candidate --postgres-image postgres:16-alpine --storage-image sfd-auth-storage --output "$RUNNER_TEMP/sfd-auth-fixture" --browser-module "$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core"
+          python3 -B tests/auth/acceptance.py --backend-image sfd-auth-candidate --postgres-image postgres:16-alpine --storage-image sfd-auth-storage --output "$RUNNER_TEMP/sfd-auth-fixture-bytea" --hash-layout bytea --browser-module "$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core"
           python3 - <<'PY'
           import json,os,pathlib
-          r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'sfd-auth-fixture/result.json').read_text())
-          assert not r['failures'] and r['existing_services_unchanged'] and r['owned_cleanup_complete']
-          assert len(r['checks']) >= 25
+          for name in ['sfd-auth-fixture','sfd-auth-fixture-bytea']:
+              r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/name/'result.json').read_text())
+              assert not r['failures'] and r['existing_services_unchanged'] and r['owned_cleanup_complete']
+              assert len(r['checks']) >= 25
           PY
       - uses: actions/upload-artifact@v4
         if: always()
@@ -60,6 +62,9 @@ jobs:
             ${{ runner.temp }}/sfd-auth-fixture/result.json
             ${{ runner.temp }}/sfd-auth-fixture/go-tests.txt
             ${{ runner.temp }}/sfd-auth-fixture/browser-tests.txt
+            ${{ runner.temp }}/sfd-auth-fixture-bytea/result.json
+            ${{ runner.temp }}/sfd-auth-fixture-bytea/go-tests.txt
+            ${{ runner.temp }}/sfd-auth-fixture-bytea/browser-tests.txt
           if-no-files-found: error
   windows:
     runs-on: windows-2022
