@@ -27,11 +27,8 @@ def main():
     baseline=snapshot()
     class Relay(http.server.BaseHTTPRequestHandler):
         backend=None
-        browser_html=None
         def log_message(self,*a):pass
         def request(self):
-            if self.path=='/__sfd-owned-browser-test' and self.browser_html:
-                body=self.browser_html.encode();self.send_response(200);self.send_header('Content-Type','text/html');self.send_header('Cache-Control','no-store');self.send_header('Content-Length',str(len(body)));self.end_headers();self.wfile.write(body);return
             c=http.client.HTTPConnection('127.0.0.1',self.backend,timeout=20);body=self.rfile.read(int(self.headers.get('Content-Length','0')));headers={k:v for k,v in self.headers.items() if k.lower() not in ['connection','content-length','host']};headers['Host']=self.headers['Host'];headers['X-Forwarded-Proto']='https';c.request(self.command,self.path,body,headers);r=c.getresponse();body=r.read();self.send_response(r.status)
             for k,v in r.getheaders():
                 if k.lower() not in ['connection','content-length','transfer-encoding','server','date']:self.send_header(k,v)
@@ -120,7 +117,7 @@ def main():
         check(request('/login',{'username':'second','password':'Synthetic9-second'})[0]==200,'second account login')
         check(request('/links',{'id':fid})[0]==404,'cross-account link denied');check(request('/upload?id='+fid,multipart,headers={'Content-Type':'multipart/form-data; boundary='+boundary})[0]==404,'cross-account upload denied');check(request('/user/files/'+fid,method='DELETE')[0]==404,'cross-account deletion denied')
         check(request('/user/files')[0]==200 and fid.encode() not in request('/user/files')[1],'file list isolates accounts')
-        Relay.browser_html=(repo/'tests/auth/browser.html').read_text().replace('__FIXTURE__',json.dumps({'username':'admin','password':password}))
+        (root/'windows-fixture.json').write_text(json.dumps({'Origin':origin,'Username':'admin','Password':password}))
 
         if args.browser_module:
             # This trust setup is restricted to a disposable GitHub Actions runner.
@@ -132,10 +129,9 @@ def main():
             command(['certutil','-N','-d','sql:'+str(nss),'--empty-password'])
             command(['certutil','-A','-d','sql:'+str(nss),'-n',name,'-t','C,,','-i',str(cert)])
             browserenv=dict(os.environ,SFD_AUTH_BROWSER_MODULE=str(pathlib.Path(args.browser_module).resolve()))
-            browserout=command(['node',str(repo/'tests/auth/browser.cjs'),origin],env=browserenv,timeout=60)
+            browserout=command(['node',str(repo/'tests/auth/browser.cjs'),origin,str(root/'windows-fixture.json')],env=browserenv,timeout=60)
             (root/'browser-tests.txt').write_text(browserout+'\n')
             check('BROWSER ACCEPTANCE PASS:' in browserout,'real historical browser UI over normally validated HTTPS')
-        (root/'windows-fixture.json').write_text(json.dumps({'Origin':origin,'Username':'admin','Password':password}))
         result['origin']=origin;result['backend_image']=args.backend_image;result['certificate_sha256']=hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest();(root/'ready.json').write_text(json.dumps({'origin':origin,'ready':True}))
         deadline=time.monotonic()+args.hold_seconds
         while time.monotonic()<deadline and not (root/'continue').exists():time.sleep(.5)

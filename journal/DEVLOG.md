@@ -276,3 +276,8 @@ Owner delegation authorizes the backend correction. Dedicated worker is based ex
 ### Legacy session CI build correction
 
 Initial published revision 19650318fb05878ef7ecf63f99d437a4739b44d1 passed Windows and Go/vet/vulnerability jobs, but the old Go 1.24 Docker builder rejected the corrected dependency Go minimum with GOTOOLCHAIN=local. Pin the builder to reviewed Go 1.26.9/Alpine 3.24; keep the runtime stage unchanged and repeat mandatory CI. Failed runs 39172424115 and 39172488862 are retained. No live adoption occurred.
+
+
+### Browser fixture policy alignment
+
+Pre-execution source review found the legacy UI explicitly disallows framing. Replace the assignment-created iframe fixture with direct top-level Playwright UI login, reading synthetic credentials only from the private fixture input. Existing frame/CSP protection remains intact. Superseded CI revisions remain retained and are not acceptance.
