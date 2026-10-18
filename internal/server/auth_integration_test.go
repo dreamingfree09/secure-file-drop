@@ -280,4 +280,30 @@ func TestAuthenticatedIdentities(t *testing.T) {
 			t.Fatal("secret disclosed")
 		}
 	})
+	t.Run("bounded expired session reclamation preserves active sessions", func(t *testing.T) {
+		active := login("admin", "Environment8-only")
+		if _, err := db.Exec(`INSERT INTO auth_sessions(token_hash,expires_at) SELECT md5(i::text)||md5('fixture-expired-'||i::text),CURRENT_TIMESTAMP-INTERVAL '1 hour' FROM generate_series(1,300) i`); err != nil {
+			t.Fatal("seed expired synthetic sessions")
+		}
+		count := func() int {
+			t.Helper()
+			var n int
+			if db.QueryRow("SELECT count(*) FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP").Scan(&n) != nil {
+				t.Fatal("expired session count")
+			}
+			return n
+		}
+		before := count()
+		_ = login("admin", "Environment8-only")
+		if count() != before-256 {
+			t.Fatal("cleanup must reclaim only one bounded batch")
+		}
+		expect(request(a.meHandler(), "GET", active, ""), 200)
+		_ = login("admin", "Environment8-only")
+		if count() != 0 {
+			t.Fatal("successive logins reclaim remaining expired sessions")
+		}
+		expect(request(a.meHandler(), "GET", active, ""), 200)
+	})
+
 }

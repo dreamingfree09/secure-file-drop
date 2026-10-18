@@ -281,3 +281,8 @@ Initial published revision 19650318fb05878ef7ecf63f99d437a4739b44d1 passed Windo
 ### Browser fixture policy alignment
 
 Pre-execution source review found the legacy UI explicitly disallows framing. Replace the assignment-created iframe fixture with direct top-level Playwright UI login, reading synthetic credentials only from the private fixture input. Existing frame/CSP protection remains intact. Superseded CI revisions remain retained and are not acceptance.
+
+
+### Expired session review correction
+
+Address automated review finding discussion_r4309050562: reclaim at most 256 expired auth_sessions records per login, using indexed expiry and SKIP LOCKED while preserving active sessions. Add real PostgreSQL regressions for bounded reclamation and active-session survival. Independent Aether acceptance remains pending; no live session/database was changed.

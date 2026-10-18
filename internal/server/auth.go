@@ -220,6 +220,16 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		}
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 		defer cancel()
+
+		// Reclaim a bounded batch without waiting on another session's locks.
+		// Only expired records are removed; current sessions remain isolated.
+		if _, err := a.DB.ExecContext(ctx, `DELETE FROM auth_sessions WHERE token_hash IN (
+            SELECT token_hash FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP
+            ORDER BY expires_at LIMIT 256 FOR UPDATE SKIP LOCKED
+        )`); err != nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
 		if _, err := a.DB.ExecContext(ctx, "INSERT INTO auth_sessions (token_hash, expires_at) VALUES ($1, $2)", sessionHash(tok), exp); err != nil {
 			http.Error(w, "server error", http.StatusInternalServerError)
 			return
