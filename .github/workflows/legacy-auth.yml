@@ -25,6 +25,14 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: '1.26.9'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Prepare isolated browser dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y libnss3-tools
+          npm ci --prefix reviewed-reference/tests/browser --ignore-scripts
+          node reviewed-reference/tests/browser/node_modules/playwright-core/cli.js install --with-deps --only-shell chromium
       - name: Compile all suites and require vet and reachable vulnerability gates
         run: |
           go test ./... -run '^$'
@@ -37,7 +45,7 @@ jobs:
           docker pull postgres:16-alpine
       - name: Require owned real PostgreSQL, native hash and HTTPS session acceptance
         run: |
-          python3 -B tests/auth/acceptance.py --backend-image sfd-auth-candidate --postgres-image postgres:16-alpine --storage-image sfd-auth-storage --output "$RUNNER_TEMP/sfd-auth-fixture"
+          python3 -B tests/auth/acceptance.py --backend-image sfd-auth-candidate --postgres-image postgres:16-alpine --storage-image sfd-auth-storage --output "$RUNNER_TEMP/sfd-auth-fixture" --browser-module "$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core"
           python3 - <<'PY'
           import json,os,pathlib
           r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'sfd-auth-fixture/result.json').read_text())
@@ -51,6 +59,7 @@ jobs:
           path: |
             ${{ runner.temp }}/sfd-auth-fixture/result.json
             ${{ runner.temp }}/sfd-auth-fixture/go-tests.txt
+            ${{ runner.temp }}/sfd-auth-fixture/browser-tests.txt
           if-no-files-found: error
   windows:
     runs-on: windows-2022
