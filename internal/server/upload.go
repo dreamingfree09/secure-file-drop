@@ -76,11 +76,17 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
+		userID, authErr := cfg.Auth.getCurrentUser(r)
+		if authErr != nil {
+			writeAuthError(w, authErr)
+			return
+		}
+
 		var objectKey string
 		var status string
 		err = db.QueryRow(
-			`SELECT object_key, status FROM files WHERE id = $1`,
-			id,
+			`SELECT object_key, status FROM files WHERE id = $1 AND user_id::text = $2`,
+			id, userID,
 		).Scan(&objectKey, &status)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -178,7 +184,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
-		shaHex, hashBytes, _, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
+		shaHex, _, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
 		if herr != nil {
 			_, _ = db.Exec(
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'stored'`,

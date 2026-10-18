@@ -267,3 +267,7 @@ Validation:
 
 Outcome:
 The application now supports enterprise-scale file transfers with professional progress tracking, providing users with clear visibility into upload and download status.
+
+## 2026-10-18 — SFD-ADMIN-SESSION-COMPATIBILITY-20261018 (Codex producer; Aether review pending)
+
+Owner delegation authorizes the backend correction. Dedicated worker is based explicitly on the preserved live feature/v2-enhancements at 2b8e56de4b79e2508125ca02c18455ae88dee7f6. Environment administrator /me used a name as a database UUID. Added signed principal separation, persisted hashed sessions and logout revocation, additive migration 12, role/owner isolation regressions, owner checks on legacy transfer routes and the discovered native byte-count correction. Corrected reachable pgx/x-text dependencies. Source and sanitized tests are reviewable; current docs/CONTINUITY.md and the exact-revision worker PR record evidence and limitations. Windows source c320861536914623ea22f28c1d4ea156d4c2132a and distributed executable f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca remain unchanged. Live backend/schema/configuration/data, all other services and TLS/credentials are preserved. Independent exact-SHA Aether review and mandatory CI precede any live backend adoption; actual Owner Windows acceptance remains pending. No integration or public production readiness is claimed.

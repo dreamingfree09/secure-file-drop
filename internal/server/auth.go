@@ -1,11 +1,13 @@
-// auth.go - Stateless session cookies and authentication helpers.
+// auth.go - Signed identities and database-backed session revocation.
 //
 // Implements HMAC-signed cookie sessions, login/logout handlers,
 // and DB-backed user authentication compatible with the MVP.
 package server
 
 import (
+	"context"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/base64"
@@ -13,7 +15,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -24,7 +25,7 @@ import (
 // AuthConfig holds authentication-related configuration used by HTTP handlers
 // (admin credentials, session secrets, cookie settings, and DB for user auth).
 //
-// It is intentionally lightweight for the MVP yet production-ready.
+// Environment administrators remain separate from registered database users.
 // Unit tests can construct this directly. Database-backed user auth
 // is supported when DB is non-nil.
 type AuthConfig struct {
@@ -39,8 +40,10 @@ type AuthConfig struct {
 }
 
 type sessionPayload struct {
-	Sub string `json:"sub"`
-	Exp int64  `json:"exp"`
+	Sub   string `json:"sub"`
+	Exp   int64  `json:"exp"`
+	Admin bool   `json:"admin,omitempty"`
+	ID    string `json:"sid"`
 }
 
 func (a AuthConfig) cookieName() string {
@@ -89,8 +92,19 @@ func decodeSession(token string) (sessionPayload, error) {
 
 // makeToken returns "payload.signature"
 func (a AuthConfig) makeToken(sub string) (string, time.Time, error) {
+	return a.makeSessionToken(sub, false)
+}
+
+func (a AuthConfig) makeSessionToken(sub string, admin bool) (string, time.Time, error) {
+	if sub == "" || a.SessionSecret == "" {
+		return "", time.Time{}, errors.New("missing identity or secret")
+	}
+	var nonce [32]byte
+	if _, err := rand.Read(nonce[:]); err != nil {
+		return "", time.Time{}, err
+	}
 	exp := time.Now().Add(a.ttl())
-	p := sessionPayload{Sub: sub, Exp: exp.Unix()}
+	p := sessionPayload{Sub: sub, Exp: exp.Unix(), Admin: admin, ID: hex.EncodeToString(nonce[:])}
 	payload, err := encodeSession(p)
 	if err != nil {
 		return "", time.Time{}, err
@@ -114,6 +128,12 @@ func (a AuthConfig) verifyToken(tok string) (sessionPayload, error) {
 	decoded, err := decodeSession(payload)
 	if err != nil {
 		return p, err
+	}
+	if a.SessionSecret == "" || decoded.Sub == "" || len(decoded.ID) != 64 {
+		return p, errors.New("invalid identity")
+	}
+	if decoded.Admin && (a.AdminUser == "" || decoded.Sub != a.AdminUser) {
+		return p, errors.New("invalid administrator")
 	}
 	if decoded.Exp <= time.Now().Unix() {
 		return p, errors.New("expired")
@@ -161,6 +181,7 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		}
 
 		var authenticated bool
+		var environmentAdmin bool
 		var userID string
 
 		// First, try database authentication if DB is available
@@ -177,6 +198,7 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 				if err == nil {
 					authenticated = true
 					userID = a.AdminUser
+					environmentAdmin = true
 				}
 			}
 		}
@@ -186,8 +208,19 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 			return
 		}
 
-		tok, exp, err := a.makeToken(userID)
+		tok, exp, err := a.makeSessionToken(userID, environmentAdmin)
 		if err != nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+
+		if a.DB == nil {
+			http.Error(w, "server error", http.StatusInternalServerError)
+			return
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+		if _, err := a.DB.ExecContext(ctx, "INSERT INTO auth_sessions (token_hash, expires_at) VALUES ($1, $2)", sessionHash(tok), exp); err != nil {
 			http.Error(w, "server error", http.StatusInternalServerError)
 			return
 		}
@@ -210,23 +243,91 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 	}
 }
 
-// logoutHandler clears the session cookie by setting an expired cookie
+// sessionHash stores no bearer credential in the database.
+func sessionHash(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
+}
+
+type identity struct {
+	Subject, Username       string
+	Admin, EnvironmentAdmin bool
+}
+type identityKey struct{}
+
+var errUnauthenticated = errors.New("unauthorized")
+var errRegisteredAccountRequired = errors.New("registered account required")
+
+// resolveIdentity validates both the signed claims and the persisted session.
+// Text comparison prevents an unknown subject from becoming a UUID SQL error.
+func (a AuthConfig) resolveIdentity(r *http.Request) (identity, error) {
+	if principal, ok := r.Context().Value(identityKey{}).(identity); ok {
+		return principal, nil
+	}
+	var principal identity
+	c, err := r.Cookie(a.cookieName())
+	if err != nil {
+		return principal, errUnauthenticated
+	}
+	payload, err := a.verifyToken(c.Value)
+	if err != nil {
+		return principal, errUnauthenticated
+	}
+	if a.DB == nil {
+		return principal, errors.New("missing session database")
+	}
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	var present bool
+	err = a.DB.QueryRowContext(ctx, "SELECT EXISTS (SELECT 1 FROM auth_sessions WHERE token_hash = $1 AND expires_at > CURRENT_TIMESTAMP)", sessionHash(c.Value)).Scan(&present)
+	if err != nil {
+		return principal, err
+	}
+	if !present {
+		return principal, errUnauthenticated
+	}
+	principal.Subject = payload.Sub
+	if payload.Admin {
+		principal.Username, principal.Admin, principal.EnvironmentAdmin = a.AdminUser, true, true
+		return principal, nil
+	}
+	err = a.DB.QueryRowContext(ctx, "SELECT username, is_admin FROM users WHERE id::text = $1 AND is_active = TRUE AND email_verified = TRUE", payload.Sub).Scan(&principal.Username, &principal.Admin)
+	if errors.Is(err, sql.ErrNoRows) {
+		return identity{}, errUnauthenticated
+	}
+	return principal, err
+}
+
+func writeAuthError(w http.ResponseWriter, err error) {
+	status, message := http.StatusInternalServerError, "server error"
+	if errors.Is(err, errUnauthenticated) {
+		status, message = http.StatusUnauthorized, "unauthorized"
+	}
+	if errors.Is(err, errRegisteredAccountRequired) {
+		status, message = http.StatusForbidden, "registered account required"
+	}
+	http.Error(w, message, status)
+}
+
+// logoutHandler revokes the current session before reporting success.
 func (a AuthConfig) logoutHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		http.SetCookie(w, &http.Cookie{
-			Name:     a.cookieName(),
-			Value:    "",
-			Path:     "/",
-			Expires:  time.Unix(0, 0),
-			MaxAge:   -1,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-			Secure:   true,
-		})
+		if _, err := a.resolveIdentity(r); err != nil {
+			writeAuthError(w, err)
+			return
+		}
+		c, _ := r.Cookie(a.cookieName())
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+		if _, err := a.DB.ExecContext(ctx, "DELETE FROM auth_sessions WHERE token_hash = $1", sessionHash(c.Value)); err != nil {
+			writeAuthError(w, err)
+			return
+		}
+		http.SetCookie(w, &http.Cookie{Name: a.cookieName(), Path: "/", Expires: time.Unix(0, 0), MaxAge: -1, HttpOnly: true, SameSite: http.SameSiteLaxMode, Secure: true})
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{"status": "ok"})
 	}
@@ -234,70 +335,54 @@ func (a AuthConfig) logoutHandler() http.HandlerFunc {
 
 func (a AuthConfig) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie(a.cookieName())
+		principal, err := a.resolveIdentity(r)
 		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeAuthError(w, err)
 			return
 		}
-		if _, err := a.verifyToken(c.Value); err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), identityKey{}, principal)))
 	})
 }
 
-// getCurrentUser extracts the current user ID (subject) from the session cookie.
+// getCurrentUser is for UUID-backed ownership and quota paths only.
 func (a AuthConfig) getCurrentUser(r *http.Request) (string, error) {
-	c, err := r.Cookie(a.cookieName())
-	if err != nil {
-		return "", errors.New("no session cookie")
-	}
-	payload, err := a.verifyToken(c.Value)
+	principal, err := a.resolveIdentity(r)
 	if err != nil {
 		return "", err
 	}
-	return payload.Sub, nil
+	if principal.EnvironmentAdmin {
+		return "", errRegisteredAccountRequired
+	}
+	return principal.Subject, nil
 }
 
-// requireAdmin is middleware that checks if the authenticated user has admin role.
 func (a AuthConfig) requireAdmin(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// First check authentication
-		c, err := r.Cookie(a.cookieName())
+	return a.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		principal, err := a.resolveIdentity(r)
 		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeAuthError(w, err)
 			return
 		}
-		payload, err := a.verifyToken(c.Value)
-		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		// Check if user is admin
-		if a.DB == nil {
-			http.Error(w, "server misconfigured", http.StatusInternalServerError)
-			return
-		}
-
-		var isAdmin bool
-		err = a.DB.QueryRow("SELECT is_admin FROM users WHERE id = $1 AND is_active = TRUE", payload.Sub).Scan(&isAdmin)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				http.Error(w, "forbidden", http.StatusForbidden)
-				return
-			}
-			log.Printf("requireAdmin: db query failed: %v", err)
-			http.Error(w, "server error", http.StatusInternalServerError)
-			return
-		}
-
-		if !isAdmin {
+		if !principal.Admin {
 			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
-
 		next.ServeHTTP(w, r)
-	})
+	}))
+}
+
+func (a AuthConfig) meHandler() http.Handler {
+	return a.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		principal, err := a.resolveIdentity(r)
+		if err != nil {
+			writeAuthError(w, err)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{"status": "ok", "username": principal.Username, "is_admin": principal.Admin})
+	}))
 }

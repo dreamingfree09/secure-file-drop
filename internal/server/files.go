@@ -74,7 +74,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		// Get current user (returns user UUID from session)
 		userID, err := cfg.Auth.getCurrentUser(r)
 		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeAuthError(w, err)
 			return
 		}
 

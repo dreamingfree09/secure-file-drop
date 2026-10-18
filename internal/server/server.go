@@ -287,37 +287,7 @@ func New(cfg Config) *Server {
 	mux.Handle("/reset-password", resetCompleteLimiter.middleware(http.HandlerFunc(cfg.ResetPasswordHandler)))
 
 	// Protected endpoint for user info (includes admin status for UI).
-	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID, err := cfg.Auth.getCurrentUser(r)
-		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-
-		var username string
-		var isAdmin bool
-		err = cfg.DB.QueryRow(
-			"SELECT username, is_admin FROM users WHERE id = $1 AND is_active = TRUE",
-			userID,
-		).Scan(&username, &isAdmin)
-
-		if err != nil {
-			if err == sql.ErrNoRows {
-				http.Error(w, "user not found", http.StatusNotFound)
-				return
-			}
-			http.Error(w, "server error", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"status":   "ok",
-			"username": username,
-			"is_admin": isAdmin,
-		})
-	})))
+	mux.Handle("/me", cfg.Auth.meHandler())
 
 	// Create file record (metadata only): step 1 in upload lifecycle
 	// (pending -> stored -> hashed -> ready/failed).
@@ -376,13 +346,13 @@ func New(cfg Config) *Server {
 	}
 
 	// Resumable upload endpoints (TUS protocol) - registered after srv creation
-	mux.HandleFunc("/upload/resumable", srv.tusCreateHandler())
+	mux.Handle("/upload/resumable", cfg.Auth.requireAuth(srv.tusCreateHandler()))
 	mux.HandleFunc("/upload/resumable/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPatch:
-			srv.tusPatchHandler()(w, r)
+			cfg.Auth.requireAuth(srv.tusPatchHandler()).ServeHTTP(w, r)
 		case http.MethodHead:
-			srv.tusHeadHandler()(w, r)
+			cfg.Auth.requireAuth(srv.tusHeadHandler()).ServeHTTP(w, r)
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		}

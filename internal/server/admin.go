@@ -86,7 +86,7 @@ func (s *Server) UserFilesHandler(w http.ResponseWriter, r *http.Request) {
 	// Get current user from session (returns user UUID)
 	userID, err := s.authCfg.getCurrentUser(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeAuthError(w, err)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (s *Server) UserDeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	// Get current user from session
 	userID, err := s.authCfg.getCurrentUser(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeAuthError(w, err)
 		return
 	}
 
