@@ -1,5 +1,21 @@
 # Windows tray companion — development preview
 
+## Connection correction — 2026-10-18
+
+The historical preview from source 8f55c9deb24b477ecfc516bb67ee8078bb9ad0f8 omitted the compiled Framework target attribute. On the Owner's machine it selected legacy Ssl3/Tls defaults even though the executable config requested the 4.8 runtime. The corrected standalone builds include FrameworkTarget.cs and select OS-controlled TLS/strong-crypto defaults without registry changes or protocol fallbacks. HttpClientHandler explicitly checks certificate revocation. Certificate/hostname failures remain failures; redirects, cookie isolation and HTTPS-only shipping policy are retained. See [Microsoft's Framework TLS guidance](https://learn.microsoft.com/en-us/dotnet/framework/network-programming/tls).
+
+Transport messages now distinguish trust, secure-channel negotiation, DNS/proxy, connectivity and other failures without printing exception messages, URLs or credentials. If login returns a cookie but /me fails with HTTP 404/405/5xx, the cookie is cleared and the client identifies the session-verification/API failure. It never treats login HTTP 200 alone as an authenticated session. The preserved historical WSL backend has a different administrator /me implementation from accepted M24; a successful readiness probe does not prove that live account/API compatibility. Owner-operated tray sign-in remains required and backend replacement is not part of this correction.
+
+Run the owned Windows regression suite with desktop/windows/tests/test.ps1 (32 platform, 16 protocol, 6 release-policy checks), and the explicit credential-free local HTTPS probe with:
+
+~~~powershell
+./desktop/windows/tests/live.ps1 -Origin 'https://localhost:8443'
+~~~
+
+The probe does not load stored sessions, send passwords, register users or change data. Its five checks exercise the release client on native Framework against the existing backend, including revocation and rejection of the localhost certificate under an IP hostname. Full authenticated transfer acceptance uses fresh owned isolated fixtures; live administrator login and visual acceptance belong to the Owner. New exact source/binary/CI identities are published in PR #26. Preserve the previous seven-file preview and exit its existing tray process before launching a separately prepared replacement. No automatic installation, Explorer registration or process termination is performed.
+
+The dated original-preview checklist below retains its historical identity; it must not be used as the checksum for the corrected replacement.
+
 Work ID: SFD-OWNER-DELEGATED-COMPLETION-20261017. The Owner authorised this companion after bounded core acceptance at M24, 8d54031c26ec10027ecebadd754f34996d55e8dd. Producer: Codex. Independent security-sensitive review and integration: Aether, pending. This is a Windows client for the existing Go backend and web UI. It neither runs nor reconfigures Docker, WSL, the backend or storage.
 
 ## Local operator prerequisite

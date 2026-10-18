@@ -156,7 +156,7 @@ namespace SecureFileDrop.Desktop
         {
             settings = config; Origin = config.Origin(); store = sessions;
             // Never forward a password, cookie or file body through redirects; retain OS certificate validation.
-            var handler = new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = cookies, UseCookies = true };
+            var handler = CreateHandler(cookies);
             http = new HttpClient(handler) { Timeout = Timeout.InfiniteTimeSpan };
             if (config.RememberSession && store != null)
             {
@@ -164,6 +164,29 @@ namespace SecureFileDrop.Desktop
                 if (cookie != null && cookie.Name == "sfd_session" && cookie.Expires.ToUniversalTime() > DateTime.UtcNow)
                     cookies.Add(Origin, cookie);
             }
+        }
+        internal static HttpClientHandler CreateHandler(CookieContainer jar)
+        {
+            return new HttpClientHandler { AllowAutoRedirect = false, CookieContainer = jar,
+                UseCookies = true, CheckCertificateRevocationList = true };
+        }
+        internal static ClientFault TransportFault(HttpRequestException error)
+        {
+            for (Exception inner = error; inner != null; inner = inner.InnerException)
+            {
+                var web = inner as WebException;
+                if (web == null) continue;
+                if (web.Status == WebExceptionStatus.TrustFailure)
+                    return new ClientFault("The backend certificate could not be validated. Check its name, trust and revocation availability; certificate validation remains enabled.");
+                if (web.Status == WebExceptionStatus.SecureChannelFailure)
+                    return new ClientFault("Windows could not negotiate a secure connection. Check the client runtime and server TLS settings; certificate validation remains enabled.");
+                if (web.Status == WebExceptionStatus.NameResolutionFailure || web.Status == WebExceptionStatus.ProxyNameResolutionFailure)
+                    return new ClientFault("The backend or configured proxy name could not be resolved. Check the address and Windows proxy settings.");
+                if (web.Status == WebExceptionStatus.ConnectFailure)
+                    return new ClientFault("Cannot connect to the backend. Check its address, availability and Windows proxy settings.");
+            }
+            // Never include exception messages, request URLs, headers or credential values.
+            return new ClientFault("The connection failed before an HTTP response was received. Check the network, Windows proxy and TLS settings; certificate validation remains enabled.");
         }
         void Forget()
         {
@@ -181,7 +204,7 @@ namespace SecureFileDrop.Desktop
                 request.Headers.TryAddWithoutValidation("Origin", Origin.GetLeftPart(UriPartial.Authority));
                 HttpResponseMessage response;
                 try { response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, budget.Token).ConfigureAwait(false); }
-                catch (HttpRequestException) { throw new ClientFault("Cannot securely reach the backend. Check its address, availability and certificate; TLS validation remains enabled."); }
+                catch (HttpRequestException error) { throw TransportFault(error); }
                 using (response)
                 {
                     int code = (int)response.StatusCode;
@@ -238,7 +261,15 @@ namespace SecureFileDrop.Desktop
             Cookie cookie = cookies.GetCookies(Origin)["sfd_session"];
             if (cookie == null || cookie.Expired || !cookie.HttpOnly || (Origin.Scheme == "https" && !cookie.Secure) || cookie.Expires.ToUniversalTime() <= DateTime.UtcNow)
                 { Forget(); throw new ClientFault("The backend did not issue a usable session cookie."); }
-            await Restore(token).ConfigureAwait(false);
+            try { await Restore(token).ConfigureAwait(false); }
+            catch (ClientFault failure)
+            {
+                Forget();
+                if (failure.Status == 404 || failure.Status == 405 || failure.Status >= 500)
+                    throw new ClientFault("Sign-in was accepted, but the backend session verification (/me) failed (HTTP " + failure.Status + "). Check backend account/API compatibility; this is an HTTP response, not a TLS failure.", failure.Status);
+                throw;
+            }
+            catch { Forget(); throw; }
             if (settings.RememberSession && store != null)
             {
                 try { store.Save(Origin, cookie); SessionRemembered = true; }

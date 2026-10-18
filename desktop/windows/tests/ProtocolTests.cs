@@ -21,6 +21,16 @@ namespace SecureFileDrop.Tests
             {
                 await client.Login("synthetic", "Synthetic1", CancellationToken.None);
                 Check(client.Authenticated, "Windows HTTP cookie login and strict /me readback");
+                server.HistoricalMe = true;
+                await client.Restore(CancellationToken.None);
+                Check(client.Authenticated, "historical status/username/is_admin session metadata remains compatible");
+                server.MeFailure = 500;
+                bool incompatible = false;
+                try { await client.Login("synthetic", "Synthetic1", CancellationToken.None); }
+                catch (ClientFault fault) { incompatible = fault.Status == 500 && fault.Message.Contains("session verification (/me)") && fault.Message.Contains("not a TLS failure"); }
+                Check(incompatible && !client.Authenticated && !client.SessionRemembered, "HTTP session verification failure is distinct from TLS and clears unverified authentication");
+                server.MeFailure = 0;
+                await client.Login("synthetic", "Synthetic1", CancellationToken.None);
                 string file = Path.Combine(root, "HTTP Δ 世界 space & $.bin");
                 byte[] bytes = new byte[1048576]; for (int i = 0; i < bytes.Length; i++) bytes[i] = (byte)(i % 241);
                 File.WriteAllBytes(file, bytes);
@@ -98,7 +108,8 @@ namespace SecureFileDrop.Tests
             string id = Guid.NewGuid().ToString(), hash = "";
             public string FilenameHeader = "";
             public volatile string Redirect;
-            public volatile bool Expired, Defer, DeferLogout;
+            public volatile bool Expired, Defer, DeferLogout, HistoricalMe;
+            public volatile int MeFailure;
             public long Bytes;
             public int Requests;
             public readonly ManualResetEventSlim Uploaded = new ManualResetEventSlim();
@@ -145,10 +156,13 @@ namespace SecureFileDrop.Tests
                         int status = 200; byte[] data = Encoding.UTF8.GetBytes("{\"status\":\"ok\"}"); string extra = "";
                         if (path == "/login")
                         {
+                            Expired = false;
                             if (Redirect != null) { status = 302; extra = "Location: " + Redirect + "\r\n"; }
                             else extra = "Set-Cookie: sfd_session=SYNTHETIC_ONLY; Path=/; HttpOnly; Expires=" + DateTime.UtcNow.AddMinutes(10).ToString("R") + "\r\n";
                         }
                         else if (path != "/ready" && Expired) status = 401;
+                        else if (path == "/me" && MeFailure != 0) status = MeFailure;
+                        else if (path == "/me" && HistoricalMe) data = Encoding.UTF8.GetBytes("{\"status\":\"ok\",\"username\":\"synthetic\",\"is_admin\":true}");
                         else if (path == "/files" && head.StartsWith("POST", StringComparison.Ordinal))
                         { id = Guid.NewGuid().ToString(); hash = ""; Bytes = 0; Uploaded.Reset(); data = Json.Encode(new FileRow { Id = id, Status = "pending" }); status = 201; }
                         else if (path.StartsWith("/upload?", StringComparison.Ordinal))
