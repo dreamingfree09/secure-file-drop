@@ -286,3 +286,8 @@ Pre-execution source review found the legacy UI explicitly disallows framing. Re
 ### Expired session review correction
 
 Address automated review finding discussion_r4309050562: reclaim at most 256 expired auth_sessions records per login, using indexed expiry and SKIP LOCKED while preserving active sessions. Add real PostgreSQL regressions for bounded reclamation and active-session survival. Independent Aether acceptance remains pending; no live session/database was changed.
+
+
+### Live hash metadata schema reconciliation
+
+Read-only actual metadata confirms schema version 11 clean, users UUID/roles and files.user_id UUID, but files.sha256_bytes is BYTEA rather than the embedded BIGINT definition. Preserve the live type and all stored values. Resolve the actual column type before upload side effects; write raw digest for BYTEA, byte count for BIGINT, reject unknown types. Require both isolated layouts with non-null sentinel file/user/hash preservation checks. No live migration, data conversion or backend recreation occurred.

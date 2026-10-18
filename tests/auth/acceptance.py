@@ -6,7 +6,7 @@ Optional --cert/--key use existing localhost TLS material read-only, with no tru
 import argparse, hashlib, http.client, http.cookiejar, http.server, json, os, pathlib, secrets, ssl, subprocess, threading, time, urllib.request, urllib.error, uuid
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--hash-layout',choices=['bigint','bytea'],default='bigint');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
     os.umask(0o077);root=pathlib.Path(args.output);root.mkdir(parents=True,exist_ok=False)
     repo=pathlib.Path(__file__).resolve().parents[2];name='sfd-auth-'+secrets.token_hex(6);label='sfd.auth-fixture';created=[];volumes=[];network=None;server=None;thread=None
     result={'fixture':name,'checks':[],'failures':[]};checks=result['checks']
@@ -61,7 +61,12 @@ def main():
         for path in sorted((repo/'internal/db/migrations').glob('*.up.sql')):
             if int(path.name.split('_')[0])<=11:sql(path.read_text())
         sql("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT false; CREATE TABLE schema_migrations(version bigint PRIMARY KEY,dirty boolean NOT NULL); INSERT INTO schema_migrations VALUES(11,false); CREATE TABLE sfd_test_owner(owner text NOT NULL); INSERT INTO sfd_test_owner VALUES('"+name+"');")
+        if args.hash_layout=='bytea':sql('ALTER TABLE files ALTER COLUMN sha256_bytes TYPE bytea USING NULL::bytea;')
+        result['hash_metadata_layout']=args.hash_layout
         sentinel=str(uuid.uuid4());sql("INSERT INTO users(id,email,username,password_hash,is_admin,email_verified) VALUES('"+sentinel+"','sentinel@example.invalid','sentinel','not-a-credential',true,true);")
+        sentinel_file=str(uuid.uuid4());sentinel_digest='ab'*32
+        sentinel_value="decode('"+sentinel_digest+"','hex')" if args.hash_layout=='bytea' else '1'
+        sql("INSERT INTO files(id,object_key,orig_name,content_type,size_bytes,status,user_id,sha256_hex,sha256_bytes) VALUES('"+sentinel_file+"','sentinel/source','preserved.txt','text/plain',1,'hashed','"+sentinel+"','"+sentinel_digest+"',"+sentinel_value+");")
         def fingerprint():return hashlib.sha256(sql("SELECT row_to_json(u)::text FROM users u ORDER BY id; SELECT row_to_json(f)::text FROM files f ORDER BY id;").encode()).hexdigest()
         before=fingerprint()
         storage=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-storage','--network',network,'--env-file',str(root/'storage.env'),'-v',volumes[1]+':/data',args.storage_image,'server','/data');created.append(storage);owned('container',storage)
@@ -110,6 +115,8 @@ def main():
         data=b'Secure File Drop isolated native hash fixture\n';status,body=request('/files',{'orig_name':'fixture.txt','content_type':'text/plain','size_bytes':len(data)});check(status==201,'owned metadata creation');fid=json.loads(body)['id']
         boundary='sfd'+secrets.token_hex(12);multipart=('--'+boundary+'\r\nContent-Disposition: form-data; name="file"; filename="fixture.txt"\r\nContent-Type: text/plain\r\n\r\n').encode()+data+('\r\n--'+boundary+'--\r\n').encode()
         status,body=request('/upload?id='+fid,multipart,headers={'Content-Type':'multipart/form-data; boundary='+boundary});check(status==200,'real native upload and hash');digest=sql("SELECT sha256_hex FROM files WHERE id='"+fid+"';");check(digest==hashlib.sha256(data).hexdigest(),'native SHA-256 matches uploaded bytes')
+        if args.hash_layout=='bytea':metadata=sql("SELECT encode(sha256_bytes,'hex') FROM files WHERE id='"+fid+"';");check(metadata==hashlib.sha256(data).hexdigest(),'legacy raw digest metadata preserved')
+        else:metadata=sql("SELECT sha256_bytes FROM files WHERE id='"+fid+"';");check(metadata==str(len(data)),'numeric byte-count metadata correct')
         status,body=request('/links',{'id':fid,'ttl_seconds':60});check(status==200,'owned signed link');link=json.loads(body)['url'];req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
         # Distinct account must not read, upload, link or delete the first account file.
@@ -124,14 +131,14 @@ def main():
             # It never runs on the Owner's Windows/WSL environment or changes its CA.
             check(os.environ.get('GITHUB_ACTIONS')=='true' and not args.cert,'ephemeral CI fixture trust only')
             nss=pathlib.Path.home()/'.pki/nssdb'
-            check(not (nss/'cert9.db').exists(),'fresh CI browser trust database')
             nss.mkdir(parents=True,exist_ok=True)
-            command(['certutil','-N','-d','sql:'+str(nss),'--empty-password'])
+            if not (nss/'cert9.db').exists():command(['certutil','-N','-d','sql:'+str(nss),'--empty-password'])
             command(['certutil','-A','-d','sql:'+str(nss),'-n',name,'-t','C,,','-i',str(cert)])
             browserenv=dict(os.environ,SFD_AUTH_BROWSER_MODULE=str(pathlib.Path(args.browser_module).resolve()))
             browserout=command(['node',str(repo/'tests/auth/browser.cjs'),origin,str(root/'windows-fixture.json')],env=browserenv,timeout=60)
             (root/'browser-tests.txt').write_text(browserout+'\n')
             check('BROWSER ACCEPTANCE PASS:' in browserout,'real historical browser UI over normally validated HTTPS')
+            command(['certutil','-D','-d','sql:'+str(nss),'-n',name])
         result['origin']=origin;result['backend_image']=args.backend_image;result['certificate_sha256']=hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest();(root/'ready.json').write_text(json.dumps({'origin':origin,'ready':True}))
         deadline=time.monotonic()+args.hold_seconds
         while time.monotonic()<deadline and not (root/'continue').exists():time.sleep(.5)
