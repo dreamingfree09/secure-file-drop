@@ -61,7 +61,7 @@ def main():
         for path in sorted((repo/'internal/db/migrations').glob('*.up.sql')):
             if int(path.name.split('_')[0])<=11:sql(path.read_text())
         sql("ALTER TABLE users ADD COLUMN is_admin BOOLEAN NOT NULL DEFAULT false; CREATE TABLE schema_migrations(version bigint PRIMARY KEY,dirty boolean NOT NULL); INSERT INTO schema_migrations VALUES(11,false); CREATE TABLE sfd_test_owner(owner text NOT NULL); INSERT INTO sfd_test_owner VALUES('"+name+"');")
-        if args.hash_layout=='bytea':sql('ALTER TABLE files ALTER COLUMN sha256_bytes TYPE bytea USING NULL::bytea;')
+        if args.hash_layout=='bytea':sql('ALTER TABLE files DROP CONSTRAINT files_sha256_bytes_check; ALTER TABLE files ALTER COLUMN sha256_bytes TYPE bytea USING NULL::bytea;')
         result['hash_metadata_layout']=args.hash_layout
         sentinel=str(uuid.uuid4());sql("INSERT INTO users(id,email,username,password_hash,is_admin,email_verified) VALUES('"+sentinel+"','sentinel@example.invalid','sentinel','not-a-credential',true,true);")
         sentinel_file=str(uuid.uuid4());sentinel_digest='ab'*32

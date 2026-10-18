@@ -296,3 +296,8 @@ Read-only actual metadata confirms schema version 11 clean, users UUID/roles and
 ### PostgreSQL fixture readiness correction
 
 Superseded CI runs 39172914130 and 39172916797 built the actual images and passed Windows/static/vulnerability gates, but hit the PostgreSQL initialization Unix-socket readiness race before migrations. The temporary initialization server exits before the final TCP server starts. Require pg_isready on 127.0.0.1 TCP before issuing fixture DDL; do not retry partially applied DDL or suppress acceptance. Cleanup/preservation passed; repeat both layouts at the successor SHA.
+
+
+### Synthetic BYTEA fixture correction
+
+The numeric-layout full-stack suite passed 27 checks. The fresh BYTEA fixture stopped before application startup because the numeric migration check (sha256_bytes >= 0) cannot apply to BYTEA. Remove that numeric-only check solely while constructing the empty owned BYTEA fixture, then seed non-null preservation metadata and repeat acceptance. This is test-only DDL on disposable databases; no live constraint or data is changed.
