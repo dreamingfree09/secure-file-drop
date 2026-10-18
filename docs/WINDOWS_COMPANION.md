@@ -2,6 +2,10 @@
 
 Work ID: SFD-OWNER-DELEGATED-COMPLETION-20261017. The Owner authorised this companion after bounded core acceptance at M24, 8d54031c26ec10027ecebadd754f34996d55e8dd. Producer: Codex. Independent security-sensitive review and integration: Aether, pending. This is a Windows client for the existing Go backend and web UI. It neither runs nor reconfigures Docker, WSL, the backend or storage.
 
+## Local operator prerequisite
+
+Follow the [local TLS and revocation runbook](LOCAL_TLS.md) before native Windows acceptance. The existing preview/source identity is unchanged by that external configuration work. Strict Schannel health/readiness and persistence are not yet accepted; secure Owner signing and the subsequent automated gates are pending. Do not count an OpenSSL-only or default-handler connection as those strict gates. The live historical WSL backend is not proven to be the accepted M24 runtime; confirm API/source compatibility before daily-use acceptance without changing existing backend/data implicitly. Standing execution authority is recorded in [GHP-01](GHP-01.md#standing-owner-delegation--2026-10-18); it does not satisfy the unexecuted visual checklist or Aether review.
+
 ## Build and run
 
 Use a supported Windows environment with .NET Framework 4.8. No embedded browser, external desktop framework or NuGet runtime package is included. The existing Windows compiler builds the application; scripts do not install prerequisites.
