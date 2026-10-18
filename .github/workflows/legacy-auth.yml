@@ -1,0 +1,67 @@
+name: Legacy administrator session compatibility
+on:
+  push:
+    branches: [codex/sfd-admin-session-compatibility-20261018]
+  pull_request:
+    branches: [feature/v2-enhancements]
+permissions:
+  contents: read
+concurrency:
+  group: sfd-legacy-auth-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  backend:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: c320861536914623ea22f28c1d4ea156d4c2132a
+          path: reviewed-reference
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.9'
+      - name: Compile all suites and require vet and reachable vulnerability gates
+        run: |
+          go test ./... -run '^$'
+          go vet ./...
+          go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Build the exact legacy application and pinned synthetic storage
+        run: |
+          docker build -t sfd-auth-candidate -f Dockerfile.backend .
+          docker build -t sfd-auth-storage -f reviewed-reference/Dockerfile.storage reviewed-reference
+          docker pull postgres:16-alpine
+      - name: Require owned real PostgreSQL, native hash and HTTPS session acceptance
+        run: |
+          python3 -B tests/auth/acceptance.py --backend-image sfd-auth-candidate --postgres-image postgres:16-alpine --storage-image sfd-auth-storage --output "$RUNNER_TEMP/sfd-auth-fixture"
+          python3 - <<'PY'
+          import json,os,pathlib
+          r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'sfd-auth-fixture/result.json').read_text())
+          assert not r['failures'] and r['existing_services_unchanged'] and r['owned_cleanup_complete']
+          assert len(r['checks']) >= 25
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: legacy-auth-sanitised-evidence
+          path: |
+            ${{ runner.temp }}/sfd-auth-fixture/result.json
+            ${{ runner.temp }}/sfd-auth-fixture/go-tests.txt
+          if-no-files-found: error
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: c320861536914623ea22f28c1d4ea156d4c2132a
+          persist-credentials: false
+      - name: Preserve reviewed transport and run native security regressions
+        shell: pwsh
+        run: |
+          ./desktop/windows/tests/test.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Windows regression failure" }
