@@ -37,6 +37,7 @@ jobs:
         run: |
           go test ./... -run '^$'
           go vet ./...
+          go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --timeout 5m
           go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - name: Build the exact legacy application and pinned synthetic storage
         run: |
@@ -45,8 +46,12 @@ jobs:
           docker pull postgres:16-alpine
       - name: Require owned real PostgreSQL, native hash and HTTPS session acceptance
         run: |
-          python3 -B tests/auth/acceptance.py --backend-image sfd-auth-candidate --postgres-image postgres:16-alpine --storage-image sfd-auth-storage --output "$RUNNER_TEMP/sfd-auth-fixture" --browser-module "$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core"
-          python3 -B tests/auth/acceptance.py --backend-image sfd-auth-candidate --postgres-image postgres:16-alpine --storage-image sfd-auth-storage --output "$RUNNER_TEMP/sfd-auth-fixture-bytea" --hash-layout bytea --browser-module "$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core"
+          SFD_E2E_BACKEND_IMAGE=sfd-auth-candidate \
+          SFD_E2E_POSTGRES_IMAGE=postgres:16-alpine \
+          SFD_E2E_STORAGE_IMAGE=sfd-auth-storage \
+          SFD_E2E_OUTPUT_ROOT="$RUNNER_TEMP" \
+          SFD_E2E_BROWSER_MODULE="$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core" \
+          go test -v ./tests/e2e -count=1 -timeout 25m
           python3 - <<'PY'
           import json,os,pathlib
           for name in ['sfd-auth-fixture','sfd-auth-fixture-bytea']:

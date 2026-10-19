@@ -1,18 +1,13 @@
+version: "2"
 run:
   timeout: 5m
   tests: true
-  skip-dirs:
-    - vendor
-    - docs
-    - tests/e2e
 linters:
+  default: none
   enable:
     - govet
     - errcheck
     - staticcheck
-    - gofmt
-    - goimports
-    - deadcode
     - unused
     - revive
     - ineffassign
@@ -20,16 +15,13 @@ linters:
     - prealloc
     - misspell
     - gosec
-issues:
-  exclude-use-default: false
-  max-issues-per-linter: 0
-  max-same-issues: 0
-linters-settings:
-  revive:
-    ignore-generated-header: true
-    severity: warning
-  misspell:
-    locale: US
-  gosec:
-    exclude:
-      - G104
+  settings:
+    misspell:
+      locale: US
+    gosec:
+      excludes:
+        - G104
+formatters:
+  enable:
+    - gofmt
+    - goimports
