@@ -205,6 +205,9 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		}
 
 		if !authenticated {
+			if a.AccountLockout != nil {
+				a.AccountLockout.RecordFailedAttempt(body.Username)
+			}
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
@@ -234,6 +237,10 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		if _, err := a.DB.ExecContext(ctx, "INSERT INTO auth_sessions (token_hash, expires_at) VALUES ($1, $2)", sessionHash(tok), exp); err != nil {
 			http.Error(w, "server error", http.StatusInternalServerError)
 			return
+		}
+
+		if a.AccountLockout != nil {
+			a.AccountLockout.RecordSuccessfulLogin(body.Username)
 		}
 
 		http.SetCookie(w, &http.Cookie{

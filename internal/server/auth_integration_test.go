@@ -117,6 +117,36 @@ func TestAuthenticatedIdentities(t *testing.T) {
 		return &http.Cookie{Name: a.cookieName(), Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode, Value: tok}
 	}
 	adminRoute := a.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(204) }))
+	t.Run("existing account lockout failure success expiry and isolation", func(t *testing.T) {
+		lockout := &AccountLockout{attempts: make(map[string]*LoginAttempt), maxAttempts: 2, lockoutDuration: time.Minute, windowDuration: time.Minute}
+		cfg := a
+		cfg.AccountLockout = lockout
+		handler := cfg.loginHandler()
+		username := lookup(ordinary)
+		invoke := func(name, password string) *httptest.ResponseRecorder {
+			b, _ := json.Marshal(map[string]string{"username": name, "password": password})
+			return request(handler, "POST", nil, string(b))
+		}
+		expect(invoke(username, "wrong-synthetic"), 401)
+		if lockout.GetAttemptCount(username) != 1 {
+			t.Fatal("failed login not recorded")
+		}
+		expect(invoke(username, "Synthetic7-password"), 200)
+		if lockout.GetAttemptCount(username) != 0 {
+			t.Fatal("successful login did not reset attempts")
+		}
+		expect(invoke(username, "wrong-synthetic"), 401)
+		expect(invoke(username, "wrong-synthetic"), 401)
+		expect(invoke(username, "Synthetic7-password"), 429)
+		expect(invoke(lookup(roleAdmin), "Synthetic7-password"), 200)
+		lockout.mu.Lock()
+		lockout.attempts[username].LockedUntil = time.Now().Add(-time.Second)
+		lockout.mu.Unlock()
+		expect(invoke(username, "Synthetic7-password"), 200)
+		if locked, _, _ := lockout.IsLocked(username); locked || lockout.GetAttemptCount(username) != 0 {
+			t.Fatal("expired lockout did not clear after valid login")
+		}
+	})
 	t.Run("environment administrator identity and permission", func(t *testing.T) {
 		// Database-first login preserves the established credential precedence.
 		// A distinct environment password proves that the fallback issued the marker.

@@ -3,10 +3,10 @@
 Required: --backend-image, --postgres-image, --storage-image (already local).
 Optional --cert/--key use existing localhost TLS material read-only, with no trust changes.
 """
-import argparse, hashlib, http.client, http.cookiejar, http.server, json, os, pathlib, secrets, ssl, subprocess, threading, time, urllib.request, urllib.error, uuid
+import argparse, hashlib, http.client, http.cookiejar, http.server, json, os, pathlib, secrets, ssl, subprocess, threading, time, urllib.request, urllib.error, urllib.parse, uuid
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--hash-layout',choices=['bigint','bytea'],default='bigint');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--rollback-image');ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--hash-layout',choices=['bigint','bytea'],default='bigint');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
     os.umask(0o077);root=pathlib.Path(args.output);root.mkdir(parents=True,exist_ok=False)
     repo=pathlib.Path(__file__).resolve().parents[2];name='sfd-auth-'+secrets.token_hex(6);label='sfd.auth-fixture';created=[];volumes=[];network=None;server=None;thread=None
     result={'fixture':name,'checks':[],'failures':[]};checks=result['checks']
@@ -31,6 +31,8 @@ def main():
         if not ids:return []
         values=json.loads(docker('inspect',*ids));return sorted([{'id':x['Id'],'image':x['Image'],'started':x['State']['StartedAt'],'mounts':sorted(x['Mounts'],key=lambda m:m['Destination'])} for x in values],key=lambda x:x['id'])
     baseline=snapshot()
+    class NoRedirect(urllib.request.HTTPRedirectHandler):
+        def redirect_request(self,*args,**kwargs):raise urllib.error.URLError('fixture redirect denied')
     class Relay(http.server.BaseHTTPRequestHandler):
         backend=None
         def log_message(self,*a):pass
@@ -81,10 +83,14 @@ def main():
             if r.returncode==0:break
             time.sleep(.5)
         assert r.returncode==0, 'storage alias readiness';docker('exec',storage,'mc','mb','fixture/'+name)
-        def start_backend():
-            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings']['Ports']['8080/tcp'];assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1';Relay.backend=int(ports[0]['HostPort']);return b
+        def start_backend(image=None):
+            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
+            if not ports:
+                if image is None:raise RuntimeError('candidate exited before loopback binding')
+                Relay.backend=0;return b
+            assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1';Relay.backend=int(ports[0]['HostPort']);return b
         backend=start_backend();thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
-        trust=ssl.create_default_context(cafile=str(pathlib.Path(args.ca) if args.ca else cert));jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust),urllib.request.HTTPCookieProcessor(jar))
+        trust=ssl.create_default_context(cafile=str(pathlib.Path(args.ca) if args.ca else cert));jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(NoRedirect(),urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust),urllib.request.HTTPCookieProcessor(jar))
         def request(path,body=None,method=None,headers=None,who=client):
             h={'Origin':origin};h.update(headers or {})
             if isinstance(body,dict):body=json.dumps(body).encode();h['Content-Type']='application/json'
@@ -111,7 +117,7 @@ def main():
         check(request('/admin/files')[0]==200,'environment admin privileged read')
         check(request('/files',{'orig_name':'admin.txt','content_type':'text/plain','size_bytes':1})[0]==403,'environment identity cannot acquire database ownership')
         oldcookie=next(iter(jar)).value;check(request('/logout',{},method='POST')[0]==200,'real logout')
-        anonymous=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust));check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'real logout rejects replay')
+        anonymous=urllib.request.build_opener(NoRedirect(),urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust));check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'real logout rejects replay')
         owned('container',backend);docker('rm','-f',backend);created.remove(backend);backend=start_backend();ready();check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'logout revocation survives backend recreation')
         # Run the exact handler/security suite against this uniquely guarded database.
         pgports=pginfo['NetworkSettings']['Ports']['5432/tcp'];assert pgports[0]['HostIp']=='127.0.0.1'
@@ -128,7 +134,9 @@ def main():
         status,body=request('/upload?id='+fid,multipart,headers={'Content-Type':'multipart/form-data; boundary='+boundary});check(status==200,'real native upload and hash');digest=sql("SELECT sha256_hex FROM files WHERE id='"+fid+"';");check(digest==hashlib.sha256(data).hexdigest(),'native SHA-256 matches uploaded bytes')
         if args.hash_layout=='bytea':metadata=sql("SELECT encode(sha256_bytes,'hex') FROM files WHERE id='"+fid+"';");check(metadata==hashlib.sha256(data).hexdigest(),'legacy raw digest metadata preserved')
         else:metadata=sql("SELECT sha256_bytes FROM files WHERE id='"+fid+"';");check(metadata==str(len(data)),'numeric byte-count metadata correct')
-        status,body=request('/links',{'id':fid,'ttl_seconds':60});check(status==200,'owned signed link');link=json.loads(body)['url'];req=urllib.request.Request(link)
+        status,body=request('/links',{'id':fid,'ttl_seconds':60});check(status==200,'owned signed link');link=json.loads(body)['url'];target=urllib.parse.urlsplit(link)
+        check(target.scheme=='https' and target.hostname=='localhost' and target.port==server.server_port and target.username is None and target.password is None and target.path=='/download' and not target.fragment,'signed download target confined to owned HTTPS origin')
+        req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
         # Distinct account must not read, upload, link or delete the first account file.
         check(request('/register',{'email':'second@example.invalid','username':'second','password':'Synthetic9-second'})[0]==201,'second isolated account');sql("UPDATE users SET email_verified=true WHERE username='second';")
@@ -153,6 +161,41 @@ def main():
         result['origin']=origin;result['backend_image']=args.backend_image;result['certificate_sha256']=hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest();(root/'ready.json').write_text(json.dumps({'origin':origin,'ready':True}))
         deadline=time.monotonic()+args.hold_seconds
         while time.monotonic()<deadline and not (root/'continue').exists():time.sleep(.5)
+        # Run only after browser/Windows acceptance so this bounded negative check
+        # cannot consume their normal login budget. No account/password is used.
+        limited=False
+        for _ in range(11):
+            req=urllib.request.Request(origin+'/login',b'not-json',{'Origin':origin,'Content-Type':'application/json'},method='POST')
+            try:
+                with anonymous.open(req,timeout=10) as response:response.read()
+            except urllib.error.HTTPError as error:
+                error.read()
+                if error.code==429 and error.headers.get('X-RateLimit-Limit-Type')=='authentication' and error.headers.get('Retry-After'):
+                    limited=True;break
+        check(limited,'real auth endpoint rate limiter rejects excess malformed requests')
+        if args.rollback_image:
+            # Only assignment-owned containers and synthetic data are touched.
+            before_rollback=fingerprint()
+            sessions_before=hashlib.sha256(sql('SELECT token_hash,expires_at FROM auth_sessions ORDER BY token_hash;').encode()).hexdigest()
+            rollback_ready=False
+            owned('container',backend);docker('rm','-f',backend);created.remove(backend)
+            backend=start_backend(args.rollback_image)
+            try:
+                for _ in range(30):
+                    try:
+                        if request('/ready',who=anonymous)[0]==200:rollback_ready=True;break
+                    except (urllib.error.URLError,ConnectionError):pass
+                    if not owned('container',backend)['State']['Running']:break
+                    time.sleep(.5)
+                result['rollback']={'image':args.rollback_image,'ready':rollback_ready,'schema_version':sql('SELECT version FROM schema_migrations;')}
+                check(fingerprint()==before_rollback and hashlib.sha256(sql('SELECT token_hash,expires_at FROM auth_sessions ORDER BY token_hash;').encode()).hexdigest()==sessions_before and sql('SELECT version FROM schema_migrations;')=='12','prior image rollback preserves additive schema and all synthetic records/sessions')
+            finally:
+                owned('container',backend);docker('rm','-f',backend);created.remove(backend);backend=start_backend();ready()
+            status,_=request('/login',{'username':'admin','password':password});status_me,body=request('/me')
+            check(status==200 and status_me==200 and json.loads(body)['is_admin'] is True,'corrected candidate restored after rollback image test')
+            check(rollback_ready,'selected rollback image starts against additive schema 12')
+
+
     except Exception as e:
         import traceback
         result['failure_location']=[{'file':pathlib.Path(f.filename).name,'line':f.lineno,'function':f.name} for f in traceback.extract_tb(e.__traceback__)]
