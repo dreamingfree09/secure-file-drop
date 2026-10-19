@@ -1,6 +1,7 @@
 // downloadHandler serves GET /download requests using a signed token.
 // The token encodes file id and expiry; optional password protection
 // may be enforced. On success, it streams the object from MinIO.
+
 package server
 
 import (
@@ -94,6 +95,9 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 		// Stream the object directly from MinIO (no memory buffering)
 		obj, err := mc.GetObject(ctx, bucket, objectKey, minio.GetObjectOptions{})
 		if err != nil {
+			Warn("download stream interrupted", nil)
+			http.Error(w, "storage unavailable", http.StatusBadGateway)
+			return
 		}
 
 		if contentType != "" {

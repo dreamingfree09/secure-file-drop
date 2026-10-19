@@ -1,4 +1,5 @@
 // security.go - Security middleware for headers and CSRF protection
+
 package server
 
 import (

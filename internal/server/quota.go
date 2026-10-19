@@ -3,6 +3,7 @@
 // quota.go - Per-user storage quota reporting endpoint.
 //
 // Exposes current usage and configured quota to the UI.
+
 package server
 
 import (
@@ -29,7 +30,7 @@ func (s *Server) UserQuotaHandler(w http.ResponseWriter, r *http.Request) {
 	// Get current user
 	userID, err := s.authCfg.getCurrentUser(r)
 	if err != nil {
-		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		writeAuthError(w, err)
 		return
 	}
 

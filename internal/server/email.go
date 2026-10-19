@@ -2,6 +2,7 @@
 //
 // Wraps SMTP client configuration and provides convenience methods
 // for sending user-facing emails.
+
 package server
 
 import (

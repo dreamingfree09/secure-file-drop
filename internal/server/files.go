@@ -2,6 +2,7 @@
 //
 // Handles POST /files to register file metadata with lifecycle status
 // and enforces per-user storage quotas before accepting uploads.
+
 package server
 
 import (
@@ -74,7 +75,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		// Get current user (returns user UUID from session)
 		userID, err := cfg.Auth.getCurrentUser(r)
 		if err != nil {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			writeAuthError(w, err)
 			return
 		}
 
@@ -92,7 +93,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		`, userID).Scan(&quota, &currentUsage)
 
 		if err != nil {
-			log.Printf("create file: failed to get user info for %s: %v", userID, err)
+			log.Printf("create file: failed to read authenticated account quota")
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}

@@ -5,6 +5,7 @@
 //
 // Generates HMAC-signed tokens bound to file ID and expiry; optional
 // password protection is supported.
+
 package server
 
 import (
@@ -84,6 +85,12 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 			return
 		}
 
+		userID, authErr := cfg.Auth.getCurrentUser(r)
+		if authErr != nil {
+			writeAuthError(w, authErr)
+			return
+		}
+
 		var req createLinkReq
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			http.Error(w, "bad request", http.StatusBadRequest)
@@ -105,7 +112,7 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 		// Ensure file exists and is in a state we allow for downloads.
 		// For now: require "hashed" (Milestone 5) so integrity is proven.
 		var status string
-		err = db.QueryRow(`SELECT status FROM files WHERE id = $1`, id).Scan(&status)
+		err = db.QueryRow(`SELECT status FROM files WHERE id = $1 AND user_id::text = $2`, id, userID).Scan(&status)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "not found", http.StatusNotFound)

@@ -2,6 +2,7 @@
 //
 // Provides JSON APIs for admins to list/delete files and for users
 // to view and remove their own uploads with ownership checks.
+
 package server
 
 import (
@@ -50,7 +51,7 @@ func (s *Server) AdminListFilesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	var files []FileInfo
 	for rows.Next() {
@@ -86,7 +87,7 @@ func (s *Server) UserFilesHandler(w http.ResponseWriter, r *http.Request) {
 	// Get current user from session (returns user UUID)
 	userID, err := s.authCfg.getCurrentUser(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeAuthError(w, err)
 		return
 	}
 
@@ -105,7 +106,7 @@ func (s *Server) UserFilesHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	var files []FileInfo
 	for rows.Next() {
@@ -150,7 +151,7 @@ func (s *Server) UserDeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	// Get current user from session
 	userID, err := s.authCfg.getCurrentUser(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		writeAuthError(w, err)
 		return
 	}
 
@@ -242,7 +243,7 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 			log.Printf("admin delete file: MinIO removal failed: %v", err)
 			// Continue with database deletion even if MinIO fails
 		} else {
-			log.Printf("admin delete file: removed from MinIO: %s", fileID)
+			Info("admin removed stored file", map[string]interface{}{"file_id": fileID})
 		}
 	}
 
@@ -260,7 +261,7 @@ func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	log.Printf("admin delete file: deleted file %s", fileID)
+	Info("admin deleted file metadata", map[string]interface{}{"file_id": fileID})
 
 	// Send deletion notification (fire and forget)
 	go func() {
@@ -311,7 +312,7 @@ func (s *Server) AdminManualCleanupHandler(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	var toDelete []struct {
 		ID     string
@@ -364,5 +365,7 @@ func (s *Server) AdminManualCleanupHandler(w http.ResponseWriter, r *http.Reques
 	log.Printf("admin manual cleanup: completed, deleted %d files", deletedCount)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(CleanupResult{DeletedCount: deletedCount})
+	if err := json.NewEncoder(w).Encode(CleanupResult{DeletedCount: deletedCount}); err != nil {
+		Warn("response write failed", nil)
+	}
 }

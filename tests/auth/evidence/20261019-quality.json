@@ -1,0 +1,126 @@
+{
+  "work_id": "SFD-ADMIN-SESSION-COMPATIBILITY-20261018",
+  "date": "2026-10-19",
+  "prior_published_revision": "75d92f2276b953d2f4397776a92fdd622b1f62e2",
+  "go_source_set_sha256": "fb1faa33efe51930c21f9e82e525fd326a222e7192e9f576791f3bc78523bb54",
+  "validation": {
+    "bigint": {
+      "checks": [
+        "local Docker target",
+        "actual pg_dump accepts separated connection environment without credential arguments",
+        "migration 11 to 12 preserves synthetic user/file records and role",
+        "migration reaches version 12",
+        "real environment admin login",
+        "real environment admin identity",
+        "environment admin privileged read",
+        "environment identity cannot acquire database ownership",
+        "real logout",
+        "real logout rejects replay",
+        "logout revocation survives backend recreation",
+        "real PostgreSQL Go security regressions and race checks",
+        "real registration",
+        "real registered-user login",
+        "registered identity readback",
+        "registered account denied admin permission",
+        "owned metadata creation",
+        "real native upload and hash",
+        "native SHA-256 matches uploaded bytes",
+        "numeric byte-count metadata correct",
+        "owned signed link",
+        "signed download bytes match",
+        "second isolated account",
+        "second account login",
+        "cross-account link denied",
+        "cross-account upload denied",
+        "cross-account deletion denied",
+        "file list isolates accounts"
+      ],
+      "checks_count": 28,
+      "go_security_and_quality_race_tests": "PASS, no skips",
+      "owned_cleanup_complete": true,
+      "existing_services_unchanged": true
+    },
+    "bytea": {
+      "checks": [
+        "local Docker target",
+        "actual pg_dump accepts separated connection environment without credential arguments",
+        "migration 11 to 12 preserves synthetic user/file records and role",
+        "migration reaches version 12",
+        "real environment admin login",
+        "real environment admin identity",
+        "environment admin privileged read",
+        "environment identity cannot acquire database ownership",
+        "real logout",
+        "real logout rejects replay",
+        "logout revocation survives backend recreation",
+        "real PostgreSQL Go security regressions and race checks",
+        "real registration",
+        "real registered-user login",
+        "registered identity readback",
+        "registered account denied admin permission",
+        "owned metadata creation",
+        "real native upload and hash",
+        "native SHA-256 matches uploaded bytes",
+        "legacy raw digest metadata preserved",
+        "owned signed link",
+        "signed download bytes match",
+        "second isolated account",
+        "second account login",
+        "cross-account link denied",
+        "cross-account upload denied",
+        "cross-account deletion denied",
+        "file list isolates accounts"
+      ],
+      "checks_count": 28,
+      "go_security_and_quality_race_tests": "PASS, no skips",
+      "owned_cleanup_complete": true,
+      "existing_services_unchanged": true
+    }
+  },
+  "strict_lint": {
+    "tool": "golangci-lint v2.14.0",
+    "result": "PASS",
+    "findings": 0,
+    "policy": "frozen reviewed v2 policy; no disabled additional rules",
+    "reviewed_exceptions": [
+      "G204/G702 operator-only absolute regular native executable, no shell",
+      "G703 read-only metadata for that configured executable",
+      "G302 deliberately writable owned negative-test fixture"
+    ]
+  },
+  "formatting": "PASS",
+  "vet": "PASS",
+  "govulncheck": {
+    "version": "v1.9.0",
+    "reachable": 0,
+    "imported_package_findings_not_called": 2,
+    "required_module_findings_not_called": 30
+  },
+  "failed_attempts": [
+    {
+      "fixture_suffix": "9db38d72",
+      "reason": "PGDATABASE full URI was not expanded; corrected to explicit connection environment",
+      "both_layouts": "failed before session acceptance; owned cleanup and original services preserved"
+    },
+    {
+      "fixture_suffix": "2a470f68",
+      "reason": "static build CGO_ENABLED=0 leaked into race-test driver",
+      "both_layouts": "failed race command, not passed; owned cleanup and original services preserved"
+    },
+    {
+      "fixture_suffix": "d24b091f",
+      "reason": "diagnostic rerun confirmed CGO setup defect",
+      "both_layouts": "failed race command, not passed; private diagnostics retained; owned cleanup and original services preserved"
+    }
+  ],
+  "windows_and_browser": "new exact-revision CI and normal-revocation Windows fixture readback pending publication",
+  "live_adoption": "not performed; independent exact-revision Aether review required",
+  "limitations": [
+    "audit helper and migration-11 audit table shapes remain different; filter regression uses a temporary API-shaped table only",
+    "S3 backup upload, backup notification delivery and webhook registration remain placeholders",
+    "hard-link backup publication requires a supporting filesystem and fails without replacing existing files",
+    "backup connection URI rejects unsupported/duplicate options instead of dropping TLS settings",
+    "TUS storage implementation remains a placeholder",
+    "no production readiness or Owner GUI acceptance claimed"
+  ]
+}

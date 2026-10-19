@@ -1,6 +1,7 @@
 // cleanup.go - Periodic cleanup of old pending/failed files.
 //
 // Background job triggered by configuration to remove stale items.
+
 package server
 
 import (
@@ -77,7 +78,7 @@ func runCleanup(ctx context.Context, cfg CleanupConfig) {
 		log.Printf("service=cleanup msg=%q err=%v", "query_failed", err)
 		return
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	deleted := 0
 	for rows.Next() {

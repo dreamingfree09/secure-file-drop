@@ -1,18 +1,23 @@
 // jsonlog.go - Structured JSON logging for production environments
+
 package server
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"runtime"
+	"sort"
+	"sync"
 	"time"
 )
 
 // LogLevel represents the severity of a log entry
 type LogLevel string
 
+// Log levels identify message severity.
 const (
 	LogLevelDebug LogLevel = "debug"
 	LogLevelInfo  LogLevel = "info"
@@ -22,6 +27,7 @@ const (
 
 // Logger provides structured JSON logging
 type Logger struct {
+	mu         sync.Mutex
 	output     io.Writer
 	minLevel   LogLevel
 	enableJSON bool
@@ -122,22 +128,34 @@ func (l *Logger) log(level LogLevel, msg string, fields map[string]interface{}, 
 		entry.Error = err.Error()
 	}
 
+	var line string
 	if l.enableJSON {
-		data, _ := json.Marshal(entry)
-		fmt.Fprintln(l.output, string(data))
+		data, marshalErr := json.Marshal(entry)
+		if marshalErr != nil {
+			log.Print("structured log serialization failed")
+			return
+		}
+		line = string(data)
 	} else {
-		// Plain text format for development
-		fmt.Fprintf(l.output, "[%s] %s %s", entry.Level, entry.Time, entry.Message)
-		if len(entry.Fields) > 0 {
-			for k, v := range entry.Fields {
-				fmt.Fprintf(l.output, " %s=%v", k, v)
-			}
+		line = fmt.Sprintf("[%s] %s %q", entry.Level, entry.Time, entry.Message)
+		keys := make([]string, 0, len(entry.Fields))
+		for k := range entry.Fields {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			line += fmt.Sprintf(" %q=%q", k, fmt.Sprint(entry.Fields[k]))
 		}
 		if entry.Error != "" {
-			fmt.Fprintf(l.output, " error=%s", entry.Error)
+			line += fmt.Sprintf(" error=%q", entry.Error)
 		}
-		fmt.Fprintln(l.output)
 	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if _, writeErr := io.WriteString(l.output, line+"\n"); writeErr != nil {
+		log.Print("structured log write failed")
+	}
+
 }
 
 // Debug logs a debug message

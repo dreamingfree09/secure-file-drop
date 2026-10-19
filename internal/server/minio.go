@@ -5,6 +5,7 @@
 //
 // Creates an authenticated client, validates bucket existence, and
 // supports endpoints with or without scheme for local/prod usage.
+
 package server
 
 import (

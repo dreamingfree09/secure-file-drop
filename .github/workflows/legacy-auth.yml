@@ -1,0 +1,87 @@
+name: Legacy administrator session compatibility
+on:
+  push:
+    branches: [codex/sfd-admin-session-compatibility-20261018]
+  pull_request:
+    branches: [feature/v2-enhancements]
+permissions:
+  contents: read
+concurrency:
+  group: sfd-legacy-auth-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  backend:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: c320861536914623ea22f28c1d4ea156d4c2132a
+          path: reviewed-reference
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.9'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Prepare isolated browser dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y libnss3-tools
+          npm ci --prefix reviewed-reference/tests/browser --ignore-scripts
+          node reviewed-reference/tests/browser/node_modules/playwright-core/cli.js install --with-deps --only-shell chromium
+      - name: Compile all suites and require vet and reachable vulnerability gates
+        run: |
+          go test ./... -run '^$'
+          go vet ./...
+          go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --timeout 5m --max-issues-per-linter=0 --max-same-issues=0 --uniq-by-line=false
+          python3 -B tests/quality/verify_lint_gate.py
+          go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Build the exact legacy application and pinned synthetic storage
+        run: |
+          docker build -t sfd-auth-candidate -f Dockerfile.backend .
+          docker build -t sfd-auth-storage -f reviewed-reference/Dockerfile.storage reviewed-reference
+          docker pull postgres:16-alpine
+      - name: Require owned real PostgreSQL, native hash and HTTPS session acceptance
+        run: |
+          SFD_E2E_BACKEND_IMAGE=sfd-auth-candidate \
+          SFD_E2E_POSTGRES_IMAGE=postgres:16-alpine \
+          SFD_E2E_STORAGE_IMAGE=sfd-auth-storage \
+          SFD_E2E_OUTPUT_ROOT="$RUNNER_TEMP" \
+          SFD_E2E_BROWSER_MODULE="$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core" \
+          go test -v ./tests/e2e -count=1 -timeout 25m
+          python3 - <<'PY'
+          import json,os,pathlib
+          for name in ['sfd-auth-fixture','sfd-auth-fixture-bytea']:
+              r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/name/'result.json').read_text())
+              assert not r['failures'] and r['existing_services_unchanged'] and r['owned_cleanup_complete']
+              assert len(r['checks']) >= 25
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: legacy-auth-sanitised-evidence
+          path: |
+            ${{ runner.temp }}/sfd-auth-fixture/result.json
+            ${{ runner.temp }}/sfd-auth-fixture/go-tests.txt
+            ${{ runner.temp }}/sfd-auth-fixture/browser-tests.txt
+            ${{ runner.temp }}/sfd-auth-fixture-bytea/result.json
+            ${{ runner.temp }}/sfd-auth-fixture-bytea/go-tests.txt
+            ${{ runner.temp }}/sfd-auth-fixture-bytea/browser-tests.txt
+          if-no-files-found: error
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: c320861536914623ea22f28c1d4ea156d4c2132a
+          persist-credentials: false
+      - name: Preserve reviewed transport and run native security regressions
+        shell: pwsh
+        run: |
+          ./desktop/windows/tests/test.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Windows regression failure" }

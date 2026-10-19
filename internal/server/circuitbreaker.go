@@ -2,6 +2,7 @@
 //
 // Implements circuit breaker to prevent cascading failures when
 // external dependencies (database, MinIO, SMTP) become unavailable.
+
 package server
 
 import (
@@ -14,11 +15,11 @@ import (
 type CircuitState int
 
 const (
-	// StateClosed: Circuit is closed, requests flow normally
+	// StateClosed Circuit is closed, requests flow normally
 	StateClosed CircuitState = iota
-	// StateOpen: Circuit is open, requests fail fast
+	// StateOpen Circuit is open, requests fail fast
 	StateOpen
-	// StateHalfOpen: Circuit is testing if service recovered
+	// StateHalfOpen Circuit is testing if service recovered
 	StateHalfOpen
 )
 

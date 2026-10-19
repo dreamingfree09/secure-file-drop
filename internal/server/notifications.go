@@ -1,4 +1,5 @@
 // notifications.go - Security event email notifications
+
 package server
 
 import (
@@ -9,6 +10,7 @@ import (
 // SecurityEvent represents different types of security events
 type SecurityEvent string
 
+// Security events identify notification categories.
 const (
 	EventFailedLogin       SecurityEvent = "failed_login"
 	EventAccountLocked     SecurityEvent = "account_locked"
@@ -202,7 +204,11 @@ func NotifyFailedLogin(emailSvc *EmailService, username, email, ip string, attem
 		},
 	}
 
-	go emailSvc.SendSecurityNotification(notification)
+	go func() {
+		if err := emailSvc.SendSecurityNotification(notification); err != nil {
+			Warn("security notification delivery failed", nil)
+		}
+	}()
 }
 
 // NotifyAccountLocked sends notification when account is locked
@@ -223,7 +229,11 @@ func NotifyAccountLocked(emailSvc *EmailService, username, email, ip string, loc
 		},
 	}
 
-	go emailSvc.SendSecurityNotification(notification)
+	go func() {
+		if err := emailSvc.SendSecurityNotification(notification); err != nil {
+			Warn("security notification delivery failed", nil)
+		}
+	}()
 }
 
 // NotifyPasswordChanged sends notification when password is changed
@@ -241,5 +251,9 @@ func NotifyPasswordChanged(emailSvc *EmailService, username, email, ip string) {
 		Details:   make(map[string]string),
 	}
 
-	go emailSvc.SendSecurityNotification(notification)
+	go func() {
+		if err := emailSvc.SendSecurityNotification(notification); err != nil {
+			Warn("security notification delivery failed", nil)
+		}
+	}()
 }

@@ -11,6 +11,7 @@ import (
 // AuditAction represents the type of action being audited
 type AuditAction string
 
+// Audit actions identify recorded operations.
 const (
 	AuditActionLogin        AuditAction = "login"
 	AuditActionLogout       AuditAction = "logout"
@@ -76,47 +77,26 @@ func (s *Server) LogAudit(ctx context.Context, log AuditLog) error {
 
 // GetAuditLogs retrieves audit logs with filtering
 func (s *Server) GetAuditLogs(ctx context.Context, filters AuditFilters) ([]AuditLog, error) {
-	query := `
-		SELECT id, timestamp, action, user_id, username, ip_address,
-		       user_agent, resource, details, success, error_message
-		FROM audit_logs
-		WHERE 1=1
-	`
-	args := []interface{}{}
-	argCount := 1
 
-	if filters.Action != "" {
-		query += fmt.Sprintf(" AND action = $%d", argCount)
-		args = append(args, filters.Action)
-		argCount++
-	}
-
-	if filters.UserID != "" {
-		query += fmt.Sprintf(" AND user_id = $%d", argCount)
-		args = append(args, filters.UserID)
-		argCount++
-	}
-
+	const query = `SELECT id, timestamp, action, user_id, username, ip_address,
+ user_agent, resource, details, success, error_message FROM audit_logs
+ WHERE ($1::text = '' OR action = $1)
+ AND ($2::text = '' OR user_id::text = $2)
+ AND ($3::timestamptz IS NULL OR timestamp >= $3)
+ AND ($4::timestamptz IS NULL OR timestamp <= $4)
+ ORDER BY timestamp DESC LIMIT $5`
+	var start, end interface{}
 	if !filters.StartTime.IsZero() {
-		query += fmt.Sprintf(" AND timestamp >= $%d", argCount)
-		args = append(args, filters.StartTime)
-		argCount++
+		start = filters.StartTime
 	}
-
 	if !filters.EndTime.IsZero() {
-		query += fmt.Sprintf(" AND timestamp <= $%d", argCount)
-		args = append(args, filters.EndTime)
-		argCount++
+		end = filters.EndTime
 	}
-
-	query += fmt.Sprintf(" ORDER BY timestamp DESC LIMIT $%d", argCount)
-	args = append(args, filters.Limit)
-
-	rows, err := s.db.QueryContext(ctx, query, args...)
+	rows, err := s.db.QueryContext(ctx, query, filters.Action, filters.UserID, start, end, filters.Limit)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(rows)
 
 	var logs []AuditLog
 	for rows.Next() {
@@ -158,13 +138,15 @@ func (s *Server) GetAuditLogs(ctx context.Context, filters AuditFilters) ([]Audi
 		}
 
 		if len(detailsJSON) > 0 {
-			json.Unmarshal(detailsJSON, &log.Details)
+			if err := json.Unmarshal(detailsJSON, &log.Details); err != nil {
+				return nil, fmt.Errorf("invalid audit details")
+			}
 		}
 
 		logs = append(logs, log)
 	}
 
-	return logs, nil
+	return logs, rows.Err()
 }
 
 // AuditFilters for querying audit logs

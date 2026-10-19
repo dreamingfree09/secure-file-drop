@@ -6,6 +6,7 @@
 // register.go - User registration and verification flow handlers.
 //
 // Handles account creation with email verification and basic validation.
+
 package server
 
 import (
@@ -227,11 +228,13 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Return success response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(RegisterResponse{
+	if err := json.NewEncoder(w).Encode(RegisterResponse{
 		ID:       userID.String(),
 		Email:    req.Email,
 		Username: req.Username,
-	})
+	}); err != nil {
+		Warn("response write failed", nil)
+	}
 }
 
 // VerifyEmailHandler handles GET /verify?token={token} requests for email verification
@@ -268,7 +271,9 @@ func (cfg Config) VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 
 	if alreadyVerified {
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte("<h2>Email already verified!</h2><p>You can now <a href='/'>log in</a>.</p>"))
+		if _, err := w.Write([]byte("<h2>Email already verified!</h2><p>You can now <a href='/'>log in</a>.</p>")); err != nil {
+			Warn("verification response write failed", nil)
+		}
 		return
 	}
 
@@ -289,7 +294,9 @@ func (cfg Config) VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("verify: email verified for user %s", email)
 
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte("<h2>Email verified successfully!</h2><p>You can now <a href='/'>log in</a>.</p>"))
+	if _, err := w.Write([]byte("<h2>Email verified successfully!</h2><p>You can now <a href='/'>log in</a>.</p>")); err != nil {
+		Warn("response write failed", nil)
+	}
 }
 
 // RequestPasswordResetHandler handles POST /reset-password-request for initiating password reset
@@ -320,7 +327,9 @@ func (cfg Config) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Req
 		// Don't reveal if email exists or not for security
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "If the email exists, a reset link has been sent"})
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "If the email exists, a reset link has been sent"}); err != nil {
+			Warn("response write failed", nil)
+		}
 		return
 	}
 	if err != nil {
@@ -362,7 +371,9 @@ func (cfg Config) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "If the email exists, a reset link has been sent"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "If the email exists, a reset link has been sent"}); err != nil {
+		Warn("response write failed", nil)
+	}
 }
 
 // ResetPasswordHandler handles POST /reset-password for completing password reset
@@ -447,14 +458,19 @@ func (cfg Config) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send password change notification
 	var username, email string
-	cfg.DB.QueryRow("SELECT username, email FROM users WHERE id = $1", userID).Scan(&username, &email)
+	if err := cfg.DB.QueryRow("SELECT username, email FROM users WHERE id = $1", userID).Scan(&username, &email); err != nil {
+		Warn("password change notification identity unavailable", nil)
+		return
+	}
 	if cfg.EmailSvc != nil && email != "" {
 		NotifyPasswordChanged(cfg.EmailSvc, username, email, getClientIP(r))
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "Password reset successfully"})
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "Password reset successfully"}); err != nil {
+		Warn("response write failed", nil)
+	}
 }
 
 // authenticateUser checks credentials against the database

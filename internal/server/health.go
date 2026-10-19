@@ -10,6 +10,7 @@ import (
 // HealthStatus represents the overall health of the system
 type HealthStatus string
 
+// Health status values describe service availability.
 const (
 	HealthStatusHealthy   HealthStatus = "healthy"
 	HealthStatusDegraded  HealthStatus = "degraded"
@@ -19,6 +20,7 @@ const (
 // ComponentStatus represents the health of an individual component
 type ComponentStatus string
 
+// Component status values describe dependency availability.
 const (
 	ComponentStatusUp       ComponentStatus = "up"
 	ComponentStatusDown     ComponentStatus = "down"
@@ -50,20 +52,20 @@ type StorageDetails struct {
 }
 
 // HandleHealth provides a detailed health check endpoint
-func (s *Server) HandleHealth(w http.ResponseWriter, r *http.Request) {
+func (s *Server) HandleHealth(w http.ResponseWriter, _ *http.Request) {
 	health := s.checkHealth()
 
 	// Set status code based on health
 	statusCode := http.StatusOK
-	if health.Status == HealthStatusDegraded {
-		statusCode = http.StatusOK // Still return 200 for degraded
-	} else if health.Status == HealthStatusUnhealthy {
+	if health.Status == HealthStatusUnhealthy {
 		statusCode = http.StatusServiceUnavailable
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(health)
+	if err := json.NewEncoder(w).Encode(health); err != nil {
+		Warn("response write failed", nil)
+	}
 }
 
 // HandleReady provides a simple readiness probe for Kubernetes/load balancers
@@ -82,20 +84,24 @@ func (s *Server) HandleReady(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":    "ok",
 		"timestamp": time.Now().Format(time.RFC3339),
-	})
+	}); err != nil {
+		Warn("response write failed", nil)
+	}
 }
 
 // HandleLive provides a liveness probe (is the process running?)
-func (s *Server) HandleLive(w http.ResponseWriter, r *http.Request) {
+func (s *Server) HandleLive(w http.ResponseWriter, _ *http.Request) {
 	// Always returns OK if the process is running
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
+	if err := json.NewEncoder(w).Encode(map[string]string{
 		"status": "alive",
-	})
+	}); err != nil {
+		Warn("response write failed", nil)
+	}
 }
 
 // checkHealth performs comprehensive health checks on all components

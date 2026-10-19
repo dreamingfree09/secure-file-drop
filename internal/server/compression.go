@@ -2,6 +2,7 @@
 //
 // Implements gzip and deflate compression for responses to reduce bandwidth
 // and improve performance for text-based responses (JSON, HTML, etc.).
+
 package server
 
 import (
@@ -39,7 +40,11 @@ func CompressionMiddleware(next http.Handler) http.Handler {
 
 		// Create gzip writer
 		gz := gzip.NewWriter(w)
-		defer gz.Close()
+		defer func() {
+			if err := gz.Close(); err != nil {
+				Warn("compressed response close failed", nil)
+			}
+		}()
 
 		// Set headers
 		w.Header().Set("Content-Encoding", "gzip")

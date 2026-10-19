@@ -2,12 +2,14 @@
 //
 // Streams multipart file data to MinIO, updates lifecycle status,
 // computes SHA-256 via native utility, and transitions metadata.
+
 package server
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -76,11 +78,17 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
+		userID, authErr := cfg.Auth.getCurrentUser(r)
+		if authErr != nil {
+			writeAuthError(w, authErr)
+			return
+		}
+
 		var objectKey string
 		var status string
 		err = db.QueryRow(
-			`SELECT object_key, status FROM files WHERE id = $1`,
-			id,
+			`SELECT object_key, status FROM files WHERE id = $1 AND user_id::text = $2`,
+			id, userID,
 		).Scan(&objectKey, &status)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -136,6 +144,14 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
+		// Legacy live databases may store a raw digest; embedded migrations use
+		// a byte count. Resolve the real column type before touching storage.
+		hashLayout, layoutErr := hashMetadataLayout(r.Context(), db)
+		if layoutErr != nil {
+			http.Error(w, "incompatible hash metadata schema", http.StatusInternalServerError)
+			return
+		}
+
 		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Minute)
 		defer cancel()
 
@@ -178,7 +194,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
-		shaHex, hashBytes, _, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
+		shaHex, rawDigest, hashBytes, herr := sha256FromMinioObject(ctx, mc, bucket, objectKey)
 		if herr != nil {
 			_, _ = db.Exec(
 				`UPDATE files SET status = 'failed' WHERE id = $1 AND status = 'stored'`,
@@ -190,11 +206,19 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 
+		var hashMetadata any = rawDigest
+		if hashLayout == "bigint" {
+			if hashBytes > uint64(1<<63-1) {
+				http.Error(w, "hash size overflow", http.StatusInternalServerError)
+				return
+			}
+			hashMetadata = int64(hashBytes)
+		}
 		_, err = db.Exec(
 			`UPDATE files SET sha256_hex = $2, sha256_bytes = $3, status = 'hashed' WHERE id = $1 AND status = 'stored'`,
 			id,
 			shaHex,
-			hashBytes,
+			hashMetadata,
 		)
 		if err != nil {
 			rid := RequestIDFromContext(r.Context())
@@ -226,4 +250,20 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			Status:    "hashed",
 		})
 	}))
+}
+
+// hashMetadataLayout supports the two verified historical schemas without
+// converting existing metadata or assigning a digest to a numeric column.
+func hashMetadataLayout(ctx context.Context, db *sql.DB) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	var layout string
+	err := db.QueryRowContext(ctx, `SELECT format_type(atttypid,atttypmod) FROM pg_attribute WHERE attrelid='files'::regclass AND attname='sha256_bytes' AND NOT attisdropped`).Scan(&layout)
+	if err != nil {
+		return "", err
+	}
+	if layout != "bigint" && layout != "bytea" {
+		return "", fmt.Errorf("unsupported hash metadata layout")
+	}
+	return layout, nil
 }

@@ -2,6 +2,7 @@
 //
 // Implements TUS (tus.io) protocol for resumable file uploads, allowing
 // large files to be uploaded in chunks with automatic resume on failure.
+
 package server
 
 import (
@@ -143,6 +144,12 @@ func (s *Server) AbortResumableUpload(uploadID string) error {
 // Implements TUS Creation extension.
 func (s *Server) tusCreateHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID, authErr := s.authCfg.getCurrentUser(r)
+		if authErr != nil {
+			writeAuthError(w, authErr)
+			return
+		}
+
 		if r.Method != http.MethodPost {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -172,7 +179,7 @@ func (s *Server) tusCreateHandler() http.HandlerFunc {
 		// Verify file exists and is pending
 		var objectKey string
 		var status string
-		err = s.db.QueryRow(`SELECT object_key, status FROM files WHERE id = $1`, fileID).Scan(&objectKey, &status)
+		err = s.db.QueryRow(`SELECT object_key, status FROM files WHERE id::text = $1 AND user_id::text = $2`, fileID, userID).Scan(&objectKey, &status)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, "file not found", http.StatusNotFound)
@@ -200,7 +207,9 @@ func (s *Server) tusCreateHandler() http.HandlerFunc {
 		w.Header().Set("Upload-Offset", "0")
 		w.Header().Set("Location", fmt.Sprintf("/upload/resumable/%s", upload.ID))
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(upload)
+		if err := json.NewEncoder(w).Encode(upload); err != nil {
+			Warn("response write failed", nil)
+		}
 	}
 }
 
@@ -208,6 +217,12 @@ func (s *Server) tusCreateHandler() http.HandlerFunc {
 // Implements TUS Core protocol.
 func (s *Server) tusPatchHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID, authErr := s.authCfg.getCurrentUser(r)
+		if authErr != nil {
+			writeAuthError(w, authErr)
+			return
+		}
+
 		if r.Method != http.MethodPatch {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -221,6 +236,17 @@ func (s *Server) tusPatchHandler() http.HandlerFunc {
 		}
 
 		// Get upload session
+		var owned bool
+		err := s.db.QueryRowContext(r.Context(), `SELECT EXISTS (SELECT 1 FROM resumable_uploads r JOIN files f ON f.id=r.file_id WHERE r.id::text=$1 AND f.user_id::text=$2)`, uploadID, userID).Scan(&owned)
+		if err != nil {
+			http.Error(w, "database error", http.StatusInternalServerError)
+			return
+		}
+		if !owned {
+			http.Error(w, "not found", http.StatusNotFound)
+			return
+		}
+
 		upload, err := s.GetResumableUpload(uploadID)
 		if err != nil {
 			if err == sql.ErrNoRows {
@@ -288,6 +314,12 @@ func (s *Server) tusPatchHandler() http.HandlerFunc {
 // Implements TUS Core protocol.
 func (s *Server) tusHeadHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		userID, authErr := s.authCfg.getCurrentUser(r)
+		if authErr != nil {
+			writeAuthError(w, authErr)
+			return
+		}
+
 		if r.Method != http.MethodHead {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
@@ -296,6 +328,17 @@ func (s *Server) tusHeadHandler() http.HandlerFunc {
 		uploadID := strings.TrimPrefix(r.URL.Path, "/upload/resumable/")
 		if uploadID == "" {
 			http.Error(w, "upload ID required", http.StatusBadRequest)
+			return
+		}
+
+		var owned bool
+		err := s.db.QueryRowContext(r.Context(), `SELECT EXISTS (SELECT 1 FROM resumable_uploads r JOIN files f ON f.id=r.file_id WHERE r.id::text=$1 AND f.user_id::text=$2)`, uploadID, userID).Scan(&owned)
+		if err != nil {
+			http.Error(w, "database error", http.StatusInternalServerError)
+			return
+		}
+		if !owned {
+			http.Error(w, "not found", http.StatusNotFound)
 			return
 		}
 
