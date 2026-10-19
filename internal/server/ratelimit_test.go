@@ -54,9 +54,11 @@ func TestRateLimiter_Window(t *testing.T) {
 func TestRateLimiter_Middleware(t *testing.T) {
 	rl := newRateLimiter(3, time.Minute)
 
-	handler := rl.middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := rl.middleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("success"))
+		if _, err := w.Write([]byte("success")); err != nil {
+			t.Error(err)
+		}
 	}))
 
 	// First 3 requests should succeed

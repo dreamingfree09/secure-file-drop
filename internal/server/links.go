@@ -5,6 +5,7 @@
 //
 // Generates HMAC-signed tokens bound to file ID and expiry; optional
 // password protection is supported.
+
 package server
 
 import (

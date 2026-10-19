@@ -2,13 +2,17 @@
 //
 // Provides scheduled PostgreSQL backups with retention policies, compression,
 // and optional cloud storage upload. Supports full and incremental backups.
+
 package server
 
 import (
 	"compress/gzip"
+	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -139,16 +143,9 @@ func (bm *BackupManager) performBackup() error {
 		"duration_ms": duration.Milliseconds(),
 	})
 
-	// Upload to S3 if configured
+	// Cloud upload is still unsupported; never report a successful remote backup.
 	if bm.config.UploadToS3 {
-		if err := bm.uploadToS3(backupPath, filename); err != nil {
-			Error("failed to upload backup to S3", map[string]any{"error": err.Error()}, err)
-		} else {
-			Info("backup uploaded to S3", map[string]any{
-				"bucket": bm.config.S3Bucket,
-				"key":    filepath.Join(bm.config.S3Prefix, filename),
-			})
-		}
+		Warn("backup S3 upload not implemented; local backup only", nil)
 	}
 
 	// Clean up old backups
@@ -165,103 +162,88 @@ func (bm *BackupManager) performBackup() error {
 
 // dumpDatabase executes pg_dump to create a backup file.
 func (bm *BackupManager) dumpDatabase(outputPath string) error {
-	// Parse DATABASE_URL to extract connection parameters
-	// Format: postgres://user:password@host:port/database?sslmode=disable
-	dbURL := bm.config.DatabaseURL
-
-	// Simple parsing (assumes standard format)
-	var host, user, password, dbname string
-	var port string = "5432"
-
-	// Extract from postgres://user:password@host:port/database
-	if strings.HasPrefix(dbURL, "postgres://") {
-		dbURL = strings.TrimPrefix(dbURL, "postgres://")
-
-		// Split user:password from rest
-		parts := strings.SplitN(dbURL, "@", 2)
-		if len(parts) == 2 {
-			userPass := parts[0]
-			hostDB := parts[1]
-
-			// Extract user and password
-			if strings.Contains(userPass, ":") {
-				userPassParts := strings.SplitN(userPass, ":", 2)
-				user = userPassParts[0]
-				password = userPassParts[1]
-			} else {
-				user = userPass
-			}
-
-			// Extract host, port, and database
-			if strings.Contains(hostDB, "/") {
-				hostPortDB := strings.SplitN(hostDB, "/", 2)
-				hostPort := hostPortDB[0]
-				dbAndParams := hostPortDB[1]
-
-				// Remove query parameters
-				if strings.Contains(dbAndParams, "?") {
-					dbname = strings.SplitN(dbAndParams, "?", 2)[0]
-				} else {
-					dbname = dbAndParams
-				}
-
-				// Extract host and port
-				if strings.Contains(hostPort, ":") {
-					hostPortParts := strings.SplitN(hostPort, ":", 2)
-					host = hostPortParts[0]
-					port = hostPortParts[1]
-				} else {
-					host = hostPort
-				}
-			}
-		}
+	if filepath.Dir(outputPath) != filepath.Clean(bm.config.BackupDir) || bm.config.DatabaseURL == "" {
+		return errors.New("invalid backup configuration")
 	}
-
-	// Build pg_dump command with connection parameters
-	cmd := exec.Command("pg_dump",
-		"--format=plain",
-		"--no-owner",
-		"--no-acl",
-		"--host="+host,
-		"--port="+port,
-		"--username="+user,
-		"--dbname="+dbname,
-	)
-
-	var output io.Writer
-	file, err := os.Create(outputPath)
+	connection, err := backupConnectionEnvironment(bm.config.DatabaseURL)
 	if err != nil {
-		return fmt.Errorf("failed to create backup file: %w", err)
+		return err
 	}
-	defer file.Close()
-
-	if bm.config.Compression {
-		gzWriter := gzip.NewWriter(file)
-		defer gzWriter.Close()
-		output = gzWriter
-	} else {
-		output = file
-	}
-
-	cmd.Stdout = output
-	cmd.Stderr = os.Stderr
-
-	// Set PGPASSWORD environment variable for authentication
-	cmd.Env = append(os.Environ(), fmt.Sprintf("PGPASSWORD=%s", password))
-
-	if err := cmd.Run(); err != nil {
-		os.Remove(outputPath) // Clean up partial backup
-		return fmt.Errorf("pg_dump failed: %w", err)
-	}
-
-	return nil
+	// Keep connection credentials out of process arguments and diagnostic output.
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Minute)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "pg_dump", "--format=plain", "--no-owner", "--no-acl", "--no-password")
+	cmd.Env = append(os.Environ(), connection...)
+	cmd.Stderr = io.Discard
+	return writeBackup(outputPath, bm.config.Compression, func(dst io.Writer) error {
+		cmd.Stdout = dst
+		if err := cmd.Run(); err != nil {
+			return errors.New("pg_dump failed; backup not published")
+		}
+		return nil
+	})
 }
 
-// uploadToS3 uploads a backup file to S3/MinIO.
-func (bm *BackupManager) uploadToS3(localPath, filename string) error {
-	// This would integrate with MinIO client to upload the backup
-	// Placeholder implementation - would need MinIO client instance
-	return fmt.Errorf("S3 upload not yet implemented")
+// backupConnectionEnvironment supports PostgreSQL URIs and explicit libpq
+// environment options. Unknown/duplicate options fail closed rather than silently
+// dropping TLS requirements. Error text never contains connection values.
+func backupConnectionEnvironment(dsn string) ([]string, error) {
+	u, err := url.Parse(dsn)
+	if err != nil || (u.Scheme != "postgres" && u.Scheme != "postgresql") || u.User == nil || u.Hostname() == "" || u.Path == "" {
+		return nil, errors.New("invalid backup connection URI")
+	}
+	password, _ := u.User.Password()
+	port := u.Port()
+	if port == "" {
+		port = "5432"
+	}
+	values := map[string]string{"PGHOST": u.Hostname(), "PGPORT": port, "PGUSER": u.User.Username(), "PGPASSWORD": password, "PGDATABASE": strings.TrimPrefix(u.Path, "/"), "PGCONNECT_TIMEOUT": "10"}
+	options := map[string]string{"sslmode": "PGSSLMODE", "sslcert": "PGSSLCERT", "sslkey": "PGSSLKEY", "sslrootcert": "PGSSLROOTCERT", "sslcrl": "PGSSLCRL", "sslcrldir": "PGSSLCRLDIR", "connect_timeout": "PGCONNECT_TIMEOUT", "application_name": "PGAPPNAME", "options": "PGOPTIONS", "target_session_attrs": "PGTARGETSESSIONATTRS", "channel_binding": "PGCHANNELBINDING", "gssencmode": "PGGSSENCMODE", "ssl_min_protocol_version": "PGSSLMINPROTOCOLVERSION", "ssl_max_protocol_version": "PGSSLMAXPROTOCOLVERSION"}
+	query, err := url.ParseQuery(u.RawQuery)
+	if err != nil {
+		return nil, errors.New("invalid backup connection options")
+	}
+	for key, v := range query {
+		env, ok := options[key]
+		if !ok || len(v) != 1 {
+			return nil, errors.New("unsupported or duplicate backup connection option")
+		}
+		values[env] = v[0]
+	}
+	result := make([]string, 0, len(values))
+	for key, value := range values {
+		result = append(result, key+"="+value)
+	}
+	return result, nil
+}
+
+// writeBackup publishes only a closed, synced successful stream. Hard-link publication
+// is exclusive: existing backups and symlink targets are never overwritten.
+func writeBackup(outputPath string, compressed bool, produce func(io.Writer) error) (result error) {
+	file, err := os.CreateTemp(filepath.Dir(outputPath), ".sfd-backup-partial-*")
+	if err != nil {
+		return fmt.Errorf("create private backup: %w", err)
+	}
+	defer func() {
+		if err := os.Remove(file.Name()); err != nil {
+			result = errors.Join(result, fmt.Errorf("remove owned partial backup: %w", err))
+		}
+	}()
+	var output io.Writer = file
+	var gz *gzip.Writer
+	if compressed {
+		gz = gzip.NewWriter(file)
+		output = gz
+	}
+	result = produce(output)
+	if gz != nil {
+		result = errors.Join(result, gz.Close())
+	}
+	result = errors.Join(result, file.Sync(), file.Close())
+	if result != nil {
+		return result
+	}
+	return os.Link(file.Name(), outputPath)
 }
 
 // cleanupOldBackups removes backup files older than retention period.
@@ -312,7 +294,7 @@ func (bm *BackupManager) cleanupOldBackups() error {
 }
 
 // sendBackupNotification sends an email notification about backup status.
-func (bm *BackupManager) sendBackupNotification(success bool, err error) {
+func (bm *BackupManager) sendBackupNotification(success bool, _ error) {
 	if bm.emailService == nil {
 		return
 	}

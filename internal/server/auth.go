@@ -2,6 +2,7 @@
 //
 // Implements HMAC-signed cookie sessions, login/logout handlers,
 // and DB-backed user authentication compatible with the MVP.
+
 package server
 
 import (

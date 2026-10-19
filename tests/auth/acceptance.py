@@ -16,6 +16,7 @@ def main():
     def command(argv,**kw):
         r=subprocess.run(argv,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=kw.pop('timeout',90),**kw)
         if r.returncode:
+            if argv[0]=='go':(root/'private-go-failure.txt').write_bytes(r.stdout+r.stderr)
             if argv[0]=='node':
                 for line in r.stderr.decode(errors='replace').splitlines():
                     if line.startswith('BROWSER DIAGNOSTIC: '):
@@ -53,7 +54,7 @@ def main():
         # Generate the bcrypt hash with the same supported Go dependency as the backend.
         helper=root/'hash.go';helper.write_text('package main\nimport("fmt";"os";"golang.org/x/crypto/bcrypt")\nfunc main(){ b,e:=bcrypt.GenerateFromPassword([]byte(os.Getenv("FIXTURE_PASSWORD")),12);if e!=nil{panic("fixture hash")};fmt.Print(string(b))}\n')
         env=dict(os.environ,GOTOOLCHAIN='go1.26.9',FIXTURE_PASSWORD=password);adminhash=command(['go','run',str(helper)],cwd=repo,env=env)
-        values={'pg':{'POSTGRES_USER':'fixture','POSTGRES_DB':dbname,'POSTGRES_PASSWORD':dbpass},'storage':{'MINIO_ROOT_USER':access,'MINIO_ROOT_PASSWORD':storagepass},'backend':{'SFD_ADDR':':8080','DATABASE_URL':'postgres://fixture:'+dbpass+'@'+name+'-pg:5432/'+dbname+'?sslmode=disable','SFD_ADMIN_USER':'admin','SFD_ADMIN_PASS':adminhash,'SFD_SESSION_SECRET':secrets.token_hex(32),'SFD_DOWNLOAD_SECRET':secrets.token_hex(32),'SFD_S3_ENDPOINT':'http://'+name+'-storage:9000','SFD_S3_ACCESS_KEY':access,'SFD_S3_SECRET_KEY':storagepass,'SFD_BUCKET':name,'SFD_HASH_TOOL':'/app/sfd-hash','SFD_PUBLIC_BASE_URL':origin,'SFD_BASE_URL':origin,'SFD_CLEANUP_ENABLED':'false','SFD_BACKUP_ENABLED':'false'}}
+        values={'pg':{'POSTGRES_USER':'fixture','POSTGRES_DB':dbname,'POSTGRES_PASSWORD':dbpass},'storage':{'MINIO_ROOT_USER':access,'MINIO_ROOT_PASSWORD':storagepass},'backend':{'SFD_ADDR':':8080','DATABASE_URL':'postgres://fixture:'+dbpass+'@'+name+'-pg:5432/'+dbname+'?sslmode=disable','SFD_ADMIN_USER':'admin','SFD_ADMIN_PASS':adminhash,'SFD_SESSION_SECRET':secrets.token_hex(32),'SFD_DOWNLOAD_SECRET':secrets.token_hex(32),'SFD_S3_ENDPOINT':'http://'+name+'-storage:9000','SFD_S3_ACCESS_KEY':access,'SFD_S3_SECRET_KEY':storagepass,'SFD_BUCKET':name,'SFD_HASH_TOOL':'/app/sfd-hash','SFD_PUBLIC_BASE_URL':origin,'SFD_BASE_URL':origin,'SFD_CLEANUP_ENABLED':'false','SFD_BACKUP_ENABLED':'false','PGHOST':name+'-pg','PGPORT':'5432','PGUSER':'fixture','PGPASSWORD':dbpass,'PGDATABASE':dbname,'PGSSLMODE':'disable'}}
         for service,v in values.items():(root/(service+'.env')).write_text(''.join(k+'='+x+'\n' for k,x in v.items()))
         pg=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-pg','--network',network,'--env-file',str(root/'pg.env'),'-p','127.0.0.1::5432','-v',volumes[0]+':/var/lib/postgresql/data',args.postgres_image);created.append(pg);pginfo=owned('container',pg)
         for _ in range(60):
@@ -98,7 +99,12 @@ def main():
                 except (urllib.error.URLError,ConnectionError):pass
                 time.sleep(.5)
             raise AssertionError('corrected backend readiness')
-        ready();check(fingerprint()==before,'migration 11 to 12 preserves synthetic user/file records and role');check(sql('SELECT version FROM schema_migrations;')=='12','migration reaches version 12')
+        ready()
+        owned('container',backend)
+        dump=docker('exec',backend,'pg_dump','--format=plain','--no-owner','--no-acl','--no-password')
+        check('CREATE TABLE public.users' in dump and 'CREATE TABLE public.auth_sessions' in dump,'actual pg_dump accepts separated connection environment without credential arguments')
+        del dump
+        check(fingerprint()==before,'migration 11 to 12 preserves synthetic user/file records and role');check(sql('SELECT version FROM schema_migrations;')=='12','migration reaches version 12')
         # Exercise actual HTTP login, identity, privileged reads, logout and replay.
         check(request('/login',{'username':'admin','password':password})[0]==200,'real environment admin login')
         status,body=request('/me');me=json.loads(body);check(status==200 and me['username']=='admin' and me['is_admin'] is True,'real environment admin identity')
@@ -109,7 +115,7 @@ def main():
         owned('container',backend);docker('rm','-f',backend);created.remove(backend);backend=start_backend();ready();check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'logout revocation survives backend recreation')
         # Run the exact handler/security suite against this uniquely guarded database.
         pgports=pginfo['NetworkSettings']['Ports']['5432/tcp'];assert pgports[0]['HostIp']=='127.0.0.1'
-        testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name)
+        testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name)
         output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output,'real PostgreSQL Go security regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
         check(request('/register',{'email':'upload@example.invalid','username':'uploader','password':'Synthetic9-uploader'})[0]==201,'real registration')

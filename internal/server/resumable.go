@@ -2,6 +2,7 @@
 //
 // Implements TUS (tus.io) protocol for resumable file uploads, allowing
 // large files to be uploaded in chunks with automatic resume on failure.
+
 package server
 
 import (
@@ -206,7 +207,9 @@ func (s *Server) tusCreateHandler() http.HandlerFunc {
 		w.Header().Set("Upload-Offset", "0")
 		w.Header().Set("Location", fmt.Sprintf("/upload/resumable/%s", upload.ID))
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(upload)
+		if err := json.NewEncoder(w).Encode(upload); err != nil {
+			Warn("response write failed", nil)
+		}
 	}
 }
 

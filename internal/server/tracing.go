@@ -2,6 +2,7 @@
 //
 // Provides distributed tracing support with correlation IDs that are propagated
 // through logs, responses, and can be used for debugging and request tracking.
+
 package server
 
 import (

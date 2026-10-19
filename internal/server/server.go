@@ -2,6 +2,7 @@
 //
 // Registers routes, configures dependencies, and exposes Start/Shutdown.
 // Keeps handler logic modular for testability.
+
 package server
 
 import (

@@ -1,4 +1,5 @@
 // prometheus.go - Prometheus metrics exporter
+
 package server
 
 import (
@@ -11,9 +12,7 @@ import (
 )
 
 // PrometheusExporter converts internal metrics to Prometheus format
-type PrometheusExporter struct {
-	mu sync.RWMutex
-}
+type PrometheusExporter struct{}
 
 // NewPrometheusExporter creates a new Prometheus exporter
 func NewPrometheusExporter() *PrometheusExporter {
@@ -42,52 +41,54 @@ func (p *PrometheusExporter) Handler() http.HandlerFunc {
 		// Request metrics
 		output.WriteString("# HELP sfd_requests_total Total number of HTTP requests\n")
 		output.WriteString("# TYPE sfd_requests_total counter\n")
-		output.WriteString(fmt.Sprintf("sfd_requests_total %d\n\n", snapshot.RequestsTotal))
+		output.Write(fmt.Appendf(nil, "sfd_requests_total %d\n\n", snapshot.RequestsTotal))
 
 		// Upload metrics
 		output.WriteString("# HELP sfd_uploads_total Total number of file uploads\n")
 		output.WriteString("# TYPE sfd_uploads_total counter\n")
-		output.WriteString(fmt.Sprintf("sfd_uploads_total %d\n\n", snapshot.UploadsTotal))
+		output.Write(fmt.Appendf(nil, "sfd_uploads_total %d\n\n", snapshot.UploadsTotal))
 
 		// Download metrics
 		output.WriteString("# HELP sfd_downloads_total Total number of file downloads\n")
 		output.WriteString("# TYPE sfd_downloads_total counter\n")
-		output.WriteString(fmt.Sprintf("sfd_downloads_total %d\n\n", snapshot.DownloadsTotal))
+		output.Write(fmt.Appendf(nil, "sfd_downloads_total %d\n\n", snapshot.DownloadsTotal))
 
 		// Storage metrics
 		output.WriteString("# HELP sfd_storage_bytes Total storage used in bytes\n")
 		output.WriteString("# TYPE sfd_storage_bytes gauge\n")
-		output.WriteString(fmt.Sprintf("sfd_storage_bytes %d\n\n", snapshot.StorageTotalBytes))
+		output.Write(fmt.Appendf(nil, "sfd_storage_bytes %d\n\n", snapshot.StorageTotalBytes))
 
 		output.WriteString("# HELP sfd_storage_files Total number of stored files\n")
 		output.WriteString("# TYPE sfd_storage_files gauge\n")
-		output.WriteString(fmt.Sprintf("sfd_storage_files %d\n\n", snapshot.StorageTotalFiles))
+		output.Write(fmt.Appendf(nil, "sfd_storage_files %d\n\n", snapshot.StorageTotalFiles))
 
 		// Login metrics
 		output.WriteString("# HELP sfd_login_success_total Total number of successful logins\n")
 		output.WriteString("# TYPE sfd_login_success_total counter\n")
-		output.WriteString(fmt.Sprintf("sfd_login_success_total %d\n\n", snapshot.LoginSuccessTotal))
+		output.Write(fmt.Appendf(nil, "sfd_login_success_total %d\n\n", snapshot.LoginSuccessTotal))
 
 		output.WriteString("# HELP sfd_login_failures_total Total number of failed logins\n")
 		output.WriteString("# TYPE sfd_login_failures_total counter\n")
-		output.WriteString(fmt.Sprintf("sfd_login_failures_total %d\n\n", snapshot.LoginFailuresTotal))
+		output.Write(fmt.Appendf(nil, "sfd_login_failures_total %d\n\n", snapshot.LoginFailuresTotal))
 
 		// File status metrics
 		output.WriteString("# HELP sfd_files_by_status Files grouped by status\n")
 		output.WriteString("# TYPE sfd_files_by_status gauge\n")
-		output.WriteString(fmt.Sprintf("sfd_files_by_status{status=\"ready\"} %d\n", snapshot.FilesReadyTotal))
-		output.WriteString(fmt.Sprintf("sfd_files_by_status{status=\"pending\"} %d\n", snapshot.FilesPendingTotal))
-		output.WriteString(fmt.Sprintf("sfd_files_by_status{status=\"failed\"} %d\n\n", snapshot.FilesFailedTotal))
+		output.Write(fmt.Appendf(nil, "sfd_files_by_status{status=\"ready\"} %d\n", snapshot.FilesReadyTotal))
+		output.Write(fmt.Appendf(nil, "sfd_files_by_status{status=\"pending\"} %d\n", snapshot.FilesPendingTotal))
+		output.Write(fmt.Appendf(nil, "sfd_files_by_status{status=\"failed\"} %d\n\n", snapshot.FilesFailedTotal))
 
 		// Response time histogram (if we add this in the future)
 		output.WriteString("# HELP sfd_uptime_seconds Application uptime in seconds\n")
 		output.WriteString("# TYPE sfd_uptime_seconds counter\n")
 		uptime := time.Since(serverStartTime).Seconds()
-		output.WriteString(fmt.Sprintf("sfd_uptime_seconds %.0f\n\n", uptime))
+		output.Write(fmt.Appendf(nil, "sfd_uptime_seconds %.0f\n\n", uptime))
 
 		w.Header().Set("Content-Type", "text/plain; version=0.0.4; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(output.String()))
+		if _, err := w.Write([]byte(output.String())); err != nil {
+			Warn("metrics response write failed", nil)
+		}
 	}
 }
 
@@ -95,14 +96,6 @@ func (p *PrometheusExporter) Handler() http.HandlerFunc {
 func PrometheusMetricsHandler() http.Handler {
 	exporter := NewPrometheusExporter()
 	return exporter.Handler()
-}
-
-// Helper function to format label safely for Prometheus
-func prometheusLabel(value string) string {
-	// Escape quotes and backslashes
-	value = strings.ReplaceAll(value, "\\", "\\\\")
-	value = strings.ReplaceAll(value, "\"", "\\\"")
-	return value
 }
 
 // MetricsSummary provides additional metrics for Prometheus

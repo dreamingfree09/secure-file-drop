@@ -311,3 +311,12 @@ Dual-layout source-built acceptance passed 27 checks per layout, preserving non-
 ### Browser cleanup diagnostic correction
 
 CI at 2a683fd28ea54a9f069fbe9962f1da229d4e3de2 passed 27 API/full-stack/security checks and normal CI fixture trust setup, then failed its browser command. Source inspection found the cleanup step attempting a visibility-waiting fill on the now-hidden password field. Clear that owned field directly after the actual visible login assertions, and emit only sanitized phase/error-type diagnostics on failure. Do not bypass TLS, revocation, CSP or UI login. Repeat mandatory exact-head CI; no browser pass is claimed yet.
+
+
+## 2026-10-19 — SFD-ADMIN-SESSION-COMPATIBILITY-20261018 quality gate correction
+
+Codex continued the existing 75d92f2 proposal under standing Owner delegation. The inherited strict-lint backlog was corrected in a separate normal commit: checked response/row/notification errors; encoded synchronized request logs without referer/query credentials; static bound audit filters; cancellation and bounded responses in the existing webhook placeholder; private backup streaming, checked gzip/sync/close, exclusive publication and parsed connection environment. Operator native paths must be absolute regular executables without group/other write access. Native-tool gosec annotations retain the reviewed operator-only/no-shell trust boundary; the sole new permission annotation belongs to an intentionally invalid owned test fixture. No additional linter rule is disabled.
+
+The unsafe old Go E2E body is replaced by an adapter to the same owned real PostgreSQL/storage/native/browser harness. Fresh dual-layout execution passed 28 checks per layout, including all guarded PostgreSQL race/security/quality tests without skips. Strict golangci-lint v2.14.0, formatter and vet pass; reachable govulncheck findings remain zero. The failed PGDATABASE-URI experiment and two CGO test-driver failures are retained, accurately failed, with full owned cleanup. See [sanitized quality evidence](../tests/auth/evidence/20261019-quality.json).
+
+No live adoption, migration, credential reset, certificate/trust change, real-data operation or merge occurred. Independent exact-revision Aether acceptance remains required. The legacy audit API/migration shape mismatch, storage/backup/recovery/deployment gates, TUS and S3/email/webhook placeholders remain explicit limitations. Browser and unchanged Windows acceptance will be repeated at the final published successor; passing producer tests do not constitute Aether review.

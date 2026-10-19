@@ -16,6 +16,7 @@ import (
 // WebhookEvent represents an event that can trigger a webhook
 type WebhookEvent string
 
+// Webhook events identify delivery categories.
 const (
 	WebhookEventFileUploaded   WebhookEvent = "file.uploaded"
 	WebhookEventFileDownloaded WebhookEvent = "file.downloaded"
@@ -62,14 +63,14 @@ func (s *Server) TriggerWebhook(ctx context.Context, event WebhookEvent, data ma
 		}
 
 		// Send webhook asynchronously
-		go s.sendWebhook(webhook, payload)
+		go s.sendWebhook(ctx, webhook, payload)
 	}
 
 	return nil
 }
 
 // sendWebhook sends a single webhook with retries
-func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
+func (s *Server) sendWebhook(parent context.Context, config WebhookConfig, payload WebhookPayload) {
 	maxRetries := config.RetryCount
 	if maxRetries == 0 {
 		maxRetries = 3
@@ -85,16 +86,20 @@ func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
 		if attempt > 0 {
 			// Exponential backoff
 			backoff := time.Duration(attempt*attempt) * time.Second
-			time.Sleep(backoff)
+			select {
+			case <-parent.Done():
+				return
+			case <-time.After(backoff):
+			}
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
+		ctx, cancel := context.WithTimeout(parent, 10*time.Second)
 
 		req, err := http.NewRequestWithContext(ctx, "POST", config.URL, bytes.NewReader(payloadBytes))
 		if err != nil {
-			log.Printf("WEBHOOK ERROR: Failed to create webhook request: %v", err)
-			continue
+			cancel()
+			log.Print("WEBHOOK ERROR: failed to create request")
+			return
 		}
 
 		req.Header.Set("Content-Type", "application/json")
@@ -110,27 +115,35 @@ func (s *Server) sendWebhook(config WebhookConfig, payload WebhookPayload) {
 
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Printf("WEBHOOK ERROR: Request failed to %s (attempt %d): %v", config.URL, attempt+1, err)
+			cancel()
+			if parent.Err() != nil {
+				return
+			}
+			log.Printf("WEBHOOK ERROR: request failed (attempt %d)", attempt+1)
 			continue
 		}
 
-		defer resp.Body.Close()
-		body, _ := io.ReadAll(resp.Body)
+		_, readErr := io.Copy(io.Discard, io.LimitReader(resp.Body, 64<<10))
+		closeErr := resp.Body.Close()
+		cancel()
+		if readErr != nil || closeErr != nil {
+			log.Print("WEBHOOK ERROR: response read failed")
+			continue
+		}
 
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-			log.Printf("WEBHOOK SENT: To %s, Event: %s", config.URL, payload.Event)
+			log.Print("WEBHOOK SENT")
 			// Log webhook delivery
-			s.logWebhookDelivery(context.Background(), config.URL, payload, true, "")
+			s.logWebhookDelivery(parent, config.URL, payload, true, "")
 			return
 		}
 
-		log.Printf("WEBHOOK ERROR: %s returned status %d (attempt %d): %s",
-			config.URL, resp.StatusCode, attempt+1, string(body))
+		log.Printf("WEBHOOK ERROR: status %d (attempt %d)", resp.StatusCode, attempt+1)
 	}
 
 	// All retries failed
-	s.logWebhookDelivery(context.Background(), config.URL, payload, false, "max retries exceeded")
-	log.Printf("WEBHOOK ERROR: Failed after max retries to %s for event %s", config.URL, payload.Event)
+	s.logWebhookDelivery(parent, config.URL, payload, false, "max retries exceeded")
+	log.Print("WEBHOOK ERROR: maximum retries reached")
 }
 
 // generateWebhookSignature creates an HMAC-SHA256 signature for the payload
@@ -142,7 +155,7 @@ func (s *Server) generateWebhookSignature(payload []byte, secret string) string 
 }
 
 // getWebhooksForEvent retrieves webhook configurations for a specific event
-func (s *Server) getWebhooksForEvent(ctx context.Context, event WebhookEvent) ([]WebhookConfig, error) {
+func (s *Server) getWebhooksForEvent(_ context.Context, _ WebhookEvent) ([]WebhookConfig, error) {
 	// Query database for webhooks configured for this event
 	// This is a placeholder - you'd implement actual DB query
 	return []WebhookConfig{}, nil

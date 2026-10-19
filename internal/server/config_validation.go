@@ -2,6 +2,7 @@
 //
 // Validates all environment variables and configuration settings at startup
 // to fail fast with clear error messages rather than runtime failures.
+
 package server
 
 import (
@@ -55,9 +56,9 @@ func (v *ConfigValidator) Errors() []ConfigValidationError {
 // ErrorString returns a formatted string of all errors.
 func (v *ConfigValidator) ErrorString() string {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Configuration validation failed with %d error(s):\n", len(v.errors)))
+	sb.Write(fmt.Appendf(nil, "Configuration validation failed with %d error(s):\n", len(v.errors)))
 	for i, err := range v.errors {
-		sb.WriteString(fmt.Sprintf("  %d. %s\n", i+1, err.Error()))
+		sb.Write(fmt.Appendf(nil, "  %d. %s\n", i+1, err.Error()))
 	}
 	return sb.String()
 }

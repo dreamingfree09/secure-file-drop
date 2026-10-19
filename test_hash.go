@@ -1,3 +1,4 @@
+// Package main provides a standalone native hash diagnostic.
 package main
 
 import (
