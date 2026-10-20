@@ -11,6 +11,7 @@ if suite=='contract':env['SFD_STORAGE_EVALUATION']='rustfs'
 if suite=='default':env['SFD_DESKTOP_CLIENT']='1'
 if suite=='rehearsal':env.update(SFD_RUSTFS_REHEARSAL='1',SFD_REHEARSAL_REQUIRED='1',SFD_REHEARSAL_EVIDENCE=str(pathlib.Path(os.environ['RUNNER_TEMP'])/'rehearsal-private'))
 root=pathlib.Path(os.environ['RUNNER_TEMP']); log=root/'runtime-private.jsonl'
+if suite=='rehearsal':pathlib.Path(env['SFD_REHEARSAL_EVIDENCE']).mkdir(mode=0o700,exist_ok=False)
 with log.open('xb') as out:process=subprocess.run(['go','test','./tests/e2e','-json','-v','-run','^'+test+'$','-count=1','-timeout','29m'],env=env,stdout=out,stderr=subprocess.STDOUT)
 events=[]
 for line in log.read_text().splitlines():
