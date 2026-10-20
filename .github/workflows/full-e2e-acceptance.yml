@@ -1,9 +1,9 @@
 name: Full E2E acceptance
 on:
   push:
-    branches: [codex/sfd-full-e2e-acceptance-20261020]
+    branches: [codex/sfd-full-e2e-acceptance-20261020, codex/sfd-final-reconciliation-20261020]
   pull_request:
-    branches: [codex/sfd-windows-companion-20261017]
+    branches: [codex/sfd-windows-companion-20261017, codex/sfd-full-e2e-acceptance-20261020]
   workflow_dispatch:
 permissions:
   contents: read
@@ -32,6 +32,12 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: tests/storage/iam/go.mod
+      - name: Require actual isolated PostgreSQL lineage regression
+        run: |
+          set -o pipefail
+          SFD_SCHEMA_GUARD_TEST=1 go test -race ./internal/db -run '^TestSchemaLineage$' -v -count=1 | tee "$RUNNER_TEMP/schema-lineage.txt"
+          test -z "$(docker ps -aq --filter label=sfd.schema-guard-run)"
+          test -z "$(docker network ls -q --filter label=sfd.schema-guard-run)"
       - name: Explicit nested-module verification
         working-directory: tests/storage/iam
         run: |
@@ -76,6 +82,7 @@ jobs:
         with:
           name: full-e2e-nested-iam
           path: |
+            ${{ runner.temp }}/schema-lineage.txt
             ${{ runner.temp }}/iam-vuln.json
             ${{ runner.temp }}/exact-revision.json
           if-no-files-found: error

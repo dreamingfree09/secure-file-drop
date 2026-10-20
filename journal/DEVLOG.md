@@ -399,3 +399,18 @@ Hosted contract scans reached the verified RustFS binary but failed inside a Doc
 ### 2026-10-20 — Public SBOM scanner permission correction
 
 Exact hosted failure: private wrapper umask0077 reduced the public upstream SBOM creation mode to0600; the restricted scanner could not read its bind mount. Explicitly apply intended0644 only to the checksum-verified public SBOM in t.TempDir. Keep private log/fixture umask0077, scanner restrictions, provenance digest and all advisory assertions. A narrow G302 annotation documents this public-only boundary; legacy lint annotations/policy remain unchanged.
+
+
+## 2026-10-20 — SFD-FINAL-RECONCILIATION-20261020
+
+Refreshed exact PR25-29 refs and read Aether6301566150. Added a read-only canonical migration-lineage guard after reproducing two version4 false-compatibility cases on fresh isolated PostgreSQL; eight regression subtests pass and rejected fixtures preserve metadata/rows. CI installation is a separate commit. Re-inspected exact successor/recovery binaries and reran42 isolated checks per BYTEA/BIGINT layout. Recorded legacy deletion wrong-key/storage-failure and lifecycle preservation blockers, exact lineage/contract differences, selected-port proposal and normal integration plan in docs/LINEAGE_RECONCILIATION.md. Independent security/architecture acceptance, unified baseline, live adoption and Owner visual checks remain open. All six live containers, original repositories/local work, environment/TLS/CRL and retained failure resources preserved; no protected integration or new product feature.
+
+
+### Final reconciliation follow-up — active schema and retained-image failures
+
+A valid PR30 review finding reproduced three custom-schema false acceptance/rejection cases in the initial guard. Corrected it on the same borrowed connection as the migration driver, with cross-schema fallback rejection; eleven isolated PostgreSQL/race cases now pass and snapshots retain rows/metadata. Retained and executed a reproducible defensive deletion regression on each exact legacy image separately: both FAIL because administrator DELETE204 forgets metadata but leaves the actual object, and a distinct owned DELETE during a fixture-only storage outage also returns204/forgets metadata. Initial reused-row fixture mistake is preserved separately. Both final failure fixtures cleaned only owned resources and left live services unchanged. Both images are unsuitable for operational adoption until complete lifecycle correction/independent review. Historical positive42-check recovery results remain evidence with this explicit limit. No new feature, live mutation, schema downgrade or protected integration.
+
+
+## 2026-10-21 — reconciliation continuation and authority clarification
+
+PR30 guard b34 final CI/artifacts all pass; exact evidence is recorded in LINEAGE_RECONCILIATION. The existing standing delegation assigns bounded port design/implementation to Codex; prior direction-approval wording was an overly restrictive interpretation and is superseded. PR31 implements the schema12 lifecycle/Windows selected-port candidate with real owned migration/COMMIT/concurrency/cleanup coverage. Exact independent Aether source/security/recovery acceptance still gates integration and live adoption. This commit changes documentation only and preserves historical records; no live/protected changes.
