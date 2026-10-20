@@ -23,7 +23,10 @@ output=''.join(x.get('Output','') for x in events);browser=[]
 for line in output.splitlines():
  if 'BROWSER CHECKS: ' in line:browser.append(json.loads(line.split('BROWSER CHECKS: ',1)[1]))
 desktop=output.count('DESKTOP PASS:')
-diagnostics=[line.strip() for line in output.splitlines() if re.search(r'(Alpine secdb HTTP [0-9]+|SBOM.*HTTP [0-9]+|unsupported runtime distribution|scanner failed:|invalid scanner JSON|storage binary scan timed out)',line)]
+# This test only reads public advisory inventories and owned image metadata;
+# it never makes authenticated app requests or prints storage configuration.
+# Keep its diagnostics, strip URLs, and exclude all other raw test output.
+diagnostics=[re.sub(r'https?://\S+', '[public URL omitted]', event.get('Output','').strip())[:2000] for event in events if event.get('Test','').endswith('/assessment-runtime-dependencies') and event.get('Output','').strip()]
 result={'diagnostics':diagnostics,'revision':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'suite':suite,'exit':process.returncode,'expected_scenarios':expected,'passed':passed,'failures':failures,'skips':skips,'browser':browser,'portable_desktop_checks':desktop,'real_Owner_GUI':'unexecuted','private_log_published':False}
 (root/'acceptance.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))
 assert process.returncode==0 and len(passed)==expected and not failures and not skips,'mandatory suite did not pass'
