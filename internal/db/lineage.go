@@ -21,23 +21,24 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	}
 	var outside bool
 	if err := conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
- WHERE c.oid=ANY(ARRAY[to_regclass('schema_migrations'),to_regclass('files'),to_regclass('users'),to_regclass('auth_sessions')]::oid[])
+ WHERE c.oid=ANY(ARRAY[to_regclass('schema_migrations'),to_regclass('files'),to_regclass('users'),to_regclass('auth_sessions'),to_regclass('resumable_uploads'),to_regclass('audit_logs'),to_regclass('sessions')]::oid[])
  AND n.nspname<>current_schema())`).Scan(&outside); err != nil {
 		return fmt.Errorf("schema resolution inspection: %w", err)
 	}
 	if outside {
 		return incompatible
 	}
-	var versioned, files, users, sessions, canonical bool
+	var versioned, files, users, sessions, canonical, applicationData bool
 	if err := conn.QueryRowContext(ctx, `SELECT to_regclass('schema_migrations') IS NOT NULL,to_regclass('files') IS NOT NULL,to_regclass('users') IS NOT NULL,to_regclass('auth_sessions') IS NOT NULL,
- EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=current_schema() AND table_name='sessions')`).Scan(&versioned, &files, &users, &sessions, &canonical); err != nil {
+ EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=current_schema() AND table_name='sessions'),
+ EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname IN ('files','users','auth_sessions','resumable_uploads','audit_logs','sessions'))`).Scan(&versioned, &files, &users, &sessions, &canonical, &applicationData); err != nil {
 		return fmt.Errorf("lineage inspection: %w", err)
 	}
 	if canonical {
 		return incompatible
 	}
 	if !versioned {
-		if files || users || sessions {
+		if applicationData {
 			return incompatible
 		}
 		return nil
@@ -46,7 +47,7 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	var dirty bool
 	err := conn.QueryRowContext(ctx, "SELECT version,dirty,count(*) OVER() FROM schema_migrations").Scan(&version, &dirty, &rows)
 	if errors.Is(err, sql.ErrNoRows) {
-		if files || users || sessions {
+		if applicationData {
 			return incompatible
 		}
 		return nil
