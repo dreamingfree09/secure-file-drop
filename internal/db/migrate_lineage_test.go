@@ -41,6 +41,8 @@ func TestLegacyLineage(t *testing.T) {
 		layout                              string
 		role, dirty, canonical, unversioned bool
 		accepted                            bool
+		extraTable                          string
+		emptyLedger                         bool
 	}{
 		{name: "fresh-and-idempotent", accepted: true},
 		{name: "legacy11-bigint-role", version: 11, layout: "bigint", role: true, accepted: true},
@@ -52,6 +54,10 @@ func TestLegacyLineage(t *testing.T) {
 		{name: "dirty11-rejected", version: 11, layout: "bigint", dirty: true},
 		{name: "future13-rejected", version: 13, layout: "bigint"},
 		{name: "unversioned-existing-data-rejected", version: 11, layout: "bigint", unversioned: true},
+		{name: "unversioned-audit-only-rejected", extraTable: "audit_logs"},
+		{name: "unversioned-resumable-only-rejected", extraTable: "resumable_uploads"},
+		{name: "empty-ledger-audit-only-rejected", extraTable: "audit_logs", emptyLedger: true},
+		{name: "empty-ledger-resumable-only-rejected", extraTable: "resumable_uploads", emptyLedger: true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -141,6 +147,13 @@ func TestLegacyLineage(t *testing.T) {
 					execSQL("INSERT INTO auth_sessions(token_hash,expires_at) VALUES ($1,CURRENT_TIMESTAMP+interval '1 hour')", strings.Repeat("c", 64))
 				}
 			}
+			if tc.extraTable != "" {
+				execSQL("CREATE TABLE " + tc.extraTable + "(id int PRIMARY KEY,payload text NOT NULL)")
+				execSQL("INSERT INTO " + tc.extraTable + " VALUES(1,'owned-historical-row')")
+			}
+			if tc.emptyLedger {
+				execSQL("CREATE TABLE schema_migrations(version bigint PRIMARY KEY,dirty boolean NOT NULL)")
+			}
 			snapshot := func() (string, string) {
 				t.Helper()
 				var cols string
@@ -148,8 +161,8 @@ func TestLegacyLineage(t *testing.T) {
 					t.Fatal("schema snapshot")
 				}
 				data := ""
-				queries := map[string]string{"users": "SELECT COALESCE(jsonb_agg(to_jsonb(u)-'is_admin' ORDER BY id),'[]')::text FROM users u", "files": "SELECT COALESCE(jsonb_agg(to_jsonb(f) ORDER BY id),'[]')::text FROM files f", "auth_sessions": "SELECT COALESCE(jsonb_agg(to_jsonb(s) ORDER BY token_hash),'[]')::text FROM auth_sessions s"}
-				for _, table := range []string{"users", "files", "auth_sessions"} {
+				queries := map[string]string{"users": "SELECT COALESCE(jsonb_agg(to_jsonb(u)-'is_admin' ORDER BY id),'[]')::text FROM users u", "files": "SELECT COALESCE(jsonb_agg(to_jsonb(f) ORDER BY id),'[]')::text FROM files f", "audit_logs": "SELECT COALESCE(jsonb_agg(to_jsonb(a) ORDER BY id),'[]')::text FROM audit_logs a", "resumable_uploads": "SELECT COALESCE(jsonb_agg(to_jsonb(a) ORDER BY id),'[]')::text FROM resumable_uploads a", "auth_sessions": "SELECT COALESCE(jsonb_agg(to_jsonb(s) ORDER BY token_hash),'[]')::text FROM auth_sessions s"}
+				for _, table := range []string{"users", "files", "auth_sessions", "audit_logs", "resumable_uploads"} {
 					var exists bool
 					if target.QueryRowContext(ctx, "SELECT to_regclass($1) IS NOT NULL", table).Scan(&exists) != nil {
 						t.Fatal("table snapshot")

@@ -52,3 +52,31 @@ func TestLifecycleOversizedDownloadTokenRejectedBeforeStorage(t *testing.T) {
 		t.Fatal("unbounded token reached metadata/storage")
 	}
 }
+
+func TestCanonicalOriginSpellings(t *testing.T) {
+	for _, tc := range []struct {
+		configured, received string
+		want                 int
+	}{
+		{"https://DROP.example:443", "https://drop.example", 204},
+		{"https://drop.example", "https://DROP.example:443", 204},
+		{"http://drop.example:80", "http://drop.example", 204},
+		{"https://[::1]:443", "https://[::1]", 204},
+		{"https://drop.example:8443", "https://drop.example", 403},
+		{"https://drop.example", "https://drop.example.attacker.invalid", 403},
+		{"https://drop.example", "https://user@drop.example", 403},
+		{"https://drop.example", "https://drop.example/path", 403},
+	} {
+		t.Run(tc.configured+"_"+tc.received, func(t *testing.T) {
+			t.Setenv("SFD_PUBLIC_BASE_URL", tc.configured)
+			h := sameOriginMiddleware(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusNoContent) }))
+			r := httptest.NewRequest("POST", "https://internal/files", nil)
+			r.Header.Set("Origin", tc.received)
+			w := httptest.NewRecorder()
+			h.ServeHTTP(w, r)
+			if w.Code != tc.want {
+				t.Fatalf("origin HTTP %d want %d", w.Code, tc.want)
+			}
+		})
+	}
+}
