@@ -137,8 +137,8 @@ def main():
         result['host_native_tool_sha256']=hashlib.sha256(native_bytes).hexdigest()
         testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name,SFD_LIFECYCLE_DATABASE=dbname,SFD_LIFECYCLE_BUCKET=name,SFD_LIFECYCLE_STORAGE=docker('port',storage,'9000/tcp'),SFD_LIFECYCLE_ACCESS=access,SFD_LIFECYCLE_SECRET=storagepass,SFD_HASH_TOOL=str(native_tool))
         result['stage']='real-go-postgresql-native-commit-faults'
-        output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');result['go_security']={'passed_test_events':len(re.findall(r'(?m)^\s*--- PASS: ',output)),'skipped_test_events':len(re.findall(r'(?m)^\s*--- SKIP: ',output)),'failed_test_events':len(re.findall(r'(?m)^\s*--- FAIL: ',output)),'real_lineage_subtests':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyLineage/',output)),'real_commit_fault_modes':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyCommitFaults/',output))}
-        check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output and result['go_security']['real_lineage_subtests']==10 and result['go_security']['real_commit_fault_modes']==4,'real PostgreSQL Go identity/lineage/COMMIT regressions and race checks')
+        output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');result['go_security']={'passed_test_events':len(re.findall(r'(?m)^\s*--- PASS: ',output)),'skipped_test_events':len(re.findall(r'(?m)^\s*--- SKIP: ',output)),'failed_test_events':len(re.findall(r'(?m)^\s*--- FAIL: ',output)),'real_lineage_subtests':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyLineage/',output)),'real_lifecycle_ordering_cases':len(re.findall(r'(?m)^\s*--- PASS: TestLifecycleOrdering/',output)),'real_commit_fault_modes':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyCommitFaults/',output))}
+        check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output and result['go_security']['real_lineage_subtests']==10 and result['go_security']['real_commit_fault_modes']==4 and result['go_security']['real_lifecycle_ordering_cases']==5,'real PostgreSQL Go identity/lineage/COMMIT regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
         uploader_password='Synthetic9-'+secrets.token_hex(24)
         check(request('/register',{'email':'upload@example.invalid','username':'uploader','password':uploader_password})[0]==201,'real registration')
@@ -155,6 +155,17 @@ def main():
         check(target.scheme=='https' and target.hostname=='localhost' and target.port==server.server_port and target.username is None and target.password is None and target.path=='/download' and not target.fragment,'signed download target confined to owned HTTPS origin')
         req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
+        # Preserve existing protected-row interpretation; this is a synthetic
+        # historical fixture, not a newly implemented password-creation feature.
+        sql("UPDATE files SET link_password='owned-historical-password' WHERE id='"+fid+"';")
+        download_path=target.path+'?'+target.query
+        check(request(download_path,who=anonymous)[0]==401,'existing protected record denies absent password')
+        check(request(download_path+'&password=wrong-owned-password',who=anonymous)[0]==401,'existing protected record denies incorrect password')
+        code,body=request(download_path+'&password=owned-historical-password',who=anonymous)
+        check(code==200 and body==data,'existing protected record retains exact legacy password interpretation')
+        sql("UPDATE files SET link_password=NULL,auto_delete=TRUE,expires_at=NOW()-INTERVAL '1 minute' WHERE id='"+fid+"';")
+        check(request(download_path,who=anonymous)[0]==410,'explicitly expired file denies still-valid bearer link')
+        sql("UPDATE files SET auto_delete=FALSE,expires_at=NULL WHERE id='"+fid+"';")
         check(request('/files')[0]==200 and json.loads(request('/files')[1])==json.loads(request('/user/files')[1]) and fid.encode() in request('/files')[1],'companion GET files reuses owned listing and native metadata')
         check(request('/files',who=anonymous)[0]==401,'anonymous companion file listing rejected')
         # Each phase uses a newly recreated owned backend, retaining the real
@@ -233,6 +244,7 @@ def main():
             browserenv=dict(os.environ,SFD_AUTH_BROWSER_MODULE=str(pathlib.Path(args.browser_module).resolve()),NODE_EXTRA_CA_CERTS=str(pathlib.Path(args.ca) if args.ca else cert))
             browserout=command(['node',str(repo/'tests/auth/browser.cjs'),origin,str(root/'windows-fixture.json')],env=browserenv,timeout=60)
             (root/'browser-tests.txt').write_text(browserout+'\n')
+            result['browser']=json.loads(next(line.split(': ',1)[1] for line in browserout.splitlines() if line.startswith('LEGACY BROWSER CHECKS: ')))
             check('BROWSER ACCEPTANCE PASS:' in browserout,'real historical browser UI over normally validated HTTPS')
             command(['certutil','-D','-d','sql:'+str(nss),'-n',name])
         result['origin']=origin;result['backend_image']=args.backend_image;result['backend_image_id']=owned('container',backend)['Image'];result['certificate_sha256']=hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest();(root/'ready.json').write_text(json.dumps({'origin':origin,'ready':True}))
