@@ -365,3 +365,8 @@ Source review confirmed the unused audit helper queried resource/details and ins
 ### 2026-10-20 — Audit timestamp boundary correction
 
 Real-schema bounds tests failed because migration timestamp has no timezone while the helper wrote local wall time and compared timestamptz filters. Store UTC explicitly and interpret the applied timestamp column as UTC for bounded filtering. Regression uses a non-UTC session timezone. No existing rows or schema changed.
+
+
+### 2026-10-20 — Full E2E current state and retained gates
+
+Record the exact received PR ancestry, scoped UI/API/audit corrections, real browser/Windows evidence, preserved reviewed executable, failed rehearsal evidence and pending independent acceptance. No live adoption or integration occurred. Retain the rejected fallback decision and explicit storage/deployment, schema/ownership, capacity and cross-host recovery gates. Canonical PR handover is the authoritative revision-specific report.
