@@ -41,7 +41,7 @@ type AuditLog struct {
 	ErrorMsg  string                 `json:"error_message,omitempty"`
 }
 
-// LogAudit records an audit log entry
+// LogAudit records an audit entry using the applied schema and database-assigned ID.
 func (s *Server) LogAudit(ctx context.Context, log AuditLog) error {
 	log.Timestamp = time.Now()
 
@@ -53,13 +53,12 @@ func (s *Server) LogAudit(ctx context.Context, log AuditLog) error {
 
 	query := `
 		INSERT INTO audit_logs (
-			id, timestamp, action, user_id, username, ip_address,
-			user_agent, resource, details, success, error_message
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+			timestamp, event_type, action, user_id, username, ip_address,
+			user_agent, resource_id, metadata, success, error_message
+		) VALUES ($1, $2, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
 
 	_, err = s.db.ExecContext(ctx, query,
-		log.ID,
 		log.Timestamp,
 		log.Action,
 		nullString(log.UserID),
@@ -78,8 +77,8 @@ func (s *Server) LogAudit(ctx context.Context, log AuditLog) error {
 // GetAuditLogs retrieves audit logs with filtering
 func (s *Server) GetAuditLogs(ctx context.Context, filters AuditFilters) ([]AuditLog, error) {
 
-	const query = `SELECT id, timestamp, action, user_id, username, ip_address,
- user_agent, resource, details, success, error_message FROM audit_logs
+	const query = `SELECT id::text, timestamp, action, user_id, username, ip_address,
+ user_agent, resource_id, metadata, success, error_message FROM audit_logs
  WHERE ($1::text = '' OR action = $1)
  AND ($2::text = '' OR user_id::text = $2)
  AND ($3::timestamptz IS NULL OR timestamp >= $3)
