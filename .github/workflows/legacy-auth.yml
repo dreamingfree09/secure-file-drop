@@ -62,10 +62,11 @@ jobs:
           for name in ['sfd-auth-fixture','sfd-auth-fixture-bytea']:
               r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/name/'result.json').read_text())
               assert not r['failures'] and r['existing_services_unchanged'] and r['owned_cleanup_complete']
-              assert len(r['checks']) == 77
+              assert len(r['checks']) == 81
+              assert r['active_shutdown']['exit_code']==0 and r['active_shutdown']['row_lock_observed'] and r['active_shutdown']['actual_object_absent']
               assert r['browser']['count']==27
               assert r['deletion_preservation']['admin_object_removed'] and r['deletion_preservation']['row_hash_unchanged'] and r['deletion_preservation']['storage_failure_status']==502
-              assert r['go_security']['real_lineage_subtests']==10 and r['go_security']['real_commit_fault_modes']==4 and r['go_security']['real_lifecycle_ordering_cases']==5 and r['go_security']['skipped_test_events']==0
+              assert r['go_security']['real_lineage_subtests']==14 and r['go_security']['real_commit_fault_modes']==4 and r['go_security']['real_lifecycle_ordering_cases']==5 and r['go_security']['skipped_test_events']==0
           PY
       - uses: actions/upload-artifact@v4
         if: always()
