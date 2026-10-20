@@ -375,3 +375,8 @@ Record the exact received PR ancestry, scoped UI/API/audit corrections, real bro
 ### 2026-10-20 — Successor-specific recovery acceptance
 
 Extend the existing owned rollback fixture to require actual admin/registered identity, revocation, account isolation and five-failure/sixth-lockout behavior before the IP ceiling, in addition to schema and fingerprint preservation. Record actual runtime image IDs. Prepare a separately labelled artifact recovery image from the same reviewed application inputs; identical application bytes are artifact recovery only, with fail-closed stop/forward fix for shared defects. Neither image is adopted without exact Aether acceptance.
+
+
+### 2026-10-20 — Actual release cancellation and backend interruption
+
+Extend the actual F196 release probe beyond pre-cancellation: cancel during real request serialization, reject unconfirmed link creation, stop only the verified synthetic backend during another transfer, verify unavailable readiness and restart/session persistence. The opt-in private owner-marked fixture control never targets live services and rechecks loopback bindings after restart. This does not operate native picker, real Explorer or OS clipboard.

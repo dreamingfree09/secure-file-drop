@@ -63,6 +63,23 @@ static class ReleaseBackendProbe {
      var link=client.CreateLink(CancellationToken.None).GetAwaiter().GetResult();Check(new Uri(link.Url).GetLeftPart(UriPartial.Authority)==origin.GetLeftPart(UriPartial.Authority),"verified signed HTTPS link "+i);
      using(var http=NewHttp(new CookieContainer())){byte[] got=http.GetByteArrayAsync(link.Url).GetAwaiter().GetResult();Check(got.SequenceEqual(data[i]),"actual byte-equal bearer download "+i);}
     }
+    using(var cancel=new CancellationTokenSource()){
+     stage="actual in-flight request cancellation";bool rejected=false;
+     try{client.Upload(Path.Combine(root,names[2]),(done,total)=>cancel.Cancel(),cancel.Token).GetAwaiter().GetResult();}catch(OperationCanceledException){rejected=true;}
+     Check(rejected&&client.LastAttempt!=null&&!client.LastAttempt.Confirmed,"actual in-flight cancellation leaves no confirmed transfer");
+     bool blocked=false;try{client.CreateLink(CancellationToken.None).GetAwaiter().GetResult();}catch(ClientFault){blocked=true;}Check(blocked,"cancelled transfer cannot create a link without reconciliation");
+    }
+    if(!String.IsNullOrEmpty(f.ControlDirectory)){
+     if(!Directory.Exists(f.ControlDirectory)||File.ReadAllText(Path.Combine(f.ControlDirectory,"owner"))!=f.FixtureOwner)throw new Exception("network control owner mismatch");
+     stage="actual backend interruption during request serialization";bool interrupted=false,signalled=false;
+     try{client.Upload(Path.Combine(root,names[2]),(done,total)=>{if(signalled)return;signalled=true;using(File.Create(Path.Combine(f.ControlDirectory,"interrupt-backend.request"))){}DateTime until=DateTime.UtcNow.AddSeconds(30);while(!File.Exists(Path.Combine(f.ControlDirectory,"backend-stopped"))&&DateTime.UtcNow<until)Thread.Sleep(50);if(!File.Exists(Path.Combine(f.ControlDirectory,"backend-stopped")))throw new Exception("owned backend stop acknowledgement missing");},CancellationToken.None).GetAwaiter().GetResult();}catch(ClientFault){interrupted=true;}
+     Check(signalled&&interrupted&&client.LastAttempt!=null&&!client.LastAttempt.Confirmed,"real interrupted request is not reported as a confirmed upload");
+     bool blocked=false;try{client.CreateLink(CancellationToken.None).GetAwaiter().GetResult();}catch(ClientFault){blocked=true;}Check(blocked,"interrupted transfer cannot create an unverified link");
+     Check(!client.Probe(CancellationToken.None).GetAwaiter().GetResult(),"actual unavailable backend readiness is false");
+     using(File.Create(Path.Combine(f.ControlDirectory,"restore-backend.request"))){}DateTime deadline=DateTime.UtcNow.AddSeconds(45);while(!File.Exists(Path.Combine(f.ControlDirectory,"backend-restored"))&&DateTime.UtcNow<deadline)Thread.Sleep(50);
+     Check(File.Exists(Path.Combine(f.ControlDirectory,"backend-restored")),"only owned synthetic backend restarted with rechecked loopback binding");
+     client.Restore(CancellationToken.None).GetAwaiter().GetResult();Check(client.Authenticated&&client.Probe(CancellationToken.None).GetAwaiter().GetResult(),"real backend restart retains valid session and readiness");
+    }
     using(var cancelled=new CancellationTokenSource()){cancelled.Cancel();bool rejected=false;try{client.Upload(Path.Combine(root,names[0]),null,cancelled.Token).GetAwaiter().GetResult();}catch(OperationCanceledException){rejected=true;}Check(rejected,"pre-cancelled real transfer rejected");}
    }
    using(var restored=new SfdClient(settings,sessions)){

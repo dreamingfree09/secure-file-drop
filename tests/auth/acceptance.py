@@ -166,7 +166,20 @@ def main():
             command(['certutil','-D','-d','sql:'+str(nss),'-n',name])
         result['origin']=origin;result['backend_image']=args.backend_image;result['backend_image_id']=owned('container',backend)['Image'];result['certificate_sha256']=hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest();(root/'ready.json').write_text(json.dumps({'origin':origin,'ready':True}))
         deadline=time.monotonic()+args.hold_seconds
-        while time.monotonic()<deadline and not (root/'continue').exists():time.sleep(.5)
+        while time.monotonic()<deadline and not (root/'continue').exists():
+            control=root/'release-control'
+            if control.exists():
+                assert control.is_dir() and (control/'owner').read_text()==name,'native control owner mismatch'
+                if (control/'interrupt-backend.request').exists() and not (control/'backend-stopped').exists():
+                    owned('container',backend);docker('stop','--time','10',backend)
+                    assert not owned('container',backend)['State']['Running']
+                    with (control/'backend-stopped').open('x') as ack:ack.write('stopped')
+                if (control/'restore-backend.request').exists() and not (control/'backend-restored').exists():
+                    owned('container',backend);docker('start',backend);info=owned('container',backend)
+                    ports=info['NetworkSettings']['Ports']['8080/tcp'];assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1'
+                    Relay.backend=int(ports[0]['HostPort']);ready()
+                    with (control/'backend-restored').open('x') as ack:ack.write('ready')
+            time.sleep(.05)
         # Run only after browser/Windows acceptance so this bounded negative check
         # cannot consume their normal login budget. No account/password is used.
         limited=False
