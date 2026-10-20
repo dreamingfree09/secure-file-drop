@@ -89,3 +89,30 @@ test('successful registration clears all submitted fields', async () => {
   await vm.runInContext('register()',h.context);
   for (const id of ['regEmail','regUsername','regPassword','regPasswordConfirm']) assert.equal(h.node(id).value, '');
 });
+
+
+test('protected HTTP401 clears expired-session metadata, links and UI', async () => {
+  const h = harness(async () => ({ok:false,status:401}));
+  vm.runInContext('isLoggedIn=true; isAdmin=false; selectedFile={name:"synthetic"};',h.context);
+  h.node('downloadLink').value='synthetic-expired-link';h.node('filesOutput').textContent='previous synthetic file';
+  await vm.runInContext('loadFiles()',h.context);
+  assert.equal(vm.runInContext('!isLoggedIn && !isAdmin && selectedFile===null',h.context),true);
+  assert.equal(h.node('downloadLink').value,'');assert.equal(h.node('filesOutput').textContent,'');
+  assert.equal(h.node('appScreen').classList.contains('hidden'),true);
+});
+
+test('an old HTTP401 cannot sign out a newer authenticated account', async () => {
+  let deliver;const delayed=new Promise(resolve=>{deliver=resolve;});
+  const h=harness(async url=>url==='/files'?delayed:{ok:true,status:204});
+  vm.runInContext('isLoggedIn=true; isAdmin=false; sessionGeneration=7;',h.context);
+  const pending=vm.runInContext('loadFiles()',h.context);await vm.runInContext('logout()',h.context);
+  vm.runInContext('isLoggedIn=true; isAdmin=false; sessionGeneration++;',h.context);
+  h.node('filesOutput').textContent='new synthetic account';deliver({ok:false,status:401});await pending;
+  assert.equal(vm.runInContext('isLoggedIn',h.context),true);assert.equal(h.node('filesOutput').textContent,'new synthetic account');
+});
+
+test('forbidden HTTP403 does not discard a valid ordinary-user session', async () => {
+  const h=harness(async()=>({ok:false,status:403}));vm.runInContext('isLoggedIn=true; isAdmin=false;',h.context);
+  const response=await vm.runInContext("sessionFetch('/admin/files')",h.context);
+  assert.equal(response.status,403);assert.equal(vm.runInContext('isLoggedIn && !isAdmin',h.context),true);
+});
