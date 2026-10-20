@@ -116,6 +116,7 @@ def main():
         status,body=request('/me');me=json.loads(body);check(status==200 and me['username']=='admin' and me['is_admin'] is True,'real environment admin identity')
         check(request('/admin/files')[0]==200,'environment admin privileged read')
         check(request('/files',{'orig_name':'admin.txt','content_type':'text/plain','size_bytes':1})[0]==403,'environment identity cannot acquire database ownership')
+        check(request('/files')[0]==403,'environment identity cannot acquire owned-file listing')
         oldcookie=next(iter(jar)).value;check(request('/logout',{},method='POST')[0]==200,'real logout')
         anonymous=urllib.request.build_opener(NoRedirect(),urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust));check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'real logout rejects replay')
         owned('container',backend);docker('rm','-f',backend);created.remove(backend);backend=start_backend();ready();check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'logout revocation survives backend recreation')
@@ -139,12 +140,15 @@ def main():
         check(target.scheme=='https' and target.hostname=='localhost' and target.port==server.server_port and target.username is None and target.password is None and target.path=='/download' and not target.fragment,'signed download target confined to owned HTTPS origin')
         req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
+        check(request('/files')[0]==200 and json.loads(request('/files')[1])==json.loads(request('/user/files')[1]) and fid.encode() in request('/files')[1],'companion GET files reuses owned listing and native metadata')
+        check(request('/files',who=anonymous)[0]==401,'anonymous companion file listing rejected')
         # Distinct account must not read, upload, link or delete the first account file.
         second_password='Synthetic9-'+secrets.token_hex(24)
         check(request('/register',{'email':'second@example.invalid','username':'second','password':second_password})[0]==201,'second isolated account');sql("UPDATE users SET email_verified=true WHERE username='second';")
         check(request('/login',{'username':'second','password':second_password})[0]==200,'second account login')
         check(request('/links',{'id':fid})[0]==404,'cross-account link denied');check(request('/upload?id='+fid,multipart,headers={'Content-Type':'multipart/form-data; boundary='+boundary})[0]==404,'cross-account upload denied');check(request('/user/files/'+fid,method='DELETE')[0]==404,'cross-account deletion denied')
         check(request('/user/files')[0]==200 and fid.encode() not in request('/user/files')[1],'file list isolates accounts')
+        check(request('/files')[0]==200 and fid.encode() not in request('/files')[1],'companion file listing isolates different accounts')
         (root/'windows-fixture.json').write_text(json.dumps({'Origin':origin,'Username':'admin','Password':password,'FixtureOwner':name,'Uploader':'uploader','UploaderPassword':uploader_password,'Other':'second','OtherPassword':second_password}))
 
         if args.browser_module:

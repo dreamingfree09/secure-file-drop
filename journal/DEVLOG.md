@@ -340,3 +340,8 @@ Read-only current backup preflight found four entries and none retention-eligibl
 ## 2026-10-20 - SFD-FULL-E2E-ACCEPTANCE-20261020: legacy browser correction
 
 Separate worker from exact PR27 candidate8c; no canonical/legacy application substitution or live adoption. Correct environment-administrator quota feedback for the existing registered-owner-only API; require successful authenticated identity readback before entering the UI; clear submitted sign-in/registration passwords; invalidate and cancel owned protected requests/uploads and stale queue/dashboard/link callbacks at logout or HTTP401. Preserve existing registered quotas and backend permissions, all Go authentication/schema/source and original producer branches. Extend trusted-HTTPS browser acceptance using fresh per-fixture accounts/passwords and keep actual OS clipboard/Explorer/visual acceptance unexecuted. The full GHP-01 parent acceptance handover will retain baseline failures, actual test results and remaining integration gates.
+
+
+### 2026-10-20 — Real Windows upload reconciliation compatibility
+
+The preserved F196 reviewed executable authenticated normally over trusted HTTPS but its first real upload ended at GET /files HTTP 405. Reuse the existing authenticated, UUID-owned /user/files listing for GET /files; POST metadata creation and administrator separation remain unchanged. Fresh real PostgreSQL tests require identical owned metadata, anonymous401, environment-admin403 and cross-account isolation. No live backend or existing records changed. Independent Aether review remains mandatory.
