@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Run existing owned suites; publish only credential-free structured evidence."""
-import json, os, pathlib, subprocess, sys, tempfile
+import json, os, pathlib, subprocess, sys
 os.umask(0o077)
 suite=sys.argv[1]
 assert suite in ('default','contract','rehearsal')
