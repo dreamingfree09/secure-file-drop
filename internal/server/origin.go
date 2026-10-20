@@ -32,7 +32,7 @@ func canonicalOrigin(raw string) (string, error) {
 		host = "[" + host + "]"
 	}
 	port := u.Port()
-	if port != "" && !((scheme == "https" && port == "443") || (scheme == "http" && port == "80")) {
+	if port != "" && (scheme != "https" || port != "443") && (scheme != "http" || port != "80") {
 		host += ":" + port
 	}
 	return scheme + "://" + host, nil
