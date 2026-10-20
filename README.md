@@ -3,20 +3,20 @@
 [![Docs](https://img.shields.io/badge/docs-up%E2%86%92-blue)](#docs)
 [![Status](https://img.shields.io/badge/status-active-brightgreen)](#status)
 
-Secure File Drop is a lightweight, self-hosted service for authenticated file uploads and short-lived, signed downloads. It's designed to be safe to expose on the public internet from day one while remaining small and auditable.
+Secure File Drop is a lightweight, self-hosted service for authenticated file uploads and short-lived, signed downloads. This is an isolated local evaluation candidate; public production readiness is not established. See the [reconciled contract and acceptance gates](docs/RECONCILED_BASELINE.md).
 
 ## Quick summary
 
 - **Modern UI**: WeTransfer-inspired interface with drag-and-drop, file type icons, and QR codes
 - **User System**: Secure registration with email verification and password reset
 - **File Management**: Multi-file uploads with progress tracking and auto-expiration
-- **Secure Downloads**: Signed, time-limited links with optional password protection
+- **Secure Downloads**: Signed, time-limited links; inherited protected records retain their existing interpretation
 - **Admin Dashboard**: System metrics, file search/filtering, and manual cleanup
 - **Storage Quotas**: Per-user storage limits with real-time usage tracking
 - **Email Notifications**: SMTP support for upload, download, and deletion alerts
 - **Advanced Rate Limiting**: Per-endpoint limits (auth, upload, download, admin) with intelligent throttling
 - **Health Monitoring**: Detailed health checks with component status and metrics
-- **Production Ready**: Circuit breakers, compression, audit logging, automated backups, and config validation
+- **Operational candidates**: Existing monitoring and backup components remain subject to independent recovery/security acceptance
 
 ## Table of contents
 
@@ -33,14 +33,14 @@ Secure File Drop is a lightweight, self-hosted service for authenticated file up
 [![CI](https://github.com/dreamingfree09/secure-file-drop/actions/workflows/ci.yml/badge.svg)](https://github.com/dreamingfree09/secure-file-drop/actions)
 [![Coverage](https://img.shields.io/badge/coverage-unknown-lightgrey)](https://codecov.io/gh/dreamingfree09/secure-file-drop)
 
-This repository contains a production-ready file sharing service with 20+ features:
+The lists below describe historical capabilities and aspirations, not blanket acceptance. The [schema12 candidate contract](docs/RECONCILED_BASELINE.md) takes precedence. Resumable upload is disabled; nonempty password creation is rejected; existing protected rows remain compatible. Automatic audit coverage and unfinished integrations are unaccepted.
 
 Docs link health: links are checked in pre-commit (local Markdown link checker) and in CI via a local checker plus Lychee for external URLs. See [.pre-commit-config.yaml](.pre-commit-config.yaml) and [.github/workflows/docs-link-check.yml](.github/workflows/docs-link-check.yml).
 
 **Core Features:**
 - Multi-file upload with drag & drop
 - Email verification and password reset
-- Password-protected downloads
+- Existing password-protected records (new password creation rejected)
 - File expiration and auto-delete
 - QR code generation for download links
 - Real-time upload progress tracking
@@ -60,7 +60,7 @@ Docs link health: links are checked in pre-commit (local Markdown link checker) 
 - Security event notifications (email alerts)
 - Automated database backups with retention policies
 - Request tracing with correlation IDs
-- Resumable file uploads (TUS protocol)
+- Resumable file uploads (historical source retained; routes fail closed in this candidate)
 - Optimized database connection pooling
 - Configuration validation at startup
 - HTTP response compression (gzip)
@@ -79,6 +79,8 @@ Built with Go, PostgreSQL, MinIO, and deployed via Docker Compose.
 - Deployment: Docker Compose
 
 ## Quickstart (Docker Compose)
+
+Historical fresh local setup only. Do not run this against an existing installation as an adoption procedure; migration/profile, preservation and independent acceptance gates in [RECONCILED_BASELINE.md](docs/RECONCILED_BASELINE.md) apply first.
 
 1. Copy `.env.example` to `.env` and configure required environment variables:
    ```bash
@@ -101,7 +103,7 @@ Built with Go, PostgreSQL, MinIO, and deployed via Docker Compose.
    curl http://localhost:8080/ready
    ```
 
-5. Log in using `SFD_ADMIN_USER`/`SFD_ADMIN_PASS` from your `.env` file
+5. The environment administrator uses `SFD_ADMIN_USER` and the locally chosen password corresponding to the bcrypt verifier in `SFD_ADMIN_PASS`; never paste the verifier or password into reports.
 
 **First-time setup notes**:
 - Migrations apply automatically on startup
@@ -262,7 +264,7 @@ The project has three levels of testing:
    ```bash
    # Start services first
    docker-compose up -d postgres minio
-   
+
    # Run integration tests
    go test -tags=integration ./tests/integration/...
    ```

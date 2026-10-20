@@ -390,3 +390,8 @@ Add a bounded opt-in test waiting for the unchanged release-generated five-minut
 ### 2026-10-20 — Exact legacy expiry status contract
 
 The real-time expiry probe incorrectly expected canonical401; legacy download.go explicitly returns410 Gone for errTokenExpired and401 for invalid signatures. Preserve that failed assertion and require exactly410 in the rerun, with credential-free status readback. No backend status behavior changed. The earlier test description of expiry401 is superseded by this contract clarification.
+
+
+## 2026-10-21 — SFD-FINAL-RECONCILIATION-20261020 selected ports
+
+Codex chose and implemented the bounded schema12 lifecycle reconciliation under standing Owner delegation; Aether gates independent acceptance and integration, not routine implementation. Preserved existing authentication/roles/verification/UUID/quota/hash layouts and frozen c320 Windows/native source. Added profile guards, exact-key storage-first deletion/cleanup, locked upload/compensation, request bounds, explicit expiration and private-bucket startup checks. Real owned race coverage includes10 schema cases,4 driver COMMIT acknowledgement modes and5 locking/cleanup cases; raw failures/logs stay local. New runtime Alpine3.24 retains PG16 tooling. Former a565/575 images fail deletion-preservation and remain rejected for adoption; equal binaries never imply software-fault rollback. Public production/Owner GUI acceptance remain open. No live/protected changes. Final executed evidence and exact SHA are in the producer PR handover; no independent acceptance is implied.
