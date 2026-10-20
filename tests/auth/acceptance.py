@@ -124,9 +124,10 @@ def main():
         testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name)
         output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output,'real PostgreSQL Go security regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
-        check(request('/register',{'email':'upload@example.invalid','username':'uploader','password':'Synthetic9-uploader'})[0]==201,'real registration')
+        uploader_password='Synthetic9-'+secrets.token_hex(24)
+        check(request('/register',{'email':'upload@example.invalid','username':'uploader','password':uploader_password})[0]==201,'real registration')
         sql("UPDATE users SET email_verified=true WHERE username='uploader';")
-        check(request('/login',{'username':'uploader','password':'Synthetic9-uploader'})[0]==200,'real registered-user login')
+        check(request('/login',{'username':'uploader','password':uploader_password})[0]==200,'real registered-user login')
         status,body=request('/me');check(status==200 and json.loads(body)['is_admin'] is False,'registered identity readback')
         check(request('/admin/files')[0]==403,'registered account denied admin permission')
         data=b'Secure File Drop isolated native hash fixture\n';status,body=request('/files',{'orig_name':'fixture.txt','content_type':'text/plain','size_bytes':len(data)});check(status==201,'owned metadata creation');fid=json.loads(body)['id']
@@ -139,11 +140,12 @@ def main():
         req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
         # Distinct account must not read, upload, link or delete the first account file.
-        check(request('/register',{'email':'second@example.invalid','username':'second','password':'Synthetic9-second'})[0]==201,'second isolated account');sql("UPDATE users SET email_verified=true WHERE username='second';")
-        check(request('/login',{'username':'second','password':'Synthetic9-second'})[0]==200,'second account login')
+        second_password='Synthetic9-'+secrets.token_hex(24)
+        check(request('/register',{'email':'second@example.invalid','username':'second','password':second_password})[0]==201,'second isolated account');sql("UPDATE users SET email_verified=true WHERE username='second';")
+        check(request('/login',{'username':'second','password':second_password})[0]==200,'second account login')
         check(request('/links',{'id':fid})[0]==404,'cross-account link denied');check(request('/upload?id='+fid,multipart,headers={'Content-Type':'multipart/form-data; boundary='+boundary})[0]==404,'cross-account upload denied');check(request('/user/files/'+fid,method='DELETE')[0]==404,'cross-account deletion denied')
         check(request('/user/files')[0]==200 and fid.encode() not in request('/user/files')[1],'file list isolates accounts')
-        (root/'windows-fixture.json').write_text(json.dumps({'Origin':origin,'Username':'admin','Password':password}))
+        (root/'windows-fixture.json').write_text(json.dumps({'Origin':origin,'Username':'admin','Password':password,'FixtureOwner':name,'Uploader':'uploader','UploaderPassword':uploader_password,'Other':'second','OtherPassword':second_password}))
 
         if args.browser_module:
             # This trust setup is restricted to a disposable GitHub Actions runner.
