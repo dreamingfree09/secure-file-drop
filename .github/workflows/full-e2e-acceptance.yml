@@ -1,0 +1,231 @@
+name: Full E2E acceptance
+on:
+  push:
+    branches: [codex/sfd-full-e2e-acceptance-20261020]
+  pull_request:
+    branches: [codex/sfd-windows-companion-20261017]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: full-e2e-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  iam:
+    name: Nested IAM tests, guards and advisory classification
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Verify exact integrated source
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          def git(*args):
+              return subprocess.check_output(["git", *args], text=True).strip()
+          evidence = {"tested_revision": git("rev-parse", "HEAD"), "tested_tree": git("rev-parse", "HEAD^{tree}"), "workflow_revision": os.environ["GITHUB_SHA"], "run_id": os.environ["GITHUB_RUN_ID"]}
+          pathlib.Path(os.environ["RUNNER_TEMP"], "exact-revision.json").write_text(json.dumps(evidence, indent=2))
+          print(json.dumps(evidence))
+          PY
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: tests/storage/iam/go.mod
+      - name: Explicit nested-module verification
+        working-directory: tests/storage/iam
+        run: |
+          go test ./... -v -count=1
+          go vet ./...
+          go mod verify
+          python3 - <<'PY'
+          import subprocess
+          run = "sfd-quality-" + "0" * 16
+          cases = [[], ["198.51.100.1:9000", run+"-private", run], ["127.0.0.1:1", "unowned", run]]
+          for args in cases:
+              result = subprocess.run(["go", "run", ".", *args], capture_output=True, text=True)
+              assert result.returncode != 0
+              assert "expected owned" in result.stderr or "unexpected disposable" in result.stderr
+          print("PASS: 3 administrative target/ownership rejection cases; no network target used")
+          PY
+      - name: Source advisory scan (JSON retained, no suppression)
+        working-directory: tests/storage/iam
+        run: |
+          go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 -json ./... > "$RUNNER_TEMP/iam-vuln.json"
+          python3 - <<'PY'
+          import json, os, collections
+          raw = open(os.environ["RUNNER_TEMP"]+"/iam-vuln.json").read()
+          decoder = json.JSONDecoder()
+          levels = {}
+          while raw.strip():
+              item, end = decoder.raw_decode(raw.lstrip())
+              raw = raw.lstrip()[end:]
+              if "finding" not in item:
+                  continue
+              finding = item["finding"]
+              frame = finding["trace"][0]
+              level = 3 if frame.get("function") else 2 if frame.get("package") else 1
+              levels[finding["osv"]] = max(level, levels.get(finding["osv"], 0))
+              print(finding["osv"], {1:"module-only",2:"package-only",3:"symbol/initialization"}[level], frame, "fixed", finding.get("fixed_version"))
+          print("Advisory reachability totals:", dict(collections.Counter(levels.values())))
+          assert all(level == 1 for level in levels.values()), "imported-package or symbol/initialization finding requires decision"
+          print("No imported affected package or symbol trace observed; module findings remain, not vulnerability-free certification")
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: full-e2e-nested-iam
+          path: |
+            ${{ runner.temp }}/iam-vuln.json
+            ${{ runner.temp }}/exact-revision.json
+          if-no-files-found: error
+          retention-days: 14
+  runtime:
+    name: ${{ matrix.suite }} required isolated acceptance
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [default, contract, rehearsal]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Verify exact integrated source
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          def git(*args):
+              return subprocess.check_output(["git", *args], text=True).strip()
+          evidence = {"tested_revision": git("rev-parse", "HEAD"), "tested_tree": git("rev-parse", "HEAD^{tree}"), "workflow_revision": os.environ["GITHUB_SHA"], "run_id": os.environ["GITHUB_RUN_ID"]}
+          pathlib.Path(os.environ["RUNNER_TEMP"], "exact-revision.json").write_text(json.dumps(evidence, indent=2))
+          print(json.dumps(evidence))
+          PY
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Native vectors and sandboxed Chromium
+        run: |
+          sudo apt-get update && sudo apt-get install -y libssl-dev
+          dotnet build desktop/windows/tests/Client.Contract.csproj --configuration Release --nologo
+          make -C native test
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Require fresh synthetic resource namespace
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          result = {}
+          for kind in ["container", "network", "volume", "image"]:
+              args = ["docker", kind, "ls", "--filter", "label=sfd.quality-run", "--quiet"]
+              if kind == "container":
+                  args.append("--all")
+              result[kind] = subprocess.check_output(args, text=True).split()
+          pathlib.Path(os.environ["RUNNER_TEMP"], "ownership-before.json").write_text(json.dumps(result, indent=2))
+          assert not any(result.values()), "pre-existing quality resources; refusing execution"
+          print("PASS: no existing labelled resources; unchanged fixtures must create fresh owned resources")
+          PY
+      - name: Mandatory actual execution with sanitized evidence
+        run: python3 -B scripts/acceptance-runtime.py '${{ matrix.suite }}'
+      - name: Verify ownership-checked cleanup independently
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          result = {}
+          for kind in ["container", "network", "volume", "image"]:
+              args = ["docker", kind, "ls", "--filter", "label=sfd.quality-run", "--quiet"]
+              if kind == "container":
+                  args.append("--all")
+              result[kind] = subprocess.check_output(args, text=True).split()
+          pathlib.Path(os.environ["RUNNER_TEMP"], "ownership-after.json").write_text(json.dumps(result, indent=2))
+          print(json.dumps(result))
+          assert not any(result.values()), "owned resources remain; no automatic deletion by workflow"
+          print("PASS: all labelled containers, networks, volumes and images removed by existing ownership-checked fixtures")
+          PY
+      - name: Retain sanitized manifests and actual test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-e2e-${{ matrix.suite }}
+          path: |
+            ${{ runner.temp }}/acceptance.json
+            ${{ runner.temp }}/exact-revision.json
+            ${{ runner.temp }}/ownership-before.json
+            ${{ runner.temp }}/ownership-after.json
+          if-no-files-found: error
+          retention-days: 14
+  windows:
+    name: Native Windows build, security and lifecycle
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build and execute owned Windows checks
+        shell: pwsh
+        run: |
+          ./desktop/windows/build.ps1
+          ./desktop/windows/tests/test.ps1 | Tee-Object -FilePath "$env:RUNNER_TEMP/windows-results.txt"
+          $text = Get-Content -LiteralPath "$env:RUNNER_TEMP/windows-results.txt" -Raw
+          if (-not $text.Contains("PRODUCT POLICY CHECKS PASSED: 6") -or -not $text.Contains("WINDOWS CHECKS PASSED: 32") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 16) { throw "Mandatory Windows checks did not execute" }
+          $evidence = @{
+            revision = (git rev-parse HEAD)
+            os = [Environment]::OSVersion.VersionString
+            host_shell_runtime = [Environment]::Version.ToString()
+            test_process_runtime = ($text.Split([char]10) | Where-Object { $_.StartsWith("WINDOWS TEST RUNTIME:") } | Select-Object -First 1).Trim()
+            framework_release = (Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -Name Release).Release
+            product_target = ".NET Framework 4.8"
+            release_https_policy_checks = 6
+            executable_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/dist/SecureFileDrop.exe -Algorithm SHA256).Hash
+            client_source_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/Client.cs -Algorithm SHA256).Hash
+            interactive_gui = "unexecuted; programmatic owned tray context only"
+          }
+          $evidence | ConvertTo-Json | Set-Content -LiteralPath "$env:RUNNER_TEMP/windows-identity.json"
+      - name: Stage the unsigned preview with provenance
+        if: always()
+        shell: pwsh
+        run: |
+          $package = Join-Path $env:RUNNER_TEMP ("sfd-windows-preview-" + $env:GITHUB_RUN_ID + "-" + $env:GITHUB_RUN_ATTEMPT)
+          if (Test-Path -LiteralPath $package) { throw "Preview namespace already exists; preserved" }
+          $null = New-Item -ItemType Directory -Path $package
+          $files = @(
+            @{ From = "./desktop/windows/dist/SecureFileDrop.exe"; Name = "SecureFileDrop.exe" }
+            @{ From = "./desktop/windows/dist/SecureFileDrop.exe.config"; Name = "SecureFileDrop.exe.config" }
+            @{ From = "$env:RUNNER_TEMP/windows-results.txt"; Name = "windows-results.txt" }
+            @{ From = "$env:RUNNER_TEMP/windows-identity.json"; Name = "windows-identity.json" }
+            @{ From = "./LICENSE"; Name = "LICENSE.txt" }
+          )
+          foreach ($file in $files) {
+            if (Test-Path -LiteralPath $file.From) { Copy-Item -LiteralPath $file.From -Destination (Join-Path $package $file.Name) }
+          }
+          $revision = git rev-parse HEAD
+          @(
+            "Secure File Drop - unsigned development preview."
+            "Source revision: $revision"
+            "Independent Aether review and visible Windows acceptance remain pending; consult the PR and CI outcome."
+            "Keep SecureFileDrop.exe and SecureFileDrop.exe.config together in a permanent folder."
+            "Configure the backend HTTPS origin in Settings. No Docker, WSL or backend service is started or reconfigured."
+            "Explorer integration is opt-in for the current user in Settings; Windows 11 uses Show more options."
+            "Documentation: https://github.com/dreamingfree09/secure-file-drop/blob/$revision/docs/WINDOWS_COMPANION.md"
+          ) | Set-Content -LiteralPath (Join-Path $package "README.txt") -Encoding utf8
+          $hashes = foreach ($name in @("SecureFileDrop.exe", "SecureFileDrop.exe.config")) {
+            $item = Join-Path $package $name
+            if (Test-Path -LiteralPath $item) { (Get-FileHash -LiteralPath $item -Algorithm SHA256).Hash + "  " + $name }
+          }
+          $hashes | Set-Content -LiteralPath (Join-Path $package "SHA256SUMS.txt") -Encoding utf8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-companion-preview-and-checks
+          path: ${{ runner.temp }}/sfd-windows-preview-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 14

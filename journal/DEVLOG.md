@@ -374,3 +374,8 @@ Received canonical combined source c320861536914623ea22f28c1d4ea156d4c2132a (PR2
 ### 2026-10-20 — Rehearsal credential handoff
 
 The expanded browser uses fresh synthetic passwords; rollback phase F still assumed its historical constant and correctly rejected authentication. Pass a fresh rehearsal-owned browser password privately through stdin and reuse it only to verify the restored synthetic account. Retain both failed rehearsal namespaces stopped with checkpoints. The five completed phases are not six-phase acceptance; rerun all six in a fresh namespace.
+
+
+### 2026-10-20 — Current-head mandatory acceptance CI
+
+Install the full E2E workflow separately from application corrections. Test the actual checkout revision, retain strict 15 default / 18 RustFS / 6 rehearsal counts and 37 real browser checks, require 17 portable real-backend client checks and native Windows 32/16/6, and independently verify fixture cleanup. Public runtime evidence contains structured assertions only; private raw logs/checkpoints cannot be uploaded by this workflow. Historical pinned integrated-master workflows remain unchanged.
