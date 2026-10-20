@@ -370,3 +370,8 @@ Real-schema bounds tests failed because migration timestamp has no timezone whil
 ### 2026-10-20 — Full E2E current state and retained gates
 
 Record the exact received PR ancestry, scoped UI/API/audit corrections, real browser/Windows evidence, preserved reviewed executable, failed rehearsal evidence and pending independent acceptance. No live adoption or integration occurred. Retain the rejected fallback decision and explicit storage/deployment, schema/ownership, capacity and cross-host recovery gates. Canonical PR handover is the authoritative revision-specific report.
+
+
+### 2026-10-20 — Successor-specific recovery acceptance
+
+Extend the existing owned rollback fixture to require actual admin/registered identity, revocation, account isolation and five-failure/sixth-lockout behavior before the IP ceiling, in addition to schema and fingerprint preservation. Record actual runtime image IDs. Prepare a separately labelled artifact recovery image from the same reviewed application inputs; identical application bytes are artifact recovery only, with fail-closed stop/forward fix for shared defects. Neither image is adopted without exact Aether acceptance.

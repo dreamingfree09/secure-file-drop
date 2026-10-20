@@ -164,7 +164,7 @@ def main():
             (root/'browser-tests.txt').write_text(browserout+'\n')
             check('BROWSER ACCEPTANCE PASS:' in browserout,'real historical browser UI over normally validated HTTPS')
             command(['certutil','-D','-d','sql:'+str(nss),'-n',name])
-        result['origin']=origin;result['backend_image']=args.backend_image;result['certificate_sha256']=hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest();(root/'ready.json').write_text(json.dumps({'origin':origin,'ready':True}))
+        result['origin']=origin;result['backend_image']=args.backend_image;result['backend_image_id']=owned('container',backend)['Image'];result['certificate_sha256']=hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest();(root/'ready.json').write_text(json.dumps({'origin':origin,'ready':True}))
         deadline=time.monotonic()+args.hold_seconds
         while time.monotonic()<deadline and not (root/'continue').exists():time.sleep(.5)
         # Run only after browser/Windows acceptance so this bounded negative check
@@ -183,7 +183,7 @@ def main():
             # Only assignment-owned containers and synthetic data are touched.
             before_rollback=fingerprint()
             sessions_before=hashlib.sha256(sql('SELECT token_hash,expires_at FROM auth_sessions ORDER BY token_hash;').encode()).hexdigest()
-            rollback_ready=False
+            rollback_ready=False;rollback_security=[]
             owned('container',backend);docker('rm','-f',backend);created.remove(backend)
             backend=start_backend(args.rollback_image)
             try:
@@ -193,13 +193,37 @@ def main():
                     except (urllib.error.URLError,ConnectionError):pass
                     if not owned('container',backend)['State']['Running']:break
                     time.sleep(.5)
-                result['rollback']={'image':args.rollback_image,'ready':rollback_ready,'schema_version':sql('SELECT version FROM schema_migrations;')}
+                result['rollback']={'image':args.rollback_image,'image_id':owned('container',backend)['Image'],'ready':rollback_ready,'schema_version':sql('SELECT version FROM schema_migrations;')}
                 check(fingerprint()==before_rollback and hashlib.sha256(sql('SELECT token_hash,expires_at FROM auth_sessions ORDER BY token_hash;').encode()).hexdigest()==sessions_before and sql('SELECT version FROM schema_migrations;')=='12','prior image rollback preserves additive schema and all synthetic records/sessions')
+                if rollback_ready:
+                    jar.clear()
+                    status,_=request('/login',{'username':'admin','password':password})
+                    status_me,body=request('/me')
+                    rollback_security.append((status==200 and status_me==200 and json.loads(body)['is_admin'] is True,'rollback environment administrator login and identity'))
+                    rollback_cookie=next(iter(jar)).value
+                    status,_=request('/logout',{},method='POST')
+                    replay,_=request('/me',headers={'Cookie':'sfd_session='+rollback_cookie},who=anonymous)
+                    rollback_security.append((status==200 and replay==401,'rollback logout revokes session replay'))
+                    status,_=request('/login',{'username':'uploader','password':uploader_password})
+                    status_me,body=request('/me')
+                    denied,_=request('/admin/files')
+                    rollback_security.append((status==200 and status_me==200 and json.loads(body)['is_admin'] is False and denied==403,'rollback registered identity and administrator isolation'))
+                    statuses=[];locked_body=b''
+                    for _ in range(6):
+                        code,locked_body=request('/login',{'username':'admin','password':'incorrect-fixture-only'})
+                        statuses.append(code)
+                    result['rollback']['lockout_statuses']=statuses
+                    result['rollback']['account_lockout_enforced']=statuses==[401,401,401,401,401,429] and locked_body.startswith(b'Account locked until ')
+                    # A different account's correct login must remain usable.
+                    isolated,_=request('/login',{'username':'uploader','password':uploader_password})
+                    rollback_security.append((isolated==200,'rollback lockout isolates accounts'))
+                    rollback_security.append((result['rollback']['account_lockout_enforced'],'rollback account lockout is enforced before the IP request ceiling'))
             finally:
                 owned('container',backend);docker('rm','-f',backend);created.remove(backend);backend=start_backend();ready()
             status,_=request('/login',{'username':'admin','password':password});status_me,body=request('/me')
             check(status==200 and status_me==200 and json.loads(body)['is_admin'] is True,'corrected candidate restored after rollback image test')
             check(rollback_ready,'selected rollback image starts against additive schema 12')
+            for accepted,description in rollback_security:check(accepted,description)
 
 
     except Exception as e:
