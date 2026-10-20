@@ -379,3 +379,8 @@ The expanded browser uses fresh synthetic passwords; rollback phase F still assu
 ### 2026-10-20 — Current-head mandatory acceptance CI
 
 Install the full E2E workflow separately from application corrections. Test the actual checkout revision, retain strict 15 default / 18 RustFS / 6 rehearsal counts and 37 real browser checks, require 17 portable real-backend client checks and native Windows 32/16/6, and independently verify fixture cleanup. Public runtime evidence contains structured assertions only; private raw logs/checkpoints cannot be uploaded by this workflow. Historical pinned integrated-master workflows remain unchanged.
+
+
+### 2026-10-20 — Bound fresh browser fixture input
+
+The fresh rehearsal browser password exceeded the registration UI maximum. Bound it to a random 41-character synthetic value. Browser registration timeout is retained as a failed fixture attempt; no six-phase pass is claimed.

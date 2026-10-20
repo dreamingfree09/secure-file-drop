@@ -75,7 +75,7 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 	f.reader, f.readerSecret = "reader_"+rehearsalSecret()[:16], rehearsalSecret()
 	f.outsider, f.outsiderSecret = "outsider_"+rehearsalSecret()[:16], rehearsalSecret()
 	f.pgSecret, f.adminSecret = rehearsalSecret(), rehearsalSecret()
-	f.browserSecret = "Rehearsal7" + rehearsalSecret()
+	f.browserSecret = "Rehearsal7" + rehearsalSecret()[:32]
 	f.sessionSecret, f.downloadSecret = rehearsalSecret(), rehearsalSecret()
 	f.evidence = t.TempDir()
 	if base := os.Getenv("SFD_REHEARSAL_EVIDENCE"); base != "" {
