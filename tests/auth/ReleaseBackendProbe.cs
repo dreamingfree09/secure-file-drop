@@ -24,6 +24,7 @@ using SecureFileDrop.Desktop;
  [DataMember] public string OtherPassword;
  [DataMember] public string UntrustedOrigin;
  [DataMember] public string ControlDirectory;
+ [DataMember] public bool VerifyLinkExpiry;
 }
 static class ReleaseBackendProbe {
  static int passed; static string stage="guard";
@@ -48,7 +49,7 @@ static class ReleaseBackendProbe {
     admin.Login(f.Username,f.Password,CancellationToken.None).GetAwaiter().GetResult();admin.Restore(CancellationToken.None).GetAwaiter().GetResult();Check(admin.Authenticated,"environment administrator login and verified identity");
     admin.Logout(CancellationToken.None).GetAwaiter().GetResult();Check(!admin.Authenticated,"administrator logout");
    }
-   var settings=new Settings{Backend=f.Origin,RememberSession=true,MaxUploadBytes=1024};var sessions=new ProtectedSessions(root);Cookie replay=null;
+   var settings=new Settings{Backend=f.Origin,RememberSession=true,MaxUploadBytes=1024};var sessions=new ProtectedSessions(root);Cookie replay=null;Link expiryLink=null;
    using(var client=new SfdClient(settings,sessions)){
     stage="registered authentication";client.Login(f.Uploader,f.UploaderPassword,CancellationToken.None).GetAwaiter().GetResult();Check(client.Authenticated,"registered login and identity readback");
     replay=sessions.Load(origin);Check(replay!=null&&replay.Secure&&replay.HttpOnly,"DPAPI remembered session retains secure cookie flags");
@@ -60,7 +61,7 @@ static class ReleaseBackendProbe {
      var receipt=client.Upload(file,(done,total)=>Interlocked.Exchange(ref progress,done),CancellationToken.None).GetAwaiter().GetResult();
      Check(receipt.Confirmed&&receipt.Size==data[i].Length&&receipt.Hash==Hash(data[i]),"actual release multipart/native integrity "+i);
      Check(data[i].Length==0 ? Interlocked.Read(ref progress)==-1 : Interlocked.Read(ref progress)==data[i].Length,"actual byte progress (empty files have no byte chunks) "+i);
-     var link=client.CreateLink(CancellationToken.None).GetAwaiter().GetResult();Check(new Uri(link.Url).GetLeftPart(UriPartial.Authority)==origin.GetLeftPart(UriPartial.Authority),"verified signed HTTPS link "+i);
+     var link=client.CreateLink(CancellationToken.None).GetAwaiter().GetResult();if(i==0)expiryLink=link;Check(new Uri(link.Url).GetLeftPart(UriPartial.Authority)==origin.GetLeftPart(UriPartial.Authority),"verified signed HTTPS link "+i);
      using(var http=NewHttp(new CookieContainer())){byte[] got=http.GetByteArrayAsync(link.Url).GetAwaiter().GetResult();Check(got.SequenceEqual(data[i]),"actual byte-equal bearer download "+i);}
     }
     using(var cancel=new CancellationTokenSource()){
@@ -109,6 +110,14 @@ static class ReleaseBackendProbe {
    using(var limited=new SfdClient(settings,null)){bool blocked=false;try{limited.Upload(oversized,null,CancellationToken.None).GetAwaiter().GetResult();}catch(ClientFault){blocked=limited.LastAttempt==null;}Check(blocked,"companion size limit rejects before metadata");}
    var mismatch=new UriBuilder(origin){Host="127.0.0.1"};using(var invalid=new SfdClient(new Settings{Backend=mismatch.Uri.GetLeftPart(UriPartial.Authority)},null))Check(!invalid.Probe(CancellationToken.None).GetAwaiter().GetResult(),"localhost-only certificate rejects IP hostname mismatch");
    if(!String.IsNullOrEmpty(f.UntrustedOrigin))using(var invalid=new SfdClient(new Settings{Backend=f.UntrustedOrigin},null))Check(!invalid.Probe(CancellationToken.None).GetAwaiter().GetResult(),"untrusted certificate rejected before any authentication");
+   if(f.VerifyLinkExpiry){
+    stage="actual five-minute signed link expiry";if(expiryLink==null)throw new Exception("owned link missing");
+    DateTime until=DateTimeOffset.Parse(expiryLink.ExpiresAt).UtcDateTime.AddSeconds(1);var wait=System.Diagnostics.Stopwatch.StartNew();
+    if(until-DateTime.UtcNow>TimeSpan.FromMinutes(6))throw new Exception("unbounded expiry fixture");
+    Console.WriteLine("RELEASE EXPIRY WAIT: owned five-minute link; no credentials or URL printed");
+    while(DateTime.UtcNow<until){if(wait.Elapsed>TimeSpan.FromSeconds(370))throw new Exception("expiry wait exceeded budget");Thread.Sleep(100);}
+    using(var http=NewHttp(new CookieContainer()))Check(http.GetAsync(expiryLink.Url).GetAwaiter().GetResult().StatusCode==HttpStatusCode.Unauthorized,"actual Windows-generated five-minute link expires with401");
+   }
    Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
    string ui=Path.Combine(root,"ui");Directory.CreateDirectory(ui);using(var file=File.Create(Path.Combine(ui,"settings.json")))new DataContractJsonSerializer(typeof(Settings)).WriteObject(file,new Settings{Backend=f.Origin,RememberSession=false});
    using(var instance=Instance("-release-e2e-"+owner))using(var context=new TrayContext(ui,instance,"")){

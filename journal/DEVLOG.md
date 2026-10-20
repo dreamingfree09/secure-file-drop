@@ -380,3 +380,8 @@ Extend the existing owned rollback fixture to require actual admin/registered id
 ### 2026-10-20 — Actual release cancellation and backend interruption
 
 Extend the actual F196 release probe beyond pre-cancellation: cancel during real request serialization, reject unconfirmed link creation, stop only the verified synthetic backend during another transfer, verify unavailable readiness and restart/session persistence. The opt-in private owner-marked fixture control never targets live services and rechecks loopback bindings after restart. This does not operate native picker, real Explorer or OS clipboard.
+
+
+### 2026-10-20 — Actual Windows-generated link expiry
+
+Add a bounded opt-in test waiting for the unchanged release-generated five-minute signed link to expire, then verify real HTTPS download401. This uses only a synthetic fixture link and normal certificate validation, not a changed clock, forged token or altered backend TTL. No link value is logged. Existing visual/Explorer/OS clipboard exclusions remain.
