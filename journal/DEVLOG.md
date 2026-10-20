@@ -399,3 +399,8 @@ Hosted contract scans reached the verified RustFS binary but failed inside a Doc
 ### 2026-10-20 — Public SBOM scanner permission correction
 
 Exact hosted failure: private wrapper umask0077 reduced the public upstream SBOM creation mode to0600; the restricted scanner could not read its bind mount. Explicitly apply intended0644 only to the checksum-verified public SBOM in t.TempDir. Keep private log/fixture umask0077, scanner restrictions, provenance digest and all advisory assertions. A narrow G302 annotation documents this public-only boundary; legacy lint annotations/policy remain unchanged.
+
+
+## 2026-10-20 — SFD-FINAL-RECONCILIATION-20261020
+
+Refreshed exact PR25-29 refs and read Aether6301566150. Added a read-only canonical migration-lineage guard after reproducing two version4 false-compatibility cases on fresh isolated PostgreSQL; eight regression subtests pass and rejected fixtures preserve metadata/rows. CI installation is a separate commit. Re-inspected exact successor/recovery binaries and reran42 isolated checks per BYTEA/BIGINT layout. Recorded legacy deletion wrong-key/storage-failure and lifecycle preservation blockers, exact lineage/contract differences, selected-port proposal and normal integration plan in docs/LINEAGE_RECONCILIATION.md. Independent security/architecture acceptance, unified baseline, live adoption and Owner visual checks remain open. All six live containers, original repositories/local work, environment/TLS/CRL and retained failure resources preserved; no protected integration or new product feature.
