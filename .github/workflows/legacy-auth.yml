@@ -72,11 +72,7 @@ jobs:
           name: legacy-auth-sanitised-evidence
           path: |
             ${{ runner.temp }}/sfd-auth-fixture/result.json
-            ${{ runner.temp }}/sfd-auth-fixture/go-tests.txt
-            ${{ runner.temp }}/sfd-auth-fixture/browser-tests.txt
             ${{ runner.temp }}/sfd-auth-fixture-bytea/result.json
-            ${{ runner.temp }}/sfd-auth-fixture-bytea/go-tests.txt
-            ${{ runner.temp }}/sfd-auth-fixture-bytea/browser-tests.txt
           if-no-files-found: error
   windows:
     runs-on: windows-2022
