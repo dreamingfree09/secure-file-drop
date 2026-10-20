@@ -3,7 +3,7 @@
 Required: --backend-image, --postgres-image, --storage-image (already local).
 Optional --cert/--key use existing localhost TLS material read-only, with no trust changes.
 """
-import shutil, tempfile, stat
+import shutil, tempfile, stat as filemode
 import argparse, hashlib, http.client, http.cookiejar, http.server, json, os, pathlib, secrets, ssl, subprocess, threading, time, urllib.request, urllib.error, urllib.parse, uuid
 
 def main():
@@ -126,14 +126,16 @@ def main():
         # DrvFS build outputs can report mode0777. Preserve executable policy:
         # stage exact compiled bytes in a new private Linux directory, never
         # relax the application's group/other-write rejection.
+        result['stage']='host-native-permission-staging'
         native_dir=pathlib.Path(tempfile.mkdtemp(prefix='sfd-lifecycle-native-',dir='/tmp'));native_dir.chmod(0o700)
         (native_dir/'owner').write_text(name)
         native_bytes=(repo/'native/sfd-hash').read_bytes();native_tool=native_dir/'sfd-hash'
         with native_tool.open('xb') as output:output.write(native_bytes)
         native_tool.chmod(0o500)
-        check(hashlib.sha256(native_tool.read_bytes()).digest()==hashlib.sha256(native_bytes).digest() and stat.S_IMODE(native_tool.stat().st_mode)==0o500,'exact host-native bytes staged with safe executable permissions')
+        check(hashlib.sha256(native_tool.read_bytes()).digest()==hashlib.sha256(native_bytes).digest() and filemode.S_IMODE(native_tool.stat().st_mode)==0o500,'exact host-native bytes staged with safe executable permissions')
         result['host_native_tool_sha256']=hashlib.sha256(native_bytes).hexdigest()
         testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name,SFD_LIFECYCLE_DATABASE=dbname,SFD_LIFECYCLE_BUCKET=name,SFD_LIFECYCLE_STORAGE=docker('port',storage,'9000/tcp'),SFD_LIFECYCLE_ACCESS=access,SFD_LIFECYCLE_SECRET=storagepass,SFD_HASH_TOOL=str(native_tool))
+        result['stage']='real-go-postgresql-native-commit-faults'
         output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output,'real PostgreSQL Go security regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
         uploader_password='Synthetic9-'+secrets.token_hex(24)
@@ -161,6 +163,7 @@ def main():
             owned('container',backend);docker('rm','-f',backend);created.remove(backend)
             backend=start_backend();ready()
             check(request('/me')[0]==200,label_name+' preserves the existing verified session')
+        result['stage']='real-https-lifecycle-preservation'
         restart_phase('lifecycle phase restart')
         check(request('/upload/resumable',{},method='POST')[0]==501,'unaccepted resumable path fails closed for registered users')
         check(request('/upload/resumable',{},method='POST',who=anonymous)[0]==401,'unsupported path still requires authentication')
