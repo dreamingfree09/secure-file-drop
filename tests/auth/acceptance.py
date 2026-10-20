@@ -4,6 +4,7 @@ Required: --backend-image, --postgres-image, --storage-image (already local).
 Optional --cert/--key use existing localhost TLS material read-only, with no trust changes.
 """
 import shutil, tempfile, stat as filemode
+import re
 import argparse, hashlib, http.client, http.cookiejar, http.server, json, os, pathlib, secrets, ssl, subprocess, threading, time, urllib.request, urllib.error, urllib.parse, uuid
 
 def main():
@@ -136,7 +137,8 @@ def main():
         result['host_native_tool_sha256']=hashlib.sha256(native_bytes).hexdigest()
         testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name,SFD_LIFECYCLE_DATABASE=dbname,SFD_LIFECYCLE_BUCKET=name,SFD_LIFECYCLE_STORAGE=docker('port',storage,'9000/tcp'),SFD_LIFECYCLE_ACCESS=access,SFD_LIFECYCLE_SECRET=storagepass,SFD_HASH_TOOL=str(native_tool))
         result['stage']='real-go-postgresql-native-commit-faults'
-        output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output,'real PostgreSQL Go security regressions and race checks')
+        output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');result['go_security']={'passed_test_events':len(re.findall(r'(?m)^\s*--- PASS: ',output)),'skipped_test_events':len(re.findall(r'(?m)^\s*--- SKIP: ',output)),'failed_test_events':len(re.findall(r'(?m)^\s*--- FAIL: ',output)),'real_lineage_subtests':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyLineage/',output)),'real_commit_fault_modes':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyCommitFaults/',output))}
+        check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output and result['go_security']['real_lineage_subtests']==10 and result['go_security']['real_commit_fault_modes']==4,'real PostgreSQL Go identity/lineage/COMMIT regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
         uploader_password='Synthetic9-'+secrets.token_hex(24)
         check(request('/register',{'email':'upload@example.invalid','username':'uploader','password':uploader_password})[0]==201,'real registration')
