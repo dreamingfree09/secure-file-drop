@@ -400,3 +400,8 @@ Codex chose and implemented the bounded schema12 lifecycle reconciliation under 
 ## 2026-10-21 — exact review and advisory corrections
 
 Accepted and corrected three valid independent PR31 findings: reserve shutdown compensation budget, reject every unversioned migration-owned table, normalize equivalent origins. Four new auxiliary-table cases reproduced mutation before correction; all14 real PostgreSQL cases pass afterward. Real active-SIGTERM and source tests require exit0, compensation and normal validation. Patched inherited Go module versions to reviewed canonical versions and require fixed zlib in the new runtime. Initial31 binary advisory IDs/one OS match reduced to module-only GO-2026-5932/zero OS matches in the corrected bounded scan; storage/public-readiness limitations remain. A later origin-expression lint finding was fixed without suppression, then full lint passed. Preserve all superseded failures/images and exact evidence; final PR handover identifies tested source/images/CI. No live/protected changes.
+
+
+## 2026-10-21 — frozen local evidence publication
+
+Committed sanitised79-check dual-layout/154-event Go race evidence, exact successor/recovery backend/native identities,14 lineage/4 COMMIT/5 lifecycle cases, actual SIGTERM compensation, patched-image applicability inventory and complete120-path source selection. Full lint0/seven enforcement scenarios pass; rejected and superseded failures remain explicit. Final GitHub handover supplies actual current-head CI, F196 release and PG16 roundtrip evidence; source commit cannot embed its own SHA. Both DEVLOG prefixes and protected graphs/work remain preserved. Integration/adoption/Owner GUI/public readiness are not producer-accepted.

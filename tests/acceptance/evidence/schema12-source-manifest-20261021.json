@@ -1,0 +1,988 @@
+{
+  "candidate_source_reference": "3bb429c9c9ee3f010eb3b9e95262b33aaab27338",
+  "image_build_reference": "13be4779b8cf1ec6ea35723c2e3a93f9f757e30d",
+  "application_input_equality_to_image_source": true,
+  "reference_revisions": {
+    "legacy_base": "976c9a39c25f7cb38274bf066e5f7be05543813e",
+    "canonical": "8b2886590f2671dfd7e537a7446e4ce17392c316",
+    "reviewed_windows": "c320861536914623ea22f28c1d4ea156d4c2132a"
+  },
+  "runtime_and_companion_inventory": [
+    {
+      "path": "Dockerfile.backend",
+      "blob": "0956918d8a5bdabdf93238f7ab7e00a2bb36d540",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "cmd/backend/main.go",
+      "blob": "735986353521488a21055c43d517626ccc5f44be",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "cmd/backend/main_test.go",
+      "blob": "3620be4a586170691a718db29f81bb6a4c82d172",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/.gitignore",
+      "blob": "d082e62e711bb57e9d30924704740fa4604fa979",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/App.cs",
+      "blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/Client.cs",
+      "blob": "8978616de376687532b50e3f93cb54e1acd5785e",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/FrameworkTarget.cs",
+      "blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/SecureFileDrop.exe.config",
+      "blob": "a6a246014513cecb03a7983b32668674babcfd59",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/WindowsIntegration.cs",
+      "blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/app.manifest",
+      "blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/build.ps1",
+      "blob": "17da686bcb0fee69aa4dec09178956864b52c36c",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/.gitignore",
+      "blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/Client.Contract.csproj",
+      "blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/ContractRunner.cs",
+      "blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/LiveProbe.cs",
+      "blob": "4a5e797b26d370627ac47239910f50be5b2942fd",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/ProductPolicyTests.cs",
+      "blob": "4436f990c197004d22119de8c542629ce4a397f7",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/ProtocolTests.cs",
+      "blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/WindowsTests.cs",
+      "blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/live.ps1",
+      "blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/test.ps1",
+      "blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "go.mod",
+      "blob": "d62b0c5bbf4c091977631389c58bd5722d426344",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "go.sum",
+      "blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/alter_001.sql",
+      "blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/alter_002.sql",
+      "blob": "7365e59ecb9c2901160504d57dc72d9c705595d3",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/alter_002_resumable_uploads.sql",
+      "blob": "52e2b147f245378aeba2b45b4cfbc8cd5d24d159",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/alter_010.sql",
+      "blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/alter_011.sql",
+      "blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/alter_012.sql",
+      "blob": "39d5fe21bb330686ddb6f715bee8a108707efca3",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/doc.go",
+      "blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/lineage.go",
+      "blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/db/migrate.go",
+      "blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47",
+      "unchanged_from": [
+        "canonical"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrate_lineage_test.go",
+      "blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.down.sql",
+      "blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.up.sql",
+      "blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.down.sql",
+      "blob": "68c37777af020f629b91e0fe34974baae92555ab",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.up.sql",
+      "blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.down.sql",
+      "blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.up.sql",
+      "blob": "088c7f7240edf55a556287c12353167af355c16a",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.down.sql",
+      "blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.up.sql",
+      "blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.down.sql",
+      "blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.up.sql",
+      "blob": "1a22e8b011c265435b76e7aeede683989a35a255",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.down.sql",
+      "blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.up.sql",
+      "blob": "545938530f826d509516028117ff48d3af8c21da",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.down.sql",
+      "blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.up.sql",
+      "blob": "779c5a06874568e5e3ac619df28ce0678e259ab4",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.down.sql",
+      "blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.up.sql",
+      "blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.down.sql",
+      "blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.up.sql",
+      "blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.down.sql",
+      "blob": "165f146571ed97f93eaddb55e120809baec39846",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.up.sql",
+      "blob": "1e5baa381088b17f4e4a062df9ef660dd182ca8d",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.down.sql",
+      "blob": "140c983af7d109727af2761f196289cfa9063ee7",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.up.sql",
+      "blob": "5e8d836ddc9b5a17919d52c9468abc065776450d",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.down.sql",
+      "blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+      "blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/db/schema.sql",
+      "blob": "2ca9b0707d9406edabd927080ee1b77976e93203",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/admin.go",
+      "blob": "a86fa9ef0f05fbbb97f6f395ee6fc1d54176050a",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/admin_test.go",
+      "blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/audit.go",
+      "blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/auth.go",
+      "blob": "b1e0b4d7400b4945a2097156b6fe48360db1f77c",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/auth_integration_test.go",
+      "blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/auth_test.go",
+      "blob": "5b10c766b28f2e8f23b894443128426abfa410c2",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/backup.go",
+      "blob": "449c77a773817b141380e47165dec87dcb144953",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/circuitbreaker.go",
+      "blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/cleanup.go",
+      "blob": "3859beb09b7f977fd7c43c0b5582f27870de4714",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/commit_fault_integration_test.go",
+      "blob": "fb5bffd130fae96071188603188c79cd0395a05e",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/compression.go",
+      "blob": "b0486db0da58f62b74c6a6f86b5250583a74980c",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/config_validation.go",
+      "blob": "f85df0749b9136eaeb38ab2e6f2ca1c758e88f44",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/db.go",
+      "blob": "8c45355a437e48554b16a5a906b7b431d8ef910e",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/db_test.go",
+      "blob": "5b1f1c56a3746f90b486783aa10917efa713e712",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/doc.go",
+      "blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/download.go",
+      "blob": "f946f0800df2edd4ab483cc29354ffdc258a0f08",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/download_test.go",
+      "blob": "e347beb1d1556b87a13c20bf6a005db79be9a847",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/download_tokens.go",
+      "blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/download_tokens_test.go",
+      "blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/email.go",
+      "blob": "86571b5e5d6f97db3c532d88e879d7ba94f5ac94",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/endpoint_ratelimit.go",
+      "blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/files.go",
+      "blob": "e8ba2db45076b4da3d58173bcfeb173ec4238a58",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/files_test.go",
+      "blob": "81fddc368fe17bd48713cb118636e2b0f643db01",
+      "unchanged_from": [
+        "legacy_base",
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/hash.go",
+      "blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/health.go",
+      "blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/jsonlog.go",
+      "blob": "46d9f36b186b8276ea0be68d3d0288517a35d933",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/lifecycle_ordering_integration_test.go",
+      "blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/lifecycle_regression_test.go",
+      "blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/links.go",
+      "blob": "fd18c03a4ab9a6b68c047b0407032b119da12718",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/links_test.go",
+      "blob": "94f4680b035b4a152cdb73f580b482ac07f34af4",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/lockout.go",
+      "blob": "5047140790803471d485bf9405cc2fdaada82a16",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/logging.go",
+      "blob": "a3f2778d3348d154aaf8350635e75999473131fa",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/metrics.go",
+      "blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/minio.go",
+      "blob": "401d11c21ae94899098affc8a2f6fc44f007ea69",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/minio_test.go",
+      "blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/notifications.go",
+      "blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/origin.go",
+      "blob": "de10f974c51405debe54548e54a47334daf28b23",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/prometheus.go",
+      "blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/quality_integration_test.go",
+      "blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/quality_regression_test.go",
+      "blob": "cd0db1b23c7ce17286e96435488bb94f255e9654",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/quota.go",
+      "blob": "c1f4c36c5b8e01b008c6ab14c8f9dc683da9f3df",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/ratelimit.go",
+      "blob": "40a35ee613c331484d1c0a06c60ba39cb236a468",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/ratelimit_test.go",
+      "blob": "0b2b27bb4c0cb87a62bafdffd3e5ccc91c5d36de",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/register.go",
+      "blob": "b6be5b0f8600fa3a2d1ee0a0080b091e326d189e",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/request.go",
+      "blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/resumable.go",
+      "blob": "3e25f54e92c43f98bf49dffd4b2a1f625a65d7c7",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/rows.go",
+      "blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/security.go",
+      "blob": "2ed986f516c8964091b6f16609c064edaf266221",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/server.go",
+      "blob": "a097e39b157bc9a3b0a2821a0ddd5c4a29c4f84f",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/tracing.go",
+      "blob": "cf0bdedeb7e7baf6ce393d80a8eef1c8e6dfee12",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/upload.go",
+      "blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/upload_test.go",
+      "blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
+    {
+      "path": "internal/server/validation.go",
+      "blob": "69f9012e570bd909416a28566638a4eee12005ea",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "internal/server/webhooks.go",
+      "blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "native/Makefile",
+      "blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "native/README.md",
+      "blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "native/sfd_hash.c",
+      "blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "native/sfd_hash.h",
+      "blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "native/sfd_hash_cli.c",
+      "blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "native/test_hash.py",
+      "blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c",
+      "unchanged_from": [
+        "canonical",
+        "reviewed_windows"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "web/static/index.html",
+      "blob": "362329d0247146878c62886bbc50582d09b058d3",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "web/static/manifest.json",
+      "blob": "25e3fad0d407016678c45d77d89ba722146fd4d4",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    },
+    {
+      "path": "web/static/sw.js",
+      "blob": "ee46a54c29ed32bdfe38f274702a4220275b3827",
+      "unchanged_from": [
+        "legacy_base"
+      ],
+      "selection": "existing reviewed source"
+    }
+  ],
+  "source_review_scope": "authentication/session/lockout/identity/ownership/audit/quota/lifecycle/Windows transport; full new diff remains independently reviewable, not exhaustive security certification",
+  "protected_integration": false
+}
