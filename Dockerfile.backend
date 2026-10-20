@@ -19,11 +19,11 @@ RUN gcc -O2 -s -I./native -o /out/sfd-hash ./native/sfd_hash.c ./native/sfd_hash
 # Build a static binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./cmd/backend
 
-FROM alpine:3.20
+FROM alpine:3.24
 WORKDIR /app
 
 # Install PostgreSQL client tools for pg_dump (required for backups)
-RUN apk add --no-cache postgresql16-client
+RUN apk add --no-cache postgresql16-client libcrypto3 ca-certificates
 
 COPY --from=build /out/backend /app/backend
 COPY --from=build /src/web /app/web
