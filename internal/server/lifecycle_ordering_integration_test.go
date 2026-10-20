@@ -3,11 +3,6 @@ package server
 import (
 	"bytes"
 	"context"
-	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -18,6 +13,12 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
 type gatedUploadBody struct {
@@ -212,7 +213,9 @@ func TestLifecycleOrdering(t *testing.T) {
 		if _, e := mc.PutObject(ctx, bucket, key, strings.NewReader("abc"), 3, minio.PutObjectOptions{}); e != nil {
 			t.Fatal(e)
 		}
-		unavailable := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { http.Error(w, "unavailable", 503) }))
+		unavailable := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			http.Error(w, "unavailable", http.StatusServiceUnavailable)
+		}))
 		defer unavailable.Close()
 		bad, e := minio.New(strings.TrimPrefix(unavailable.URL, "http://"), &minio.Options{Creds: credentials.NewStaticV4("fixture", "synthetic", "")})
 		if e != nil {
