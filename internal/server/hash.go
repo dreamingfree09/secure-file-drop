@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -120,8 +121,9 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 	}
 	defer func() { _ = obj.Close() }()
 
-	if _, err := io.Copy(tmp, obj); err != nil {
-		return "", nil, 0, fmt.Errorf("copy object to temp: %w", err)
+	copied, copyErr := io.Copy(tmp, obj)
+	if copyErr != nil {
+		return "", nil, 0, fmt.Errorf("copy object to temp: %w", copyErr)
 	}
 	if err := tmp.Sync(); err != nil {
 		return "", nil, 0, fmt.Errorf("sync temp: %w", err)
@@ -135,6 +137,9 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 		return "", nil, 0, err
 	}
 
+	if out.Bytes > math.MaxInt64 || int64(out.Bytes) != copied {
+		return "", nil, 0, errors.New("hash tool byte count mismatch")
+	}
 	raw, err := hex.DecodeString(out.Hash)
 	if err != nil {
 		return "", nil, 0, fmt.Errorf("decode sha256 hex: %w", err)
@@ -144,4 +149,24 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 	}
 
 	return out.Hash, raw, out.Bytes, nil
+}
+
+// Native readiness executes a known empty-file vector, not just a path lookup.
+func hashToolReady(ctx context.Context) error {
+	f, err := os.CreateTemp("", "sfd-ready-*")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = os.Remove(f.Name()) }()
+	if err = f.Close(); err != nil {
+		return err
+	}
+	out, err := runHashTool(ctx, f.Name())
+	if err != nil {
+		return err
+	}
+	if out.Bytes != 0 || out.Hash != "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" {
+		return errors.New("native readiness vector mismatch")
+	}
+	return nil
 }

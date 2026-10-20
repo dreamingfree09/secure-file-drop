@@ -1,7 +1,3 @@
-// cleanup.go - Periodic cleanup of old pending/failed files.
-//
-// Background job triggered by configuration to remove stale items.
-
 package server
 
 import (
@@ -15,7 +11,7 @@ import (
 	"github.com/minio/minio-go/v7"
 )
 
-// CleanupConfig holds configuration for the cleanup job
+// CleanupConfig controls retention and dependencies for background cleanup.
 type CleanupConfig struct {
 	Enabled     bool
 	Interval    time.Duration
@@ -25,136 +21,88 @@ type CleanupConfig struct {
 	Bucket      string
 }
 
-// StartCleanupJob starts a background goroutine that periodically cleans up expired files
+// StartCleanupJob cleans old pending/failed files until cancellation.
 func StartCleanupJob(ctx context.Context, cfg CleanupConfig) {
 	if !cfg.Enabled {
-		log.Printf("service=cleanup msg=%q", "disabled")
 		return
 	}
-
-	log.Printf("service=cleanup msg=%q interval=%s max_age=%s",
-		"starting", cfg.Interval, cfg.MaxAge)
-
 	ticker := time.NewTicker(cfg.Interval)
 	defer ticker.Stop()
-
-	// Run immediately on start
-	runCleanup(ctx, cfg)
-
 	for {
+		if _, err := runCleanup(ctx, cfg); err != nil && ctx.Err() == nil {
+			log.Printf("cleanup failed")
+		}
 		select {
 		case <-ctx.Done():
-			log.Printf("service=cleanup msg=%q", "shutting_down")
 			return
 		case <-ticker.C:
-			runCleanup(ctx, cfg)
 		}
 	}
 }
+func runCleanup(ctx context.Context, cfg CleanupConfig) (int, error) {
+	return cleanupFiles(ctx, cfg, true)
+}
 
-func runCleanup(ctx context.Context, cfg CleanupConfig) {
-	start := time.Now()
-	log.Printf("service=cleanup msg=%q", "starting_cleanup_run")
-
-	cutoff := time.Now().Add(-cfg.MaxAge)
-
-	// Find expired files in two categories:
-	// 1. Old files in pending/failed status (created more than MaxAge ago)
-	// 2. Files with auto_delete=true that have passed their expires_at time
-	rows, err := cfg.DB.QueryContext(ctx, `
-		SELECT id, object_key, status, created_at, expires_at, auto_delete
-		FROM files
-		WHERE (
-			-- Old pending/failed files
-			(created_at < $1 AND status IN ('pending', 'failed'))
-			OR
-			-- Files with explicit expiration
-			(auto_delete = true AND expires_at IS NOT NULL AND expires_at < NOW())
-		)
-		ORDER BY created_at ASC
-		LIMIT 100
-	`, cutoff)
+// Manual cleanup retains the legacy pending/failed-only policy; background
+// cleanup also honors explicitly requested file expiration.
+func cleanupFiles(ctx context.Context, cfg CleanupConfig, includeExpired bool) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+	tx, err := cfg.DB.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("service=cleanup msg=%q err=%v", "query_failed", err)
-		return
+		return 0, err
 	}
-	defer closeRows(rows)
-
-	deleted := 0
+	defer func() { _ = tx.Rollback() }()
+	rows, err := tx.QueryContext(ctx, `SELECT id,object_key FROM files WHERE (created_at<$1 AND status IN ('pending','failed')) OR ($2 AND auto_delete=TRUE AND expires_at IS NOT NULL AND expires_at<CURRENT_TIMESTAMP)
+ ORDER BY created_at LIMIT 100 FOR UPDATE SKIP LOCKED`, time.Now().Add(-cfg.MaxAge), includeExpired)
+	if err != nil {
+		return 0, err
+	}
+	type item struct{ id, key string }
+	var items []item
 	for rows.Next() {
-		var (
-			id         string
-			objectKey  string
-			status     string
-			createdAt  time.Time
-			expiresAt  sql.NullTime
-			autoDelete bool
-		)
-
-		if err := rows.Scan(&id, &objectKey, &status, &createdAt, &expiresAt, &autoDelete); err != nil {
-			log.Printf("service=cleanup msg=%q err=%v", "scan_failed", err)
-			continue
+		var v item
+		if err = rows.Scan(&v.id, &v.key); err != nil {
+			_ = rows.Close()
+			return 0, err
 		}
-
-		age := time.Since(createdAt)
-		reason := "old_pending_failed"
-		if autoDelete && expiresAt.Valid {
-			reason = "auto_delete_expired"
-		}
-		log.Printf("service=cleanup msg=%q id=%s status=%s age=%s reason=%s",
-			"deleting_file", id, status, age, reason)
-
-		// Delete from MinIO (if exists)
-		if err := cfg.MinioClient.RemoveObject(ctx, cfg.Bucket, objectKey, minio.RemoveObjectOptions{}); err != nil {
-			log.Printf("service=cleanup msg=%q id=%s err=%v", "minio_delete_failed", id, err)
-			// Continue anyway - record might be orphaned
-		}
-
-		// Delete from database
-		if _, err := cfg.DB.ExecContext(ctx, `DELETE FROM files WHERE id = $1`, id); err != nil {
-			log.Printf("service=cleanup msg=%q id=%s err=%v", "db_delete_failed", id, err)
-			continue
-		}
-
-		deleted++
+		items = append(items, v)
 	}
-
-	duration := time.Since(start)
-	log.Printf("service=cleanup msg=%q deleted=%d duration_ms=%d",
-		"cleanup_complete", deleted, duration.Milliseconds())
+	err = rows.Err()
+	_ = rows.Close()
+	if err != nil {
+		return 0, err
+	}
+	for _, v := range items {
+		if err = cfg.MinioClient.RemoveObject(ctx, cfg.Bucket, v.key, minio.RemoveObjectOptions{}); err != nil {
+			return 0, err
+		}
+		if _, err = tx.ExecContext(ctx, "DELETE FROM files WHERE id=$1", v.id); err != nil {
+			return 0, err
+		}
+	}
+	if _, err = tx.ExecContext(ctx, "DELETE FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP"); err != nil {
+		return 0, err
+	}
+	if err = tx.Commit(); err != nil {
+		return 0, err
+	}
+	return len(items), nil
 }
 
-// GetCleanupConfigFromEnv reads cleanup configuration from environment variables
+// GetCleanupConfigFromEnv reads positive durations with conservative defaults.
 func GetCleanupConfigFromEnv(db *sql.DB, mc *minio.Client, bucket string) CleanupConfig {
 	enabled := os.Getenv("SFD_CLEANUP_ENABLED") == "true"
-
-	interval := 1 * time.Hour
-	if v := os.Getenv("SFD_CLEANUP_INTERVAL"); v != "" {
-		if d, err := time.ParseDuration(v); err == nil {
-			interval = d
-		}
+	interval := time.Hour
+	age := 24 * time.Hour
+	if d, e := time.ParseDuration(os.Getenv("SFD_CLEANUP_INTERVAL")); e == nil && d > 0 {
+		interval = d
 	}
-
-	maxAge := 24 * time.Hour
-	if v := os.Getenv("SFD_CLEANUP_MAX_AGE"); v != "" {
-		if d, err := time.ParseDuration(v); err == nil {
-			maxAge = d
-		}
+	if d, e := time.ParseDuration(os.Getenv("SFD_CLEANUP_MAX_AGE")); e == nil && d > 0 {
+		age = d
 	}
-
-	// Also support hours as a fallback
-	if v := os.Getenv("SFD_CLEANUP_MAX_AGE_HOURS"); v != "" {
-		if hours, err := strconv.Atoi(v); err == nil {
-			maxAge = time.Duration(hours) * time.Hour
-		}
+	if h, e := strconv.Atoi(os.Getenv("SFD_CLEANUP_MAX_AGE_HOURS")); e == nil && h > 0 && h <= 876000 {
+		age = time.Duration(h) * time.Hour
 	}
-
-	return CleanupConfig{
-		Enabled:     enabled,
-		Interval:    interval,
-		MaxAge:      maxAge,
-		DB:          db,
-		MinioClient: mc,
-		Bucket:      bucket,
-	}
+	return CleanupConfig{enabled, interval, age, db, mc, bucket}
 }

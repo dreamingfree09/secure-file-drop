@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -47,6 +48,12 @@ type Config struct {
 // production entrypoint. The struct is intentionally simple; most logic
 // resides in handler functions to keep unit-testing straightforward.
 type Server struct {
+	cleanupCtx      context.Context
+	cleanupCancel   context.CancelFunc
+	requestCancel   context.CancelFunc
+	requests        sync.WaitGroup
+	requestMu       sync.Mutex
+	closing         bool
 	httpServer      *http.Server
 	db              *sql.DB
 	minio           *minio.Client
@@ -64,6 +71,12 @@ type Server struct {
 // critical dependencies (MinIO). It panics early if required dependencies
 // are missing to avoid running in a half-configured state.
 func New(cfg Config) *Server {
+	if _, err := publicOrigin(); err != nil {
+		panic("invalid SFD_PUBLIC_BASE_URL")
+	}
+	if _, err := maxRequestBytes(); err != nil {
+		panic("invalid upload envelope configuration")
+	}
 	mux := http.NewServeMux()
 
 	// Initialize CSRF protection (24-hour token TTL)
@@ -111,7 +124,7 @@ func New(cfg Config) *Server {
 	// Ready endpoint: comprehensive dependency readiness checks with detailed status.
 	// Returns 200 OK if all dependencies are healthy, 503 if any are unhealthy.
 	// Provides detailed status for each component (postgres, minio) with latency.
-	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) {
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
 		type ComponentStatus struct {
 			Status  string `json:"status"` // "ok" or "error"
 			Message string `json:"message,omitempty"`
@@ -133,7 +146,7 @@ func New(cfg Config) *Server {
 			}
 			overallOK = false
 		} else {
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 			defer cancel()
 
 			start := time.Now()
@@ -143,7 +156,7 @@ func New(cfg Config) *Server {
 			if err != nil {
 				response["components"].(map[string]ComponentStatus)["postgres"] = ComponentStatus{
 					Status:  "error",
-					Message: err.Error(),
+					Message: "postgres unavailable",
 					Latency: latency,
 				}
 				overallOK = false
@@ -156,7 +169,7 @@ func New(cfg Config) *Server {
 		}
 
 		// Check MinIO
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
 		defer cancel()
 
 		start := time.Now()
@@ -166,7 +179,7 @@ func New(cfg Config) *Server {
 		if err != nil || !exists {
 			msg := "bucket not found"
 			if err != nil {
-				msg = err.Error()
+				msg = "storage unavailable"
 			}
 			response["components"].(map[string]ComponentStatus)["minio"] = ComponentStatus{
 				Status:  "error",
@@ -179,6 +192,16 @@ func New(cfg Config) *Server {
 				Status:  "ok",
 				Latency: latency,
 			}
+		}
+
+		nativeCtx, nativeCancel := context.WithTimeout(r.Context(), time.Second)
+		nativeErr := hashToolReady(nativeCtx)
+		nativeCancel()
+		if nativeErr != nil {
+			overallOK = false
+			response["components"].(map[string]ComponentStatus)["native_hash"] = ComponentStatus{Status: "error", Message: "native hash unavailable"}
+		} else {
+			response["components"].(map[string]ComponentStatus)["native_hash"] = ComponentStatus{Status: "ok"}
 		}
 
 		// Set overall status
@@ -314,6 +337,7 @@ func New(cfg Config) *Server {
 	endpointRateLimiter := NewEndpointRateLimiter()
 
 	var handler http.Handler = mux
+	handler = sameOriginMiddleware(handler)
 	handler = CompressionMiddleware(handler)
 	handler = securityHeadersMiddleware(handler)
 	handler = endpointRateLimiter.Middleware(handler)
@@ -324,6 +348,9 @@ func New(cfg Config) *Server {
 		Addr:              cfg.Addr,
 		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       5 * time.Minute,
+		WriteTimeout:      31 * time.Minute,
+		IdleTimeout:       time.Minute,
 	}
 
 	// Initialize circuit breakers for external dependencies
@@ -332,7 +359,9 @@ func New(cfg Config) *Server {
 	circuitBreakers.GetOrCreate("minio", 5, 30*time.Second)
 	circuitBreakers.GetOrCreate("smtp", 3, 60*time.Second)
 
+	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
 	srv := &Server{
+		cleanupCtx: cleanupCtx, cleanupCancel: cleanupCancel,
 		httpServer:      s,
 		db:              cfg.DB,
 		minio:           mc,
@@ -345,6 +374,22 @@ func New(cfg Config) *Server {
 		shutdownChan:    make(chan struct{}),
 		circuitBreakers: circuitBreakers,
 	}
+
+	requestCtx, requestCancel := context.WithCancel(context.Background())
+	srv.requestCancel = requestCancel
+	s.BaseContext = func(net.Listener) context.Context { return requestCtx }
+	s.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		srv.requestMu.Lock()
+		if srv.closing {
+			srv.requestMu.Unlock()
+			http.Error(w, "shutting down", http.StatusServiceUnavailable)
+			return
+		}
+		srv.requests.Add(1)
+		srv.requestMu.Unlock()
+		defer srv.requests.Done()
+		handler.ServeHTTP(w, r)
+	})
 
 	// Resumable upload endpoints (TUS protocol) - registered after srv creation
 	mux.Handle("/upload/resumable", cfg.Auth.requireAuth(srv.tusCreateHandler()))
@@ -394,32 +439,43 @@ func New(cfg Config) *Server {
 func (s *Server) Start() error {
 	// Start cleanup job in background
 	cleanupCfg := GetCleanupConfigFromEnv(s.db, s.minio, s.bucket)
-	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
-
-	go func() {
-		defer close(s.cleanupDone)
-		StartCleanupJob(cleanupCtx, cleanupCfg)
-	}()
-
-	// Store cancel func for shutdown
-	go func() {
-		<-s.cleanupDone
-		cleanupCancel()
-	}()
-
+	defer s.cleanupCancel()
+	go func() { defer close(s.cleanupDone); StartCleanupJob(s.cleanupCtx, cleanupCfg) }()
 	ln, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
-		cleanupCancel()
+		s.cleanupCancel()
 		return err
 	}
 	return s.httpServer.Serve(ln)
 }
 
-// Shutdown gracefully shuts down the HTTP server and background jobs using
-// the provided context (deadline/timeout respected).
+// Shutdown gracefully shuts down the HTTP server and background jobs
+// using the provided context (respecting the deadline/timeout supplied by the caller).
 func (s *Server) Shutdown(ctx context.Context) error {
-	// Signal cleanup job to stop (via cleanupDone channel close will happen)
-	// The cleanup job checks context.Done() which we handle in Start()
-
-	return s.httpServer.Shutdown(ctx)
+	s.cleanupCancel()
+	// Allow short transfers to drain, then cancel active handlers and leave the
+	// caller's remaining budget for upload compensation and background cleanup.
+	grace, cancel := context.WithTimeout(ctx, 5*time.Second)
+	err := s.httpServer.Shutdown(grace)
+	cancel()
+	s.requestMu.Lock()
+	s.closing = true
+	s.requestMu.Unlock()
+	s.requestCancel()
+	if err != nil {
+		_ = s.httpServer.Close()
+	}
+	done := make(chan struct{})
+	go func() { s.requests.Wait(); close(done) }()
+	select {
+	case <-done:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	select {
+	case <-s.cleanupDone:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }

@@ -8,7 +8,7 @@ package server
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
+	"mime"
 	"net/http"
 	"strings"
 	"time"
@@ -51,8 +51,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		}
 
 		var req createFileReq
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			http.Error(w, "bad request", http.StatusBadRequest)
+		if !decodeJSON(w, r, &req) {
 			return
 		}
 
@@ -61,8 +60,21 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		req.ContentType = strings.TrimSpace(req.ContentType)
 
 		// Validate required fields and ensure size is non-negative
-		if req.OrigName == "" || req.ContentType == "" || req.SizeBytes < 0 {
+		if req.OrigName == "" || len(req.OrigName) > 255 || req.ContentType == "" || req.SizeBytes < 0 || req.TTLHours < 0 || req.TTLHours > 876000 || len(req.LinkPassword) > 72 {
 			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if _, _, err := mime.ParseMediaType(req.ContentType); err != nil {
+			http.Error(w, "bad content type", http.StatusBadRequest)
+			return
+		}
+		limit, err := maxUploadBytes()
+		if err != nil {
+			http.Error(w, "server misconfigured", http.StatusInternalServerError)
+			return
+		}
+		if req.SizeBytes > limit {
+			http.Error(w, "file too large", http.StatusRequestEntityTooLarge)
 			return
 		}
 
@@ -79,28 +91,32 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 			return
 		}
 
-		// Check user quota
-		var quota sql.NullInt64
-		var currentUsage int64
-		err = db.QueryRow(`
-			SELECT 
-				u.storage_quota_bytes,
-				COALESCE(SUM(f.size_bytes), 0) as current_usage
-			FROM users u
-			LEFT JOIN files f ON f.user_id = u.id AND f.status IN ('stored', 'hashed', 'ready')
-			WHERE u.id = $1
-			GROUP BY u.id, u.storage_quota_bytes
-		`, userID).Scan(&quota, &currentUsage)
-
+		ctx, cancel := sqlContext(r.Context())
+		defer cancel()
+		tx, err := db.BeginTx(ctx, nil)
 		if err != nil {
-			log.Printf("create file: failed to read authenticated account quota")
-			http.Error(w, "db error", http.StatusInternalServerError)
+			http.Error(w, "database error", http.StatusInternalServerError)
 			return
 		}
-
-		// Enforce quota if set
-		if quota.Valid && (currentUsage+req.SizeBytes) > quota.Int64 {
+		defer func() { _ = tx.Rollback() }()
+		var quota sql.NullInt64
+		var currentUsage int64
+		err = tx.QueryRowContext(ctx, "SELECT storage_quota_bytes FROM users WHERE id::text=$1 FOR UPDATE", userID).Scan(&quota)
+		if err == nil {
+			err = tx.QueryRowContext(ctx, "SELECT COALESCE(SUM(size_bytes),0) FROM files WHERE user_id::text=$1 AND status IN ('pending','stored','hashed','ready')", userID).Scan(&currentUsage)
+		}
+		if err != nil {
+			http.Error(w, "database error", http.StatusInternalServerError)
+			return
+		}
+		if quota.Valid && (currentUsage > quota.Int64 || req.SizeBytes > quota.Int64-currentUsage) {
 			http.Error(w, "storage quota exceeded", http.StatusForbidden)
+			return
+		}
+		// The inherited creation path ignored this field. Do not silently
+		// create an unprotected file or invent a new on-disk password format.
+		if req.LinkPassword != "" {
+			http.Error(w, "password-protected creation is not supported by this reviewed schema contract", http.StatusBadRequest)
 			return
 		}
 
@@ -121,12 +137,14 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 			autoDelete = true
 		}
 
-		_, err = db.Exec(`
+		_, err = tx.ExecContext(ctx, `
 			INSERT INTO files (id, object_key, orig_name, content_type, size_bytes, user_id, status, expires_at, auto_delete)
 			VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8)
 		`, id, objectKey, req.OrigName, req.ContentType, req.SizeBytes, userID, expiresAt, autoDelete)
+		if err == nil {
+			err = tx.Commit()
+		}
 		if err != nil {
-			log.Printf("create file: failed to insert file record: %v", err)
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}

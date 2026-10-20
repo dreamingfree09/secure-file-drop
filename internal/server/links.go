@@ -51,31 +51,11 @@ func clampTTLSeconds(n int) int {
 }
 
 func requestOrigin(r *http.Request) string {
-	// Prefer reverse-proxy headers if present.
-	scheme := strings.TrimSpace(r.Header.Get("X-Forwarded-Proto"))
-	host := strings.TrimSpace(r.Header.Get("X-Forwarded-Host"))
-
-	// Some proxies set X-Forwarded-Host as a comma-separated list.
-	if i := strings.IndexByte(host, ','); i >= 0 {
-		host = strings.TrimSpace(host[:i])
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
 	}
-
-	if scheme == "" {
-		if r.TLS != nil {
-			scheme = "https"
-		} else {
-			scheme = "http"
-		}
-	}
-
-	if host == "" {
-		host = r.Host
-	}
-	if host == "" {
-		host = "localhost:8080"
-	}
-
-	return scheme + "://" + host
+	return scheme + "://" + r.Host
 }
 
 func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {

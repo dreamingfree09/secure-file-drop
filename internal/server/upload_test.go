@@ -86,7 +86,7 @@ func TestUploadHandler_MaxBytesValidation(t *testing.T) {
 			shouldError: false,
 		},
 		{
-			name:        "empty value (no limit)",
+			name:        "empty value (bounded default)",
 			envValue:    "",
 			shouldError: false,
 		},
@@ -98,7 +98,7 @@ func TestUploadHandler_MaxBytesValidation(t *testing.T) {
 		{
 			name:        "negative value",
 			envValue:    "-1",
-			shouldError: false, // parsed successfully, but semantically questionable
+			shouldError: true, // non-positive limits cannot disable the transfer bound
 		},
 	}
 
@@ -228,8 +228,8 @@ func TestMaxUploadBytes_NotSet(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	if limit != 0 {
-		t.Errorf("Expected limit 0 (no limit), got %d", limit)
+	if limit != 50<<30 {
+		t.Errorf("Expected bounded 50 GiB default, got %d", limit)
 	}
 }
 
@@ -284,5 +284,23 @@ func TestUploadHandler_ContextTimeout(t *testing.T) {
 
 	if time.Until(deadline) > 5*time.Minute {
 		t.Error("Deadline is too far in the future")
+	}
+}
+
+func TestUploadEnvelopeBound(t *testing.T) {
+	t.Setenv("SFD_MAX_UPLOAD_BYTES", "1024")
+	t.Setenv("SFD_MAX_REQUEST_BYTES", "")
+	if n, err := maxRequestBytes(); err != nil || n != 1024+(1<<20) {
+		t.Fatalf("multipart allowance: %d %v", n, err)
+	}
+	t.Setenv("SFD_MAX_REQUEST_BYTES", "1024")
+	if _, err := maxRequestBytes(); err == nil {
+		t.Fatal("file bytes cannot consume the multipart envelope")
+	}
+	for _, raw := range []string{"0", "-1", "9223372036854775807"} {
+		t.Setenv("SFD_MAX_UPLOAD_BYTES", raw)
+		if _, err := maxUploadBytes(); err == nil {
+			t.Fatal("accepted nonpositive or overflowing file bound")
+		}
 	}
 }
