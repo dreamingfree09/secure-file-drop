@@ -18,7 +18,7 @@ The implementation uses OpenSSL for digest primitives. Build using:
 gcc -o sfd-hash sfd_hash.c sfd_hash_cli.c -lcrypto
 ```
 
-(If you prefer a Makefile target, we can add one; currently the repo's `native/Makefile` is empty.)
+Use `make -C native test` from the repository root to build the C utility and assert five SHA-256 vectors, byte counts and error exit codes. Python 3 is required for the vector checks; there is no Go fallback.
 
 ## Usage
 

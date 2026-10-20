@@ -9,7 +9,7 @@ def main():
     ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--rollback-image');ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--hash-layout',choices=['bigint','bytea'],default='bigint');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
     os.umask(0o077);root=pathlib.Path(args.output);root.mkdir(parents=True,exist_ok=False)
     repo=pathlib.Path(__file__).resolve().parents[2];name='sfd-auth-'+secrets.token_hex(6);label='sfd.auth-fixture';created=[];volumes=[];network=None;server=None;thread=None
-    result={'fixture':name,'checks':[],'failures':[]};checks=result['checks']
+    result={'fixture':name,'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip(),'checks':[],'failures':[]};checks=result['checks']
     def check(value,name):
         if not value:raise AssertionError(name)
         checks.append(name)
@@ -56,7 +56,7 @@ def main():
         # Generate the bcrypt hash with the same supported Go dependency as the backend.
         helper=root/'hash.go';helper.write_text('package main\nimport("fmt";"os";"golang.org/x/crypto/bcrypt")\nfunc main(){ b,e:=bcrypt.GenerateFromPassword([]byte(os.Getenv("FIXTURE_PASSWORD")),12);if e!=nil{panic("fixture hash")};fmt.Print(string(b))}\n')
         env=dict(os.environ,GOTOOLCHAIN='go1.26.9',FIXTURE_PASSWORD=password);adminhash=command(['go','run',str(helper)],cwd=repo,env=env)
-        values={'pg':{'POSTGRES_USER':'fixture','POSTGRES_DB':dbname,'POSTGRES_PASSWORD':dbpass},'storage':{'MINIO_ROOT_USER':access,'MINIO_ROOT_PASSWORD':storagepass},'backend':{'SFD_ADDR':':8080','DATABASE_URL':'postgres://fixture:'+dbpass+'@'+name+'-pg:5432/'+dbname+'?sslmode=disable','SFD_ADMIN_USER':'admin','SFD_ADMIN_PASS':adminhash,'SFD_SESSION_SECRET':secrets.token_hex(32),'SFD_DOWNLOAD_SECRET':secrets.token_hex(32),'SFD_S3_ENDPOINT':'http://'+name+'-storage:9000','SFD_S3_ACCESS_KEY':access,'SFD_S3_SECRET_KEY':storagepass,'SFD_BUCKET':name,'SFD_HASH_TOOL':'/app/sfd-hash','SFD_PUBLIC_BASE_URL':origin,'SFD_BASE_URL':origin,'SFD_CLEANUP_ENABLED':'false','SFD_BACKUP_ENABLED':'false','PGHOST':name+'-pg','PGPORT':'5432','PGUSER':'fixture','PGPASSWORD':dbpass,'PGDATABASE':dbname,'PGSSLMODE':'disable'}}
+        values={'pg':{'POSTGRES_USER':'fixture','POSTGRES_DB':dbname,'POSTGRES_PASSWORD':dbpass},'storage':{'MINIO_ROOT_USER':access,'MINIO_ROOT_PASSWORD':storagepass},'backend':{'SFD_ADDR':':8080','DATABASE_URL':'postgres://fixture:'+dbpass+'@'+name+'-pg:5432/'+dbname+'?sslmode=disable','SFD_ADMIN_USER':'admin','SFD_ADMIN_PASS':adminhash,'SFD_SESSION_SECRET':secrets.token_hex(32),'SFD_DOWNLOAD_SECRET':secrets.token_hex(32),'SFD_S3_ENDPOINT':'http://'+name+'-storage:9000','SFD_S3_ACCESS_KEY':access,'SFD_S3_SECRET_KEY':storagepass,'SFD_BUCKET':name,'SFD_HASH_TOOL':'/app/sfd-hash','SFD_PUBLIC_BASE_URL':origin,'SFD_BASE_URL':origin,'SFD_MAX_UPLOAD_BYTES':'1024','SFD_MAX_REQUEST_BYTES':str(1024+(1<<20)),'SFD_CLEANUP_ENABLED':'false','SFD_BACKUP_ENABLED':'false','PGHOST':name+'-pg','PGPORT':'5432','PGUSER':'fixture','PGPASSWORD':dbpass,'PGDATABASE':dbname,'PGSSLMODE':'disable'}}
         for service,v in values.items():(root/(service+'.env')).write_text(''.join(k+'='+x+'\n' for k,x in v.items()))
         pg=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-pg','--network',network,'--env-file',str(root/'pg.env'),'-p','127.0.0.1::5432','-v',volumes[0]+':/var/lib/postgresql/data',args.postgres_image);created.append(pg);pginfo=owned('container',pg)
         for _ in range(60):
@@ -77,7 +77,7 @@ def main():
         sql("INSERT INTO files(id,object_key,orig_name,content_type,size_bytes,status,user_id,sha256_hex,sha256_bytes) VALUES('"+sentinel_file+"','sentinel/source','preserved.txt','text/plain',1,'hashed','"+sentinel+"','"+sentinel_digest+"',"+sentinel_value+");")
         def fingerprint():return hashlib.sha256(sql("SELECT row_to_json(u)::text FROM users u ORDER BY id; SELECT row_to_json(f)::text FROM files f ORDER BY id;").encode()).hexdigest()
         before=fingerprint()
-        storage=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-storage','--network',network,'--env-file',str(root/'storage.env'),'-v',volumes[1]+':/data',args.storage_image,'server','/data');created.append(storage);owned('container',storage)
+        storage=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-storage','--network',network,'-p','127.0.0.1::9000','--env-file',str(root/'storage.env'),'-v',volumes[1]+':/data',args.storage_image,'server','/data');created.append(storage);owned('container',storage)
         for _ in range(60):
             r=subprocess.run(['docker','exec',storage,'mc','alias','set','fixture','http://127.0.0.1:9000',access,storagepass],capture_output=True)
             if r.returncode==0:break
@@ -96,7 +96,7 @@ def main():
             if isinstance(body,dict):body=json.dumps(body).encode();h['Content-Type']='application/json'
             req=urllib.request.Request(origin+path,body,h,method=method)
             try:
-                with who.open(req,timeout=15) as r:return r.status,r.read()
+                with who.open(req,timeout=35) as r:return r.status,r.read()
             except urllib.error.HTTPError as e:return e.code,e.read()
         def ready():
             for _ in range(60):
@@ -122,7 +122,7 @@ def main():
         owned('container',backend);docker('rm','-f',backend);created.remove(backend);backend=start_backend();ready();check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'logout revocation survives backend recreation')
         # Run the exact handler/security suite against this uniquely guarded database.
         pgports=pginfo['NetworkSettings']['Ports']['5432/tcp'];assert pgports[0]['HostIp']=='127.0.0.1'
-        testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name)
+        testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name,SFD_LIFECYCLE_DATABASE=dbname,SFD_LIFECYCLE_BUCKET=name,SFD_LIFECYCLE_STORAGE=docker('port',storage,'9000/tcp'),SFD_LIFECYCLE_ACCESS=access,SFD_LIFECYCLE_SECRET=storagepass,SFD_HASH_TOOL=str(repo/'native/sfd-hash'))
         output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output,'real PostgreSQL Go security regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
         uploader_password='Synthetic9-'+secrets.token_hex(24)
@@ -142,6 +142,61 @@ def main():
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
         check(request('/files')[0]==200 and json.loads(request('/files')[1])==json.loads(request('/user/files')[1]) and fid.encode() in request('/files')[1],'companion GET files reuses owned listing and native metadata')
         check(request('/files',who=anonymous)[0]==401,'anonymous companion file listing rejected')
+        # Each phase uses a newly recreated owned backend, retaining the real
+        # persisted sessions. Production rate limits are unchanged; this avoids
+        # combining unrelated test cases into one limiter window.
+        def restart_phase(label_name):
+            nonlocal backend
+            owned('container',backend);docker('rm','-f',backend);created.remove(backend)
+            backend=start_backend();ready()
+            check(request('/me')[0]==200,label_name+' preserves the existing verified session')
+        restart_phase('lifecycle phase restart')
+        check(request('/upload/resumable',{},method='POST')[0]==501,'unaccepted resumable path fails closed for registered users')
+        check(request('/upload/resumable',{},method='POST',who=anonymous)[0]==401,'unsupported path still requires authentication')
+        jar.clear();check(request('/login',{'username':'admin','password':password})[0]==200,'lifecycle administrator login')
+        admin_status,_=request('/admin/files/'+fid,method='DELETE')
+        admin_row=sql("SELECT EXISTS(SELECT 1 FROM files WHERE id='"+fid+"');")=='t'
+        missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+fid],capture_output=True).returncode!=0
+        check(admin_status==204 and not admin_row and missing,'administrator deletes exact stored object and metadata')
+        check(request('/upload/resumable',{},method='POST')[0]==403,'environment identity cannot acquire unsupported UUID ownership')
+        jar.clear();check(request('/login',{'username':'uploader','password':uploader_password})[0]==200,'lifecycle owner login')
+        def create_file(filename,size):
+            status,body=request('/files',{'orig_name':filename,'content_type':'text/plain','size_bytes':size})
+            check(status==201,'owned lifecycle metadata '+filename);return json.loads(body)['id']
+        def upload_bytes(file_id,value,complete=True):
+            boundary='sfd'+secrets.token_hex(12)
+            body=('--'+boundary+'\r\nContent-Disposition: form-data; name="file"; filename="fixture.txt"\r\nContent-Type: text/plain\r\n\r\n').encode()+value
+            if complete:body+=('\r\n--'+boundary+'--\r\n').encode()
+            return request('/upload?id='+file_id,body,headers={'Content-Type':'multipart/form-data; boundary='+boundary})
+        fid=create_file('storage-failure.txt',len(data));check(upload_bytes(fid,data)[0]==200,'real file exists before storage-failure deletion')
+        before_delete=hashlib.sha256(sql("SELECT row_to_json(f)::text FROM files f WHERE id='"+fid+"';").encode()).hexdigest()
+        owned('container',storage);docker('stop',storage)
+        failure_status,_=request('/user/files/'+fid,method='DELETE')
+        after_delete=hashlib.sha256(sql("SELECT row_to_json(f)::text FROM files f WHERE id='"+fid+"';").encode()).hexdigest()
+        owned('container',storage);docker('start',storage)
+        for _ in range(60):
+            stat=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+fid],capture_output=True)
+            if stat.returncode==0:break
+            time.sleep(.5)
+        check(failure_status==502 and before_delete==after_delete and stat.returncode==0,'storage outage retains exact file metadata and actual object')
+        result['deletion_preservation']={'admin_status':admin_status,'admin_object_removed':missing,'storage_failure_status':failure_status,'row_hash_unchanged':before_delete==after_delete,'object_retained':stat.returncode==0}
+        mismatch=create_file('mismatch.txt',1);check(upload_bytes(mismatch,b'abc')[0]==400,'actual bytes must match reserved metadata')
+        check(sql("SELECT status FROM files WHERE id='"+mismatch+"';")=='failed','mismatched upload retains failed metadata')
+        truncated=create_file('truncated.txt',len(data));check(upload_bytes(truncated,data,False)[0]==400,'truncated multipart framing rejected')
+        check(sql("SELECT status FROM files WHERE id='"+truncated+"';")=='failed','truncated upload cannot become hashed')
+        boundary_id=create_file('boundary.txt',1024);check(upload_bytes(boundary_id,b'x'*1024)[0]==200,'actual backend exact file boundary accepts multipart overhead')
+        check(request('/files',{'orig_name':'over.txt','content_type':'text/plain','size_bytes':1025})[0]==413,'oversized metadata rejected before storage')
+        check(request('/files',{'orig_name':'unaccepted-password.txt','content_type':'text/plain','size_bytes':1,'link_password':'synthetic-only'})[0]==400,'unsupported password creation cannot silently issue an unprotected file')
+        check(request('/files',{'orig_name':'origin.txt','content_type':'text/plain','size_bytes':1},headers={'Origin':'https://not-this-fixture.invalid'})[0]==403,'real foreign-origin mutation rejected')
+        quota_password='Quota7-'+secrets.token_hex(24);quota_jar=http.cookiejar.CookieJar();quota_client=urllib.request.build_opener(NoRedirect(),urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust),urllib.request.HTTPCookieProcessor(quota_jar))
+        check(request('/register',{'email':'quota@example.invalid','username':'quota_probe','password':quota_password},who=quota_client)[0]==201,'synthetic quota account registration')
+        sql("UPDATE users SET email_verified=true,storage_quota_bytes=16 WHERE username='quota_probe';")
+        check(request('/login',{'username':'quota_probe','password':quota_password},who=quota_client)[0]==200,'synthetic quota account login')
+        status,body=request('/files',{'orig_name':'reserved-a.txt','content_type':'text/plain','size_bytes':10},who=quota_client);check(status==201,'pending metadata reserves existing quota');reserved=json.loads(body)['id']
+        check(request('/files',{'orig_name':'reserved-b.txt','content_type':'text/plain','size_bytes':10},who=quota_client)[0]==403,'simultaneous pending reservations cannot overrun quota')
+        check(request('/user/files/'+reserved,method='DELETE',who=quota_client)[0]==204,'owner can release an unused pending reservation')
+        check(request('/files',{'orig_name':'reserved-c.txt','content_type':'text/plain','size_bytes':10},who=quota_client)[0]==201,'released quota becomes available')
+        restart_phase('post-lifecycle phase restart')
         # Distinct account must not read, upload, link or delete the first account file.
         second_password='Synthetic9-'+secrets.token_hex(24)
         check(request('/register',{'email':'second@example.invalid','username':'second','password':second_password})[0]==201,'second isolated account');sql("UPDATE users SET email_verified=true WHERE username='second';")
