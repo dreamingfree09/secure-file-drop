@@ -138,7 +138,7 @@ def main():
         testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name,SFD_LIFECYCLE_DATABASE=dbname,SFD_LIFECYCLE_BUCKET=name,SFD_LIFECYCLE_STORAGE=docker('port',storage,'9000/tcp'),SFD_LIFECYCLE_ACCESS=access,SFD_LIFECYCLE_SECRET=storagepass,SFD_HASH_TOOL=str(native_tool))
         result['stage']='real-go-postgresql-native-commit-faults'
         output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');result['go_security']={'passed_test_events':len(re.findall(r'(?m)^\s*--- PASS: ',output)),'skipped_test_events':len(re.findall(r'(?m)^\s*--- SKIP: ',output)),'failed_test_events':len(re.findall(r'(?m)^\s*--- FAIL: ',output)),'real_lineage_subtests':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyLineage/',output)),'real_lifecycle_ordering_cases':len(re.findall(r'(?m)^\s*--- PASS: TestLifecycleOrdering/',output)),'real_commit_fault_modes':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyCommitFaults/',output))}
-        check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output and result['go_security']['real_lineage_subtests']==10 and result['go_security']['real_commit_fault_modes']==4 and result['go_security']['real_lifecycle_ordering_cases']==5,'real PostgreSQL Go identity/lineage/COMMIT regressions and race checks')
+        check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output and result['go_security']['real_lineage_subtests']==14 and result['go_security']['real_commit_fault_modes']==4 and result['go_security']['real_lifecycle_ordering_cases']==5,'real PostgreSQL Go identity/lineage/COMMIT regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
         uploader_password='Synthetic9-'+secrets.token_hex(24)
         check(request('/register',{'email':'upload@example.invalid','username':'uploader','password':uploader_password})[0]==201,'real registration')
@@ -207,6 +207,36 @@ def main():
             time.sleep(.5)
         check(failure_status==502 and before_delete==after_delete and stat.returncode==0,'storage outage retains exact file metadata and actual object')
         result['deletion_preservation']={'admin_status':admin_status,'admin_object_removed':missing,'storage_failure_status':failure_status,'row_hash_unchanged':before_delete==after_delete,'object_retained':stat.returncode==0}
+        # Observe a real owned row lock during an unfinished multipart body,
+        # then send SIGTERM only to this fixture backend. Its process must leave
+        # time for storage/metadata compensation before a clean exit.
+        shutdown_id=create_file('active-shutdown.txt',3)
+        active_info=owned('container',backend);active_port=active_info['NetworkSettings']['Ports']['8080/tcp'][0]
+        assert active_port['HostIp']=='127.0.0.1'
+        stream=http.client.HTTPConnection('127.0.0.1',int(active_port['HostPort']),timeout=30)
+        shutdown_boundary='sfd-shutdown-'+secrets.token_hex(8)
+        fragment=('--'+shutdown_boundary+'\r\nContent-Disposition: form-data; name="file"; filename="active-shutdown.txt"\r\nContent-Type: text/plain\r\n\r\nabc').encode()
+        try:
+            stream.putrequest('POST','/upload?id='+shutdown_id)
+            stream.putheader('Origin',origin);stream.putheader('Cookie','; '.join(c.name+'='+c.value for c in jar))
+            stream.putheader('Content-Type','multipart/form-data; boundary='+shutdown_boundary);stream.putheader('Content-Length',str(len(fragment)+100));stream.endheaders();stream.send(fragment)
+            locked=False
+            for _ in range(30):
+                owned('container',name+'-pg')
+                lock_probe=subprocess.run(['docker','exec',name+'-pg','psql','-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate','-U','fixture','-d',dbname,'-c',"BEGIN; SELECT id FROM files WHERE id='"+shutdown_id+"' FOR UPDATE NOWAIT;ROLLBACK;"],capture_output=True)
+                if lock_probe.returncode!=0:
+                    assert b'55P03' in lock_probe.stderr,'unexpected owned lock diagnostic'
+                    locked=True;break
+                time.sleep(.1)
+            check(locked,'active multipart owns real PostgreSQL row lock before SIGTERM')
+            started=time.monotonic();owned('container',backend);docker('stop','--time','25',backend);elapsed=time.monotonic()-started
+        finally:stream.close()
+        final_info=owned('container',backend)
+        status_after=sql("SELECT status FROM files WHERE id='"+shutdown_id+"';")
+        object_missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+shutdown_id],capture_output=True).returncode!=0
+        check(final_info['State']['ExitCode']==0 and not final_info['State']['Running'] and elapsed<20 and status_after=='failed' and object_missing,'real SIGTERM finishes bounded failed-upload compensation and exits cleanly')
+        result['active_shutdown']={'exit_code':final_info['State']['ExitCode'],'elapsed_seconds':round(elapsed,3),'row_lock_observed':locked,'status':status_after,'actual_object_absent':object_missing,'docker_kill_budget_seconds':25,'application_budget_seconds':20}
+        restart_phase('post-SIGTERM phase restart')
         mismatch=create_file('mismatch.txt',1);check(upload_bytes(mismatch,b'abc')[0]==400,'actual bytes must match reserved metadata')
         check(sql("SELECT status FROM files WHERE id='"+mismatch+"';")=='failed','mismatched upload retains failed metadata')
         truncated=create_file('truncated.txt',len(data));check(upload_bytes(truncated,data,False)[0]==400,'truncated multipart framing rejected')
