@@ -41,6 +41,9 @@ func TestAuditFiltersOwnedFixture(t *testing.T) {
 	if db.QueryRow("SELECT count(*) FROM public.audit_logs").Scan(&existing) != nil || existing != 0 {
 		t.Fatal("fresh migrated audit table required")
 	}
+	if _, err := db.Exec("SET TIME ZONE 'Pacific/Honolulu'"); err != nil {
+		t.Fatal("set synthetic connection timezone")
+	}
 	server := &Server{db: db}
 	ctx := context.Background()
 	start := time.Now().Add(-time.Minute)

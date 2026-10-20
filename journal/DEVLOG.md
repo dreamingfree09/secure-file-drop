@@ -360,3 +360,8 @@ Retain the exact local C# acceptance probe source used to load and exercise the 
 ### 2026-10-20 — Applied audit-schema correction
 
 Source review confirmed the unused audit helper queried resource/details and inserted a text ID against a migration defining resource_id/metadata, required event_type and BIGSERIAL ID. Map the existing helper to the applied columns and database-generated ID; no migration or historical record conversion. Replace the temporary invented-schema test with the real fresh migrated public table under the existing owner guard. Automatic operation-wide audit wiring remains absent and is not claimed or added as a new feature. Independent review is required before adoption.
+
+
+### 2026-10-20 — Audit timestamp boundary correction
+
+Real-schema bounds tests failed because migration timestamp has no timezone while the helper wrote local wall time and compared timestamptz filters. Store UTC explicitly and interpret the applied timestamp column as UTC for bounded filtering. Regression uses a non-UTC session timezone. No existing rows or schema changed.

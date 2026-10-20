@@ -43,7 +43,7 @@ type AuditLog struct {
 
 // LogAudit records an audit entry using the applied schema and database-assigned ID.
 func (s *Server) LogAudit(ctx context.Context, log AuditLog) error {
-	log.Timestamp = time.Now()
+	log.Timestamp = time.Now().UTC()
 
 	// Convert details to JSON
 	detailsJSON, err := json.Marshal(log.Details)
@@ -81,8 +81,8 @@ func (s *Server) GetAuditLogs(ctx context.Context, filters AuditFilters) ([]Audi
  user_agent, resource_id, metadata, success, error_message FROM audit_logs
  WHERE ($1::text = '' OR action = $1)
  AND ($2::text = '' OR user_id::text = $2)
- AND ($3::timestamptz IS NULL OR timestamp >= $3)
- AND ($4::timestamptz IS NULL OR timestamp <= $4)
+ AND ($3::timestamptz IS NULL OR timestamp AT TIME ZONE 'UTC' >= $3)
+ AND ($4::timestamptz IS NULL OR timestamp AT TIME ZONE 'UTC' <= $4)
  ORDER BY timestamp DESC LIMIT $5`
 	var start, end interface{}
 	if !filters.StartTime.IsZero() {
