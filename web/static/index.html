@@ -961,10 +961,10 @@ function resetSessionUI() {
   activeUploads.clear();
   selectedFile = currentUpload = null; uploadQueue = []; queuedKeys.clear();
   uploadInProgress = false; allFiles = []; myFilesAll = []; myFilesRendered = []; mySelection.clear();
-  for (const id of ['username','password','regEmail','regUsername','regPassword','regPasswordConfirm','linkPassword','downloadLink']) {
+  for (const id of ['username','password','regEmail','regUsername','regPassword','regPasswordConfirm','linkPassword','downloadLink','fileInput']) {
     const node = document.getElementById(id); if (node) node.value = '';
   }
-  for (const id of ['metricsOutput','filesOutput','myFilesOutput','quotaOutput','uploadAlert','loginAlert','qrCodeContainer']) {
+  for (const id of ['metricsOutput','filesOutput','myFilesOutput','quotaOutput','uploadAlert','loginAlert','qrCodeContainer','fileName','fileSize','linkExpires','myFilesCount','myFilesUpdated']) {
     const node = document.getElementById(id); if (node) node.textContent = '';
   }
   for (const id of ['linkContainer','fileInfo','progressContainer','qrModal']) {

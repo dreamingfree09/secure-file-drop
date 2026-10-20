@@ -155,7 +155,7 @@ def main():
             nss.mkdir(parents=True,exist_ok=True)
             if not (nss/'cert9.db').exists():command(['certutil','-N','-d','sql:'+str(nss),'--empty-password'])
             command(['certutil','-A','-d','sql:'+str(nss),'-n',name,'-t','C,,','-i',str(cert)])
-            browserenv=dict(os.environ,SFD_AUTH_BROWSER_MODULE=str(pathlib.Path(args.browser_module).resolve()))
+            browserenv=dict(os.environ,SFD_AUTH_BROWSER_MODULE=str(pathlib.Path(args.browser_module).resolve()),NODE_EXTRA_CA_CERTS=str(pathlib.Path(args.ca) if args.ca else cert))
             browserout=command(['node',str(repo/'tests/auth/browser.cjs'),origin,str(root/'windows-fixture.json')],env=browserenv,timeout=60)
             (root/'browser-tests.txt').write_text(browserout+'\n')
             check('BROWSER ACCEPTANCE PASS:' in browserout,'real historical browser UI over normally validated HTTPS')

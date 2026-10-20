@@ -64,4 +64,4 @@ function check(value,name){ assert.ok(value,name); checks.push(name); }
   await context.close();console.log('BROWSER ACCEPTANCE PASS: actual historical browser UI with verified identities, role-correct quota, upload/hash/download and session-state cleanup');
   console.log('LEGACY BROWSER CHECKS: '+JSON.stringify({count:checks.length,checks,clipboard:'isolated test clipboard; OS clipboard unexecuted',external_QR:'external requests blocked in synthetic fixture; QR integration unexecuted'}));
  }finally{await browser.close();}
-})().catch(error=>{console.error('BROWSER DIAGNOSTIC: '+JSON.stringify({stage,kind:error.name,assertion:error.name==='AssertionError'?error.message:'runtime failure; values redacted'}));process.exitCode=1;});
+})().catch(error=>{console.error('BROWSER DIAGNOSTIC: '+JSON.stringify({stage,kind:error.name,certificate_error:/CERT_|certificate/i.test(error.message),assertion:error.name==='AssertionError'?error.message:'runtime failure; values redacted'}));process.exitCode=1;});
