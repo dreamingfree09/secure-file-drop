@@ -221,6 +221,12 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 		}
 		// #nosec G204 G702 -- Fixed browser script; argument is the verified owned loopback port, no shell.
 		cmd := exec.CommandContext(ctx, "node", "tests/browser/journey.cjs", restoredApp.base)
+		fixture, err := json.Marshal(map[string]string{"username": "admin", "password": f.adminSecret})
+		if err != nil {
+			f.t.Fatal(err)
+		}
+		cmd.Stdin = bytes.NewReader(fixture)
+		cmd.Env = append(os.Environ(), "SFD_BROWSER_RUN="+f.run)
 		cmd.Dir = "../.."
 		cmd.Env = os.Environ()
 		out, err := cmd.CombinedOutput()

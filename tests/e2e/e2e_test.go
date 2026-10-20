@@ -523,6 +523,12 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		}
 		// #nosec G204 G702 -- Constant script, verified synthetic loopback target; no shell.
 		cmd := exec.CommandContext(ctx, "node", "../browser/journey.cjs", base)
+		fixture, err := json.Marshal(map[string]string{"username": "admin", "password": password})
+		if err != nil {
+			t.Fatal(err)
+		}
+		cmd.Stdin = bytes.NewReader(fixture)
+		cmd.Env = append(os.Environ(), "SFD_BROWSER_RUN="+run)
 		if out, err := cmd.CombinedOutput(); err != nil {
 			t.Fatalf("real browser: %v %s", err, out)
 		} else {

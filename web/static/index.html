@@ -622,7 +622,7 @@
 
           <button class="btn btn-primary" onclick="login()">Sign In</button>
 
-          <div id="loginAlert"></div>
+          <div id="loginAlert" role="alert"></div>
 
           <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
             <span style="color: var(--text-secondary);">Don't have an account?</span>
@@ -700,7 +700,7 @@
             <div class="link-expires" id="linkExpires"></div>
           </div>
 
-          <div id="uploadAlert"></div>
+          <div id="uploadAlert" role="alert"></div>
         </div>
       </div>
 
@@ -867,6 +867,7 @@ async function uploadFile() {
   const uploadAlert = document.getElementById('uploadAlert');
   
   try {
+    uploadAlert.textContent = '';
     // Show progress
     progressContainer.classList.add('show');
     progressFill.style.width = '30%';
