@@ -933,5 +933,75 @@
   "live_adoption": false,
   "merge": false,
   "Owner_interactive": "unexecuted",
-  "production_readiness": false
+  "production_readiness": false,
+  "corrected_legacy_image": {
+    "source": "1eed52bd8ab5e0d16928ce831f7a455d3a877728",
+    "image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad"
+  },
+  "corrected_legacy_dual_layout": [
+    {
+      "role": "corrected-ui-bytea",
+      "image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad",
+      "layout": "bytea",
+      "backend_fixture_exit": 0,
+      "backend_checks": 34,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "LEGACY BROWSER CHECKS: {\"count\":27,\"checks\":[\"actual environment administrator UI login\",\"sign-in password field cleared\",\"environment administrator quota is inapplicable, not a temporary failure\",\"environment administrator dashboard visible\",\"actual admin identity verified\",\"actual environment admin logout revokes session\",\"actual registered user UI login\",\"registered user quota readback works\",\"ordinary user administrator dashboard hidden\",\"actual multipart upload 0\",\"owned HTTPS signed link 0\",\"actual byte-equal download 0\",\"native hash and owned browser metadata 0\",\"copy control with isolated test clipboard 0\",\"actual multipart upload 1\",\"owned HTTPS signed link 1\",\"actual byte-equal download 1\",\"native hash and owned browser metadata 1\",\"copy control with isolated test clipboard 1\",\"logout clears signed link immediately\",\"signed-out application hidden\",\"registered logout rejects protected readback\",\"actual registered user UI login\",\"login200 plus identity500 does not accept a session\",\"actual registered user UI login\",\"401 resets account and protected transfer UI\",\"no uncaught browser errors\"],\"clipboard\":\"isolated test clipboard; OS clipboard unexecuted\",\"external_QR\":\"external requests blocked in synthetic fixture; QR integration unexecuted\"}"
+      ]
+    },
+    {
+      "role": "corrected-ui-bigint",
+      "image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad",
+      "layout": "bigint",
+      "backend_fixture_exit": 0,
+      "backend_checks": 34,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "LEGACY BROWSER CHECKS: {\"count\":27,\"checks\":[\"actual environment administrator UI login\",\"sign-in password field cleared\",\"environment administrator quota is inapplicable, not a temporary failure\",\"environment administrator dashboard visible\",\"actual admin identity verified\",\"actual environment admin logout revokes session\",\"actual registered user UI login\",\"registered user quota readback works\",\"ordinary user administrator dashboard hidden\",\"actual multipart upload 0\",\"owned HTTPS signed link 0\",\"actual byte-equal download 0\",\"native hash and owned browser metadata 0\",\"copy control with isolated test clipboard 0\",\"actual multipart upload 1\",\"owned HTTPS signed link 1\",\"actual byte-equal download 1\",\"native hash and owned browser metadata 1\",\"copy control with isolated test clipboard 1\",\"logout clears signed link immediately\",\"signed-out application hidden\",\"registered logout rejects protected readback\",\"actual registered user UI login\",\"login200 plus identity500 does not accept a session\",\"actual registered user UI login\",\"401 resets account and protected transfer UI\",\"no uncaught browser errors\"],\"clipboard\":\"isolated test clipboard; OS clipboard unexecuted\",\"external_QR\":\"external requests blocked in synthetic fixture; QR integration unexecuted\"}"
+      ]
+    },
+    {
+      "role": "release-bytea",
+      "image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad",
+      "layout": "bytea",
+      "backend_fixture_exit": 0,
+      "backend_checks": 34,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 36"
+      ]
+    },
+    {
+      "role": "release-bigint",
+      "image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad",
+      "layout": "bigint",
+      "backend_fixture_exit": 0,
+      "backend_checks": 34,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 36"
+      ]
+    }
+  ],
+  "untrusted_native_endpoint": {
+    "received_HTTP_requests": 0,
+    "closed": true
+  }
 }
