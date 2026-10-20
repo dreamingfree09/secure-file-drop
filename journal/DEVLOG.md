@@ -345,3 +345,8 @@ Separate worker from exact PR27 candidate8c; no canonical/legacy application sub
 ### 2026-10-20 — Real Windows upload reconciliation compatibility
 
 The preserved F196 reviewed executable authenticated normally over trusted HTTPS but its first real upload ended at GET /files HTTP 405. Reuse the existing authenticated, UUID-owned /user/files listing for GET /files; POST metadata creation and administrator separation remain unchanged. Fresh real PostgreSQL tests require identical owned metadata, anonymous401, environment-admin403 and cross-account isolation. No live backend or existing records changed. Independent Aether review remains mandatory.
+
+
+### 2026-10-20 — Legacy correction current-head CI
+
+Extend the existing protected lint/security and real PostgreSQL BYTEA/BIGINT HTTPS acceptance workflow to the owned correction branch and its PR27 base. Preserve full lint invocation and enforcement verifier, all existing security tests and the frozen reviewed Windows transport reference. Workflow installation is a separate commit.

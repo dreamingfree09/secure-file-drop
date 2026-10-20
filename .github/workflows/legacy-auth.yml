@@ -1,9 +1,9 @@
 name: Legacy administrator session compatibility
 on:
   push:
-    branches: [codex/sfd-admin-session-compatibility-20261018]
+    branches: [codex/sfd-admin-session-compatibility-20261018, codex/sfd-full-e2e-legacy-20261020]
   pull_request:
-    branches: [feature/v2-enhancements]
+    branches: [feature/v2-enhancements, codex/sfd-admin-session-compatibility-20261018]
 permissions:
   contents: read
 concurrency:
