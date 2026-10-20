@@ -394,3 +394,8 @@ Record the exact received PR ancestry, scoped UI/API/audit corrections, real bro
 ### 2026-10-20 — Dependency scan failure attribution
 
 Hosted contract scans reached the verified RustFS binary but failed inside a Docker helper closing over the parent test, causing Goexit and hiding the actual scanner failure in the child summary. Bind the dependency scanner helper to its current subtest while keeping ownership cleanup on the parent. Do not suppress the failed scan or count later scenarios as passes. Local18/18 and hosted6/6 evidence remain separate.
+
+
+### 2026-10-20 — Public SBOM scanner permission correction
+
+Exact hosted failure: private wrapper umask0077 reduced the public upstream SBOM creation mode to0600; the restricted scanner could not read its bind mount. Explicitly apply intended0644 only to the checksum-verified public SBOM in t.TempDir. Keep private log/fixture umask0077, scanner restrictions, provenance digest and all advisory assertions. A narrow G302 annotation documents this public-only boundary; legacy lint annotations/policy remain unchanged.
