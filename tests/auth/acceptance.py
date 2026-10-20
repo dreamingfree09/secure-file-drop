@@ -3,12 +3,13 @@
 Required: --backend-image, --postgres-image, --storage-image (already local).
 Optional --cert/--key use existing localhost TLS material read-only, with no trust changes.
 """
+import shutil, tempfile, stat
 import argparse, hashlib, http.client, http.cookiejar, http.server, json, os, pathlib, secrets, ssl, subprocess, threading, time, urllib.request, urllib.error, urllib.parse, uuid
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--rollback-image');ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--hash-layout',choices=['bigint','bytea'],default='bigint');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
     os.umask(0o077);root=pathlib.Path(args.output);root.mkdir(parents=True,exist_ok=False)
-    repo=pathlib.Path(__file__).resolve().parents[2];name='sfd-auth-'+secrets.token_hex(6);label='sfd.auth-fixture';created=[];volumes=[];network=None;server=None;thread=None
+    repo=pathlib.Path(__file__).resolve().parents[2];name='sfd-auth-'+secrets.token_hex(6);label='sfd.auth-fixture';created=[];volumes=[];network=None;server=None;thread=None;native_dir=None
     result={'fixture':name,'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip(),'checks':[],'failures':[]};checks=result['checks']
     def check(value,name):
         if not value:raise AssertionError(name)
@@ -122,7 +123,17 @@ def main():
         owned('container',backend);docker('rm','-f',backend);created.remove(backend);backend=start_backend();ready();check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'logout revocation survives backend recreation')
         # Run the exact handler/security suite against this uniquely guarded database.
         pgports=pginfo['NetworkSettings']['Ports']['5432/tcp'];assert pgports[0]['HostIp']=='127.0.0.1'
-        testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name,SFD_LIFECYCLE_DATABASE=dbname,SFD_LIFECYCLE_BUCKET=name,SFD_LIFECYCLE_STORAGE=docker('port',storage,'9000/tcp'),SFD_LIFECYCLE_ACCESS=access,SFD_LIFECYCLE_SECRET=storagepass,SFD_HASH_TOOL=str(repo/'native/sfd-hash'))
+        # DrvFS build outputs can report mode0777. Preserve executable policy:
+        # stage exact compiled bytes in a new private Linux directory, never
+        # relax the application's group/other-write rejection.
+        native_dir=pathlib.Path(tempfile.mkdtemp(prefix='sfd-lifecycle-native-',dir='/tmp'));native_dir.chmod(0o700)
+        (native_dir/'owner').write_text(name)
+        native_bytes=(repo/'native/sfd-hash').read_bytes();native_tool=native_dir/'sfd-hash'
+        with native_tool.open('xb') as output:output.write(native_bytes)
+        native_tool.chmod(0o500)
+        check(hashlib.sha256(native_tool.read_bytes()).digest()==hashlib.sha256(native_bytes).digest() and stat.S_IMODE(native_tool.stat().st_mode)==0o500,'exact host-native bytes staged with safe executable permissions')
+        result['host_native_tool_sha256']=hashlib.sha256(native_bytes).hexdigest()
+        testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name,SFD_LIFECYCLE_DATABASE=dbname,SFD_LIFECYCLE_BUCKET=name,SFD_LIFECYCLE_STORAGE=docker('port',storage,'9000/tcp'),SFD_LIFECYCLE_ACCESS=access,SFD_LIFECYCLE_SECRET=storagepass,SFD_HASH_TOOL=str(native_tool))
         output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output,'real PostgreSQL Go security regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
         uploader_password='Synthetic9-'+secrets.token_hex(24)
@@ -307,6 +318,9 @@ def main():
         for ident in reversed(created):owned('container',ident);docker('rm','-f',ident)
         if network is not None:owned('network',network);docker('network','rm',network)
         for v in reversed(volumes):owned('volume',v);docker('volume','rm',v)
+        if native_dir is not None:
+            assert native_dir.parent==pathlib.Path('/tmp') and not native_dir.is_symlink() and (native_dir/'owner').read_text()==name
+            shutil.rmtree(native_dir)
         result['existing_services_unchanged']=snapshot()==baseline;result['owned_cleanup_complete']=not docker('ps','-aq','--filter','label='+label+'='+name) and not docker('volume','ls','-q','--filter','label='+label+'='+name) and not docker('network','ls','-q','--filter','label='+label+'='+name)
         (root/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
     return 0 if not result['failures'] and result['existing_services_unchanged'] and result['owned_cleanup_complete'] else 1
