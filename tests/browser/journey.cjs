@@ -28,7 +28,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
       };
     });
     const user = 'browser_' + crypto.randomBytes(6).toString('hex');
-    const password = 'SyntheticBrowser' + crypto.randomBytes(16).toString('hex') + '7';
+    const password = fixture.browser_password || ('SyntheticBrowser' + crypto.randomBytes(16).toString('hex') + '7');
     stage = 'initial page and accessibility'; await page.goto(base);
     check(await page.locator('#loginForm').getByLabel('Username', { exact: true }).count() === 1 && await page.locator('#loginForm').getByLabel('Password', { exact: true }).getAttribute('type') === 'password', 'initial page and labelled masked credentials');
     await page.getByRole('link', { name: 'Create Account', exact: true }).click();

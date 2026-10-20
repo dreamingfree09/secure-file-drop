@@ -37,7 +37,7 @@ type rehearsal struct {
 	ctx                                                                              context.Context
 	cli, run, network, label, appImage, minioImage, evidence                         string
 	root, rootSecret, app, appSecret, reader, readerSecret, outsider, outsiderSecret string
-	pgSecret, adminSecret, sessionSecret, downloadSecret                             string
+	browserSecret, pgSecret, adminSecret, sessionSecret, downloadSecret              string
 	resources                                                                        [][2]string
 	rustEnv                                                                          map[string]string
 }
@@ -75,6 +75,7 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 	f.reader, f.readerSecret = "reader_"+rehearsalSecret()[:16], rehearsalSecret()
 	f.outsider, f.outsiderSecret = "outsider_"+rehearsalSecret()[:16], rehearsalSecret()
 	f.pgSecret, f.adminSecret = rehearsalSecret(), rehearsalSecret()
+	f.browserSecret = "Rehearsal7" + rehearsalSecret()
 	f.sessionSecret, f.downloadSecret = rehearsalSecret(), rehearsalSecret()
 	f.evidence = t.TempDir()
 	if base := os.Getenv("SFD_REHEARSAL_EVIDENCE"); base != "" {
@@ -221,7 +222,7 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 		}
 		// #nosec G204 G702 -- Fixed browser script; argument is the verified owned loopback port, no shell.
 		cmd := exec.CommandContext(ctx, "node", "tests/browser/journey.cjs", restoredApp.base)
-		fixture, err := json.Marshal(map[string]string{"max_file_bytes": "6291456", "username": "admin", "password": f.adminSecret})
+		fixture, err := json.Marshal(map[string]string{"browser_password": f.browserSecret, "max_file_bytes": "6291456", "username": "admin", "password": f.adminSecret})
 		if err != nil {
 			f.t.Fatal(err)
 		}
@@ -772,7 +773,7 @@ func (f *rehearsal) accept(a rehearsalApp, manifest []rehearsalFile, data map[st
 			if !strings.HasPrefix(r.Username, "browser_") {
 				f.t.Fatal("unexpected synthetic owner")
 			}
-			browserLogin := f.request(a, "POST", "/login", f.json(map[string]string{"username": r.Username, "password": "SyntheticBrowser123"}), nil, "")
+			browserLogin := f.request(a, "POST", "/login", f.json(map[string]string{"username": r.Username, "password": f.browserSecret}), nil, "")
 			f.expect(browserLogin.code, 200)
 			if len(browserLogin.cookies) != 1 {
 				f.t.Fatal("browser owner missing session")

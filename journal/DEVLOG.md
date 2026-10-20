@@ -369,3 +369,8 @@ Owner-authorised Windows-only correction from PR #26 received 4c3c2736129a1b1423
 ## 2026-10-20 - SFD-FULL-E2E-ACCEPTANCE-20261020: acceptance execution
 
 Received canonical combined source c320861536914623ea22f28c1d4ea156d4c2132a (PR26 over PR25), separately preserved legacy proposal 8c548d8da15e280f3a5b595eaa8a0687627f5452 (PR27 over WSL feature2b). No source-lineage substitution, live backend adoption or integration is authorised while Aether exact-revision gates remain unresolved. Baseline Go/unit/race/vet/build/native/lint/docs/environment checks passed; explicit opt-in/fault fixture skips are not runtime acceptance. Expanded the existing real browser journey with privately piped synthetic credentials, keyboard/role/file-boundary/integrity/expiry/interruption checks and isolated clipboard instrumentation. Fixed stale upload error text at the start of a subsequent attempt and marked existing feedback as alerts. Actual runtime results and remaining visual/legacy reconciliation gates will be recorded after execution. Original DEVLOG prefix and all existing worktrees/services remain preserved.
+
+
+### 2026-10-20 — Rehearsal credential handoff
+
+The expanded browser uses fresh synthetic passwords; rollback phase F still assumed its historical constant and correctly rejected authentication. Pass a fresh rehearsal-owned browser password privately through stdin and reuse it only to verify the restored synthetic account. Retain both failed rehearsal namespaces stopped with checkpoints. The five completed phases are not six-phase acceptance; rerun all six in a fresh namespace.
