@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Run existing owned suites; publish only credential-free structured evidence."""
-import json, os, pathlib, subprocess, sys
+import json, os, pathlib, subprocess, sys, re
 os.umask(0o077)
 suite=sys.argv[1]
 assert suite in ('default','contract','rehearsal')
@@ -23,7 +23,8 @@ output=''.join(x.get('Output','') for x in events);browser=[]
 for line in output.splitlines():
  if 'BROWSER CHECKS: ' in line:browser.append(json.loads(line.split('BROWSER CHECKS: ',1)[1]))
 desktop=output.count('DESKTOP PASS:')
-result={'revision':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'suite':suite,'exit':process.returncode,'expected_scenarios':expected,'passed':passed,'failures':failures,'skips':skips,'browser':browser,'portable_desktop_checks':desktop,'real_Owner_GUI':'unexecuted','private_log_published':False}
+diagnostics=[line.strip() for line in output.splitlines() if re.search(r'(Alpine secdb HTTP [0-9]+|SBOM.*HTTP [0-9]+|unsupported runtime distribution|scanner failed:|invalid scanner JSON|storage binary scan timed out)',line)]
+result={'diagnostics':diagnostics,'revision':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'suite':suite,'exit':process.returncode,'expected_scenarios':expected,'passed':passed,'failures':failures,'skips':skips,'browser':browser,'portable_desktop_checks':desktop,'real_Owner_GUI':'unexecuted','private_log_published':False}
 (root/'acceptance.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result))
 assert process.returncode==0 and len(passed)==expected and not failures and not skips,'mandatory suite did not pass'
 assert len(browser)==1 and browser[0]['count']==37,'mandatory browser journey missing'
