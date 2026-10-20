@@ -21,6 +21,10 @@ var migrationsFS embed.FS
 func RunMigrations(db *sql.DB) (result error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
+	if err := checkSchemaLineage(ctx, db); err != nil {
+		return err
+	}
+
 	source, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
 		return fmt.Errorf("migration source: %w", err)
