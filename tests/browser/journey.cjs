@@ -13,6 +13,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
   assert.match(process.env.SFD_BROWSER_RUN || '', /^sfd-quality-[0-9a-f]{16}$/);
   const fixture = JSON.parse(require('node:fs').readFileSync(0, 'utf8'));
   assert.equal(fixture.username, 'admin'); assert.ok(fixture.password);
+  const fileLimit=Number(fixture.max_file_bytes || 1024); assert.ok(Number.isSafeInteger(fileLimit) && fileLimit>=1024 && fileLimit<=8*1024*1024);
   const browser = await chromium.launch({ headless: true, chromiumSandbox: true });
   try {
     const context = await browser.newContext({ acceptDownloads: true, viewport: { width: 1280, height: 900 } });
@@ -57,7 +58,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
     const samples = [
       {name:'browser Δοκιμή 世界 with spaces & plus+.txt',bytes:Buffer.from('Real browser synthetic upload\n')},
       {name:'empty space Δ.txt',bytes:Buffer.alloc(0)},
-      {name:'exact boundary.bin',bytes:Buffer.alloc(1024,0x53)}
+      {name:'exact boundary.bin',bytes:Buffer.alloc(fileLimit,0x53)}
     ];
     for (const [index,sample] of samples.entries()) {
       stage = 'upload sample ' + index;
@@ -86,7 +87,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
       check(await page.evaluate(() => window.fixtureCopied === document.getElementById('downloadLink').value), 'copy control writes exact link to isolated test clipboard sample '+index);
     }
     stage = 'upload rejection and recovery';
-    await page.locator('#fileInput').setInputFiles({name:'too large.bin',mimeType:'application/octet-stream',buffer:Buffer.alloc(1025)});
+    await page.locator('#fileInput').setInputFiles({name:'too large.bin',mimeType:'application/octet-stream',buffer:Buffer.alloc(fileLimit+1)});
     await page.waitForFunction(() => document.getElementById('uploadAlert').textContent.includes('Upload failed'));
     check(await page.locator('#linkContainer').evaluate(el => !el.classList.contains('show')), 'oversize rejection leaves no successful link');
     await context.setOffline(true);
@@ -97,6 +98,7 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
     await page.locator('#fileInput').setInputFiles({name:'recovered.txt',mimeType:'text/plain',buffer:Buffer.from('recovered')});
     check((await retry).status() === 200,'browser upload recovers after connectivity returns');
     await page.waitForFunction(() => document.getElementById('linkContainer').classList.contains('show'));
+    const ownRows=await page.evaluate(async () => (await fetch('/files')).json());
     stage = 'responsive and safe evidence';
     await page.setViewportSize({width:390,height:844});
     check(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth+2),'mobile layout contains horizontal overflow');
@@ -116,6 +118,13 @@ function check(value, name) { assert.ok(value, name); checks.push(name); }
     check(true,'administrator actual metrics render');
     await page.evaluate(() => { for (const el of document.querySelectorAll('input')) el.value=''; });
     if(process.env.SFD_BROWSER_EVIDENCE) await page.screenshot({path:path.join(process.env.SFD_BROWSER_EVIDENCE,process.env.SFD_BROWSER_RUN+'-admin.png'),fullPage:true});
+    stage='owned browser fixture cleanup';
+    const allowedNames=new Set([...samples.map(x=>x.name),'recovered.txt']);
+    for(const row of ownRows.filter(x=>x.orig_name!==samples[0].name)){
+      assert.ok(allowedNames.has(row.orig_name) && /^[0-9a-f-]{36}$/.test(row.id));
+      const response=await page.evaluate(async id=>fetch('/admin/files/'+id,{method:'DELETE'}).then(r=>r.status),row.id);
+      assert.equal(response,204);
+    }
     stage='logout'; await page.getByRole('button',{name:'Sign out',exact:true}).click();
     await page.waitForFunction(() => document.getElementById('appScreen').classList.contains('hidden'));
     check((await page.request.get(base+'/me')).status() === 401,'actual logout rejects protected session');

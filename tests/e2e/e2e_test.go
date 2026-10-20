@@ -523,7 +523,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		}
 		// #nosec G204 G702 -- Constant script, verified synthetic loopback target; no shell.
 		cmd := exec.CommandContext(ctx, "node", "../browser/journey.cjs", base)
-		fixture, err := json.Marshal(map[string]string{"username": "admin", "password": password})
+		fixture, err := json.Marshal(map[string]string{"max_file_bytes": "1024", "username": "admin", "password": password})
 		if err != nil {
 			t.Fatal(err)
 		}
