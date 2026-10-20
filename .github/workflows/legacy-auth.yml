@@ -43,11 +43,13 @@ jobs:
       - name: Build the exact legacy application and pinned synthetic storage
         run: |
           docker build -t sfd-auth-candidate -f Dockerfile.backend .
+          docker build --label sfd.recovery=artifact-only -t sfd-auth-recovery -f Dockerfile.backend .
           docker build -t sfd-auth-storage -f reviewed-reference/Dockerfile.storage reviewed-reference
           docker pull postgres:16-alpine
       - name: Require owned real PostgreSQL, native hash and HTTPS session acceptance
         run: |
           SFD_E2E_BACKEND_IMAGE=sfd-auth-candidate \
+          SFD_E2E_ROLLBACK_IMAGE=sfd-auth-recovery \
           SFD_E2E_POSTGRES_IMAGE=postgres:16-alpine \
           SFD_E2E_STORAGE_IMAGE=sfd-auth-storage \
           SFD_E2E_OUTPUT_ROOT="$RUNNER_TEMP" \
