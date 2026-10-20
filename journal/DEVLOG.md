@@ -350,3 +350,8 @@ The preserved F196 reviewed executable authenticated normally over trusted HTTPS
 ### 2026-10-20 — Legacy correction current-head CI
 
 Extend the existing protected lint/security and real PostgreSQL BYTEA/BIGINT HTTPS acceptance workflow to the owned correction branch and its PR27 base. Preserve full lint invocation and enforcement verifier, all existing security tests and the frozen reviewed Windows transport reference. Workflow installation is a separate commit.
+
+
+### 2026-10-20 — Preserved executable real Windows acceptance
+
+Retain the exact local C# acceptance probe source used to load and exercise the unchanged F196 Framework 4.8 executable. On backend image sha256:3d774f3e4c13a3094fcbb9555010a2260f32505a48a5d2bda56f8bbca5e5c4c7, both real BYTEA and BIGINT fixtures passed 34 backend checks and 36 actual release checks. This includes normal Windows certificate/revocation validation, rejected untrusted/name-mismatched certificates, multipart/native SHA/download equality, DPAPI persistence/isolation, real server expiry, logout, account switching and an owned programmatic tray context/exit. No Owner visual/file-picker/Explorer/OS clipboard acceptance is claimed. Empty files correctly generate no byte-chunk progress events; completion is separately verified. Only new labelled synthetic database/session records were expired. Private fixture files and binaries remain local.
