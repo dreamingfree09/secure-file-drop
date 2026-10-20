@@ -498,6 +498,12 @@ func (f *rehearsal) application(suffix string, d rehearsalDB, s rehearsalStore) 
 	a := rehearsalApp{id: f.docker(args...), db: d}
 	f.own("container", a.id)
 	a.base = "http://" + f.port(a.id, "8080/tcp")
+	lastReadiness := "not attempted"
+	defer func() {
+		if lastReadiness != "HTTP 200" {
+			f.t.Log("owned backend readiness diagnostic:", lastReadiness)
+		}
+	}()
 	f.wait("unchanged backend", func() bool {
 		req, err := http.NewRequestWithContext(f.ctx, "GET", a.base+"/ready", nil)
 		if err != nil {
@@ -505,8 +511,10 @@ func (f *rehearsal) application(suffix string, d rehearsalDB, s rehearsalStore) 
 		}
 		res, err := (&http.Client{Timeout: 3 * time.Second}).Do(req)
 		if err != nil {
+			lastReadiness = fmt.Sprintf("transport error type %T", err)
 			return false
 		}
+		lastReadiness = fmt.Sprintf("HTTP %d", res.StatusCode)
 		_ = res.Body.Close()
 		return res.StatusCode == 200
 	})
