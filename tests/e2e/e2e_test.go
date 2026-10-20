@@ -55,14 +55,17 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		}
 		return strings.TrimSpace(string(b)), e
 	}
-	docker := func(args ...string) string {
-		t.Helper()
-		out, e := call(args...)
-		if e != nil {
-			t.Fatalf("Docker %s failed: %v\n%s", args[0], e, out)
+	dockerFor := func(test *testing.T) func(...string) string {
+		return func(args ...string) string {
+			test.Helper()
+			out, e := call(args...)
+			if e != nil {
+				test.Fatalf("Docker %s failed: %v\n%s", args[0], e, out)
+			}
+			return out
 		}
-		return out
 	}
+	docker := dockerFor(t)
 	endpoint := docker("context", "inspect", "--format", "{{.Endpoints.docker.Host}}")
 	if os.Getenv("DOCKER_HOST") != "" || (!strings.HasPrefix(endpoint, "unix://") && !strings.HasPrefix(endpoint, "npipe://")) {
 		t.Fatal("only the local Docker engine is permitted")
@@ -654,7 +657,7 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 	code, _, _ = request("GET", base+"/", nil, nil, nil)
 	expect(code, 200)
 
-	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(ctx, t, app, mi, run, storage.binary, docker, own) })
+	t.Run("assessment-runtime-dependencies", func(t *testing.T) { assessRuntimeDependencies(ctx, t, app, mi, run, storage.binary, dockerFor(t), own) })
 	t.Run("assessment-fixture-recovery", func(t *testing.T) {
 		assessFixtureRecovery(ctx, t, conn, mc, database, bucket, "uploads/"+concurrentID, pg, run, docker)
 	})

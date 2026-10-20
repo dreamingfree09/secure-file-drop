@@ -389,3 +389,8 @@ The fresh rehearsal browser password exceeded the registration UI maximum. Bound
 ### 2026-10-20 — Full E2E current state and retained gates
 
 Record the exact received PR ancestry, scoped UI/API/audit corrections, real browser/Windows evidence, preserved reviewed executable, failed rehearsal evidence and pending independent acceptance. No live adoption or integration occurred. Retain the rejected fallback decision and explicit storage/deployment, schema/ownership, capacity and cross-host recovery gates. Canonical PR handover is the authoritative revision-specific report.
+
+
+### 2026-10-20 — Dependency scan failure attribution
+
+Hosted contract scans reached the verified RustFS binary but failed inside a Docker helper closing over the parent test, causing Goexit and hiding the actual scanner failure in the child summary. Bind the dependency scanner helper to its current subtest while keeping ownership cleanup on the parent. Do not suppress the failed scan or count later scenarios as passes. Local18/18 and hosted6/6 evidence remain separate.
