@@ -384,3 +384,8 @@ Install the full E2E workflow separately from application corrections. Test the 
 ### 2026-10-20 — Bound fresh browser fixture input
 
 The fresh rehearsal browser password exceeded the registration UI maximum. Bound it to a random 41-character synthetic value. Browser registration timeout is retained as a failed fixture attempt; no six-phase pass is claimed.
+
+
+### 2026-10-20 — Full E2E current state and retained gates
+
+Record the exact received PR ancestry, scoped UI/API/audit corrections, real browser/Windows evidence, preserved reviewed executable, failed rehearsal evidence and pending independent acceptance. No live adoption or integration occurred. Retain the rejected fallback decision and explicit storage/deployment, schema/ownership, capacity and cross-host recovery gates. Canonical PR handover is the authoritative revision-specific report.

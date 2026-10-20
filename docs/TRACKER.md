@@ -266,3 +266,8 @@ Final lint configuration also checks test files without an errcheck exclusion. E
 ### Verified real-container acceptance
 
 [CI run 38799681132](https://github.com/dreamingfree09/secure-file-drop/actions/runs/38799681132) at `8668a727c2dbf7bcc7980c125934b371b980bd0e` completed all three jobs successfully: Go/native/UI unit/vet/build/race/vulnerability/lint checks, documentation targets, and the mandatory real-container upload/native-hash/signed-download flow. Full-stack negative cases include ownership/roles, tampered and expired links/sessions, concurrency, native-tool failure, private storage, outage/retry, cleanup and attachment headers. Resource cleanup returned without ownership errors. Later documentation/test error-checking changes do not alter production behavior; the PR handover records the final revision's CI readback.
+
+
+## 2026-10-20 current acceptance status — SFD-FULL-E2E-ACCEPTANCE-20261020
+
+Development close-out and integration remain pending exact Aether acceptance and the current continuity gates. Historical milestone labels (including public exposure Complete) do not establish current public production readiness. Canonical and legacy workers preserve separate ancestry. Real browser/Windows/schema/storage results, known advisory applicability, failed/unexecuted tests, rollback restrictions and the minimal remaining Owner visual procedure are maintained in the canonical PR handover and [continuity](CONTINUITY.md). No live adoption or merge is claimed.

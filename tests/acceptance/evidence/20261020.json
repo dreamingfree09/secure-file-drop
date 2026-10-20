@@ -1,0 +1,937 @@
+{
+  "work_id": "SFD-FULL-E2E-ACCEPTANCE-20261020",
+  "producer": "Codex",
+  "independent_acceptance": "pending Aether",
+  "received": [
+    {
+      "PR": 25,
+      "head": "aa784cab5b32860a72958e35b0b89085ff65de72",
+      "base": "8d54031c26ec10027ecebadd754f34996d55e8dd",
+      "state": "open",
+      "merged": false,
+      "changed_files": [
+        {
+          "path": ".github/workflows/integrated-rustfs-acceptance.yml",
+          "status": "added",
+          "additions": 192,
+          "deletions": 0
+        },
+        {
+          "path": "docs/CONTINUITY.md",
+          "status": "modified",
+          "additions": 21,
+          "deletions": 0
+        },
+        {
+          "path": "docs/TRACKER.md",
+          "status": "modified",
+          "additions": 18,
+          "deletions": 0
+        },
+        {
+          "path": "journal/DEVLOG.md",
+          "status": "modified",
+          "additions": 11,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "PR": 26,
+      "head": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "base": "aa784cab5b32860a72958e35b0b89085ff65de72",
+      "state": "open",
+      "merged": false,
+      "changed_files": [
+        {
+          "path": ".github/workflows/windows-companion.yml",
+          "status": "added",
+          "additions": 184,
+          "deletions": 0
+        },
+        {
+          "path": "AGENTS.md",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 2
+        },
+        {
+          "path": "README.md",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/.gitignore",
+          "status": "added",
+          "additions": 3,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/App.cs",
+          "status": "added",
+          "additions": 346,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/Client.cs",
+          "status": "added",
+          "additions": 383,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/FrameworkTarget.cs",
+          "status": "added",
+          "additions": 3,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/SecureFileDrop.exe.config",
+          "status": "added",
+          "additions": 5,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/WindowsIntegration.cs",
+          "status": "added",
+          "additions": 206,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/app.manifest",
+          "status": "added",
+          "additions": 7,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/build.ps1",
+          "status": "added",
+          "additions": 11,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/.gitignore",
+          "status": "added",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/Client.Contract.csproj",
+          "status": "added",
+          "additions": 9,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/ContractRunner.cs",
+          "status": "added",
+          "additions": 119,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/LiveProbe.cs",
+          "status": "added",
+          "additions": 46,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/ProductPolicyTests.cs",
+          "status": "added",
+          "additions": 43,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/ProtocolTests.cs",
+          "status": "added",
+          "additions": 210,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/WindowsTests.cs",
+          "status": "added",
+          "additions": 188,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/live.ps1",
+          "status": "added",
+          "additions": 12,
+          "deletions": 0
+        },
+        {
+          "path": "desktop/windows/tests/test.ps1",
+          "status": "added",
+          "additions": 20,
+          "deletions": 0
+        },
+        {
+          "path": "docs/CONTINUITY.md",
+          "status": "modified",
+          "additions": 57,
+          "deletions": 0
+        },
+        {
+          "path": "docs/GHP-01.md",
+          "status": "modified",
+          "additions": 14,
+          "deletions": 3
+        },
+        {
+          "path": "docs/LOCAL_TLS.md",
+          "status": "added",
+          "additions": 75,
+          "deletions": 0
+        },
+        {
+          "path": "docs/TRACKER.md",
+          "status": "modified",
+          "additions": 9,
+          "deletions": 0
+        },
+        {
+          "path": "docs/WINDOWS_COMPANION.md",
+          "status": "added",
+          "additions": 132,
+          "deletions": 0
+        },
+        {
+          "path": "journal/DEVLOG.md",
+          "status": "modified",
+          "additions": 61,
+          "deletions": 0
+        },
+        {
+          "path": "tests/e2e/desktop_client_test.go",
+          "status": "added",
+          "additions": 83,
+          "deletions": 0
+        },
+        {
+          "path": "tests/e2e/proxy_corrections_test.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        }
+      ]
+    },
+    {
+      "PR": 27,
+      "head": "8c548d8da15e280f3a5b595eaa8a0687627f5452",
+      "base": "2b8e56de4b79e2508125ca02c18455ae88dee7f6",
+      "state": "open",
+      "merged": false,
+      "changed_files": [
+        {
+          "path": ".github/workflows/legacy-auth.yml",
+          "status": "added",
+          "additions": 87,
+          "deletions": 0
+        },
+        {
+          "path": ".golangci.yml",
+          "status": "modified",
+          "additions": 12,
+          "deletions": 20
+        },
+        {
+          "path": "Dockerfile.backend",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 1
+        },
+        {
+          "path": "cmd/backend/main_test.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 9
+        },
+        {
+          "path": "docs/CONTINUITY.md",
+          "status": "added",
+          "additions": 57,
+          "deletions": 0
+        },
+        {
+          "path": "go.mod",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 5
+        },
+        {
+          "path": "go.sum",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 8
+        },
+        {
+          "path": "internal/db/doc.go",
+          "status": "added",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "path": "internal/db/migrate.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/db/migrations/000012_authenticated_sessions.down.sql",
+          "status": "added",
+          "additions": 2,
+          "deletions": 0
+        },
+        {
+          "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+          "status": "added",
+          "additions": 8,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/admin.go",
+          "status": "modified",
+          "additions": 11,
+          "deletions": 8
+        },
+        {
+          "path": "internal/server/audit.go",
+          "status": "modified",
+          "additions": 17,
+          "deletions": 35
+        },
+        {
+          "path": "internal/server/auth.go",
+          "status": "modified",
+          "additions": 163,
+          "deletions": 60
+        },
+        {
+          "path": "internal/server/auth_integration_test.go",
+          "status": "added",
+          "additions": 345,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/backup.go",
+          "status": "modified",
+          "additions": 81,
+          "deletions": 99
+        },
+        {
+          "path": "internal/server/circuitbreaker.go",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 3
+        },
+        {
+          "path": "internal/server/cleanup.go",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 1
+        },
+        {
+          "path": "internal/server/compression.go",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 1
+        },
+        {
+          "path": "internal/server/config_validation.go",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 2
+        },
+        {
+          "path": "internal/server/db.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/download.go",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/download_tokens.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/email.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/endpoint_ratelimit.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/files.go",
+          "status": "modified",
+          "additions": 3,
+          "deletions": 2
+        },
+        {
+          "path": "internal/server/hash.go",
+          "status": "modified",
+          "additions": 11,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/health.go",
+          "status": "modified",
+          "additions": 16,
+          "deletions": 10
+        },
+        {
+          "path": "internal/server/jsonlog.go",
+          "status": "modified",
+          "additions": 28,
+          "deletions": 10
+        },
+        {
+          "path": "internal/server/links.go",
+          "status": "modified",
+          "additions": 8,
+          "deletions": 1
+        },
+        {
+          "path": "internal/server/lockout.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/logging.go",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 39
+        },
+        {
+          "path": "internal/server/metrics.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/minio.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/notifications.go",
+          "status": "modified",
+          "additions": 17,
+          "deletions": 3
+        },
+        {
+          "path": "internal/server/prometheus.go",
+          "status": "modified",
+          "additions": 16,
+          "deletions": 23
+        },
+        {
+          "path": "internal/server/quality_integration_test.go",
+          "status": "added",
+          "additions": 70,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/quality_regression_test.go",
+          "status": "added",
+          "additions": 286,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/quota.go",
+          "status": "modified",
+          "additions": 2,
+          "deletions": 1
+        },
+        {
+          "path": "internal/server/ratelimit.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/ratelimit_test.go",
+          "status": "modified",
+          "additions": 4,
+          "deletions": 2
+        },
+        {
+          "path": "internal/server/register.go",
+          "status": "modified",
+          "additions": 24,
+          "deletions": 8
+        },
+        {
+          "path": "internal/server/resumable.go",
+          "status": "modified",
+          "additions": 45,
+          "deletions": 2
+        },
+        {
+          "path": "internal/server/rows.go",
+          "status": "added",
+          "additions": 9,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/security.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/server.go",
+          "status": "modified",
+          "additions": 5,
+          "deletions": 34
+        },
+        {
+          "path": "internal/server/tracing.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/upload.go",
+          "status": "modified",
+          "additions": 44,
+          "deletions": 4
+        },
+        {
+          "path": "internal/server/upload_test.go",
+          "status": "modified",
+          "additions": 6,
+          "deletions": 7
+        },
+        {
+          "path": "internal/server/validation.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "internal/server/webhooks.go",
+          "status": "modified",
+          "additions": 30,
+          "deletions": 17
+        },
+        {
+          "path": "journal/DEVLOG.md",
+          "status": "modified",
+          "additions": 69,
+          "deletions": 1
+        },
+        {
+          "path": "test_hash.go",
+          "status": "modified",
+          "additions": 1,
+          "deletions": 0
+        },
+        {
+          "path": "tests/auth/WindowsProbe.cs",
+          "status": "added",
+          "additions": 41,
+          "deletions": 0
+        },
+        {
+          "path": "tests/auth/acceptance.py",
+          "status": "added",
+          "additions": 215,
+          "deletions": 0
+        },
+        {
+          "path": "tests/auth/browser.cjs",
+          "status": "added",
+          "additions": 26,
+          "deletions": 0
+        },
+        {
+          "path": "tests/auth/e2e.py",
+          "status": "added",
+          "additions": 17,
+          "deletions": 0
+        },
+        {
+          "path": "tests/auth/evidence/20261018-local.json",
+          "status": "added",
+          "additions": 58,
+          "deletions": 0
+        },
+        {
+          "path": "tests/auth/evidence/20261018-strict-lint.json",
+          "status": "added",
+          "additions": 19,
+          "deletions": 0
+        },
+        {
+          "path": "tests/auth/evidence/20261019-lint-reconciliation.json",
+          "status": "added",
+          "additions": 9065,
+          "deletions": 0
+        },
+        {
+          "path": "tests/auth/evidence/20261019-quality.json",
+          "status": "added",
+          "additions": 126,
+          "deletions": 0
+        },
+        {
+          "path": "tests/e2e/e2e_test.go",
+          "status": "modified",
+          "additions": 27,
+          "deletions": 391
+        },
+        {
+          "path": "tests/quality/verify_lint_gate.py",
+          "status": "added",
+          "additions": 114,
+          "deletions": 0
+        }
+      ]
+    }
+  ],
+  "canonical_quality": [
+    {
+      "step": "native",
+      "exit": 0
+    },
+    {
+      "step": "unit",
+      "exit": 0,
+      "passed_test_events": 111,
+      "skips": [
+        null,
+        null,
+        "TestUploadHashDownloadFlow",
+        "TestRustFSMigrationRehearsal",
+        "TestDisposableCommitFaults"
+      ],
+      "failed_tests": []
+    },
+    {
+      "step": "vet",
+      "exit": 0
+    },
+    {
+      "step": "build",
+      "exit": 0
+    },
+    {
+      "step": "race",
+      "exit": 0,
+      "passed_test_events": 111,
+      "skips": [
+        null,
+        null,
+        "TestDisposableCommitFaults"
+      ],
+      "failed_tests": []
+    },
+    {
+      "step": "lint",
+      "exit": 0
+    },
+    {
+      "step": "advisory",
+      "exit": 0
+    },
+    {
+      "step": "docs",
+      "exit": 0
+    },
+    {
+      "step": "env-validator",
+      "exit": 0
+    }
+  ],
+  "canonical_default_and_contract": [
+    {
+      "suite": "default",
+      "source": "c08aa897bd418047364afca2fec83e4837b335cd",
+      "exit": 0,
+      "expected_scenarios": 15,
+      "passed_scenarios": 15,
+      "failures": [],
+      "skips": [],
+      "live_services_preserved": true,
+      "owned_cleanup": true,
+      "retained_failed_rehearsal_preserved": true,
+      "elapsed_seconds": 212.36,
+      "browser_summaries": [
+        "BROWSER CHECKS: {\"count\":37,\"checks\":[\"initial page and labelled masked credentials\",\"actual UI synthetic registration\",\"registration clears account and password fields\",\"UI rejects incorrect credentials\",\"failed login does not open application\",\"keyboard sign-in with registered identity\",\"login clears credential fields\",\"ordinary dashboard hides administrator controls\",\"registered authenticated identity readback\",\"real multipart upload sample 0\",\"owned signed download origin sample 0\",\"attachment filename and byte equality sample 0\",\"browser metadata and native SHA-256 sample 0\",\"visible owned listing sample 0\",\"copy control writes exact link to isolated test clipboard sample 0\",\"real multipart upload sample 1\",\"owned signed download origin sample 1\",\"attachment filename and byte equality sample 1\",\"browser metadata and native SHA-256 sample 1\",\"visible owned listing sample 1\",\"copy control writes exact link to isolated test clipboard sample 1\",\"real multipart upload sample 2\",\"owned signed download origin sample 2\",\"attachment filename and byte equality sample 2\",\"browser metadata and native SHA-256 sample 2\",\"visible owned listing sample 2\",\"copy control writes exact link to isolated test clipboard sample 2\",\"oversize rejection leaves no successful link\",\"browser offline upload fails without fake completion\",\"browser upload recovers after connectivity returns\",\"mobile layout contains horizontal overflow\",\"unauthorized session resets protected UI and link\",\"synthetic environment administrator UI login\",\"administrator dashboard controls visible\",\"administrator actual metrics render\",\"actual logout rejects protected session\",\"no uncaught browser errors\"],\"OS_clipboard\":\"unexecuted; isolated test clipboard only\",\"OS_native_file_picker\":\"unexecuted; browser filechooser event exercised\"}"
+      ]
+    },
+    {
+      "suite": "rustfs-contract",
+      "source": "c08aa897bd418047364afca2fec83e4837b335cd",
+      "exit": 0,
+      "expected_scenarios": 18,
+      "passed_scenarios": 18,
+      "failures": [],
+      "skips": [],
+      "live_services_preserved": true,
+      "owned_cleanup": true,
+      "retained_failed_rehearsal_preserved": true,
+      "elapsed_seconds": 235.72,
+      "browser_summaries": [
+        "BROWSER CHECKS: {\"count\":37,\"checks\":[\"initial page and labelled masked credentials\",\"actual UI synthetic registration\",\"registration clears account and password fields\",\"UI rejects incorrect credentials\",\"failed login does not open application\",\"keyboard sign-in with registered identity\",\"login clears credential fields\",\"ordinary dashboard hides administrator controls\",\"registered authenticated identity readback\",\"real multipart upload sample 0\",\"owned signed download origin sample 0\",\"attachment filename and byte equality sample 0\",\"browser metadata and native SHA-256 sample 0\",\"visible owned listing sample 0\",\"copy control writes exact link to isolated test clipboard sample 0\",\"real multipart upload sample 1\",\"owned signed download origin sample 1\",\"attachment filename and byte equality sample 1\",\"browser metadata and native SHA-256 sample 1\",\"visible owned listing sample 1\",\"copy control writes exact link to isolated test clipboard sample 1\",\"real multipart upload sample 2\",\"owned signed download origin sample 2\",\"attachment filename and byte equality sample 2\",\"browser metadata and native SHA-256 sample 2\",\"visible owned listing sample 2\",\"copy control writes exact link to isolated test clipboard sample 2\",\"oversize rejection leaves no successful link\",\"browser offline upload fails without fake completion\",\"browser upload recovers after connectivity returns\",\"mobile layout contains horizontal overflow\",\"unauthorized session resets protected UI and link\",\"synthetic environment administrator UI login\",\"administrator dashboard controls visible\",\"administrator actual metrics render\",\"actual logout rejects protected session\",\"no uncaught browser errors\"],\"OS_clipboard\":\"unexecuted; isolated test clipboard only\",\"OS_native_file_picker\":\"unexecuted; browser filechooser event exercised\"}"
+      ]
+    }
+  ],
+  "hosted_rehearsal": {
+    "diagnostics": [],
+    "revision": "8504239c7f3a7c334fe71f4fc681de7d5d915809",
+    "suite": "rehearsal",
+    "exit": 0,
+    "expected_scenarios": 6,
+    "passed": [
+      "TestRustFSMigrationRehearsal/A-configuration-and-identity",
+      "TestRustFSMigrationRehearsal/B-authenticated-source-and-checkpoint",
+      "TestRustFSMigrationRehearsal/C-logical-scoped-copy",
+      "TestRustFSMigrationRehearsal/D-before-writes-rollback",
+      "TestRustFSMigrationRehearsal/E-cold-restored-pair-acceptance",
+      "TestRustFSMigrationRehearsal/F-postwrite-delete-coherent-rollback"
+    ],
+    "failures": [],
+    "skips": [],
+    "browser": [
+      {
+        "count": 37,
+        "checks": [
+          "initial page and labelled masked credentials",
+          "actual UI synthetic registration",
+          "registration clears account and password fields",
+          "UI rejects incorrect credentials",
+          "failed login does not open application",
+          "keyboard sign-in with registered identity",
+          "login clears credential fields",
+          "ordinary dashboard hides administrator controls",
+          "registered authenticated identity readback",
+          "real multipart upload sample 0",
+          "owned signed download origin sample 0",
+          "attachment filename and byte equality sample 0",
+          "browser metadata and native SHA-256 sample 0",
+          "visible owned listing sample 0",
+          "copy control writes exact link to isolated test clipboard sample 0",
+          "real multipart upload sample 1",
+          "owned signed download origin sample 1",
+          "attachment filename and byte equality sample 1",
+          "browser metadata and native SHA-256 sample 1",
+          "visible owned listing sample 1",
+          "copy control writes exact link to isolated test clipboard sample 1",
+          "real multipart upload sample 2",
+          "owned signed download origin sample 2",
+          "attachment filename and byte equality sample 2",
+          "browser metadata and native SHA-256 sample 2",
+          "visible owned listing sample 2",
+          "copy control writes exact link to isolated test clipboard sample 2",
+          "oversize rejection leaves no successful link",
+          "browser offline upload fails without fake completion",
+          "browser upload recovers after connectivity returns",
+          "mobile layout contains horizontal overflow",
+          "unauthorized session resets protected UI and link",
+          "synthetic environment administrator UI login",
+          "administrator dashboard controls visible",
+          "administrator actual metrics render",
+          "actual logout rejects protected session",
+          "no uncaught browser errors"
+        ],
+        "OS_clipboard": "unexecuted; isolated test clipboard only",
+        "OS_native_file_picker": "unexecuted; browser filechooser event exercised"
+      }
+    ],
+    "portable_desktop_checks": 0,
+    "real_Owner_GUI": "unexecuted",
+    "private_log_published": false
+  },
+  "module_advisories": {
+    "baseline_root": {
+      "GO-2026-5932": {
+        "level": "module-only",
+        "fixed_version": null,
+        "module": "golang.org/x/crypto"
+      }
+    },
+    "nested_iam": {
+      "GO-2026-5932": {
+        "level": "module-only",
+        "fixed_version": null,
+        "module": "golang.org/x/crypto"
+      }
+    }
+  },
+  "runtime_dependency_details": {
+    "default": [
+      "e2e_test.go:657: Alpine 3.24.2 main/community comparison: image=sha256:636c066a9f62d31850aeca38153d5dc3b2407e2abbbfdb64162ac58edbb4fa72 packages=17 advisory-matches=0; version applicability only, not exploit reachability",
+      "e2e_test.go:657: Alpine 3.24.2 main/community comparison: image=sha256:bf71d5db81327c9aa74baf664a745169e1c0dfb170bf92b3ab482dbbe9fb3889 packages=17 advisory-matches=0; version applicability only, not exploit reachability",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2025-3495 level=3 module=github.com/minio/minio installed=v0.0.0-20260212201848-7aac2a2c5b7c package=github.com/minio/minio/internal/grid symbol=shape fixed= https://pkg.go.dev/vuln/GO-2025-3495",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2025-4116 level=1 module=golang.org/x/crypto installed=v0.37.0 package= symbol= fixed=v0.43.0 https://pkg.go.dev/vuln/GO-2025-4116",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2025-4134 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=NewServerConn fixed=v0.45.0 https://pkg.go.dev/vuln/GO-2025-4134",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2025-4135 level=1 module=golang.org/x/crypto installed=v0.37.0 package= symbol= fixed=v0.45.0 https://pkg.go.dev/vuln/GO-2025-4135",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2025-4173 level=3 module=github.com/eclipse/paho.mqtt.golang installed=v1.5.0 package=github.com/eclipse/paho.mqtt.golang symbol=CleanSession fixed=v1.5.1 https://pkg.go.dev/vuln/GO-2025-4173",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4394 level=3 module=go.opentelemetry.io/otel/sdk/metric installed=v1.35.0 package=go.opentelemetry.io/otel/sdk/metric/internal/aggregate symbol=TryLock fixed= https://pkg.go.dev/vuln/GO-2026-4394",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4440 level=1 module=golang.org/x/net installed=v0.39.0 package= symbol= fixed=v0.45.0 https://pkg.go.dev/vuln/GO-2026-4440",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4441 level=1 module=golang.org/x/net installed=v0.39.0 package= symbol= fixed=v0.45.0 https://pkg.go.dev/vuln/GO-2026-4441",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4503 level=2 module=filippo.io/edwards25519 installed=v1.1.0 package=filippo.io/edwards25519 symbol= fixed=v1.1.1 https://pkg.go.dev/vuln/GO-2026-4503",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4514 level=2 module=github.com/buger/jsonparser installed=v1.1.1 package=github.com/buger/jsonparser symbol= fixed=v1.1.2 https://pkg.go.dev/vuln/GO-2026-4514",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4762 level=3 module=google.golang.org/grpc installed=v1.72.0 package=google.golang.org/grpc symbol=ServeHTTP fixed=v1.79.3 https://pkg.go.dev/vuln/GO-2026-4762",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4779 level=3 module=github.com/minio/minio installed=v0.0.0-20260212201848-7aac2a2c5b7c package=github.com/minio/minio/internal/bucket/object/lock symbol=Valid fixed= https://pkg.go.dev/vuln/GO-2026-4779",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4803 level=3 module=github.com/minio/minio installed=v0.0.0-20260212201848-7aac2a2c5b7c package=github.com/minio/minio/internal/grid symbol=shape fixed= https://pkg.go.dev/vuln/GO-2026-4803",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4896 level=3 module=github.com/minio/minio installed=v0.0.0-20260212201848-7aac2a2c5b7c package=github.com/minio/minio/internal/s3select/sql symbol=String fixed= https://pkg.go.dev/vuln/GO-2026-4896",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4918 level=3 module=golang.org/x/net installed=v0.39.0 package=golang.org/x/net/http2 symbol=RoundTrip fixed=v0.53.0 https://pkg.go.dev/vuln/GO-2026-4918",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-4945 level=3 module=github.com/go-jose/go-jose/v4 installed=v4.1.0 package=github.com/go-jose/go-jose/v4 symbol=MarshalJSON fixed=v4.1.4 https://pkg.go.dev/vuln/GO-2026-4945",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5005 level=1 module=golang.org/x/crypto installed=v0.37.0 package= symbol= fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5005",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5006 level=1 module=golang.org/x/crypto installed=v0.37.0 package= symbol= fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5006",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5013 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=Client fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5013",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5014 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=NewServerConn fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5014",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5015 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=Authenticate fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5015",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5016 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=Reject fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5016",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5017 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=SendRequest fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5017",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5018 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=ParseRawPrivateKey fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5018",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5019 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=CheckCert fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5019",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5020 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=Server fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5020",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5021 level=1 module=golang.org/x/crypto installed=v0.37.0 package= symbol= fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5021",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5023 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=NewServerConn fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5023",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5025 level=1 module=golang.org/x/net installed=v0.39.0 package= symbol= fixed=v0.55.0 https://pkg.go.dev/vuln/GO-2026-5025",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5026 level=3 module=golang.org/x/net installed=v0.39.0 package=golang.org/x/net/idna symbol=ToASCII fixed=v0.55.0 https://pkg.go.dev/vuln/GO-2026-5026",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5027 level=1 module=golang.org/x/net installed=v0.39.0 package= symbol= fixed=v0.55.0 https://pkg.go.dev/vuln/GO-2026-5027",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5028 level=1 module=golang.org/x/net installed=v0.39.0 package= symbol= fixed=v0.55.0 https://pkg.go.dev/vuln/GO-2026-5028",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5029 level=1 module=golang.org/x/net installed=v0.39.0 package= symbol= fixed=v0.55.0 https://pkg.go.dev/vuln/GO-2026-5029",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5030 level=1 module=golang.org/x/net installed=v0.39.0 package= symbol= fixed=v0.55.0 https://pkg.go.dev/vuln/GO-2026-5030",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5033 level=1 module=golang.org/x/crypto installed=v0.37.0 package= symbol= fixed=v0.52.0 https://pkg.go.dev/vuln/GO-2026-5033",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5264 level=3 module=github.com/prometheus/prometheus installed=v0.303.0 package=github.com/prometheus/prometheus/model/histogram symbol=ZeroBucket fixed=v0.305.2 https://pkg.go.dev/vuln/GO-2026-5264",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5284 level=3 module=github.com/minio/minio installed=v0.0.0-20260212201848-7aac2a2c5b7c package=github.com/minio/minio/cmd symbol=UnmarshalMsg fixed= https://pkg.go.dev/vuln/GO-2026-5284",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5327 level=1 module=go.mongodb.org/mongo-driver installed=v1.17.3 package= symbol= fixed=v1.17.7 https://pkg.go.dev/vuln/GO-2026-5327",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5381 level=3 module=github.com/prometheus/prometheus installed=v0.303.0 package=github.com/prometheus/prometheus/model/histogram symbol=shape fixed=v0.311.3 https://pkg.go.dev/vuln/GO-2026-5381",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5415 level=3 module=github.com/minio/minio-go/v7 installed=v7.0.91 package=github.com/minio/minio-go/v7 symbol=SetKey fixed= https://pkg.go.dev/vuln/GO-2026-5415",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5426 level=2 module=go.opentelemetry.io/otel installed=v1.35.0 package=go.opentelemetry.io/otel/sdk/resource symbol= fixed= https://pkg.go.dev/vuln/GO-2026-5426",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5437 level=3 module=github.com/minio/minio installed=v0.0.0-20260212201848-7aac2a2c5b7c package=github.com/minio/minio/internal/bucket/replication symbol=Errorf fixed= https://pkg.go.dev/vuln/GO-2026-5437",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5543 level=1 module=github.com/Azure/go-ntlmssp installed=v0.0.0-20221128193559-754e69321358 package= symbol= fixed=v0.1.1 https://pkg.go.dev/vuln/GO-2026-5543",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5662 level=3 module=github.com/prometheus/prometheus installed=v0.303.0 package=github.com/prometheus/prometheus/model/histogram symbol=String fixed=v0.311.2-0.20260410083055-07c6232d159b https://pkg.go.dev/vuln/GO-2026-5662",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5710 level=3 module=github.com/prometheus/prometheus installed=v0.303.0 package=github.com/prometheus/prometheus/model/histogram symbol=PositiveBucketIterator fixed=v0.311.3 https://pkg.go.dev/vuln/GO-2026-5710",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5757 level=3 module=github.com/minio/minio installed=v0.0.0-20260212201848-7aac2a2c5b7c package=github.com/minio/minio/internal/bucket/replication symbol=MetadataReplicate fixed= https://pkg.go.dev/vuln/GO-2026-5757",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5841 level=2 module=github.com/klauspost/compress installed=v1.18.0 package=github.com/klauspost/compress/s2 symbol= fixed=v1.18.7 https://pkg.go.dev/vuln/GO-2026-5841",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5932 level=1 module=golang.org/x/crypto installed=v0.37.0 package= symbol= fixed= https://pkg.go.dev/vuln/GO-2026-5932",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5942 level=1 module=golang.org/x/net installed=v0.39.0 package= symbol= fixed=v0.56.0 https://pkg.go.dev/vuln/GO-2026-5942",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-5970 level=3 module=golang.org/x/text installed=v0.24.0 package=golang.org/x/text/unicode/norm symbol=String fixed=v0.39.0 https://pkg.go.dev/vuln/GO-2026-5970",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6061 level=3 module=google.golang.org/grpc installed=v1.72.0 package=google.golang.org/grpc/internal/transport symbol=Read fixed=v1.82.1 https://pkg.go.dev/vuln/GO-2026-6061",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6107 level=1 module=go.etcd.io/etcd/client/pkg/v3 installed=v3.5.21 package= symbol= fixed=v3.5.33 https://pkg.go.dev/vuln/GO-2026-6107",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6303 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=NewServerConn fixed=v0.55.0 https://pkg.go.dev/vuln/GO-2026-6303",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6348 level=3 module=google.golang.org/grpc installed=v1.72.0 package=google.golang.org/grpc/mem symbol=IsBelowBufferPoolingThreshold fixed=v1.83.1 https://pkg.go.dev/vuln/GO-2026-6348",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6354 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=Accept fixed=v0.56.0 https://pkg.go.dev/vuln/GO-2026-6354",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6355 level=3 module=golang.org/x/crypto installed=v0.37.0 package=golang.org/x/crypto/ssh symbol=NewServerConn fixed=v0.56.0 https://pkg.go.dev/vuln/GO-2026-6355",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6372 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=Error fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6372",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6441 level=1 module=google.golang.org/grpc installed=v1.72.0 package= symbol= fixed=v1.83.1 https://pkg.go.dev/vuln/GO-2026-6441",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6443 level=3 module=google.golang.org/grpc installed=v1.72.0 package=google.golang.org/grpc/internal/transport symbol=HandleStreams fixed=v1.82.2 https://pkg.go.dev/vuln/GO-2026-6443",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6491 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=Open fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6491",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6492 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=Dial fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6492",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6493 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=String fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6493",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6494 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=ReadFrame fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6494",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6496 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=Dial fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6496",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6498 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=ExchangeDelete fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6498",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6500 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=Dial fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6500",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6502 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=Qos fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6502",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6503 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=DialConfig fixed=v1.13.0 https://pkg.go.dev/vuln/GO-2026-6503",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6505 level=3 module=go.opentelemetry.io/otel installed=v1.35.0 package=go.opentelemetry.io/otel/sdk/metric symbol=opentelemetry fixed= https://pkg.go.dev/vuln/GO-2026-6505",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6603 level=3 module=golang.org/x/net installed=v0.39.0 package=golang.org/x/net/http2 symbol=Read fixed=v0.60.0 https://pkg.go.dev/vuln/GO-2026-6603",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6610 level=3 module=golang.org/x/net installed=v0.39.0 package=golang.org/x/net/http2 symbol=RoundTripOpt fixed=v0.60.0 https://pkg.go.dev/vuln/GO-2026-6610",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6611 level=3 module=golang.org/x/net installed=v0.39.0 package=golang.org/x/net/http2 symbol=Error fixed=v0.60.0 https://pkg.go.dev/vuln/GO-2026-6611",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6612 level=3 module=golang.org/x/net installed=v0.39.0 package=golang.org/x/net/http2 symbol=GetClientConn fixed=v0.60.0 https://pkg.go.dev/vuln/GO-2026-6612",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6617 level=3 module=golang.org/x/net installed=v0.39.0 package=golang.org/x/net/http2 symbol=WriteWindowUpdate fixed=v0.60.0 https://pkg.go.dev/vuln/GO-2026-6617",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6629 level=1 module=golang.org/x/text installed=v0.24.0 package= symbol= fixed=v0.41.0 https://pkg.go.dev/vuln/GO-2026-6629",
+      "e2e_test.go:657: Storage BINARY ADVISORY GO-2026-6700 level=3 module=github.com/rabbitmq/amqp091-go installed=v1.10.0 package=github.com/rabbitmq/amqp091-go symbol=Dial fixed=v1.14.0 https://pkg.go.dev/vuln/GO-2026-6700",
+      "e2e_test.go:657: Storage binary scan complete: 76 advisory IDs; symbol=52 package-only=4 module-only=20; symbol presence is not application exploit reachability",
+      "e2e_test.go:657: Backend BINARY ADVISORY GO-2026-5932 level=1 module=golang.org/x/crypto installed=v0.57.0 package= symbol= fixed= https://pkg.go.dev/vuln/GO-2026-5932",
+      "e2e_test.go:657: Backend binary scan complete: 1 advisory IDs; symbol=0 package-only=0 module-only=1; symbol presence is not application exploit reachability"
+    ],
+    "rustfs-contract": [
+      "e2e_test.go:657: Alpine 3.24.2 main/community comparison: image=sha256:35a81b6126597df7ca510a0594f298f936ca8b26fc037e0c51b0111b95c2ae80 packages=17 advisory-matches=0; version applicability only, not exploit reachability",
+      "e2e_test.go:657: Alpine 3.24.2 main/community comparison: image=sha256:fc9597adbcbda9ea32d5c2c06c6d740dd1e0d433303981e44b2905f7ca308420 packages=35 advisory-matches=0; version applicability only, not exploit reachability",
+      "e2e_test.go:657: UNSUPPORTED: govulncheck does not analyze Rust binary symbols; upstream release SBOM is package-level evidence only",
+      "e2e_test.go:657: Backend BINARY ADVISORY GO-2026-5932 level=1 module=golang.org/x/crypto installed=v0.57.0 package= symbol= fixed= https://pkg.go.dev/vuln/GO-2026-5932",
+      "e2e_test.go:657: Backend binary scan complete: 1 advisory IDs; symbol=0 package-only=0 module-only=1; symbol presence is not application exploit reachability"
+    ]
+  },
+  "nested_iam": [
+    {
+      "step": "test",
+      "exit": 0
+    },
+    {
+      "step": "vet",
+      "exit": 0
+    },
+    {
+      "step": "verify",
+      "exit": 0
+    },
+    {
+      "step": "advisory",
+      "exit": 0
+    },
+    {
+      "step": "pre-network ownership rejection",
+      "passed": 3,
+      "network_targets_used": false
+    }
+  ],
+  "windows": {
+    "source": "c320861536914623ea22f28c1d4ea156d4c2132a",
+    "native_checks": 32,
+    "protocol_checks": 16,
+    "release_policy_checks": 6,
+    "framework_release": 534296,
+    "built_exe_sha256": "6a6b4f3e068d3b06bc8dc432ea399572a35cdd7cb709950dfa782dca534a5ac4",
+    "preserved_reviewed_exe_sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+    "actual_owner_visual_acceptance": false
+  },
+  "reviewed_executable_sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+  "actual_release_probe_sha256": "be3ced1a6733b8f57bcabefdbbc5c0536d6a1b8c9bb0a3de7ae767f91ce978fd",
+  "old_image_release_tests": [
+    {
+      "role": "release-bytea",
+      "image": "sha256:3d774f3e4c13a3094fcbb9555010a2260f32505a48a5d2bda56f8bbca5e5c4c7",
+      "layout": "bytea",
+      "backend_fixture_exit": 0,
+      "backend_checks": 34,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 36"
+      ]
+    },
+    {
+      "role": "release-bigint",
+      "image": "sha256:3d774f3e4c13a3094fcbb9555010a2260f32505a48a5d2bda56f8bbca5e5c4c7",
+      "layout": "bigint",
+      "backend_fixture_exit": 0,
+      "backend_checks": 34,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 36"
+      ]
+    }
+  ],
+  "live_adoption": false,
+  "merge": false,
+  "Owner_interactive": "unexecuted",
+  "production_readiness": false
+}
