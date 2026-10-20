@@ -385,3 +385,8 @@ Extend the actual F196 release probe beyond pre-cancellation: cancel during real
 ### 2026-10-20 — Actual Windows-generated link expiry
 
 Add a bounded opt-in test waiting for the unchanged release-generated five-minute signed link to expire, then verify real HTTPS download401. This uses only a synthetic fixture link and normal certificate validation, not a changed clock, forged token or altered backend TTL. No link value is logged. Existing visual/Explorer/OS clipboard exclusions remain.
+
+
+### 2026-10-20 — Exact legacy expiry status contract
+
+The real-time expiry probe incorrectly expected canonical401; legacy download.go explicitly returns410 Gone for errTokenExpired and401 for invalid signatures. Preserve that failed assertion and require exactly410 in the rerun, with credential-free status readback. No backend status behavior changed. The earlier test description of expiry401 is superseded by this contract clarification.

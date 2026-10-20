@@ -116,7 +116,7 @@ static class ReleaseBackendProbe {
     if(until-DateTime.UtcNow>TimeSpan.FromMinutes(6))throw new Exception("unbounded expiry fixture");
     Console.WriteLine("RELEASE EXPIRY WAIT: owned five-minute link; no credentials or URL printed");
     while(DateTime.UtcNow<until){if(wait.Elapsed>TimeSpan.FromSeconds(370))throw new Exception("expiry wait exceeded budget");Thread.Sleep(100);}
-    using(var http=NewHttp(new CookieContainer()))Check(http.GetAsync(expiryLink.Url).GetAwaiter().GetResult().StatusCode==HttpStatusCode.Unauthorized,"actual Windows-generated five-minute link expires with401");
+    using(var http=NewHttp(new CookieContainer())){var status=http.GetAsync(expiryLink.Url).GetAwaiter().GetResult().StatusCode;Console.WriteLine("RELEASE EXPIRED DOWNLOAD HTTP: "+(int)status);Check(status==HttpStatusCode.Gone,"actual Windows-generated five-minute link expires with410 Gone");}
    }
    Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
    string ui=Path.Combine(root,"ui");Directory.CreateDirectory(ui);using(var file=File.Create(Path.Combine(ui,"settings.json")))new DataContractJsonSerializer(typeof(Settings)).WriteObject(file,new Settings{Backend=f.Origin,RememberSession=false});
