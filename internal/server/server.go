@@ -292,7 +292,7 @@ func New(cfg Config) *Server {
 
 	// Create file record (metadata only): step 1 in upload lifecycle
 	// (pending -> stored -> hashed -> ready/failed).
-	mux.Handle("/files", cfg.createFileHandler(cfg.DB))
+	// Registered below after the shared owned-file handler is available.
 
 	// Stream upload to MinIO (pending -> stored).
 	mux.Handle("/upload", cfg.uploadHandler(cfg.DB, mc, bucket))
@@ -367,7 +367,18 @@ func New(cfg Config) *Server {
 	mux.Handle("/admin/cleanup", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminManualCleanupHandler)))
 
 	// User endpoints (protected) - show user's own files
-	mux.Handle("/user/files", cfg.Auth.requireAuth(http.HandlerFunc(srv.UserFilesHandler)))
+	ownedFiles := cfg.Auth.requireAuth(http.HandlerFunc(srv.UserFilesHandler))
+	createFile := cfg.createFileHandler(cfg.DB)
+	// The reviewed companion verifies completion through GET /files. Reuse
+	// exactly the existing UUID-scoped listing; never expose the admin list.
+	mux.Handle("/files", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			ownedFiles.ServeHTTP(w, r)
+			return
+		}
+		createFile.ServeHTTP(w, r)
+	}))
+	mux.Handle("/user/files", ownedFiles)
 	mux.HandleFunc("/user/files/", func(w http.ResponseWriter, r *http.Request) {
 		cfg.Auth.requireAuth(http.HandlerFunc(srv.UserDeleteFileHandler)).ServeHTTP(w, r)
 	})

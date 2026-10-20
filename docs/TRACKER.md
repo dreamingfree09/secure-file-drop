@@ -121,3 +121,8 @@ Acceptance criteria:
 - Behaviour verified via real requests
 - DEVLOG entry exists documenting configuration, validation, and any issues encountered
 
+
+
+## 2026-10-20 current acceptance status — SFD-FULL-E2E-ACCEPTANCE-20261020
+
+Development close-out and integration remain pending exact Aether acceptance and the current continuity gates. Historical milestone labels (including public exposure Complete) do not establish current public production readiness. Canonical and legacy workers preserve separate ancestry. Real browser/Windows/schema/storage results, known advisory applicability, failed/unexecuted tests, rollback restrictions and the minimal remaining Owner visual procedure are maintained in the canonical PR handover and [continuity](CONTINUITY.md). No live adoption or merge is claimed.

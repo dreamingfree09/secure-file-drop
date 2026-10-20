@@ -35,15 +35,19 @@ func TestAuditFiltersOwnedFixture(t *testing.T) {
 	if db.QueryRow("SELECT owner FROM sfd_test_owner").Scan(&marker) != nil || marker != owner {
 		t.Fatal("audit fixture owner")
 	}
-	// The legacy audit API and migration 11 have different shapes. Test the API's
-	// declared shape in a connection-local temporary table; never alter public data.
-	if _, err := db.Exec(`CREATE TEMP TABLE audit_logs(id text,timestamp timestamptz,action text,user_id text,username text,ip_address text,user_agent text,resource text,details jsonb,success boolean,error_message text)`); err != nil {
-		t.Fatal("temporary audit table")
+	// Use the applied public migration, not an invented temporary API schema.
+	// This database is newly created and verified by the fixture owner marker.
+	var existing int
+	if db.QueryRow("SELECT count(*) FROM public.audit_logs").Scan(&existing) != nil || existing != 0 {
+		t.Fatal("fresh migrated audit table required")
+	}
+	if _, err := db.Exec("SET TIME ZONE 'Pacific/Honolulu'"); err != nil {
+		t.Fatal("set synthetic connection timezone")
 	}
 	server := &Server{db: db}
 	ctx := context.Background()
 	start := time.Now().Add(-time.Minute)
-	for _, entry := range []AuditLog{{ID: "1", Action: AuditActionLogin, UserID: "first", IPAddress: "127.0.0.1", Success: true, Details: map[string]interface{}{"synthetic": true}}, {ID: "2", Action: AuditActionLogout, UserID: "second", IPAddress: "127.0.0.1", Success: true}} {
+	for _, entry := range []AuditLog{{Action: AuditActionLogin, UserID: "first", IPAddress: "127.0.0.1", Success: true, Details: map[string]interface{}{"synthetic": true}}, {Action: AuditActionLogout, UserID: "second", IPAddress: "127.0.0.1", Success: true}} {
 		if err := server.LogAudit(ctx, entry); err != nil {
 			t.Fatal("insert synthetic audit")
 		}

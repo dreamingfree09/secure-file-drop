@@ -847,7 +847,7 @@
             <div class="link-title">✓ Upload Complete!</div>
             <div class="link-box">
               <input type="text" class="link-input" id="downloadLink" readonly>
-              <button class="btn-copy" onclick="copyLink()">Copy Link</button>
+              <button class="btn-copy" onclick="copyLink(event)">Copy Link</button>
               <button class="btn-qr" onclick="showQRCode()">QR Code</button>
             </div>
             <div class="link-expires" id="linkExpires"></div>
@@ -948,6 +948,44 @@
   </div>
 
 <script>
+let sessionGeneration = 0;
+let logoutPending = false;
+const activeUploads = new Set();
+const activeRequests = new Set();
+function resetSessionUI() {
+  sessionGeneration++;
+  isLoggedIn = false; isAdmin = false;
+  for (const controller of activeRequests) controller.abort();
+  activeRequests.clear();
+  for (const upload of activeUploads) upload.abort();
+  activeUploads.clear();
+  selectedFile = currentUpload = null; uploadQueue = []; queuedKeys.clear();
+  uploadInProgress = false; allFiles = []; myFilesAll = []; myFilesRendered = []; mySelection.clear();
+  for (const id of ['username','password','regEmail','regUsername','regPassword','regPasswordConfirm','linkPassword','downloadLink','fileInput']) {
+    const node = document.getElementById(id); if (node) node.value = '';
+  }
+  for (const id of ['metricsOutput','filesOutput','myFilesOutput','quotaOutput','uploadAlert','loginAlert','qrCodeContainer','fileName','fileSize','linkExpires','myFilesCount','myFilesUpdated']) {
+    const node = document.getElementById(id); if (node) node.textContent = '';
+  }
+  for (const id of ['linkContainer','fileInfo','progressContainer','qrModal']) {
+    const node = document.getElementById(id); if (node) node.classList.remove('show');
+  }
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.add('hidden');
+  hideQuotaBanner();
+}
+async function sessionFetch(input, options) {
+  const generation = sessionGeneration;
+  const controller = new AbortController();
+  activeRequests.add(controller);
+  try {
+    const response = await fetch(input, { ...options, signal: controller.signal });
+    if (generation !== sessionGeneration) throw new DOMException('Session changed', 'AbortError');
+    if (response.status === 401) resetSessionUI();
+    return response;
+  } finally { activeRequests.delete(controller); }
+}
 let isLoggedIn = false;
 let isAdmin = false;
 let selectedFile = null;
@@ -972,6 +1010,8 @@ async function loadConfig() {
 
 // Login function
 async function login() {
+  if (logoutPending) return;
+  const generation = ++sessionGeneration;
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   const loginAlert = document.getElementById('loginAlert');
@@ -981,6 +1021,7 @@ async function login() {
     return;
   }
 
+  document.getElementById('password').value = '';
   try {
     const res = await fetch('/login', {
       method: 'POST',
@@ -989,13 +1030,16 @@ async function login() {
     });
     
     if (res.ok) {
-      isLoggedIn = true;
-      
+      if (generation !== sessionGeneration) return;
       // Check if user is admin
       const meRes = await fetch('/me');
-      if (meRes.ok) {
+      if (!meRes.ok) throw new Error('Session verification failed');
+      {
         const userData = await meRes.json();
-        isAdmin = userData.is_admin || false;
+        if (generation !== sessionGeneration) return;
+        if (userData.status !== 'ok' || typeof userData.username !== 'string' || !userData.username || typeof userData.is_admin !== 'boolean') throw new Error('Session verification failed');
+        isLoggedIn = true; isAdmin = userData.is_admin;
+        document.getElementById('username').value = '';
         
         // Show/hide admin section based on admin status
         const adminSection = document.getElementById('adminSection');
@@ -1029,6 +1073,7 @@ async function login() {
 
 // Check existing session on page load and restore UI if authenticated
 async function checkSession() {
+  const generation = sessionGeneration;
   try {
     const meRes = await fetch('/me');
     if (!meRes.ok) {
@@ -1036,6 +1081,7 @@ async function checkSession() {
       return;
     }
     const userData = await meRes.json();
+    if (generation !== sessionGeneration || userData.status !== 'ok' || typeof userData.username !== 'string' || typeof userData.is_admin !== 'boolean') return;
     isLoggedIn = true;
     isAdmin = !!userData.is_admin;
 
@@ -1205,24 +1251,27 @@ function addFilesToQueue(files) {
 // Process upload queue
 async function processUploadQueue() {
   if (currentUpload || uploadQueue.length === 0) return;
+  const generation = sessionGeneration;
   
   currentUpload = uploadQueue.shift();
   selectedFile = currentUpload;
   
   await uploadFile();
-  
+  if (generation !== sessionGeneration) return;
   currentUpload = null;
   
   // Continue with next file if any
   if (uploadQueue.length > 0) {
-    setTimeout(() => processUploadQueue(), 500);
+    setTimeout(() => { if (generation === sessionGeneration) processUploadQueue(); }, 500);
   }
 }
 
 // Upload file
 let uploadInProgress = false;
 async function uploadFile() {
-  if (!selectedFile || uploadInProgress) return;
+  if (!selectedFile || !isLoggedIn || uploadInProgress) return;
+  const file = selectedFile;
+  const generation = sessionGeneration;
   uploadInProgress = true;
 
   const progressContainer = document.getElementById('progressContainer');
@@ -1232,6 +1281,7 @@ async function uploadFile() {
   const uploadAlert = document.getElementById('uploadAlert');
   
   try {
+    uploadAlert.textContent = '';
     // Show progress
     progressContainer.classList.add('show');
     progressFill.style.width = '30%';
@@ -1244,9 +1294,9 @@ async function uploadFile() {
 
     // Step 1: Create file metadata
     const payload = {
-      orig_name: selectedFile.name,
-      content_type: selectedFile.type || 'application/octet-stream',
-      size_bytes: selectedFile.size
+      orig_name: file.name,
+      content_type: file.type || 'application/octet-stream',
+      size_bytes: file.size
     };
     if (ttlHours > 0) {
       payload.ttl_hours = ttlHours;
@@ -1255,7 +1305,7 @@ async function uploadFile() {
       payload.link_password = linkPassword;
     }
 
-    const metaRes = await fetch('/files', {
+    const metaRes = await sessionFetch('/files', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload)
@@ -1266,13 +1316,14 @@ async function uploadFile() {
     }
 
     const meta = await metaRes.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     
     progressFill.style.width = '50%';
     progressText.textContent = 'Uploading file...';
 
     // Step 2: Upload file with real progress tracking and speed calculation
     const fd = new FormData();
-    fd.append('file', selectedFile);
+    fd.append('file', file);
 
     let startTime = Date.now();
     let lastTime = startTime;
@@ -1280,8 +1331,11 @@ async function uploadFile() {
 
     const upRes = await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
+      activeUploads.add(xhr);
+      xhr.addEventListener('loadend', () => activeUploads.delete(xhr));
       
       xhr.upload.addEventListener('progress', (e) => {
+        if (!isLoggedIn || generation !== sessionGeneration) return;
         if (e.lengthComputable) {
           const now = Date.now();
           const timeDiff = (now - lastTime) / 1000; // seconds
@@ -1361,6 +1415,7 @@ async function uploadFile() {
       xhr.send(fd);
     });
 
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!upRes.ok) {
       throw new Error('Failed to upload file');
     }
@@ -1369,7 +1424,7 @@ async function uploadFile() {
     progressText.textContent = 'Generating download link...';
 
     // Step 3: Create download link
-    const linkRes = await fetch('/links', {
+    const linkRes = await sessionFetch('/links', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
@@ -1383,6 +1438,7 @@ async function uploadFile() {
     }
 
     const linkJson = await linkRes.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
 
     progressFill.style.width = '100%';
     progressFill.style.animation = 'none'; // Stop shimmer animation at 100%
@@ -1390,6 +1446,7 @@ async function uploadFile() {
 
     // Show download link
     setTimeout(() => {
+      if (!isLoggedIn || generation !== sessionGeneration) return;
       progressContainer.classList.remove('show');
       displayDownloadLink(linkJson.url, linkJson.expires_at);
       
@@ -1402,7 +1459,7 @@ async function uploadFile() {
       
       // Remove from global dedupe set to allow future re-uploads of the same file
       try {
-        const keyStr = `${selectedFile.name}|${selectedFile.size}`;
+        const keyStr = `${file.name}|${file.size}`;
         queuedKeys.delete(keyStr);
       } catch (_) {}
 
@@ -1410,6 +1467,7 @@ async function uploadFile() {
     }, 500);
 
   } catch (err) {
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     progressContainer.classList.remove('show');
     uploadInProgress = false;
     showAlert(uploadAlert, 'Upload failed: ' + err.message, 'error');
@@ -1429,7 +1487,7 @@ function displayDownloadLink(url, expiresAt) {
 }
 
 // Copy link to clipboard
-function copyLink() {
+function copyLink(event) {
   const downloadLink = document.getElementById('downloadLink');
   downloadLink.select();
   document.execCommand('copy');
@@ -1446,11 +1504,14 @@ function copyLink() {
 
 // Load metrics
 async function loadMetrics() {
+  const generation = sessionGeneration;
   try {
-    const res = await fetch('/metrics');
+    const res = await sessionFetch('/metrics');
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!res.ok) return;
     
     const metrics = await res.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     
     // Format storage size for display
     const formatStorage = (bytes) => {
@@ -1530,9 +1591,16 @@ function hideQuotaBanner() {
 }
 
 async function loadQuota() {
+  const generation = sessionGeneration;
   try {
-    const res = await fetch('/quota');
+    const res = await sessionFetch('/quota');
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     const quotaOutput = document.getElementById('quotaOutput');
+    if (res.status === 403) {
+      if (quotaOutput) quotaOutput.textContent = 'No personal storage quota applies to the environment administrator. Use a registered account for personal uploads.';
+      hideQuotaBanner();
+      return;
+    }
     if (!res.ok) {
       if (quotaOutput) {
         quotaOutput.innerHTML = `
@@ -1547,6 +1615,7 @@ async function loadQuota() {
     }
     
     const quota = await res.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     
     // Format storage size for display
     const formatStorage = (bytes) => {
@@ -1604,11 +1673,14 @@ async function loadQuota() {
 let allFiles = []; // Store all files for filtering
 
 async function loadFiles() {
+  const generation = sessionGeneration;
   try {
-    const res = await fetch('/admin/files');
+    const res = await sessionFetch('/admin/files');
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!res.ok) return;
     
     allFiles = await res.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     renderFiles(allFiles);
   } catch (err) {
     console.error('Failed to load files:', err);
@@ -1673,11 +1745,14 @@ let mySelection = new Set();
 let myFilesRendered = [];
 
 async function loadMyFiles() {
+  const generation = sessionGeneration;
   try {
-    const res = await fetch('/user/files');
+    const res = await sessionFetch('/user/files');
+    if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!res.ok) return;
 
     myFilesAll = await res.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
 
     const countEl = document.getElementById('myFilesCount');
     if (countEl) {
@@ -1842,7 +1917,7 @@ async function deleteSelected() {
   const ids = Array.from(mySelection);
   for (const id of ids) {
     try {
-      const res = await fetch(`/user/files/${id}`, { method: 'DELETE' });
+      const res = await sessionFetch(`/user/files/${id}`, { method: 'DELETE' });
       if (res.status === 204) {
         mySelection.delete(id);
       }
@@ -1861,7 +1936,7 @@ function selectReadyOnly() {
 async function deleteMyFile(id) {
   if (!confirm(`Delete file ${id}?`)) return;
   try {
-    const res = await fetch(`/user/files/${id}`, { method: 'DELETE' });
+    const res = await sessionFetch(`/user/files/${id}`, { method: 'DELETE' });
     if (res.status === 204) {
       // Refresh user's files and quota
       await loadMyFiles();
@@ -1945,7 +2020,7 @@ async function deleteFile(id) {
   if (!confirm(`Delete file ${id}?`)) return;
   
   try {
-    const res = await fetch(`/admin/files/${id}`, { method: 'DELETE' });
+    const res = await sessionFetch(`/admin/files/${id}`, { method: 'DELETE' });
     if (res.ok) {
       loadFiles();
       loadMetrics();
@@ -1962,7 +2037,7 @@ async function manualCleanup() {
   if (!confirm('Run cleanup job to delete old pending/failed files?')) return;
   
   try {
-    const res = await fetch('/admin/cleanup', { method: 'POST' });
+    const res = await sessionFetch('/admin/cleanup', { method: 'POST' });
     if (res.ok) {
       const result = await res.json();
       alert(`Cleanup complete. Deleted ${result.deleted_count || 0} files.`);
@@ -2158,16 +2233,21 @@ if (document.readyState === 'loading') {
 }
 
 // Logout function
-function logout() {
-  fetch('/logout', { method: 'POST' }).finally(() => {
-    isLoggedIn = false;
-    document.getElementById('appScreen').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
-    document.getElementById('logoutBtn').classList.add('hidden');
-    document.getElementById('username').value = '';
-    document.getElementById('password').value = '';
-    document.getElementById('loginAlert').innerHTML = '';
-  });
+async function logout() {
+  if (logoutPending) return;
+  logoutPending = true;
+  const stop = new AbortController();
+  const timeout = setTimeout(() => stop.abort(), 10000);
+  const request = fetch('/logout', { method: 'POST', signal: stop.signal });
+  resetSessionUI();
+  try {
+    const response = await request;
+    if (!response.ok) throw new Error('Session revocation failed');
+  } catch (_) {
+    showAlert(document.getElementById('loginAlert'), 'Signed out locally. The server could not confirm session revocation. Sign in again when it is available.', 'error');
+  } finally {
+    clearTimeout(timeout); logoutPending = false;
+  }
 }
 
 // Toggle between login and register forms
@@ -2237,6 +2317,7 @@ async function register() {
     return;
   }
 
+  for (const id of ['regPassword','regPasswordConfirm']) document.getElementById(id).value = '';
   try {
     const res = await fetch('/register', {
       method: 'POST',

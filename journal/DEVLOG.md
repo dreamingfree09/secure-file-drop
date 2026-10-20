@@ -335,3 +335,58 @@ Integration ancestry is explicit: master 8d54031 and feature 2b8e56d share 1a0f7
 Rollback testing disproved the prior assumption that the original live image can start at schema12: it stops on missing migration12 metadata. This startup failure is retained; synthetic records/sessions/schema were preserved and the corrected candidate was restored. The separately identified f39faa9 image cb3c849f... is a schema-compatible fallback and passed 33 owned BYTEA checks, including rollback, preservation and restored candidate login/me. Aether must explicitly accept BOTH the final successor and this fallback before any live adoption; fallback lacks the newly wired lockout callbacks and is not public production approval. Never downgrade schema metadata or run Down to make the old image start.
 
 Read-only current backup preflight found four entries and none retention-eligible now or within one hour; no settings/files changed. Adoption requires a fresh effective-config/backup inventory covering the full maintenance window and stops if startup retention could remove an existing backup. Preserve the existing job settings; do not silently disable/re-enable them. The canonical PR handover will record exact final CI/image/Windows identities after publication. No live migration/recreation, credential reset, real-record operation, CA/CRL/trust change, protected-branch integration or GUI acceptance occurred. Independent exact-revision Aether review remains pending; production/storage/ownership/audit-schema/recovery/deployment limitations remain open.
+
+
+## 2026-10-20 - SFD-FULL-E2E-ACCEPTANCE-20261020: legacy browser correction
+
+Separate worker from exact PR27 candidate8c; no canonical/legacy application substitution or live adoption. Correct environment-administrator quota feedback for the existing registered-owner-only API; require successful authenticated identity readback before entering the UI; clear submitted sign-in/registration passwords; invalidate and cancel owned protected requests/uploads and stale queue/dashboard/link callbacks at logout or HTTP401. Preserve existing registered quotas and backend permissions, all Go authentication/schema/source and original producer branches. Extend trusted-HTTPS browser acceptance using fresh per-fixture accounts/passwords and keep actual OS clipboard/Explorer/visual acceptance unexecuted. The full GHP-01 parent acceptance handover will retain baseline failures, actual test results and remaining integration gates.
+
+
+### 2026-10-20 — Real Windows upload reconciliation compatibility
+
+The preserved F196 reviewed executable authenticated normally over trusted HTTPS but its first real upload ended at GET /files HTTP 405. Reuse the existing authenticated, UUID-owned /user/files listing for GET /files; POST metadata creation and administrator separation remain unchanged. Fresh real PostgreSQL tests require identical owned metadata, anonymous401, environment-admin403 and cross-account isolation. No live backend or existing records changed. Independent Aether review remains mandatory.
+
+
+### 2026-10-20 — Legacy correction current-head CI
+
+Extend the existing protected lint/security and real PostgreSQL BYTEA/BIGINT HTTPS acceptance workflow to the owned correction branch and its PR27 base. Preserve full lint invocation and enforcement verifier, all existing security tests and the frozen reviewed Windows transport reference. Workflow installation is a separate commit.
+
+
+### 2026-10-20 — Preserved executable real Windows acceptance
+
+Retain the exact local C# acceptance probe source used to load and exercise the unchanged F196 Framework 4.8 executable. On backend image sha256:3d774f3e4c13a3094fcbb9555010a2260f32505a48a5d2bda56f8bbca5e5c4c7, both real BYTEA and BIGINT fixtures passed 34 backend checks and 36 actual release checks. This includes normal Windows certificate/revocation validation, rejected untrusted/name-mismatched certificates, multipart/native SHA/download equality, DPAPI persistence/isolation, real server expiry, logout, account switching and an owned programmatic tray context/exit. No Owner visual/file-picker/Explorer/OS clipboard acceptance is claimed. Empty files correctly generate no byte-chunk progress events; completion is separately verified. Only new labelled synthetic database/session records were expired. Private fixture files and binaries remain local.
+
+
+### 2026-10-20 — Applied audit-schema correction
+
+Source review confirmed the unused audit helper queried resource/details and inserted a text ID against a migration defining resource_id/metadata, required event_type and BIGSERIAL ID. Map the existing helper to the applied columns and database-generated ID; no migration or historical record conversion. Replace the temporary invented-schema test with the real fresh migrated public table under the existing owner guard. Automatic operation-wide audit wiring remains absent and is not claimed or added as a new feature. Independent review is required before adoption.
+
+
+### 2026-10-20 — Audit timestamp boundary correction
+
+Real-schema bounds tests failed because migration timestamp has no timezone while the helper wrote local wall time and compared timestamptz filters. Store UTC explicitly and interpret the applied timestamp column as UTC for bounded filtering. Regression uses a non-UTC session timezone. No existing rows or schema changed.
+
+
+### 2026-10-20 — Full E2E current state and retained gates
+
+Record the exact received PR ancestry, scoped UI/API/audit corrections, real browser/Windows evidence, preserved reviewed executable, failed rehearsal evidence and pending independent acceptance. No live adoption or integration occurred. Retain the rejected fallback decision and explicit storage/deployment, schema/ownership, capacity and cross-host recovery gates. Canonical PR handover is the authoritative revision-specific report.
+
+
+### 2026-10-20 — Successor-specific recovery acceptance
+
+Extend the existing owned rollback fixture to require actual admin/registered identity, revocation, account isolation and five-failure/sixth-lockout behavior before the IP ceiling, in addition to schema and fingerprint preservation. Record actual runtime image IDs. Prepare a separately labelled artifact recovery image from the same reviewed application inputs; identical application bytes are artifact recovery only, with fail-closed stop/forward fix for shared defects. Neither image is adopted without exact Aether acceptance.
+
+
+### 2026-10-20 — Actual release cancellation and backend interruption
+
+Extend the actual F196 release probe beyond pre-cancellation: cancel during real request serialization, reject unconfirmed link creation, stop only the verified synthetic backend during another transfer, verify unavailable readiness and restart/session persistence. The opt-in private owner-marked fixture control never targets live services and rechecks loopback bindings after restart. This does not operate native picker, real Explorer or OS clipboard.
+
+
+### 2026-10-20 — Actual Windows-generated link expiry
+
+Add a bounded opt-in test waiting for the unchanged release-generated five-minute signed link to expire, then verify real HTTPS download401. This uses only a synthetic fixture link and normal certificate validation, not a changed clock, forged token or altered backend TTL. No link value is logged. Existing visual/Explorer/OS clipboard exclusions remain.
+
+
+### 2026-10-20 — Exact legacy expiry status contract
+
+The real-time expiry probe incorrectly expected canonical401; legacy download.go explicitly returns410 Gone for errTokenExpired and401 for invalid signatures. Preserve that failed assertion and require exactly410 in the rerun, with credential-free status readback. No backend status behavior changed. The earlier test description of expiry401 is superseded by this contract clarification.
