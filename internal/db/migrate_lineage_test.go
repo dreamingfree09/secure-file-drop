@@ -158,7 +158,7 @@ func TestSchemaLineage(t *testing.T) {
 			snapshot := func() string {
 				t.Helper()
 				var snapshot string
-				if err := db.QueryRowContext(ctx, `SELECT jsonb_build_object('columns',(SELECT jsonb_agg(to_jsonb(c) ORDER BY table_schema,table_name,ordinal_position) FROM (SELECT table_schema,table_name,column_name,data_type,ordinal_position FROM information_schema.columns WHERE table_schema IN ('sfd_custom','public')) c),'version',(SELECT jsonb_agg(to_jsonb(m)) FROM sfd_custom.schema_migrations m))::text`).Scan(&snapshot); err != nil {
+				if err := db.QueryRowContext(ctx, `SELECT jsonb_build_object('columns',(SELECT jsonb_agg(to_jsonb(c) ORDER BY table_schema,table_name,ordinal_position) FROM (SELECT table_schema,table_name,column_name,data_type,ordinal_position FROM information_schema.columns WHERE table_schema IN ('sfd_custom','public')) c),'version',(SELECT jsonb_agg(to_jsonb(m)) FROM sfd_custom.schema_migrations m),'files',(SELECT jsonb_agg(to_jsonb(f) ORDER BY id) FROM sfd_custom.files f))::text`).Scan(&snapshot); err != nil {
 					t.Fatal(err)
 				}
 				return snapshot

@@ -709,14 +709,21 @@
     }
   ],
   "schema_guard": {
-    "implementation": "a1c8289223fe4e2762d6dcee7a4212c45c7e00d4",
+    "implementation": "a353636571ac46eec974f7650d66a250945ca8f0",
     "received_source_failures": [
       "legacy-v4-collision",
       "hybrid-v4-bytea"
     ],
-    "corrected_subtests": 8,
+    "corrected_subtests": 11,
     "metadata_and_rows_unchanged_on_rejection": true,
-    "negative_fixtures_are_not_full_legacy_migrations": true
+    "negative_fixtures_are_not_full_legacy_migrations": true,
+    "custom_schema_received_failures": [
+      "custom-canonical-public-incompatible",
+      "custom-incompatible-public-empty",
+      "custom-incompatible-public-canonical"
+    ],
+    "same_borrowed_migration_connection": true,
+    "cross_schema_application_resolution_rejected": true
   },
   "fresh_recovery": [
     {
@@ -778,7 +785,7 @@
       "sfd-hash": "744ebf494f5d2f1f9230afcc3e582e83137fcd8ed531c7f20074b8b3c7aa6b4f"
     }
   },
-  "operational_image_acceptance": "withheld: legacy deletion/cleanup/lifecycle preservation findings",
+  "operational_image_acceptance": "rejected for adoption: administrator wrong-key and user storage-failure deletion regressions FAIL on both exact images; lifecycle correction/review required",
   "frozen_executable_sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
   "new_binary_installed": false,
   "live_schema_observed": {
@@ -794,5 +801,90 @@
   },
   "live_runtime_modified": false,
   "owner_visual_acceptance": "unexecuted",
-  "postintegration_acceptance": "unexecuted"
+  "postintegration_acceptance": "unexecuted",
+  "fresh_deletion_preservation_failures": [
+    {
+      "inherited_revision": "976c9a39c25f7cb38274bf066e5f7be05543813e",
+      "inherited_fixture_sha256": "ae45a6d79cc6b35f85b3f023dbd6089790369ea3bec3041843fd05bd7aa55a4a",
+      "probe_source_sha256": "8c48af39597caf1ccec848725cd052566cda3196788aea5a174e0a44a0fa82fb",
+      "backend_image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad",
+      "exit": 1,
+      "actual": {
+        "admin_delete_status": 204,
+        "admin_metadata_preserved": false,
+        "admin_object_present_after_success": true,
+        "owned_delete_storage_down_status": 204,
+        "metadata_preserved": false,
+        "object_present_after_owned_storage_restart": true,
+        "expected_storage_error_status": 502,
+        "expected_metadata_preserved": true,
+        "target": "only newly created synthetic fixture"
+      },
+      "failures": [
+        "deletion must remove exact object and retain metadata on storage failure"
+      ],
+      "existing_services_unchanged": true,
+      "owned_cleanup_complete": true
+    },
+    {
+      "inherited_revision": "976c9a39c25f7cb38274bf066e5f7be05543813e",
+      "inherited_fixture_sha256": "ae45a6d79cc6b35f85b3f023dbd6089790369ea3bec3041843fd05bd7aa55a4a",
+      "probe_source_sha256": "8c48af39597caf1ccec848725cd052566cda3196788aea5a174e0a44a0fa82fb",
+      "backend_image": "sha256:575a6088b3e082f9a4990dcd1580ca2d5d31c2f4d639922ea3cb0c2f18179a2f",
+      "exit": 1,
+      "actual": {
+        "admin_delete_status": 204,
+        "admin_metadata_preserved": false,
+        "admin_object_present_after_success": true,
+        "owned_delete_storage_down_status": 204,
+        "metadata_preserved": false,
+        "object_present_after_owned_storage_restart": true,
+        "expected_storage_error_status": 502,
+        "expected_metadata_preserved": true,
+        "target": "only newly created synthetic fixture"
+      },
+      "failures": [
+        "deletion must remove exact object and retain metadata on storage failure"
+      ],
+      "existing_services_unchanged": true,
+      "owned_cleanup_complete": true
+    }
+  ],
+  "local_final_quality": [
+    {
+      "step": "unit",
+      "exit": 0,
+      "passed": 111,
+      "skips": [
+        "TestSchemaLineage",
+        "TestDisposableCommitFaults",
+        "TestUploadHashDownloadFlow",
+        "TestRustFSMigrationRehearsal"
+      ],
+      "failures": []
+    },
+    {
+      "step": "vet",
+      "exit": 0
+    },
+    {
+      "step": "race",
+      "exit": 0,
+      "passed": 111,
+      "skips": [
+        "TestSchemaLineage",
+        "TestDisposableCommitFaults"
+      ],
+      "failures": []
+    },
+    {
+      "step": "build",
+      "exit": 0
+    },
+    {
+      "step": "native",
+      "exit": 0
+    }
+  ],
+  "full_configured_lint_findings": 0
 }
