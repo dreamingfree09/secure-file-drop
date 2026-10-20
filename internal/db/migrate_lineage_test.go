@@ -109,6 +109,74 @@ func TestSchemaLineage(t *testing.T) {
 			t.Fatal("canonical migration identity")
 		}
 	})
+
+	for n, tc := range []struct {
+		name                             string
+		publicCanonical, customCanonical bool
+	}{
+		{"custom-canonical-public-incompatible", false, true},
+		{"custom-incompatible-public-empty", false, false},
+		{"custom-incompatible-public-canonical", true, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			db := fresh(20 + n)
+			db.SetMaxOpenConns(1)
+			execSQL := func(q string) {
+				t.Helper()
+				if _, err := db.ExecContext(ctx, q); err != nil {
+					t.Fatal(err)
+				}
+			}
+			canonical := func() {
+				t.Helper()
+				entries, err := migrationsFS.ReadDir("migrations")
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, e := range entries {
+					if strings.HasSuffix(e.Name(), ".up.sql") {
+						raw, err := migrationsFS.ReadFile("migrations/" + e.Name())
+						if err != nil {
+							t.Fatal(err)
+						}
+						execSQL(string(raw))
+					}
+				}
+				execSQL("CREATE TABLE schema_migrations(version bigint PRIMARY KEY,dirty boolean NOT NULL);INSERT INTO schema_migrations VALUES(4,false)")
+			}
+			if tc.publicCanonical {
+				canonical()
+			} else if tc.customCanonical {
+				execSQL("CREATE TABLE files(sha256_bytes bytea);CREATE TABLE schema_migrations(version bigint PRIMARY KEY,dirty boolean NOT NULL);INSERT INTO schema_migrations VALUES(12,false);CREATE TABLE auth_sessions(token_hash text)")
+			}
+			execSQL("CREATE SCHEMA sfd_custom;SET search_path TO sfd_custom,public")
+			if tc.customCanonical {
+				canonical()
+			} else {
+				execSQL("CREATE TABLE sfd_custom.files(id integer PRIMARY KEY,created_by text,sha256_bytes bigint);INSERT INTO sfd_custom.files(id,created_by) VALUES(1,'synthetic-owner');CREATE TABLE sfd_custom.schema_migrations(version bigint PRIMARY KEY,dirty boolean NOT NULL);INSERT INTO sfd_custom.schema_migrations VALUES(4,false)")
+			}
+			snapshot := func() string {
+				t.Helper()
+				var snapshot string
+				if err := db.QueryRowContext(ctx, `SELECT jsonb_build_object('columns',(SELECT jsonb_agg(to_jsonb(c) ORDER BY table_schema,table_name,ordinal_position) FROM (SELECT table_schema,table_name,column_name,data_type,ordinal_position FROM information_schema.columns WHERE table_schema IN ('sfd_custom','public')) c),'version',(SELECT jsonb_agg(to_jsonb(m)) FROM sfd_custom.schema_migrations m))::text`).Scan(&snapshot); err != nil {
+					t.Fatal(err)
+				}
+				return snapshot
+			}
+			before := snapshot()
+			err := RunMigrations(db)
+			if tc.customCanonical && err != nil {
+				t.Fatalf("valid active schema rejected: %v", err)
+			}
+			if !tc.customCanonical && err == nil {
+				t.Error("incompatible active schema accepted")
+			}
+			if snapshot() != before {
+				t.Error("schema preflight/idempotent migration modified schema or ledger")
+			}
+		})
+	}
+
 	// These are negative contract fixtures, not a claim to reproduce every legacy
 	// migration. Full legacy BYTEA/BIGINT acceptance remains in PR29.
 	cases := []struct {
