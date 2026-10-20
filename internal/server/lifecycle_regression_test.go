@@ -1,9 +1,12 @@
 package server
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestLifecycleCrossOriginMutation(t *testing.T) {
@@ -21,5 +24,31 @@ func TestLifecycleCrossOriginMutation(t *testing.T) {
 		if w.Code != want {
 			t.Fatal("origin boundary", w.Code)
 		}
+	}
+}
+
+func TestLifecycleDownloadExpiryBoundary(t *testing.T) {
+	t.Setenv("SFD_DOWNLOAD_SECRET", "synthetic-expiry-boundary-secret")
+	expiry := time.Unix(2000000000, 0).UTC()
+	token, err := signDownloadToken("fixture-file", expiry)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := verifyDownloadToken(token, expiry.Add(-time.Second)); err != nil {
+		t.Fatal("unexpired fixture rejected")
+	}
+	for _, at := range []time.Time{expiry, expiry.Add(time.Second)} {
+		if _, err := verifyDownloadToken(token, at); !errors.Is(err, errTokenExpired) {
+			t.Fatal("expired fixture accepted")
+		}
+	}
+}
+
+func TestLifecycleOversizedDownloadTokenRejectedBeforeStorage(t *testing.T) {
+	request := httptest.NewRequest("GET", "/download?token="+strings.Repeat("x", 4097), nil)
+	response := httptest.NewRecorder()
+	Config{}.downloadHandler(nil, nil, "").ServeHTTP(response, request)
+	if response.Code != http.StatusBadRequest {
+		t.Fatal("unbounded token reached metadata/storage")
 	}
 }

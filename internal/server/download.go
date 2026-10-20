@@ -62,7 +62,7 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 		)
 
 		err = db.QueryRow(
-			`SELECT object_key, status, content_type, orig_name, size_bytes, link_password,expires_at,auto_delete
+			`SELECT object_key, status, content_type, orig_name, size_bytes, link_password,expires_at,COALESCE(auto_delete,FALSE)
 		 FROM files
 		 WHERE id::text = $1`,
 			claims.FileID,
@@ -140,6 +140,7 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 		// Encourage safe download behavior in browsers.
 		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": SanitizeFilename(origName)}))
 
+		w.Header().Set("Cache-Control", "private, no-store")
 		w.WriteHeader(http.StatusOK)
 
 		n, copyErr := io.Copy(w, obj)

@@ -391,18 +391,18 @@ func New(cfg Config) *Server {
 		handler.ServeHTTP(w, r)
 	})
 
-	// Resumable upload endpoints (TUS protocol) - registered after srv creation
-	mux.Handle("/upload/resumable", cfg.Auth.requireAuth(srv.tusCreateHandler()))
-	mux.HandleFunc("/upload/resumable/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPatch:
-			cfg.Auth.requireAuth(srv.tusPatchHandler()).ServeHTTP(w, r)
-		case http.MethodHead:
-			cfg.Auth.requireAuth(srv.tusHeadHandler()).ServeHTTP(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	// The inherited resumable implementation has not been accepted and does
+	// not participate in the shared file transaction protocol. Keep its source
+	// and records intact, but fail closed at the existing authenticated routes.
+	unsupportedResumable := cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, err := cfg.Auth.getCurrentUser(r); err != nil {
+			writeAuthError(w, err)
+			return
 		}
-	})
+		http.Error(w, "resumable uploads are not accepted in this baseline", http.StatusNotImplemented)
+	}))
+	mux.Handle("/upload/resumable", unsupportedResumable)
+	mux.Handle("/upload/resumable/", unsupportedResumable)
 
 	// Admin endpoints (protected) - only accessible by admin users
 	mux.Handle("/admin/files", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminListFilesHandler)))

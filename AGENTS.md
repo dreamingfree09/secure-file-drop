@@ -1,0 +1,13 @@
+# Secure File Drop agent instructions
+
+Under SFD-OWNER-AUTONOMY-20261018, Codex owns bounded implementation and engineering decisions; Aether independently reviews and recommends acceptance. Follow the standing delegation and retained Owner-only boundaries in docs/GHP-01.md. Do not request repeated approval for authorised work. Start at README.md, docs/CONTINUITY.md, docs/GHP-01.md, docs/SPEC.md and CONTRIBUTING.md. Keep the established lowercase docs/ directory.
+
+Verify the actual Git root, origin, branch and local work before changes. Preserve private credentials, .env files, uploads, recovery items, unrelated checkouts and the existing feature/v2-enhancements branch. Never print credential-bearing remote URLs or publish secrets. Use one producer-owned branch per work package and one coherent PR.
+
+Normal scoped commits, pushes and PR publication are authorised by the current assignment. Keep workflow installation in a separate commit from application changes. Normal dependency-ordered merges are authorised only after Aether accepts the exact revision and all mandatory CI/acceptance gates pass; preserve ordered parents, trees and worker branches. No force push, history rewrite, branch deletion, remote changes, unapproved paid services or public deployment. Keep journal/DEVLOG.md strictly append-only.
+
+Inspect test setup and deletion behavior before execution. Use only newly created, uniquely named disposable PostgreSQL databases, MinIO buckets and volumes, synthetic accounts and files. Verify local connection targets and resource ownership before migrations, cleanup or deletion. Existing Docker Desktop may be started; use the local engine, dedicated resources and loopback ports. No privileged containers, host-wide cleanup, existing-volume reuse, Docker settings changes or system installation.
+
+For code changes run go test ./..., go vet ./..., relevant race checks, backend and native builds, SHA-256 known vectors and a real upload/hash/signed-download flow including matching downloaded bytes and negative security cases. Exercise browser and container builds where available. Run supported dependency vulnerability checks. Do not mask failures, count skips as passes, or substitute mocks for full-stack acceptance. Record unavailable checks as blocked.
+
+Use GHP-01 exact revision handovers. Publish results in the existing tracker/continuity and a complete PR description, without duplicate reports. Read back the remote branch, PR contents and relevant records before reporting CODEX DONE. Producer completion, independent Aether review, acknowledgement and integration remain distinct.
