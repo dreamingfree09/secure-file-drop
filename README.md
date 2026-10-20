@@ -3,7 +3,7 @@
 [![Docs](https://img.shields.io/badge/docs-up%E2%86%92-blue)](#docs)
 [![Status](https://img.shields.io/badge/status-active-brightgreen)](#status)
 
-Secure File Drop is a lightweight, self-hosted service for authenticated file uploads and short-lived, signed downloads. This is an isolated local evaluation candidate; public production readiness is not established. See the [reconciled contract and acceptance gates](docs/RECONCILED_BASELINE.md).
+Secure File Drop is a lightweight, self-hosted service for authenticated file uploads and short-lived, signed downloads. This is an isolated local evaluation candidate; public production readiness is not established. See the [reconciled contract and acceptance gates](docs/RECONCILED_BASELINE.md). The [reviewed Windows guide](docs/WINDOWS_COMPANION.md) and [local TLS runbook](docs/LOCAL_TLS.md) retain their exact c320 content and dated limitations.
 
 ## Quick summary
 
