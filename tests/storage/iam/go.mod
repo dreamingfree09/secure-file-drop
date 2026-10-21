@@ -1,6 +1,6 @@
 module sfd-storage-evaluation-iam
 
-go 1.26.9
+go 1.26.10
 
 require github.com/minio/madmin-go/v3 v3.0.110
 

@@ -419,3 +419,8 @@ PR30 guard b34 final CI/artifacts all pass; exact evidence is recorded in LINEAG
 ## 2026-10-22 - SFD-FINAL-ACCEPTANCE-CONTINUATION-20261021
 
 Codex prepared an explicit selected-source canonical worker from PR30 with PR31 runtime/schema/companion allowlist, preserving every original branch and canonical evidence/test file. Reconciled missing canonical JSON/cancellation/password/filename/browser safeguards; retained fixed uncapped lint policy and meaningful real-session tests. Source manifest and docs/CANONICAL_RECONCILIATION.md describe exact selection and limitations. No protected merge/live adoption/real migration; CRL renewal prepared against established ledger for secure OpenSSL Owner input. Final publication/tests/CI and signing state are recorded separately after execution; this entry does not claim pending checks passed.
+
+
+## 2026-10-22 - Fresh runtime advisory correction
+
+Current authoritative scans exposed newly published GO-2026-6809 (reachable Go x509 Verify, fixed1.26.10) and Alpine musl/musl-utils1.2.6-r2 below patchedr3. Codex raised actual build/test toolchain and runtime constraints; prior images retained as evidence and superseded for adoption. Rebuild and full exact-image acceptance are required; no production change or exploit reproduction.

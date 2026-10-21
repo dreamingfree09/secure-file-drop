@@ -1,4 +1,4 @@
-FROM golang:1.26.9-alpine3.24 AS build
+FROM golang:1.26.10-alpine3.24 AS build
 WORKDIR /src
 
 # Copy module files first for better Docker layer caching
@@ -23,7 +23,7 @@ FROM alpine:3.24
 WORKDIR /app
 
 # Install PostgreSQL client tools for pg_dump (required for backups)
-RUN apk add --no-cache postgresql16-client libcrypto3 ca-certificates 'zlib>=1.3.2-r1'
+RUN apk add --no-cache postgresql16-client libcrypto3 ca-certificates 'zlib>=1.3.2-r1' 'musl>=1.2.6-r3' 'musl-utils>=1.2.6-r3'
 
 COPY --from=build /out/backend /app/backend
 COPY --from=build /src/web /app/web

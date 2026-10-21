@@ -43,7 +43,7 @@ def policy(root, workflow=True):
 
 
 def lint(root, output):
-    env=dict(os.environ,GOTOOLCHAIN='go1.26.9')
+    env=dict(os.environ,GOTOOLCHAIN='go1.26.10')
     command=TOOL+FLAGS+['--output.json.path',str(output),'--output.text.path',str(output.with_suffix('.txt'))]
     result=subprocess.run(command,cwd=root,env=env,capture_output=True,timeout=360)
     if not output.exists():raise AssertionError('lint did not produce findings evidence')

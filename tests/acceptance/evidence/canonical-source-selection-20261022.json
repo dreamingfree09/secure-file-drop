@@ -14,9 +14,9 @@
     {
       "path": "Dockerfile.backend",
       "received_blob": "0956918d8a5bdabdf93238f7ab7e00a2bb36d540",
-      "selected_blob": "0956918d8a5bdabdf93238f7ab7e00a2bb36d540",
-      "exact_received_bytes": true,
-      "selection": "exact reviewed source"
+      "selected_blob": "d805c168d87f4f8f8216c05abbacdd8410bbe3fa",
+      "exact_received_bytes": false,
+      "selection": "new authoritative security advisory correction: Go1.26.10 and patched musl minimums"
     },
     {
       "path": "cmd/backend/main.go",
@@ -161,9 +161,9 @@
     {
       "path": "go.mod",
       "received_blob": "d62b0c5bbf4c091977631389c58bd5722d426344",
-      "selected_blob": "d62b0c5bbf4c091977631389c58bd5722d426344",
-      "exact_received_bytes": true,
-      "selection": "exact reviewed source"
+      "selected_blob": "425e449669d52784b2861e93ed7024e05f87b0eb",
+      "exact_received_bytes": false,
+      "selection": "new authoritative security advisory correction: Go1.26.10 and patched musl minimums"
     },
     {
       "path": "go.sum",
