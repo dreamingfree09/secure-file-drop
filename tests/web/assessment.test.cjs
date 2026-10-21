@@ -7,7 +7,7 @@ function harness(){
  const nodes=new Map(),requests=[];
  function node(id){if(!nodes.has(id)){const cls=new Set();nodes.set(id,{value:'',textContent:'',innerHTML:'',style:{},files:[],addEventListener(){},classList:{add(x){cls.add(x)},remove(x){cls.delete(x)},toggle(x,v){if(v)cls.add(x);else cls.delete(x)},contains(x){return cls.has(x)}}})}return nodes.get(id)}
  class XHR{constructor(){this.listeners={};this.upload={addEventListener:(type,fn)=>{this.progress=fn}};requests.push(this)}addEventListener(type,fn){this.listeners[type]=fn}open(){}send(){}abort(){this.aborted=true;this.listeners.abort?.()}}
- const context=vm.createContext({document:{readyState:'complete',getElementById:node,querySelectorAll:()=>[]},fetch:async url=>url==='/files'?{ok:true,json:async()=>({id:'synthetic'})}:{ok:true,status:204},console,AbortController,clearTimeout,TextEncoder,XMLHttpRequest:XHR,FormData:class{append(){}},setTimeout(){}});
+ const context=vm.createContext({document:{readyState:'loading',addEventListener(){},getElementById:node,querySelectorAll:()=>[]},fetch:async url=>url==='/files'?{ok:true,json:async()=>({id:'synthetic'})}:{ok:true,status:204},console,DOMException,AbortController,clearTimeout,TextEncoder,XMLHttpRequest:XHR,FormData:class{append(){}},setTimeout(){}});
  const html=fs.readFileSync(path.join(__dirname,'../../web/static/index.html'),'utf8');
  vm.runInContext(html.split('<script>')[1].split('</script>')[0],context);
  return{context,node,requests};

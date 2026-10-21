@@ -32,7 +32,8 @@ import (
 
 // This test owns a fresh network, database, buckets, volumes, image and containers.
 // It never uses application environment files or existing service endpoints.
-func TestUploadHashDownloadFlow(t *testing.T) {
+// Historical schema4 runtime contract remains executable separately; schema12 has its own owned acceptance below.
+func TestCanonicalSchema4UploadHashDownloadFlow(t *testing.T) {
 	if os.Getenv("SFD_E2E") != "1" {
 		t.Skip("full-stack Docker test requires SFD_E2E=1; not a full-stack pass")
 	}

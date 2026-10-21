@@ -414,3 +414,8 @@ A valid PR30 review finding reproduced three custom-schema false acceptance/reje
 ## 2026-10-21 — reconciliation continuation and authority clarification
 
 PR30 guard b34 final CI/artifacts all pass; exact evidence is recorded in LINEAGE_RECONCILIATION. The existing standing delegation assigns bounded port design/implementation to Codex; prior direction-approval wording was an overly restrictive interpretation and is superseded. PR31 implements the schema12 lifecycle/Windows selected-port candidate with real owned migration/COMMIT/concurrency/cleanup coverage. Exact independent Aether source/security/recovery acceptance still gates integration and live adoption. This commit changes documentation only and preserves historical records; no live/protected changes.
+
+
+## 2026-10-22 - SFD-FINAL-ACCEPTANCE-CONTINUATION-20261021
+
+Codex prepared an explicit selected-source canonical worker from PR30 with PR31 runtime/schema/companion allowlist, preserving every original branch and canonical evidence/test file. Reconciled missing canonical JSON/cancellation/password/filename/browser safeguards; retained fixed uncapped lint policy and meaningful real-session tests. Source manifest and docs/CANONICAL_RECONCILIATION.md describe exact selection and limitations. No protected merge/live adoption/real migration; CRL renewal prepared against established ledger for secure OpenSSL Owner input. Final publication/tests/CI and signing state are recorded separately after execution; this entry does not claim pending checks passed.

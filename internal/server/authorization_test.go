@@ -11,32 +11,34 @@ import (
 )
 
 func TestAdministratorRequiresSignedRole(t *testing.T) {
-	a := AuthConfig{AdminUser: "admin", SessionSecret: "synthetic-secret"}
-	for _, subject := range []string{"admin", "ordinary-user"} {
-		token, _, err := a.makeToken(subject)
+	db := canonicalOwnedAuthDB(t)
+	a := AuthConfig{DB: db, AdminUser: "canonical-admin", SessionSecret: "synthetic-secret"}
+	for _, admin := range []bool{false, true} {
+		sub := "canonical-admin"
+		if !admin {
+			sub = canonicalRegisteredUser(t, db)
+		}
+		tok, exp, err := a.makeSessionToken(sub, admin)
 		if err != nil {
 			t.Fatal(err)
 		}
+		if _, err = db.Exec("INSERT INTO auth_sessions(token_hash,expires_at) VALUES($1,$2)", sessionHash(tok), exp); err != nil {
+			t.Fatal("persist synthetic session")
+		}
 		r := httptest.NewRequest("GET", "/admin/files", nil)
-		r.AddCookie(&http.Cookie{Name: a.cookieName(), Value: token, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
+		r.AddCookie(a.cookie(r, tok, exp))
 		w := httptest.NewRecorder()
-		a.requireAdmin(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { t.Fatal("ordinary session reached admin handler") })).ServeHTTP(w, r)
-		if w.Code != 403 {
-			t.Fatalf("ordinary session got %d", w.Code)
+		a.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(204) })).ServeHTTP(w, r)
+		want := 403
+		if admin {
+			want = 204
+		}
+		if w.Code != want {
+			t.Fatalf("role HTTP %d want %d", w.Code, want)
 		}
 	}
-	token, _, err := a.makeSessionToken("admin", true)
-	if err != nil {
-		t.Fatal(err)
-	}
-	r := httptest.NewRequest("GET", "/admin/files", nil)
-	r.AddCookie(&http.Cookie{Name: a.cookieName(), Value: token, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
-	w := httptest.NewRecorder()
-	a.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(204) })).ServeHTTP(w, r)
-	if w.Code != 204 {
-		t.Fatalf("admin session got %d", w.Code)
-	}
 }
+
 func TestActualMetadataValidation(t *testing.T) {
 	a := AuthConfig{AdminUser: "admin", SessionSecret: "synthetic-secret"}
 	token, _, err := a.makeSessionToken("admin", true)
@@ -55,6 +57,7 @@ func TestActualMetadataValidation(t *testing.T) {
 		r := httptest.NewRequest("POST", "/files", strings.NewReader(body))
 		r.AddCookie(&http.Cookie{Name: a.cookieName(), Value: token, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
 		w := httptest.NewRecorder()
+		r = r.WithContext(context.WithValue(r.Context(), identityKey{}, identity{Subject: "00000000-0000-0000-0000-000000000001", Username: "fixture"}))
 		cfg.createFileHandler(nil).ServeHTTP(w, r)
 		if w.Code != 400 && w.Code != 413 {
 			t.Fatalf("invalid metadata reached database: %d", w.Code)
@@ -89,11 +92,11 @@ func TestRegistrationBcryptBoundsAndPasswordBytes(t *testing.T) {
 	}
 }
 func TestLoginIssuesDistinctRoleBoundCookies(t *testing.T) {
-	a := AuthConfig{AdminUser: "admin", AdminPass: "SyntheticPass123", SessionSecret: "synthetic-secret"}
+	a := AuthConfig{DB: canonicalOwnedAuthDB(t), AdminUser: "canonical-cookie-admin", AdminPass: canonicalPasswordHash(t, "SyntheticPass123"), SessionSecret: "synthetic-secret"}
 	t.Setenv("SFD_PUBLIC_BASE_URL", "https://files.test")
 	var previous string
 	for i := 0; i < 2; i++ {
-		r := httptest.NewRequest("POST", "https://files.test/login", bytes.NewBufferString(`{"username":"admin","password":"SyntheticPass123"}`))
+		r := httptest.NewRequest("POST", "https://files.test/login", bytes.NewBufferString(`{"username":"canonical-cookie-admin","password":"SyntheticPass123"}`))
 		w := httptest.NewRecorder()
 		a.loginHandler().ServeHTTP(w, r)
 		if w.Code != 200 {
@@ -104,7 +107,7 @@ func TestLoginIssuesDistinctRoleBoundCookies(t *testing.T) {
 			t.Fatal("unsafe cookie")
 		}
 		p, err := a.verifyToken(cookies[0].Value)
-		if err != nil || !p.Admin || p.Sub != "admin" || p.ID == "" {
+		if err != nil || !p.Admin || p.Sub != "canonical-cookie-admin" || p.ID == "" {
 			t.Fatal("missing signed identity")
 		}
 		if previous == cookies[0].Value {

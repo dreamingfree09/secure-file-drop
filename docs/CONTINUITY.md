@@ -234,3 +234,8 @@ Follow-up source review corrected the initial public-only preflight to use the s
 ### 2026-10-21 — continued reconciliation
 
 The schema12 lifecycle and frozen Windows selected port is implemented in [PR31](https://github.com/dreamingfree09/secure-file-drop/pull/31). Codex owns bounded design/corrections; Aether independently accepts exact revisions before integration/adoption. Canonical guard final b34 CI and artifact readback passed; this documentation follow-up requires its own checks. [Lineage reconciliation](LINEAGE_RECONCILIATION.md) now records the explicit port/integration gates. Earlier architecture-direction approval wording is superseded; no routine Owner approval is requested. No live/protected changes or production readiness.
+
+
+## 2026-10-22 — canonical selected-source preparation and CRL maintenance
+
+SFD-FINAL-ACCEPTANCE-CONTINUATION-20261021 follows [Aether checkpoint](https://github.com/dreamingfree09/secure-file-drop/pull/31#issuecomment-6323780286). Dedicated normal-commit selected port begins at exact PR30, without whole legacy history import. [Selection, corrected safeguards, explicit test contracts and remaining gates](CANONICAL_RECONCILIATION.md). All protected integrations/live adoption remain HOLD; secure CRL renewal uses existing issuer records and hidden signing input. Exact final revision/tests/CI/signing/publication status belong in the complete PR handover. DEVLOG remains append-only.

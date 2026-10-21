@@ -1,12 +1,14 @@
+// logging.go - Request ID injection and structured request logging.
+//
+// Wraps handlers to emit one log line per request including request ID,
+// method, path, status code, duration, and user agent. Avoids sensitive
+// data and records basic metrics.
+
 package server
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
-	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -26,53 +28,66 @@ func RequestIDFromContext(ctx context.Context) string {
 	return ""
 }
 
-// generateRequestID creates a 16-byte random ID encoded as hex (32 chars).
-func generateRequestID() string {
-	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		// Fallback: time-based (rare)
-		return hex.EncodeToString([]byte(time.Now().Format(time.RFC3339Nano)))
-	}
-	return hex.EncodeToString(b)
-}
-
-// requestIDMiddleware ensures every request has a request id.
-// If the client supplies X-Request-Id, we keep it; otherwise we generate one.
-func requestIDMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		rid := r.Header.Get("X-Request-Id")
-		if rid == "" || len(rid) > 128 || strings.IndexFunc(rid, func(r rune) bool { return r < 33 || r > 126 }) >= 0 {
-			rid = generateRequestID()
-		}
-		ctx := context.WithValue(r.Context(), requestIDKey, rid)
-		w.Header().Set("X-Request-Id", rid)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-// loggingMiddleware logs one line per request in a simple structured format.
+// loggingMiddleware logs one line per request with detailed structured information.
+// Includes request ID, method, path, status, timing, client IP, user agent, and size.
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		rid := RequestIDFromContext(r.Context())
 
-		// Wrap ResponseWriter to capture status code.
+		// Wrap ResponseWriter to capture status code and response size
 		lrw := &loggingResponseWriter{ResponseWriter: w, status: 200}
 		next.ServeHTTP(lrw, r)
 
-		ms := time.Since(start).Milliseconds()
-		// #nosec G706 -- All request-controlled string fields are quoted with %q.
-		log.Printf("rid=%q method=%q path=%q status=%d ms=%d remote=%q ua=%q",
-			rid, r.Method, r.URL.Path, lrw.status, ms, r.RemoteAddr, r.UserAgent())
+		duration := time.Since(start)
+		ms := duration.Milliseconds()
+
+		// Extract client IP (same logic as rate limiter)
+		clientIP := getClientIPForLogging(r)
+
+		Info("request completed", map[string]interface{}{
+			"request_id": rid, "method": r.Method, "path": r.URL.Path,
+			"status": lrw.status, "ms": ms, "bytes": lrw.size,
+			"ip": clientIP, "user_agent": r.UserAgent(),
+		})
 
 		// Record metrics
 		GetMetrics().RecordRequest(lrw.status)
 	})
 }
 
+// getClientIPForLogging extracts client IP for logging purposes
+func getClientIPForLogging(r *http.Request) string {
+	// Check X-Forwarded-For header (comma-separated list of IPs)
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// Take the first IP in the list
+		for i, c := range xff {
+			if c == ',' {
+				return xff[:i]
+			}
+		}
+		return xff
+	}
+
+	// Check X-Real-IP header
+	if xri := r.Header.Get("X-Real-IP"); xri != "" {
+		return xri
+	}
+
+	// Fall back to RemoteAddr (format: "ip:port")
+	for i := len(r.RemoteAddr) - 1; i >= 0; i-- {
+		if r.RemoteAddr[i] == ':' {
+			return r.RemoteAddr[:i]
+		}
+	}
+
+	return r.RemoteAddr
+}
+
 type loggingResponseWriter struct {
 	http.ResponseWriter
 	status int
+	size   int
 }
 
 func (w *loggingResponseWriter) WriteHeader(code int) {
@@ -80,4 +95,11 @@ func (w *loggingResponseWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
+func (w *loggingResponseWriter) Write(b []byte) (int, error) {
+	n, err := w.ResponseWriter.Write(b)
+	w.size += n
+	return n, err
+}
+
+// Unwrap preserves request-controller deadlines through middleware.
 func (w *loggingResponseWriter) Unwrap() http.ResponseWriter { return w.ResponseWriter }

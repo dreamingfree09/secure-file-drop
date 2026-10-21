@@ -1,13 +1,25 @@
+// RegisterHandler handles POST /register to create new users and issue
+// an email verification. Email must be verified before login succeeds.
+// Password complexity is enforced; responses avoid leaking user existence.
+// VerifyEmailHandler handles GET /verify?token=... and marks the user
+// email as verified, enabling login. Tokens are single-use and time-bound.
+// register.go - User registration and verification flow handlers.
+//
+// Handles account creation with email verification and basic validation.
+
 package server
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"log"
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -86,32 +98,67 @@ func verifyPassword(password, hash string) bool {
 	return err == nil
 }
 
+// generateVerificationToken creates a random hex token for email verification
+func generateVerificationToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+// sendVerificationEmail sends an email with verification link
+func sendVerificationEmail(emailSvc *EmailService, baseURL, email, token string) error {
+	if emailSvc == nil {
+		// Fallback logging without exposing the token (security risk)
+		log.Printf("EMAIL VERIFICATION: Email service not configured, verification email for %s not sent", email)
+		log.Printf("WARNING: Email verification required but no email service available")
+		return nil
+	}
+	return emailSvc.SendVerificationEmail(email, token, baseURL)
+}
+
+// generateResetToken creates a random hex token for password reset
+func generateResetToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
+// sendPasswordResetEmail sends an email with password reset link
+func sendPasswordResetEmail(emailSvc *EmailService, baseURL, email, token string) error {
+	if emailSvc == nil {
+		// Fallback logging without exposing the token (security risk)
+		log.Printf("PASSWORD RESET: Email service not configured, reset email for %s not sent", email)
+		log.Printf("WARNING: Password reset requested but no email service available")
+		return nil
+	}
+	return emailSvc.SendPasswordResetEmail(email, token, baseURL)
+}
+
 // RegisterHandler handles POST /register requests for user registration
 func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := sqlContext(r.Context())
+	defer cancel()
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
 	var req RegisterRequest
 	if !decodeJSON(w, r, &req) {
 		return
 	}
 
-	ctx, cancel := sqlContext(r.Context())
-	defer cancel()
 	// Sanitize inputs
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 	req.Username = strings.TrimSpace(req.Username)
-	// Password bytes are preserved exactly; bcrypt accepts at most 72 bytes.
 
 	// Validate email
 	if !validateEmail(req.Email) {
 		http.Error(w, "Invalid email address", http.StatusBadRequest)
-		return
-	}
-
-	if len(req.Email) > 255 || strings.EqualFold(req.Username, cfg.Auth.AdminUser) {
-		http.Error(w, "Invalid or reserved account name", http.StatusBadRequest)
 		return
 	}
 
@@ -151,62 +198,328 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Generate verification token for email verification
+	verificationToken, err := generateVerificationToken()
+	if err != nil {
+		log.Printf("register: token generation failed: %v", err)
+		http.Error(w, "Failed to generate verification token", http.StatusInternalServerError)
+		return
+	}
+
 	// Create user
 	userID := uuid.New()
 	_, err = cfg.DB.ExecContext(ctx, `
-		INSERT INTO users (id, email, username, password_hash)
-		VALUES ($1, $2, $3, $4)
-	`, userID, req.Email, req.Username, passwordHash)
+		INSERT INTO users (id, email, username, password_hash, verification_token, verification_sent_at, email_verified)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, userID, req.Email, req.Username, passwordHash, verificationToken, time.Now().UTC(), false)
 	if err != nil {
-		if strings.Contains(err.Error(), "23505") {
-			http.Error(w, "Email or username already registered", http.StatusConflict)
-			return
-		}
-		log.Printf("register: insert failed")
+		log.Printf("register: insert failed: %v", err)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("register: account created")
+	// Send verification email
+	if err := sendVerificationEmail(cfg.EmailSvc, cfg.BaseURL, req.Email, verificationToken); err != nil {
+		log.Printf("register: email send failed: %v", err)
+		// Don't fail registration if email fails - user is already created
+	}
+
+	log.Printf("register: created user - verification email sent")
 
 	// Return success response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(RegisterResponse{
+	if err := json.NewEncoder(w).Encode(RegisterResponse{
 		ID:       userID.String(),
 		Email:    req.Email,
 		Username: req.Username,
-	})
+	}); err != nil {
+		Warn("response write failed", nil)
+	}
+}
+
+// VerifyEmailHandler handles GET /verify?token={token} requests for email verification
+func (cfg Config) VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := sqlContext(r.Context())
+	defer cancel()
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		http.Error(w, "Missing verification token", http.StatusBadRequest)
+		return
+	}
+
+	// Find user with this token
+	var userID, email string
+	var alreadyVerified bool
+	err := cfg.DB.QueryRowContext(ctx, `
+		SELECT id, email, email_verified
+		FROM users
+		WHERE verification_token = $1
+	`, token).Scan(&userID, &email, &alreadyVerified)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, "Invalid or expired verification token", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		log.Printf("verify: db query failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	if alreadyVerified {
+		w.Header().Set("Content-Type", "text/html")
+		if _, err := w.Write([]byte("<h2>Email already verified!</h2><p>You can now <a href='/'>log in</a>.</p>")); err != nil {
+			Warn("verification response write failed", nil)
+		}
+		return
+	}
+
+	// Mark email as verified and clear token
+	_, err = cfg.DB.ExecContext(ctx, `
+		UPDATE users
+		SET email_verified = true,
+		    verification_token = NULL
+		WHERE id = $1
+	`, userID)
+
+	if err != nil {
+		log.Printf("verify: update failed: %v", err)
+		http.Error(w, "Failed to verify email", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("verify: email verified for user %s", email)
+
+	w.Header().Set("Content-Type", "text/html")
+	if _, err := w.Write([]byte("<h2>Email verified successfully!</h2><p>You can now <a href='/'>log in</a>.</p>")); err != nil {
+		Warn("response write failed", nil)
+	}
+}
+
+// RequestPasswordResetHandler handles POST /reset-password-request for initiating password reset
+func (cfg Config) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := sqlContext(r.Context())
+	defer cancel()
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Email string `json:"email"`
+	}
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+
+	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	if !validateEmail(req.Email) {
+		http.Error(w, "Invalid email address", http.StatusBadRequest)
+		return
+	}
+
+	// Check if user exists
+	var userID string
+	err := cfg.DB.QueryRowContext(ctx, "SELECT id FROM users WHERE email = $1 AND is_active = TRUE", req.Email).Scan(&userID)
+	if err == sql.ErrNoRows {
+		// Don't reveal if email exists or not for security
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "If the email exists, a reset link has been sent"}); err != nil {
+			Warn("response write failed", nil)
+		}
+		return
+	}
+	if err != nil {
+		log.Printf("reset-request: db query failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Generate reset token (expires in 1 hour)
+	resetToken, err := generateResetToken()
+	if err != nil {
+		log.Printf("reset-request: token generation failed: %v", err)
+		http.Error(w, "Failed to generate reset token", http.StatusInternalServerError)
+		return
+	}
+
+	expiresAt := time.Now().UTC().Add(1 * time.Hour)
+
+	// Store reset token
+	_, err = cfg.DB.ExecContext(ctx, `
+		UPDATE users
+		SET reset_token = $1,
+		    reset_token_expires = $2
+		WHERE id = $3
+	`, resetToken, expiresAt, userID)
+
+	if err != nil {
+		log.Printf("reset-request: update failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Send reset email
+	if err := sendPasswordResetEmail(cfg.EmailSvc, cfg.BaseURL, req.Email, resetToken); err != nil {
+		log.Printf("reset-request: email send failed: %v", err)
+	}
+
+	log.Printf("reset-request: password reset requested for %s", req.Email)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "If the email exists, a reset link has been sent"}); err != nil {
+		Warn("response write failed", nil)
+	}
+}
+
+// ResetPasswordHandler handles POST /reset-password for completing password reset
+func (cfg Config) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := sqlContext(r.Context())
+	defer cancel()
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"new_password"`
+	}
+	if !decodeJSON(w, r, &req) {
+		return
+	}
+
+	req.Token = strings.TrimSpace(req.Token)
+
+	if req.Token == "" {
+		http.Error(w, "Missing reset token", http.StatusBadRequest)
+		return
+	}
+
+	// Validate new password
+	if valid, msg := validatePassword(req.NewPassword); !valid {
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+
+	// Find user with valid token
+	var userID string
+	var expiresAt time.Time
+	err := cfg.DB.QueryRowContext(ctx, `
+		SELECT id, reset_token_expires
+		FROM users
+		WHERE reset_token = $1 AND is_active = TRUE
+	`, req.Token).Scan(&userID, &expiresAt)
+
+	if err == sql.ErrNoRows {
+		http.Error(w, "Invalid or expired reset token", http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		log.Printf("reset-password: db query failed: %v", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Check if token is expired
+	if time.Now().UTC().After(expiresAt) {
+		http.Error(w, "Reset token has expired", http.StatusGone)
+		return
+	}
+
+	// Hash new password
+	passwordHash, err := hashPassword(req.NewPassword)
+	if err != nil {
+		log.Printf("reset-password: hash failed: %v", err)
+		http.Error(w, "Failed to process password", http.StatusInternalServerError)
+		return
+	}
+
+	// Update password and clear reset token
+	_, err = cfg.DB.ExecContext(ctx, `
+		UPDATE users
+		SET password_hash = $1,
+		    reset_token = NULL,
+		    reset_token_expires = NULL
+		WHERE id = $2
+	`, passwordHash, userID)
+
+	if err != nil {
+		log.Printf("reset-password: update failed: %v", err)
+		http.Error(w, "Failed to reset password", http.StatusInternalServerError)
+		return
+	}
+
+	log.Printf("reset-password: password reset successful for user %s", userID)
+
+	// Send password change notification
+	var username, email string
+	if err := cfg.DB.QueryRowContext(ctx, "SELECT username, email FROM users WHERE id = $1", userID).Scan(&username, &email); err != nil {
+		Warn("password change notification identity unavailable", nil)
+		return
+	}
+	if cfg.EmailSvc != nil && email != "" {
+		NotifyPasswordChanged(cfg.EmailSvc, username, email, getClientIP(r))
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(map[string]string{"status": "ok", "message": "Password reset successfully"}); err != nil {
+		Warn("response write failed", nil)
+	}
 }
 
 // authenticateUser checks credentials against the database
-func authenticateUser(ctx context.Context, db *sql.DB, username, password string) (string, bool, error) {
-	if len(password) > 72 {
-		return "", false, nil
-	}
+func authenticateUser(parent context.Context, db *sql.DB, username, password string) (string, bool, error) {
+	ctx, cancel := sqlContext(parent)
+	defer cancel()
 	var userID string
 	var passwordHash string
+	var emailVerified bool
+
+	log.Printf("auth: attempting login (username: %s)", username)
 
 	err := db.QueryRowContext(ctx,
-		"SELECT id, password_hash FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE",
+		"SELECT id, password_hash, email_verified FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE",
 		username,
-	).Scan(&userID, &passwordHash)
+	).Scan(&userID, &passwordHash, &emailVerified)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
+			log.Printf("auth: user not found or not active")
 			return "", false, nil
 		}
+		log.Printf("auth: db query failed")
 		return "", false, err
 	}
 
+	log.Printf("auth: found user (id: %s, verified: %v)", userID, emailVerified)
+
 	if !verifyPassword(password, passwordHash) {
+		log.Printf("auth: password verification failed")
 		return "", false, nil
 	}
 
-	// Update last login
-	if _, err := db.ExecContext(ctx, "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1", userID); err != nil {
-		return "", false, err
+	log.Printf("auth: password verified")
+
+	// Check if email is verified
+	if !emailVerified {
+		log.Printf("auth: login blocked - email not verified for user %s", userID)
+		return "", false, nil
 	}
+
+	log.Printf("auth: login successful")
+
+	// Update last login
+	_, _ = db.ExecContext(ctx, "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1", userID)
 
 	return userID, true, nil
 }

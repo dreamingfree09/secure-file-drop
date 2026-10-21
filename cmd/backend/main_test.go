@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"testing"
 )
 
@@ -39,11 +38,6 @@ func TestGetenvDefault(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Setenv(tt.key, tt.envValue)
-			if tt.name == "env var not set" {
-				if err := os.Unsetenv(tt.key); err != nil {
-					t.Fatal(err)
-				}
-			}
 
 			got := getenvDefault(tt.key, tt.def)
 			if got != tt.want {

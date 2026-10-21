@@ -1,3 +1,5 @@
+> Current development candidate: [canonical schema12 selected-source reconciliation](docs/CANONICAL_RECONCILIATION.md). Historical schema4 setup/storage acceptance below is not an adoption procedure for existing11/BYTEA. No public production readiness or live replacement is claimed.
+
 # Secure File Drop
 
 Secure File Drop is a self-hosted Go application for registered-user uploads to private MinIO storage, native C SHA-256 verification and expiring bearer download links.

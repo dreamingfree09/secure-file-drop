@@ -13,12 +13,29 @@ func publicOrigin() (string, error) {
 	if raw == "" {
 		return "", nil
 	}
+	return canonicalOrigin(raw)
+}
+
+// Canonical origin spelling matches browser/Uri default-port and DNS-case rules.
+// Paths, credentials and other URL components are never origins.
+func canonicalOrigin(raw string) (string, error) {
 	u, err := url.Parse(raw)
-	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Hostname() == "" ||
-		u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" {
-		return "", fmt.Errorf("invalid public origin")
+	if err != nil {
+		return "", fmt.Errorf("invalid origin")
 	}
-	return u.Scheme + "://" + u.Host, nil
+	scheme := strings.ToLower(u.Scheme)
+	if (scheme != "http" && scheme != "https") || u.Hostname() == "" || u.User != nil || u.Path != "" || u.RawQuery != "" || u.Fragment != "" || u.Opaque != "" {
+		return "", fmt.Errorf("invalid origin")
+	}
+	host := strings.ToLower(u.Hostname())
+	if strings.Contains(host, ":") {
+		host = "[" + host + "]"
+	}
+	port := u.Port()
+	if port != "" && (scheme != "https" || port != "443") && (scheme != "http" || port != "80") {
+		host += ":" + port
+	}
+	return scheme + "://" + host, nil
 }
 
 // Forwarded headers remain untrusted. Browsers must match the configured origin.
@@ -33,9 +50,13 @@ func sameOriginMiddleware(next http.Handler) http.Handler {
 			if expected == "" {
 				expected = requestOrigin(r)
 			}
-			if origin := r.Header.Get("Origin"); origin != "" && origin != expected {
-				http.Error(w, "forbidden origin", http.StatusForbidden)
-				return
+			if origin := r.Header.Get("Origin"); origin != "" {
+				received, receivedErr := canonicalOrigin(origin)
+				configured, configuredErr := canonicalOrigin(expected)
+				if receivedErr != nil || configuredErr != nil || received != configured {
+					http.Error(w, "forbidden origin", http.StatusForbidden)
+					return
+				}
 			}
 		}
 		next.ServeHTTP(w, r)
