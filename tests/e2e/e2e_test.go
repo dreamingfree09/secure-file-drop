@@ -39,3 +39,18 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 		})
 	}
 }
+
+// Configuration rendering uses a new synthetic env file and never starts
+// Compose services or reads the Owner's existing installation configuration.
+func TestDeploymentTemplate(t *testing.T) {
+	if os.Getenv("SFD_E2E_BACKEND_IMAGE") == "" {
+		t.Skip("requires explicitly enabled owned acceptance; ordinary compilation is not configuration acceptance")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	output, err := exec.CommandContext(ctx, "python3", "-B", "../acceptance/compose-template.py").Output()
+	if err != nil {
+		t.Fatal("synthetic deployment template contract failed; no private output disclosed")
+	}
+	t.Log(string(output))
+}

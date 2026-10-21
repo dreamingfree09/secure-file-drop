@@ -7,9 +7,9 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD locally before starting this isolated template}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - sfd_pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -24,11 +24,11 @@ services:
     container_name: sfd_minio
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD locally before starting this isolated template}
     command: server /data --console-address ":9001"
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - sfd_minio_data:/data
     healthcheck:
@@ -48,34 +48,35 @@ services:
       - "--entrypoints.websecure.address=:443"
       - "--log.level=INFO"
     ports:
-      - "8081:80"
-      - "8443:443"
+      - "127.0.0.1:8081:80"
+      - "127.0.0.1:8443:443"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     restart: unless-stopped
 
   backend:
+    stop_grace_period: 25s
     build:
       context: .
       dockerfile: Dockerfile.backend
     container_name: sfd_backend
     ports:
-      - "8080:8080"  # Direct access to backend (bypasses Traefik for easier development)
+      - "127.0.0.1:8080:8080"  # Direct access to backend (bypasses Traefik for easier development)
     environment:
       SFD_BUCKET: ${SFD_BUCKET}
       SFD_S3_ENDPOINT: http://minio:9000
-      SFD_S3_ACCESS_KEY: minioadmin
-      SFD_S3_SECRET_KEY: CHANGE_THIS_LATER
+      SFD_S3_ACCESS_KEY: ${SFD_S3_ACCESS_KEY:?Set SFD_S3_ACCESS_KEY locally before starting this isolated template}
+      SFD_S3_SECRET_KEY: ${SFD_S3_SECRET_KEY:?Set SFD_S3_SECRET_KEY locally before starting this isolated template}
       SFD_MAX_UPLOAD_BYTES: ${SFD_MAX_UPLOAD_BYTES}
-      SFD_DOWNLOAD_SECRET: ${SFD_DOWNLOAD_SECRET}
+      SFD_DOWNLOAD_SECRET: ${SFD_DOWNLOAD_SECRET:?Set SFD_DOWNLOAD_SECRET locally before starting this isolated template}
       SFD_PUBLIC_BASE_URL: ${SFD_PUBLIC_BASE_URL}
       SFD_ADDR: ":8080"
       SFD_VERSION: "dev"
       SFD_COMMIT: "local"
       SFD_ADMIN_USER: ${SFD_ADMIN_USER:-admin}
-      SFD_ADMIN_PASS: ${SFD_ADMIN_PASS:-$$2b$$12$$mwAYLCuBKlQEf.t6uiJUUOTjKyJ/6Qyy/kH70RlAFjnKT.dYyH4RO}
-      SFD_SESSION_SECRET: ${SFD_SESSION_SECRET:-change-me-use-openssl-rand-hex-32}
-      DATABASE_URL: ${DATABASE_URL}
+      SFD_ADMIN_PASS: ${SFD_ADMIN_PASS:?Set SFD_ADMIN_PASS locally before starting this isolated template}
+      SFD_SESSION_SECRET: ${SFD_SESSION_SECRET:?Set SFD_SESSION_SECRET locally before starting this isolated template}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL locally before starting this isolated template}
       SFD_SMTP_HOST: ${SFD_SMTP_HOST}
       SFD_SMTP_PORT: ${SFD_SMTP_PORT}
       SFD_SMTP_USER: ${SFD_SMTP_USER}
@@ -142,7 +143,7 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - sfd_prometheus_data:/prometheus
@@ -155,10 +156,10 @@ services:
     container_name: sfd_grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD locally}
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     volumes:
       - sfd_grafana_data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro

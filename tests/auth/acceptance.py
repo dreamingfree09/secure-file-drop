@@ -86,7 +86,7 @@ def main():
             time.sleep(.5)
         assert r.returncode==0, 'storage alias readiness';docker('exec',storage,'mc','mb','fixture/'+name)
         def start_backend(image=None):
-            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
+            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--stop-timeout','25','--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
             if not ports:
                 if image is None:raise RuntimeError('candidate exited before loopback binding')
                 Relay.backend=0;return b
@@ -229,13 +229,13 @@ def main():
                     locked=True;break
                 time.sleep(.1)
             check(locked,'active multipart owns real PostgreSQL row lock before SIGTERM')
-            started=time.monotonic();owned('container',backend);docker('stop','--time','25',backend);elapsed=time.monotonic()-started
+            started=time.monotonic();owned('container',backend);docker('stop',backend);elapsed=time.monotonic()-started
         finally:stream.close()
         final_info=owned('container',backend)
         status_after=sql("SELECT status FROM files WHERE id='"+shutdown_id+"';")
         object_missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+shutdown_id],capture_output=True).returncode!=0
-        check(final_info['State']['ExitCode']==0 and not final_info['State']['Running'] and elapsed<20 and status_after=='failed' and object_missing,'real SIGTERM finishes bounded failed-upload compensation and exits cleanly')
-        result['active_shutdown']={'exit_code':final_info['State']['ExitCode'],'elapsed_seconds':round(elapsed,3),'row_lock_observed':locked,'status':status_after,'actual_object_absent':object_missing,'docker_kill_budget_seconds':25,'application_budget_seconds':20}
+        check(final_info['Config']['StopTimeout']==25 and final_info['State']['ExitCode']==0 and not final_info['State']['Running'] and elapsed<20 and status_after=='failed' and object_missing,'real SIGTERM finishes bounded failed-upload compensation and exits cleanly')
+        result['active_shutdown']={'exit_code':final_info['State']['ExitCode'],'elapsed_seconds':round(elapsed,3),'row_lock_observed':locked,'status':status_after,'actual_object_absent':object_missing,'configured_docker_stop_timeout_seconds':final_info['Config']['StopTimeout'],'docker_kill_budget_seconds':25,'application_budget_seconds':20}
         restart_phase('post-SIGTERM phase restart')
         mismatch=create_file('mismatch.txt',1);check(upload_bytes(mismatch,b'abc')[0]==400,'actual bytes must match reserved metadata')
         check(sql("SELECT status FROM files WHERE id='"+mismatch+"';")=='failed','mismatched upload retains failed metadata')
@@ -284,7 +284,7 @@ def main():
             if control.exists():
                 assert control.is_dir() and (control/'owner').read_text()==name,'native control owner mismatch'
                 if (control/'interrupt-backend.request').exists() and not (control/'backend-stopped').exists():
-                    owned('container',backend);docker('stop','--time','10',backend)
+                    owned('container',backend);docker('stop',backend)
                     assert not owned('container',backend)['State']['Running']
                     with (control/'backend-stopped').open('x') as ack:ack.write('stopped')
                 if (control/'restore-backend.request').exists() and not (control/'backend-restored').exists():
