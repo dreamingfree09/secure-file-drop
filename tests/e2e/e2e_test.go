@@ -3,8 +3,10 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -51,6 +53,27 @@ func TestDeploymentTemplate(t *testing.T) {
 	output, err := exec.CommandContext(ctx, "python3", "-B", "../acceptance/compose-template.py").Output()
 	if err != nil {
 		t.Fatal("synthetic deployment template contract failed; no private output disclosed")
+	}
+	var evidence struct {
+		Count int `json:"count"`
+	}
+	if json.Unmarshal(output, &evidence) != nil || evidence.Count != 15 {
+		t.Fatal("incomplete synthetic configuration contract")
+	}
+	root := os.Getenv("SFD_E2E_OUTPUT_ROOT")
+	if root == "" {
+		t.Fatal("explicit owned output root required")
+	}
+	file, err := os.OpenFile(filepath.Join(root, "sfd-compose-contract.json"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	if err != nil {
+		t.Fatal("preserve existing configuration evidence; exclusive creation failed")
+	}
+	if _, err = file.Write(output); err != nil {
+		_ = file.Close()
+		t.Fatal("write sanitised configuration evidence")
+	}
+	if err = file.Close(); err != nil {
+		t.Fatal("close configuration evidence")
 	}
 	t.Log(string(output))
 }
