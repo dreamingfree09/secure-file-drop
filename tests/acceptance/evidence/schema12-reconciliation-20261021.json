@@ -2,13 +2,13 @@
   "work": "SFD-FINAL-RECONCILIATION-20261020",
   "producer": "Codex",
   "independent_recipient": "Aether",
-  "source_reference_before_evidence_commit": "3bb429c9c9ee3f010eb3b9e95262b33aaab27338",
+  "source_reference_before_evidence_commit": "65592b2bf3dc80bf54a846cd2a896551ff9bd2f1",
   "application_image_source": "13be4779b8cf1ec6ea35723c2e3a93f9f757e30d",
   "image_application_inputs_equal_to_candidate": true,
   "local_layouts": [
     {
       "layout": "bytea",
-      "fixture_source_revision": "13be4779b8cf1ec6ea35723c2e3a93f9f757e30d",
+      "fixture_source_revision": "021d51e243d24a6c68c2b5b10dc7ef07ff0bceab",
       "checks": [
         "local Docker target",
         "actual pg_dump accepts separated connection environment without credential arguments",
@@ -107,10 +107,11 @@
       },
       "active_shutdown": {
         "exit_code": 0,
-        "elapsed_seconds": 5.528,
+        "elapsed_seconds": 5.535,
         "row_lock_observed": true,
         "status": "failed",
         "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
         "docker_kill_budget_seconds": 25,
         "application_budget_seconds": 20
       },
@@ -134,7 +135,7 @@
     },
     {
       "layout": "bigint",
-      "fixture_source_revision": "13be4779b8cf1ec6ea35723c2e3a93f9f757e30d",
+      "fixture_source_revision": "021d51e243d24a6c68c2b5b10dc7ef07ff0bceab",
       "checks": [
         "local Docker target",
         "actual pg_dump accepts separated connection environment without credential arguments",
@@ -233,10 +234,11 @@
       },
       "active_shutdown": {
         "exit_code": 0,
-        "elapsed_seconds": 5.461,
+        "elapsed_seconds": 5.543,
         "row_lock_observed": true,
         "status": "failed",
         "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
         "docker_kill_budget_seconds": 25,
         "application_budget_seconds": 20
       },
@@ -494,7 +496,8 @@
     "Initial native fixture DrvFS permission and Python module shadow failures; safely staged identical native bytes and corrected test module.",
     "Initial standalone custom-dump probe used URI as PGDATABASE environment default and failed; separated libpq configuration retained; new exact-image roundtrip outcomes reported in final PR.",
     "Superseded a86 hosted runs39517345704/39517352789 fail lint and are not final acceptance.",
-    "Historical retained failed rehearsals are preserved stopped; no broad cleanup."
+    "Historical retained failed rehearsals are preserved stopped; no broad cleanup.",
+    "Legacy Compose template lacked the tested stop budget, had usable defaults and non-loopback ports. New synthetic contract failed before correction and15 checks pass after; live files/credentials/services were not changed."
   ],
   "blocked_or_unexecuted": [
     "No prohibited MinIO signature-bypass reproduction developed/executed/published.",
@@ -504,6 +507,131 @@
     "Owner visual tray/menu/picker/Explorer/OS clipboard/Quick Send/progress/cancel/exit remain unexecuted.",
     "No maintained-storage/public-production/capacity/rotation/topology/combined cross-host recovery acceptance."
   ],
-  "final_windows_release_and_backup_evidence": "Revision-specific final PR31 handover, separate from programmatic CI and from superseded image results. Preserved F196/c320 source unchanged.",
-  "acceptance": "producer bounded evidence only; independent Aether source/security/recovery acceptance pending"
+  "final_windows_release_and_backup_evidence": "Actual F196 unchanged release passes44 BYTEA (including natural300s expiry410) and43 BIGINT checks; each71-check backend fixture and PG16.15 custom dump/restore pass, exact synthetic user/file/session/audit rows equal and source unchanged. Owner visual acceptance remains unexecuted.",
+  "acceptance": "producer bounded evidence only; independent Aether source/security/recovery acceptance pending",
+  "configuration_contract": {
+    "suite": "synthetic-compose-contract",
+    "checks": [
+      "synthetic Compose template renders without existing .env",
+      "Compose reserves tested25s backend stop budget",
+      "all template published ports are loopback-only",
+      "backend uses explicit existing storage variable SFD_S3_ACCESS_KEY",
+      "backend uses explicit existing storage variable SFD_S3_SECRET_KEY",
+      "missing credential/configuration fails closed POSTGRES_PASSWORD",
+      "missing credential/configuration fails closed MINIO_ROOT_PASSWORD",
+      "missing credential/configuration fails closed SFD_S3_ACCESS_KEY",
+      "missing credential/configuration fails closed SFD_S3_SECRET_KEY",
+      "missing credential/configuration fails closed SFD_ADMIN_PASS",
+      "missing credential/configuration fails closed SFD_SESSION_SECRET",
+      "missing credential/configuration fails closed SFD_DOWNLOAD_SECRET",
+      "missing credential/configuration fails closed GRAFANA_ADMIN_PASSWORD",
+      "missing credential/configuration fails closed DATABASE_URL",
+      "sample contains no usable default credential or connection identity"
+    ],
+    "count": 15,
+    "services_started": false,
+    "existing_env_read": false,
+    "real_secrets_used": false
+  },
+  "actual_preserved_F196_release": [
+    {
+      "layout": "bytea",
+      "image": "sha256:5ca09cd169cad7e0ea544495fb0952fbc75e854cad060b97953e5a8374695226",
+      "source": "3bb429c9c9ee3f010eb3b9e95262b33aaab27338",
+      "backend_checks": 71,
+      "failures": [],
+      "probe_checks": 44,
+      "probe_exit": 0,
+      "preservation": true,
+      "cleanup": true,
+      "probe_sha256": "ca387966bf9cd02e90c0559ec4cf07bedd0b7f40bf989e663a9840156536b992",
+      "natural_expiry_http": 410,
+      "Owner_GUI": "unexecuted"
+    },
+    {
+      "layout": "bigint",
+      "image": "sha256:5ca09cd169cad7e0ea544495fb0952fbc75e854cad060b97953e5a8374695226",
+      "source": "46c1b683328097579844f48f5179af59d164d1ea",
+      "backend_checks": 71,
+      "failures": [],
+      "probe_checks": 43,
+      "probe_exit": 0,
+      "preservation": true,
+      "cleanup": true,
+      "probe_sha256": "ca387966bf9cd02e90c0559ec4cf07bedd0b7f40bf989e663a9840156536b992",
+      "natural_expiry_http": null,
+      "Owner_GUI": "unexecuted"
+    }
+  ],
+  "actual_image_resident_pg16_roundtrip": [
+    {
+      "layout": "bytea",
+      "source_revision": "46c1b683328097579844f48f5179af59d164d1ea",
+      "image": "sha256:5ca09cd169cad7e0ea544495fb0952fbc75e854cad060b97953e5a8374695226",
+      "image_resident_pg_dump_version": "pg_dump (PostgreSQL) 16.15",
+      "custom_dump_restore": true,
+      "schema": 12,
+      "exact_user_file_session_audit_rows_equal": true,
+      "source_unchanged": true,
+      "archive_sha256": "455231bd2c770cb9b075d8b7c1f4f2966d0b50244b77507f09fe3b0a80b2d144",
+      "archive": "local-only synthetic private records"
+    },
+    {
+      "layout": "bigint",
+      "source_revision": "46c1b683328097579844f48f5179af59d164d1ea",
+      "image": "sha256:5ca09cd169cad7e0ea544495fb0952fbc75e854cad060b97953e5a8374695226",
+      "image_resident_pg_dump_version": "pg_dump (PostgreSQL) 16.15",
+      "custom_dump_restore": true,
+      "schema": 12,
+      "exact_user_file_session_audit_rows_equal": true,
+      "source_unchanged": true,
+      "archive_sha256": "9f07c00674a92194cd878932b8a6b613361627d0ad2d015d69792865b632ff34",
+      "archive": "local-only synthetic private records"
+    }
+  ],
+  "whitespace": {
+    "full_diff_check_exit": 2,
+    "findings": [
+      {
+        "path": "desktop/windows/tests/WindowsTests.cs",
+        "line": 129,
+        "classification": "unchanged frozen c320 test blob has whitespace-only line; preserved exactly"
+      }
+    ],
+    "new_or_adapted_paths_findings": 0
+  },
+  "final_preservation": {
+    "observed_utc": "2026-10-21T00:07:50.032588+00:00",
+    "six_live_ids_images_starts_mounts_unchanged": true,
+    "backend_image": "sha256:7b53527539596c711a4b2e4a68d26d8e4c7a025228327e43b461b8f9b079b532",
+    "environment_equals_owner_validated_candidate": true,
+    "protected_checkouts_preserved": true,
+    "original_change_entries": 5,
+    "retained_failure_counts": {
+      "container": 57,
+      "network": 5,
+      "volume": 37,
+      "image": 10
+    },
+    "retained_failure_inventory_exact_match": true,
+    "all_retained_failure_containers_stopped": true,
+    "backup_configuration": {
+      "SFD_BACKUP_ENABLED": "true",
+      "SFD_BACKUP_RETENTION_DAYS": "7",
+      "SFD_BACKUP_INTERVAL": "24h",
+      "SFD_CLEANUP_ENABLED": "unset"
+    },
+    "adoption_performed": false,
+    "live_record_mutations": false,
+    "positive_size_existing_backup_files": 5
+  },
+  "tls_preservation": {
+    "observed_utc": "2026-10-21T00:08:10.857768+00:00",
+    "served_leaf_sha256": "4106ecd1f0bd2d94be7a7fcf2236cb9b0119dde5aa82a97edd2cdab584809b70",
+    "distribution_crl_sha256": "d5e8ca59b3324fe4f133d2c381737bab413340085d990469d1691a9688a6b5cc",
+    "certificate_chain_hostname_and_CRL_verify": true,
+    "crl_dates": "lastUpdate=Oct 18 12:17:40 2026 GMT\nnextUpdate=Oct 25 12:17:40 2026 GMT",
+    "normal_Windows_Schannel_ready_http": 200,
+    "trust_or_security_changes": false
+  }
 }

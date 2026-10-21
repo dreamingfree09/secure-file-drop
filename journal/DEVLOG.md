@@ -405,3 +405,8 @@ Accepted and corrected three valid independent PR31 findings: reserve shutdown c
 ## 2026-10-21 — frozen local evidence publication
 
 Committed sanitised79-check dual-layout/154-event Go race evidence, exact successor/recovery backend/native identities,14 lineage/4 COMMIT/5 lifecycle cases, actual SIGTERM compensation, patched-image applicability inventory and complete120-path source selection. Full lint0/seven enforcement scenarios pass; rejected and superseded failures remain explicit. Final GitHub handover supplies actual current-head CI, F196 release and PG16 roundtrip evidence; source commit cannot embed its own SHA. Both DEVLOG prefixes and protected graphs/work remain preserved. Integration/adoption/Owner GUI/public readiness are not producer-accepted.
+
+
+## 2026-10-21 — final operational contract and release readback
+
+Completed unchanged F196 release44/43 checks, natural expiry410 and PG16.15 exact-row custom dump/restore on both owned layouts. Final configuration review corrected only the candidate template:25s stop grace, loopback ports, explicit storage values and no usable sample/default secrets. Fifteen synthetic render/required-value failures pass; default configured Docker stop with real multipart locks/compensation passes both79-check layouts with154 Go events/no skips. Final122-path manifest includes deployment inputs while proving unchanged compiled application inputs at13be477. Live six services/.env/TLS/CRL/data/five backups/protected checkouts and retained57containers/37volumes/5networks/10images remain unchanged. Exact frozen c320 test whitespace retained and disclosed. Final CI and published SHA belong to the PR handover; no producer self-acceptance, protected integration, live adoption or Owner GUI claim.

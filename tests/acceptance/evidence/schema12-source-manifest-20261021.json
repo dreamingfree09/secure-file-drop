@@ -1,5 +1,5 @@
 {
-  "candidate_source_reference": "3bb429c9c9ee3f010eb3b9e95262b33aaab27338",
+  "candidate_source_reference": "65592b2bf3dc80bf54a846cd2a896551ff9bd2f1",
   "image_build_reference": "13be4779b8cf1ec6ea35723c2e3a93f9f757e30d",
   "application_input_equality_to_image_source": true,
   "reference_revisions": {
@@ -8,6 +8,12 @@
     "reviewed_windows": "c320861536914623ea22f28c1d4ea156d4c2132a"
   },
   "runtime_and_companion_inventory": [
+    {
+      "path": ".env.example",
+      "blob": "fd40d6a2b256deac94e698c3285e5ed427859a00",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
+    },
     {
       "path": "Dockerfile.backend",
       "blob": "0956918d8a5bdabdf93238f7ab7e00a2bb36d540",
@@ -180,6 +186,12 @@
         "reviewed_windows"
       ],
       "selection": "existing reviewed source"
+    },
+    {
+      "path": "docker-compose.yml",
+      "blob": "d8c02c8f107bd3f4dfed13ba959c30bd281d8305",
+      "unchanged_from": [],
+      "selection": "bounded adapted correction or regression; inspect full diff"
     },
     {
       "path": "go.mod",
@@ -984,5 +996,9 @@
     }
   ],
   "source_review_scope": "authentication/session/lockout/identity/ownership/audit/quota/lifecycle/Windows transport; full new diff remains independently reviewable, not exhaustive security certification",
-  "protected_integration": false
+  "protected_integration": false,
+  "deployment_files_not_copied_to_backend_image": [
+    "docker-compose.yml",
+    ".env.example"
+  ]
 }
