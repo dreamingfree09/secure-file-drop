@@ -188,6 +188,7 @@ func ValidateAllConfiguration() error {
 	// Required core configuration
 	v.ValidateRequired("DATABASE_URL")
 	v.ValidateRequired("SFD_SESSION_SECRET")
+	v.ValidateRequired("SFD_DOWNLOAD_SECRET")
 	v.ValidateRequired("SFD_ADMIN_PASS")
 
 	// Database configuration
@@ -202,6 +203,10 @@ func ValidateAllConfiguration() error {
 	// Session secret validation
 	sessionSecret := os.Getenv("SFD_SESSION_SECRET")
 	v.ValidateMinLength("SFD_SESSION_SECRET", sessionSecret, 32)
+	v.ValidateMinLength("SFD_DOWNLOAD_SECRET", os.Getenv("SFD_DOWNLOAD_SECRET"), 32)
+	if _, err := maxRequestBytes(); err != nil {
+		v.AddError("SFD_MAX_REQUEST_BYTES", "must equal positive file limit plus 1 MiB without overflow")
+	}
 
 	// Admin password must be bcrypt hash
 	adminPass := os.Getenv("SFD_ADMIN_PASS")

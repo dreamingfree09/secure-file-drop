@@ -305,7 +305,7 @@ func New(cfg Config) *Server {
 	// Password reset request (POST JSON {email}) - strict rate limiting
 	// 5 requests per 15 minutes per IP to prevent email enumeration and spam
 	resetRateLimiter := newRateLimiter(5, 15*time.Minute)
-	mux.Handle("/reset-password-request", resetRateLimiter.middleware(http.HandlerFunc(cfg.RequestPasswordResetHandler)))
+	mux.Handle("/reset-password-request", resetRateLimiter.middleware(http.HandlerFunc(passwordResetUnavailable)))
 
 	// Password reset completion (POST JSON {token, new_password})
 	// 10 attempts per hour to prevent token brute-force

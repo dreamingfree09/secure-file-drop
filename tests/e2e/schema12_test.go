@@ -11,7 +11,7 @@ import (
 )
 
 func TestUploadHashDownloadFlow(t *testing.T) {
-	keys := []string{"SFD_E2E_BACKEND_IMAGE", "SFD_E2E_POSTGRES_IMAGE", "SFD_E2E_STORAGE_IMAGE", "SFD_E2E_OUTPUT_ROOT"}
+	keys := []string{"SFD_E2E_BACKEND_IMAGE", "SFD_E2E_POSTGRES_IMAGE", "SFD_E2E_STORAGE_IMAGE", "SFD_E2E_OUTPUT_ROOT", "SFD_E2E_PROXY_IMAGE"}
 	configured := 0
 	for _, key := range keys {
 		if os.Getenv(key) != "" {
@@ -56,7 +56,7 @@ func TestDeploymentTemplate(t *testing.T) {
 	var evidence struct {
 		Count int `json:"count"`
 	}
-	if json.Unmarshal(output, &evidence) != nil || evidence.Count != 15 {
+	if json.Unmarshal(output, &evidence) != nil || evidence.Count != 18 {
 		t.Fatal("incomplete synthetic configuration contract")
 	}
 	root := os.Getenv("SFD_E2E_OUTPUT_ROOT")

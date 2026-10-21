@@ -7,9 +7,9 @@
     {
       "path": ".env.example",
       "received_blob": "fd40d6a2b256deac94e698c3285e5ed427859a00",
-      "selected_blob": "fd40d6a2b256deac94e698c3285e5ed427859a00",
-      "exact_received_bytes": true,
-      "selection": "exact reviewed source"
+      "selected_blob": "8fcac1509e1305a39e4ab596ce95dd74162d596e",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
     },
     {
       "path": "Dockerfile.backend",
@@ -154,9 +154,9 @@
     {
       "path": "docker-compose.yml",
       "received_blob": "d8c02c8f107bd3f4dfed13ba959c30bd281d8305",
-      "selected_blob": "d8c02c8f107bd3f4dfed13ba959c30bd281d8305",
-      "exact_received_bytes": true,
-      "selection": "exact reviewed source"
+      "selected_blob": "74d46e801aeccde13c50885a6d1be0b9b096f189",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
     },
     {
       "path": "go.mod",
@@ -497,9 +497,9 @@
     {
       "path": "internal/server/config_validation.go",
       "received_blob": "f85df0749b9136eaeb38ab2e6f2ca1c758e88f44",
-      "selected_blob": "f85df0749b9136eaeb38ab2e6f2ca1c758e88f44",
-      "exact_received_bytes": true,
-      "selection": "exact reviewed source"
+      "selected_blob": "816800cf36709fc91ccc1ec209498869d264ad36",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
     },
     {
       "path": "internal/server/db.go",
@@ -553,9 +553,9 @@
     {
       "path": "internal/server/email.go",
       "received_blob": "86571b5e5d6f97db3c532d88e879d7ba94f5ac94",
-      "selected_blob": "86571b5e5d6f97db3c532d88e879d7ba94f5ac94",
-      "exact_received_bytes": true,
-      "selection": "exact reviewed source"
+      "selected_blob": "1998a1d1ed85b3573a977d4466cc524dd027b870",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
     },
     {
       "path": "internal/server/endpoint_ratelimit.go",
@@ -637,7 +637,7 @@
     {
       "path": "internal/server/logging.go",
       "received_blob": "a3f2778d3348d154aaf8350635e75999473131fa",
-      "selected_blob": "8671b667a803e485ef0ba12734ec87b6f985371d",
+      "selected_blob": "68ac8439c1d10b90a02607634fab69631eec1397",
       "exact_received_bytes": false,
       "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
     },
@@ -707,21 +707,21 @@
     {
       "path": "internal/server/ratelimit.go",
       "received_blob": "40a35ee613c331484d1c0a06c60ba39cb236a468",
-      "selected_blob": "40a35ee613c331484d1c0a06c60ba39cb236a468",
-      "exact_received_bytes": true,
-      "selection": "exact reviewed source"
+      "selected_blob": "d71b19df33c4e14478b6a1d54a69b83fb365ec08",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
     },
     {
       "path": "internal/server/ratelimit_test.go",
       "received_blob": "0b2b27bb4c0cb87a62bafdffd3e5ccc91c5d36de",
-      "selected_blob": "0b2b27bb4c0cb87a62bafdffd3e5ccc91c5d36de",
-      "exact_received_bytes": true,
-      "selection": "exact reviewed source"
+      "selected_blob": "b078578a9903d30bf3dd229411dd61b1e2a856db",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
     },
     {
       "path": "internal/server/register.go",
       "received_blob": "b6be5b0f8600fa3a2d1ee0a0080b091e326d189e",
-      "selected_blob": "a2de16b2525e43bbdf38903b519a1bd5da5074e4",
+      "selected_blob": "c4f78f370060148c83c6def52ae937ee8d73a0a8",
       "exact_received_bytes": false,
       "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
     },
@@ -756,7 +756,7 @@
     {
       "path": "internal/server/server.go",
       "received_blob": "a097e39b157bc9a3b0a2821a0ddd5c4a29c4f84f",
-      "selected_blob": "33fcba7aaa1ee1fdce23b1e74381c342058b27a5",
+      "selected_blob": "0356647a1b2f6a39692c68a34086be619963120e",
       "exact_received_bytes": false,
       "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
     },
@@ -880,5 +880,42 @@
     "tests/auth/acceptance.py",
     "web/static/index.html",
     "web/static/sw.js"
+  ],
+  "auxiliary_selected_configuration": [
+    {
+      "path": "monitoring/README.md",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "fa1ba82cca67e67a9f3b5f89bd447e08f7d18219",
+      "selected_blob": "a5c7dc5a7ceae1cf9e8872d9ba9545deac8d5f7d",
+      "exact_received_bytes": false
+    },
+    {
+      "path": "monitoring/grafana/dashboards/sfd-overview.json",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "b2ced8f97c7fa11c75cfd75a06064dda56c1e2b7",
+      "selected_blob": "b2ced8f97c7fa11c75cfd75a06064dda56c1e2b7",
+      "exact_received_bytes": true
+    },
+    {
+      "path": "monitoring/grafana/provisioning/dashboards/default.yml",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "5f467af1a4b6a945584c5e32e57edd56aada2be2",
+      "selected_blob": "5f467af1a4b6a945584c5e32e57edd56aada2be2",
+      "exact_received_bytes": true
+    },
+    {
+      "path": "monitoring/grafana/provisioning/datasources/prometheus.yml",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "228561dfbab8165f5473f686ac3dd1d8f8605495",
+      "selected_blob": "228561dfbab8165f5473f686ac3dd1d8f8605495",
+      "exact_received_bytes": true
+    },
+    {
+      "path": "monitoring/prometheus.yml",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "e605d86ec3702d81369707401d05bc538b5d434e",
+      "selected_blob": "52f1b773ce7741f0991f21eb92b0ffdeebd2aa38",
+      "exact_received_bytes": false
+    }
   ]
 }

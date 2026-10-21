@@ -6,11 +6,14 @@
 package server
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
+	"net"
 	"net/smtp"
 	"os"
 	"strings"
+	"time"
 )
 
 // EmailConfig holds configuration for sending emails via SMTP
@@ -62,7 +65,7 @@ func (s *EmailService) SendEmail(to, subject, body string) error {
 	if !s.config.Enabled {
 		// Email disabled, just log (sanitized - no email addresses)
 		log.Printf("EMAIL (disabled): Subject: %s", subject)
-		return nil
+		return fmt.Errorf("email delivery disabled")
 	}
 
 	// Validate configuration
@@ -88,7 +91,7 @@ func (s *EmailService) SendEmail(to, subject, body string) error {
 
 	// Send email
 	addr := s.config.SMTPHost + ":" + s.config.SMTPPort
-	err := smtp.SendMail(addr, auth, s.config.FromEmail, []string{to}, message)
+	err := s.sendBounded(addr, auth, to, message)
 	if err != nil {
 		log.Printf("EMAIL ERROR: Failed to send to %s: %v", to, err)
 		return err
@@ -268,4 +271,47 @@ func (s *EmailService) SendFileDeletedNotification(to, filename, reason string) 
 	`, reasonText, filename)
 
 	return s.SendEmail(to, subject, body)
+}
+
+// sendBounded retains the standard SMTP STARTTLS/PlainAuth policy with a finite socket budget.
+func (s *EmailService) sendBounded(addr string, auth smtp.Auth, to string, message []byte) error {
+	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = conn.Close() }()
+	if err = conn.SetDeadline(time.Now().Add(10 * time.Second)); err != nil {
+		return err
+	}
+	client, err := smtp.NewClient(conn, s.config.SMTPHost)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = client.Close() }()
+	if ok, _ := client.Extension("STARTTLS"); ok {
+		if err = client.StartTLS(&tls.Config{ServerName: s.config.SMTPHost, MinVersion: tls.VersionTLS12}); err != nil {
+			return err
+		}
+	}
+	if err = client.Auth(auth); err != nil {
+		return err
+	}
+	if err = client.Mail(s.config.FromEmail); err != nil {
+		return err
+	}
+	if err = client.Rcpt(to); err != nil {
+		return err
+	}
+	writer, err := client.Data()
+	if err != nil {
+		return err
+	}
+	if _, err = writer.Write(message); err != nil {
+		_ = writer.Close()
+		return err
+	}
+	if err = writer.Close(); err != nil {
+		return err
+	}
+	return client.Quit()
 }

@@ -57,32 +57,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 }
 
 // getClientIPForLogging extracts client IP for logging purposes
-func getClientIPForLogging(r *http.Request) string {
-	// Check X-Forwarded-For header (comma-separated list of IPs)
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// Take the first IP in the list
-		for i, c := range xff {
-			if c == ',' {
-				return xff[:i]
-			}
-		}
-		return xff
-	}
-
-	// Check X-Real-IP header
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		return xri
-	}
-
-	// Fall back to RemoteAddr (format: "ip:port")
-	for i := len(r.RemoteAddr) - 1; i >= 0; i-- {
-		if r.RemoteAddr[i] == ':' {
-			return r.RemoteAddr[:i]
-		}
-	}
-
-	return r.RemoteAddr
-}
+func getClientIPForLogging(r *http.Request) string { return getClientIP(r) }
 
 type loggingResponseWriter struct {
 	http.ResponseWriter

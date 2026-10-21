@@ -174,6 +174,15 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if ctx.Err() != nil {
+		http.Error(w, "server error", http.StatusInternalServerError)
+		return
+	}
+	if cfg.EmailSvc == nil || !cfg.EmailSvc.config.Enabled {
+		http.Error(w, "registration unavailable: email delivery is not configured", http.StatusServiceUnavailable)
+		return
+	}
+
 	// Check if user already exists
 	var exists bool
 	err := cfg.DB.QueryRowContext(ctx,
@@ -208,7 +217,13 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create user
 	userID := uuid.New()
-	_, err = cfg.DB.ExecContext(ctx, `
+	tx, err := cfg.DB.BeginTx(ctx, nil)
+	if err != nil {
+		http.Error(w, "registration unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	defer func() { _ = tx.Rollback() }()
+	_, err = tx.ExecContext(ctx, `
 		INSERT INTO users (id, email, username, password_hash, verification_token, verification_sent_at, email_verified)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`, userID, req.Email, req.Username, passwordHash, verificationToken, time.Now().UTC(), false)
@@ -218,10 +233,15 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send verification email
+	// Do not commit an account whose verification message could not be delivered.
 	if err := sendVerificationEmail(cfg.EmailSvc, cfg.BaseURL, req.Email, verificationToken); err != nil {
-		log.Printf("register: email send failed: %v", err)
-		// Don't fail registration if email fails - user is already created
+		Warn("registration delivery failed", nil)
+		http.Error(w, "registration unavailable: email delivery failed", http.StatusServiceUnavailable)
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "registration failed", http.StatusInternalServerError)
+		return
 	}
 
 	log.Printf("register: created user - verification email sent")
@@ -522,4 +542,13 @@ func authenticateUser(parent context.Context, db *sql.DB, username, password str
 	_, _ = db.ExecContext(ctx, "UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1", userID)
 
 	return userID, true, nil
+}
+
+// passwordResetUnavailable does not issue tokens or email links to an unimplemented UI.
+func passwordResetUnavailable(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	http.Error(w, "email password reset is not accepted in this baseline", http.StatusNotImplemented)
 }

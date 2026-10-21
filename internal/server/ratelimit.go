@@ -10,6 +10,7 @@
 package server
 
 import (
+	"net"
 	"net/http"
 	"sync"
 	"time"
@@ -117,32 +118,12 @@ func (rl *rateLimiter) cleanup() {
 	}
 }
 
-// getClientIP extracts the client's IP address from the request.
-// It checks X-Forwarded-For and X-Real-IP headers first (for reverse proxies),
-// then falls back to RemoteAddr.
+// getClientIP uses the immediate peer. Forwarded headers are not authenticated.
+// Proxy-shared limits remain a deployment/topology constraint until an explicit trust policy is reviewed.
 func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header (comma-separated list of IPs)
-	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
-		// Take the first IP in the list
-		for i, c := range xff {
-			if c == ',' {
-				return xff[:i]
-			}
-		}
-		return xff
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil {
+		return host
 	}
-
-	// Check X-Real-IP header
-	if xri := r.Header.Get("X-Real-IP"); xri != "" {
-		return xri
-	}
-
-	// Fall back to RemoteAddr (format: "ip:port")
-	for i := len(r.RemoteAddr) - 1; i >= 0; i-- {
-		if r.RemoteAddr[i] == ':' {
-			return r.RemoteAddr[:i]
-		}
-	}
-
 	return r.RemoteAddr
 }

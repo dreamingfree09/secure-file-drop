@@ -68,6 +68,7 @@ services:
       SFD_S3_ACCESS_KEY: ${SFD_S3_ACCESS_KEY:?Set SFD_S3_ACCESS_KEY locally before starting this isolated template}
       SFD_S3_SECRET_KEY: ${SFD_S3_SECRET_KEY:?Set SFD_S3_SECRET_KEY locally before starting this isolated template}
       SFD_MAX_UPLOAD_BYTES: ${SFD_MAX_UPLOAD_BYTES}
+      SFD_MAX_REQUEST_BYTES: ${SFD_MAX_REQUEST_BYTES:?Set file limit plus 1048576 explicitly}
       SFD_DOWNLOAD_SECRET: ${SFD_DOWNLOAD_SECRET:?Set SFD_DOWNLOAD_SECRET locally before starting this isolated template}
       SFD_PUBLIC_BASE_URL: ${SFD_PUBLIC_BASE_URL}
       SFD_ADDR: ":8080"
@@ -125,7 +126,7 @@ services:
       - "traefik.http.middlewares.sfd-rl.ratelimit.average=30"
       - "traefik.http.middlewares.sfd-rl.ratelimit.burst=60"
 
-      - "traefik.http.middlewares.sfd-buf.buffering.maxRequestBodyBytes=${SFD_MAX_UPLOAD_BYTES}"
+      - "traefik.http.middlewares.sfd-buf.buffering.maxRequestBodyBytes=${SFD_MAX_REQUEST_BYTES:?Set file limit plus 1048576 explicitly}"
       - "traefik.http.middlewares.sfd-buf.buffering.memRequestBodyBytes=10485760"
 
       - "traefik.http.routers.sfd.middlewares=sfd-sec,sfd-rl,sfd-buf"

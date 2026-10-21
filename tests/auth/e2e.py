@@ -9,6 +9,7 @@ def main():
     root=pathlib.Path(os.environ['SFD_E2E_OUTPUT_ROOT'])/('sfd-auth-fixture'+('-bytea' if layout=='bytea' else ''))
     assert root.is_absolute() and not root.exists()
     sys.argv=[str(pathlib.Path(acceptance.__file__)), '--backend-image',os.environ['SFD_E2E_BACKEND_IMAGE'],'--postgres-image',os.environ['SFD_E2E_POSTGRES_IMAGE'],'--storage-image',os.environ['SFD_E2E_STORAGE_IMAGE'],'--output',str(root),'--hash-layout',layout]
+    sys.argv+=['--proxy-image',os.environ['SFD_E2E_PROXY_IMAGE']]
     if os.environ.get('SFD_E2E_ROLLBACK_IMAGE'):sys.argv+=['--rollback-image',os.environ['SFD_E2E_ROLLBACK_IMAGE']]
     if os.environ.get('SFD_E2E_BROWSER_MODULE'):sys.argv+=['--browser-module',os.environ['SFD_E2E_BROWSER_MODULE']]
     acceptance.main()

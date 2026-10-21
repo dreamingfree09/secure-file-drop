@@ -103,26 +103,26 @@ func TestGetClientIP(t *testing.T) {
 			name:       "X-Forwarded-For single IP",
 			remoteAddr: "127.0.0.1:12345",
 			xff:        "203.0.113.1",
-			expected:   "203.0.113.1",
+			expected:   "127.0.0.1",
 		},
 		{
 			name:       "X-Forwarded-For multiple IPs",
 			remoteAddr: "127.0.0.1:12345",
 			xff:        "203.0.113.1, 198.51.100.1, 192.0.2.1",
-			expected:   "203.0.113.1",
+			expected:   "127.0.0.1",
 		},
 		{
 			name:       "X-Real-IP",
 			remoteAddr: "127.0.0.1:12345",
 			xri:        "203.0.113.5",
-			expected:   "203.0.113.5",
+			expected:   "127.0.0.1",
 		},
 		{
-			name:       "X-Forwarded-For takes precedence",
+			name:       "untrusted headers do not select peer",
 			remoteAddr: "127.0.0.1:12345",
 			xff:        "203.0.113.1",
 			xri:        "203.0.113.5",
-			expected:   "203.0.113.1",
+			expected:   "127.0.0.1",
 		},
 	}
 

@@ -8,7 +8,7 @@ import re
 import argparse, hashlib, http.client, http.cookiejar, http.server, json, os, pathlib, secrets, ssl, subprocess, threading, time, urllib.request, urllib.error, urllib.parse, uuid
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--rollback-image');ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--hash-layout',choices=['bigint','bytea'],default='bigint');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--proxy-image');ap.add_argument('--rollback-image');ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--hash-layout',choices=['bigint','bytea'],default='bigint');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
     os.umask(0o077);root=pathlib.Path(args.output);root.mkdir(parents=True,exist_ok=False)
     repo=pathlib.Path(__file__).resolve().parents[2];name='sfd-auth-'+secrets.token_hex(6);label='sfd.auth-fixture';created=[];volumes=[];network=None;server=None;thread=None;native_dir=None
     result={'fixture':name,'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip(),'checks':[],'failures':[]};checks=result['checks']
@@ -58,7 +58,8 @@ def main():
         # Generate the bcrypt hash with the same supported Go dependency as the backend.
         helper=root/'hash.go';helper.write_text('package main\nimport("fmt";"os";"golang.org/x/crypto/bcrypt")\nfunc main(){ b,e:=bcrypt.GenerateFromPassword([]byte(os.Getenv("FIXTURE_PASSWORD")),12);if e!=nil{panic("fixture hash")};fmt.Print(string(b))}\n')
         env=dict(os.environ,GOTOOLCHAIN='go1.26.10',FIXTURE_PASSWORD=password);adminhash=command(['go','run',str(helper)],cwd=repo,env=env)
-        values={'pg':{'POSTGRES_USER':'fixture','POSTGRES_DB':dbname,'POSTGRES_PASSWORD':dbpass},'storage':{'MINIO_ROOT_USER':access,'MINIO_ROOT_PASSWORD':storagepass},'backend':{'SFD_ADDR':':8080','DATABASE_URL':'postgres://fixture:'+dbpass+'@'+name+'-pg:5432/'+dbname+'?sslmode=disable','SFD_ADMIN_USER':'admin','SFD_ADMIN_PASS':adminhash,'SFD_SESSION_SECRET':secrets.token_hex(32),'SFD_DOWNLOAD_SECRET':secrets.token_hex(32),'SFD_S3_ENDPOINT':'http://'+name+'-storage:9000','SFD_S3_ACCESS_KEY':access,'SFD_S3_SECRET_KEY':storagepass,'SFD_BUCKET':name,'SFD_HASH_TOOL':'/app/sfd-hash','SFD_PUBLIC_BASE_URL':origin,'SFD_BASE_URL':origin,'SFD_MAX_UPLOAD_BYTES':'1024','SFD_MAX_REQUEST_BYTES':str(1024+(1<<20)),'SFD_CLEANUP_ENABLED':'false','SFD_BACKUP_ENABLED':'false','PGHOST':name+'-pg','PGPORT':'5432','PGUSER':'fixture','PGPASSWORD':dbpass,'PGDATABASE':dbname,'PGSSLMODE':'disable'}}
+        smtp_tool=root/'smtp-sink';command(['go','build','-o',str(smtp_tool),'./tests/auth/smtp'],cwd=repo,env=dict(os.environ,GOTOOLCHAIN='go1.26.10',CGO_ENABLED='0'));smtp_tool.chmod(0o500)
+        values={'pg':{'POSTGRES_USER':'fixture','POSTGRES_DB':dbname,'POSTGRES_PASSWORD':dbpass},'storage':{'MINIO_ROOT_USER':access,'MINIO_ROOT_PASSWORD':storagepass},'backend':{'SFD_AUTH_SMTP_FIXTURE':'owned-loopback-only','SFD_SMTP_HOST':'localhost','SFD_SMTP_PORT':'2525','SFD_SMTP_USER':'fixture','SFD_SMTP_PASS':secrets.token_hex(24),'SFD_SMTP_FROM':'fixture@example.invalid','SFD_ADDR':':8080','DATABASE_URL':'postgres://fixture:'+dbpass+'@'+name+'-pg:5432/'+dbname+'?sslmode=disable','SFD_ADMIN_USER':'admin','SFD_ADMIN_PASS':adminhash,'SFD_SESSION_SECRET':secrets.token_hex(32),'SFD_DOWNLOAD_SECRET':secrets.token_hex(32),'SFD_S3_ENDPOINT':'http://'+name+'-storage:9000','SFD_S3_ACCESS_KEY':access,'SFD_S3_SECRET_KEY':storagepass,'SFD_BUCKET':name,'SFD_HASH_TOOL':'/app/sfd-hash','SFD_PUBLIC_BASE_URL':origin,'SFD_BASE_URL':origin,'SFD_MAX_UPLOAD_BYTES':'1024','SFD_MAX_REQUEST_BYTES':str(1024+(1<<20)),'SFD_CLEANUP_ENABLED':'false','SFD_BACKUP_ENABLED':'false','PGHOST':name+'-pg','PGPORT':'5432','PGUSER':'fixture','PGPASSWORD':dbpass,'PGDATABASE':dbname,'PGSSLMODE':'disable'}}
         for service,v in values.items():(root/(service+'.env')).write_text(''.join(k+'='+x+'\n' for k,x in v.items()))
         pg=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-pg','--network',network,'--env-file',str(root/'pg.env'),'-p','127.0.0.1::5432','-v',volumes[0]+':/var/lib/postgresql/data',args.postgres_image);created.append(pg);pginfo=owned('container',pg)
         for _ in range(60):
@@ -85,12 +86,19 @@ def main():
             if r.returncode==0:break
             time.sleep(.5)
         assert r.returncode==0, 'storage alias readiness';docker('exec',storage,'mc','mb','fixture/'+name)
+        def start_mail(b):
+            owned('container',b);docker('exec','-d',b,'/fixture/smtp-sink')
+            for _ in range(60):
+                probe=subprocess.run(['docker','exec',b,'/fixture/smtp-sink','check'],capture_output=True)
+                if probe.returncode==0:return
+                time.sleep(.1)
+            raise AssertionError('owned loopback SMTP readiness')
         def start_backend(image=None):
-            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--stop-timeout','25','--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
+            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--stop-timeout','25','--mount','type=bind,source='+str(smtp_tool)+',target=/fixture/smtp-sink,readonly','--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
             if not ports:
                 if image is None:raise RuntimeError('candidate exited before loopback binding')
                 Relay.backend=0;return b
-            assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1';Relay.backend=int(ports[0]['HostPort']);return b
+            assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1';Relay.backend=int(ports[0]['HostPort']);start_mail(b);return b
         backend=start_backend();thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
         trust=ssl.create_default_context(cafile=str(pathlib.Path(args.ca) if args.ca else cert));jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(NoRedirect(),urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust),urllib.request.HTTPCookieProcessor(jar))
         def request(path,body=None,method=None,headers=None,who=client):
@@ -100,6 +108,14 @@ def main():
             try:
                 with who.open(req,timeout=35) as r:return r.status,r.read()
             except urllib.error.HTTPError as e:return e.code,e.read()
+        def verify_delivery(address):
+            owned('container',backend)
+            messages=[json.loads(line) for line in docker('exec',backend,'cat','/tmp/sfd-fixture-mail.jsonl').splitlines()]
+            tokens=[]
+            for message in messages:
+                if message.get('To')==address:tokens+=re.findall(re.escape(origin)+r'/verify\?token=([0-9a-f]{64})',message.get('Body',''))
+            tokens=list(dict.fromkeys(tokens));assert len(tokens)==1,'synthetic verification delivery missing or ambiguous'
+            check(request('/verify?token='+tokens[0])[0]==200,'real delivered verification completes for synthetic account '+address.split('@')[0])
         def ready():
             for _ in range(60):
                 try:
@@ -108,6 +124,7 @@ def main():
                 time.sleep(.5)
             raise AssertionError('corrected backend readiness')
         ready()
+        check(request('/reset-password-request',{'email':'fixture@example.invalid'})[0]==501,'unaccepted reset email fails closed without token issuance')
         owned('container',backend)
         dump=docker('exec',backend,'pg_dump','--format=plain','--no-owner','--no-acl','--no-password')
         check('CREATE TABLE public.users' in dump and 'CREATE TABLE public.auth_sessions' in dump,'actual pg_dump accepts separated connection environment without credential arguments')
@@ -146,13 +163,41 @@ def main():
         # Separate ordinary browser/API account created only in the fixture.
         uploader_password='Synthetic9-'+secrets.token_hex(24)
         check(request('/register',{'email':'upload@example.invalid','username':'uploader','password':uploader_password})[0]==201,'real registration')
-        sql("UPDATE users SET email_verified=true WHERE username='uploader';")
+        verify_delivery("upload@example.invalid")
         check(request('/login',{'username':'uploader','password':uploader_password})[0]==200,'real registered-user login')
         status,body=request('/me');check(status==200 and json.loads(body)['is_admin'] is False,'registered identity readback')
         check(request('/admin/files')[0]==403,'registered account denied admin permission')
         check(request('/metrics')[0]==403,'registered account denied aggregate administrator metrics')
         check(request('/files',{'orig_name':'bad\nname.txt','content_type':'text/plain','size_bytes':0})[0]==400,'real metadata rejects control characters')
         check(request('/files',{'orig_name':'a'*256,'content_type':'text/plain','size_bytes':0})[0]==400,'real metadata rejects oversized filenames without truncation')
+        if args.proxy_image:
+            backend_info=owned('container',backend);backend_name=backend_info['Name'].lstrip('/')
+            proxy_config={'http':{'routers':{'fixture':{'entryPoints':['websecure'],'rule':'Host(`localhost`)','service':'fixture','middlewares':['bounds'],'tls':{}}},'middlewares':{'bounds':{'buffering':{'maxRequestBodyBytes':1024+(1<<20),'memRequestBodyBytes':1024+(1<<20)}}},'services':{'fixture':{'loadBalancer':{'servers':[{'url':'http://'+backend_name+':8080'}]}}}},'tls':{'certificates':[{'certFile':'/fixture/tls.crt','keyFile':'/fixture/tls.key'}]}}
+            config_path=root/'proxy.json';config_path.write_text(json.dumps(proxy_config))
+            proxy=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'-p','127.0.0.1::8443','--mount','type=bind,source='+str(config_path)+',target=/fixture/proxy.yml,readonly','--mount','type=bind,source='+str(cert)+',target=/fixture/tls.crt,readonly','--mount','type=bind,source='+str(key)+',target=/fixture/tls.key,readonly',args.proxy_image,'--entrypoints.websecure.address=:8443','--providers.file.filename=/fixture/proxy.yml','--api.dashboard=false','--log.level=ERROR');created.append(proxy);proxy_info=owned('container',proxy);proxy_ports=proxy_info['NetworkSettings']['Ports']['8443/tcp']
+            check(len(proxy_ports)==1 and proxy_ports[0]['HostIp']=='127.0.0.1' and len(proxy_info['Mounts'])==3 and all(not m['RW'] for m in proxy_info['Mounts']),'owned Traefik uses loopback TLS and read-only fixture mounts')
+            proxy_origin='https://localhost:'+proxy_ports[0]['HostPort']
+            def proxy_request(path,body=None,headers=None):
+                h=dict(headers or {})
+                if isinstance(body,dict):body=json.dumps(body).encode();h['Content-Type']='application/json'
+                req=urllib.request.Request(proxy_origin+path,body,h)
+                try:
+                    with client.open(req,timeout=35) as res:return res.status,res.read()
+                except urllib.error.HTTPError as error:return error.code,error.read()
+            for _ in range(60):
+                try:
+                    if proxy_request('/ready')[0]==200:break
+                except (urllib.error.URLError,ConnectionError):pass
+                time.sleep(.2)
+            else:raise AssertionError('owned real TLS proxy readiness')
+            body_bytes=b'p'*1024;code,payload=proxy_request('/files',{'orig_name':'proxy-boundary.txt','content_type':'text/plain','size_bytes':1024});assert code==201;proxy_file=json.loads(payload)['id'];bound='sfdproxy'+secrets.token_hex(8)
+            upload=('--'+bound+'\r\nContent-Disposition: form-data; name="file"; filename="proxy-boundary.txt"\r\nContent-Type: text/plain\r\n\r\n').encode()+body_bytes+('\r\n--'+bound+'--\r\n').encode()
+            uploaded,_=proxy_request('/upload?id='+proxy_file,upload,{'Content-Type':'multipart/form-data; boundary='+bound});linked,link_body=proxy_request('/links',{'id':proxy_file,'ttl_seconds':60});assert linked==200;link_value=json.loads(link_body)['url'];assert link_value.startswith(origin+'/download?');downloaded,returned=proxy_request('/download?'+urllib.parse.urlsplit(link_value).query)
+            check(uploaded==200 and downloaded==200 and returned==body_bytes and sql("SELECT sha256_hex FROM files WHERE id='"+proxy_file+"';")==hashlib.sha256(body_bytes).hexdigest(),'real Traefik exact-limit multipart upload and byte-equal signed download')
+            code,payload=proxy_request('/files',{'orig_name':'proxy-rejected.txt','content_type':'text/plain','size_bytes':1024});assert code==201;over_id=json.loads(payload)['id'];rejected,_=proxy_request('/upload?id='+over_id,b'x'*(1024+(1<<20)+1),{'Content-Type':'application/octet-stream'})
+            check(rejected==413 and sql("SELECT status FROM files WHERE id='"+over_id+"';")=='pending','real Traefik rejects over-envelope body before backend mutation')
+            result['proxy']={'image':proxy_info['Image'],'exact_limit_file_bytes':1024,'request_envelope_bytes':1024+(1<<20),'exact_limit_http':uploaded,'over_envelope_http':rejected,'normal_certificate_validation':True,'docker_socket_mounted':False}
+            owned('container',proxy);docker('rm','-f',proxy);created.remove(proxy)
         data=b'Secure File Drop isolated native hash fixture\n';status,body=request('/files',{'orig_name':'fixture.txt','content_type':'text/plain','size_bytes':len(data)});check(status==201,'owned metadata creation');fid=json.loads(body)['id']
         boundary='sfd'+secrets.token_hex(12);multipart=('--'+boundary+'\r\nContent-Disposition: form-data; name="file"; filename="fixture.txt"\r\nContent-Type: text/plain\r\n\r\n').encode()+data+('\r\n--'+boundary+'--\r\n').encode()
         status,body=request('/upload?id='+fid,multipart,headers={'Content-Type':'multipart/form-data; boundary='+boundary});check(status==200,'real native upload and hash');digest=sql("SELECT sha256_hex FROM files WHERE id='"+fid+"';");check(digest==hashlib.sha256(data).hexdigest(),'native SHA-256 matches uploaded bytes')
@@ -254,7 +299,7 @@ def main():
         check(request('/files',{'orig_name':'origin.txt','content_type':'text/plain','size_bytes':1},headers={'Origin':'https://not-this-fixture.invalid'})[0]==403,'real foreign-origin mutation rejected')
         quota_password='Quota7-'+secrets.token_hex(24);quota_jar=http.cookiejar.CookieJar();quota_client=urllib.request.build_opener(NoRedirect(),urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust),urllib.request.HTTPCookieProcessor(quota_jar))
         check(request('/register',{'email':'quota@example.invalid','username':'quota_probe','password':quota_password},who=quota_client)[0]==201,'synthetic quota account registration')
-        sql("UPDATE users SET email_verified=true,storage_quota_bytes=16 WHERE username='quota_probe';")
+        verify_delivery("quota@example.invalid");sql("UPDATE users SET storage_quota_bytes=16 WHERE username='quota_probe';")
         check(request('/login',{'username':'quota_probe','password':quota_password},who=quota_client)[0]==200,'synthetic quota account login')
         status,body=request('/files',{'orig_name':'reserved-a.txt','content_type':'text/plain','size_bytes':10},who=quota_client);check(status==201,'pending metadata reserves existing quota');reserved=json.loads(body)['id']
         check(request('/files',{'orig_name':'reserved-b.txt','content_type':'text/plain','size_bytes':10},who=quota_client)[0]==403,'simultaneous pending reservations cannot overrun quota')
@@ -263,7 +308,7 @@ def main():
         restart_phase('post-lifecycle phase restart')
         # Distinct account must not read, upload, link or delete the first account file.
         second_password='Synthetic9-'+secrets.token_hex(24)
-        check(request('/register',{'email':'second@example.invalid','username':'second','password':second_password})[0]==201,'second isolated account');sql("UPDATE users SET email_verified=true WHERE username='second';")
+        check(request('/register',{'email':'second@example.invalid','username':'second','password':second_password})[0]==201,'second isolated account');verify_delivery("second@example.invalid")
         check(request('/login',{'username':'second','password':second_password})[0]==200,'second account login')
         check(request('/links',{'id':fid})[0]==404,'cross-account link denied');check(request('/upload?id='+fid,multipart,headers={'Content-Type':'multipart/form-data; boundary='+boundary})[0]==404,'cross-account upload denied');check(request('/user/files/'+fid,method='DELETE')[0]==404,'cross-account deletion denied')
         check(request('/user/files')[0]==200 and fid.encode() not in request('/user/files')[1],'file list isolates accounts')
@@ -295,7 +340,7 @@ def main():
                     assert not owned('container',backend)['State']['Running']
                     with (control/'backend-stopped').open('x') as ack:ack.write('stopped')
                 if (control/'restore-backend.request').exists() and not (control/'backend-restored').exists():
-                    owned('container',backend);docker('start',backend);info=owned('container',backend)
+                    owned('container',backend);docker('start',backend);start_mail(backend);info=owned('container',backend)
                     ports=info['NetworkSettings']['Ports']['8080/tcp'];assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1'
                     Relay.backend=int(ports[0]['HostPort']);ready()
                     with (control/'backend-restored').open('x') as ack:ack.write('ready')

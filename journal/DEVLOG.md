@@ -424,3 +424,8 @@ Codex prepared an explicit selected-source canonical worker from PR30 with PR31 
 ## 2026-10-22 - Fresh runtime advisory correction
 
 Current authoritative scans exposed newly published GO-2026-6809 (reachable Go x509 Verify, fixed1.26.10) and Alpine musl/musl-utils1.2.6-r2 below patchedr3. Codex raised actual build/test toolchain and runtime constraints; prior images retained as evidence and superseded for adoption. Rebuild and full exact-image acceptance are required; no production change or exploit reproduction.
+
+
+## 2026-10-22 - PR32 source and deployment review corrections
+
+Codex reconciled confirmed startup/download-secret, untrusted forwarded-header, multipart proxy, missing monitoring configuration and registration-delivery defects. Disabled SMTP now fails before user mutations; failed delivery rolls back; synthetic loopback SMTP exercises real verification. Unaccepted reset email fails closed501 instead of publishing a dead UI link. Ordinary fail-before unit checks and real isolated Traefik/mailer checks retain existing security assertions. Application and workflow changes remain separate normal commits. No live service/data/credential/TLS changes or new product feature. Exact final tests and revision remain in the producer handover.
