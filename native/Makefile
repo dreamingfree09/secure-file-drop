@@ -18,10 +18,6 @@ clean:
 	rm -f $(TARGET) $(OBJS)
 
 test: $(TARGET)
-	@echo "Testing sfd-hash with sample file..."
-	@echo "hello world" > /tmp/sfd-test.txt
-	@./$(TARGET) /tmp/sfd-test.txt
-	@rm -f /tmp/sfd-test.txt
-	@echo "Test passed!"
+	python3 test_hash.py ./$(TARGET)
 
 .PHONY: all clean test

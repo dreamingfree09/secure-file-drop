@@ -12,7 +12,7 @@
 
 ## Purpose
 
-Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. The system is designed to be safe to expose on the public internet from day one, while remaining simple and auditable.
+Secure File Drop is a public-facing application that allows authenticated users to upload files and generate secure, time-limited download links. Public exposure is a design goal; production readiness remains unaccepted. The [reconciled baseline](RECONCILED_BASELINE.md) defines the current bounded candidate and overrides historical unsupported-feature claims.
 
 This project is an educational exercise that combines a memory-safe backend (Go) with a small C utility for efficient, low-level hashing.
 

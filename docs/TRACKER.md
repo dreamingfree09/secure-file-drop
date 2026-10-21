@@ -126,3 +126,10 @@ Acceptance criteria:
 ## 2026-10-20 current acceptance status — SFD-FULL-E2E-ACCEPTANCE-20261020
 
 Development close-out and integration remain pending exact Aether acceptance and the current continuity gates. Historical milestone labels (including public exposure Complete) do not establish current public production readiness. Canonical and legacy workers preserve separate ancestry. Real browser/Windows/schema/storage results, known advisory applicability, failed/unexecuted tests, rollback restrictions and the minimal remaining Owner visual procedure are maintained in the canonical PR handover and [continuity](CONTINUITY.md). No live adoption or merge is claimed.
+
+
+## SFD-FINAL-RECONCILIATION-20261020 continuation — 2026-10-21
+
+- Selected schema12 lifecycle/native/Windows candidate prepared on a dedicated PR29 descendant; see [contract/gates](RECONCILED_BASELINE.md).
+- Former a565/575 recovery pair rejected by actual deletion-preservation failures; cb3 remains rejected.
+- Integration/live adoption remain HOLD pending exact independent Aether source/security acceptance and mandatory checks. Owner-only interactive Windows tests remain unexecuted.

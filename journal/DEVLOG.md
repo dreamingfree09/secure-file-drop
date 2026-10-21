@@ -390,3 +390,23 @@ Add a bounded opt-in test waiting for the unchanged release-generated five-minut
 ### 2026-10-20 — Exact legacy expiry status contract
 
 The real-time expiry probe incorrectly expected canonical401; legacy download.go explicitly returns410 Gone for errTokenExpired and401 for invalid signatures. Preserve that failed assertion and require exactly410 in the rerun, with credential-free status readback. No backend status behavior changed. The earlier test description of expiry401 is superseded by this contract clarification.
+
+
+## 2026-10-21 — SFD-FINAL-RECONCILIATION-20261020 selected ports
+
+Codex chose and implemented the bounded schema12 lifecycle reconciliation under standing Owner delegation; Aether gates independent acceptance and integration, not routine implementation. Preserved existing authentication/roles/verification/UUID/quota/hash layouts and frozen c320 Windows/native source. Added profile guards, exact-key storage-first deletion/cleanup, locked upload/compensation, request bounds, explicit expiration and private-bucket startup checks. Real owned race coverage includes10 schema cases,4 driver COMMIT acknowledgement modes and5 locking/cleanup cases; raw failures/logs stay local. New runtime Alpine3.24 retains PG16 tooling. Former a565/575 images fail deletion-preservation and remain rejected for adoption; equal binaries never imply software-fault rollback. Public production/Owner GUI acceptance remain open. No live/protected changes. Final executed evidence and exact SHA are in the producer PR handover; no independent acceptance is implied.
+
+
+## 2026-10-21 — exact review and advisory corrections
+
+Accepted and corrected three valid independent PR31 findings: reserve shutdown compensation budget, reject every unversioned migration-owned table, normalize equivalent origins. Four new auxiliary-table cases reproduced mutation before correction; all14 real PostgreSQL cases pass afterward. Real active-SIGTERM and source tests require exit0, compensation and normal validation. Patched inherited Go module versions to reviewed canonical versions and require fixed zlib in the new runtime. Initial31 binary advisory IDs/one OS match reduced to module-only GO-2026-5932/zero OS matches in the corrected bounded scan; storage/public-readiness limitations remain. A later origin-expression lint finding was fixed without suppression, then full lint passed. Preserve all superseded failures/images and exact evidence; final PR handover identifies tested source/images/CI. No live/protected changes.
+
+
+## 2026-10-21 — frozen local evidence publication
+
+Committed sanitised79-check dual-layout/154-event Go race evidence, exact successor/recovery backend/native identities,14 lineage/4 COMMIT/5 lifecycle cases, actual SIGTERM compensation, patched-image applicability inventory and complete120-path source selection. Full lint0/seven enforcement scenarios pass; rejected and superseded failures remain explicit. Final GitHub handover supplies actual current-head CI, F196 release and PG16 roundtrip evidence; source commit cannot embed its own SHA. Both DEVLOG prefixes and protected graphs/work remain preserved. Integration/adoption/Owner GUI/public readiness are not producer-accepted.
+
+
+## 2026-10-21 — final operational contract and release readback
+
+Completed unchanged F196 release44/43 checks, natural expiry410 and PG16.15 exact-row custom dump/restore on both owned layouts. Final configuration review corrected only the candidate template:25s stop grace, loopback ports, explicit storage values and no usable sample/default secrets. Fifteen synthetic render/required-value failures pass; default configured Docker stop with real multipart locks/compensation passes both79-check layouts with154 Go events/no skips. Final122-path manifest includes deployment inputs while proving unchanged compiled application inputs at13be477. Live six services/.env/TLS/CRL/data/five backups/protected checkouts and retained57containers/37volumes/5networks/10images remain unchanged. Exact frozen c320 test whitespace retained and disclosed. Final CI and published SHA belong to the PR handover; no producer self-acceptance, protected integration, live adoption or Owner GUI claim.

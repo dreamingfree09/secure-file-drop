@@ -3,6 +3,7 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"os/exec"
 	"testing"
@@ -38,4 +39,45 @@ func TestUploadHashDownloadFlow(t *testing.T) {
 			t.Log(string(output))
 		})
 	}
+}
+
+// Configuration rendering uses a new synthetic env file and never starts
+// Compose services or reads the Owner's existing installation configuration.
+func TestDeploymentTemplate(t *testing.T) {
+	if os.Getenv("SFD_E2E_BACKEND_IMAGE") == "" {
+		t.Skip("requires explicitly enabled owned acceptance; ordinary compilation is not configuration acceptance")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	output, err := exec.CommandContext(ctx, "python3", "-B", "../acceptance/compose-template.py").Output()
+	if err != nil {
+		t.Fatal("synthetic deployment template contract failed; no private output disclosed")
+	}
+	var evidence struct {
+		Count int `json:"count"`
+	}
+	if json.Unmarshal(output, &evidence) != nil || evidence.Count != 15 {
+		t.Fatal("incomplete synthetic configuration contract")
+	}
+	root := os.Getenv("SFD_E2E_OUTPUT_ROOT")
+	if root == "" {
+		t.Fatal("explicit owned output root required")
+	}
+	outputRoot, err := os.OpenRoot(root)
+	if err != nil {
+		t.Fatal("open explicit owned output root")
+	}
+	defer func() { _ = outputRoot.Close() }()
+	file, err := outputRoot.OpenFile("sfd-compose-contract.json", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	if err != nil {
+		t.Fatal("preserve existing configuration evidence; exclusive creation failed")
+	}
+	if _, err = file.Write(output); err != nil {
+		_ = file.Close()
+		t.Fatal("write sanitized configuration evidence")
+	}
+	if err = file.Close(); err != nil {
+		t.Fatal("close configuration evidence")
+	}
+	t.Log(string(output))
 }

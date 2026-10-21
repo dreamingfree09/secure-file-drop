@@ -1,15 +1,13 @@
-// migrate.go - Embedded SQL migrations runner using golang-migrate.
-//
-// Applies all pending migrations from the embedded iofs to Postgres
-// on startup; safe to run repeatedly (no-op when up to date).
-
+// Package db applies the embedded, versioned Secure File Drop schema.
 package db
 
 import (
+	"context"
 	"database/sql"
 	"embed"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -19,27 +17,35 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-// RunMigrations applies all pending migrations to the database.
-// Returns nil if migrations succeed or are already at the latest version.
-func RunMigrations(db *sql.DB) error {
-	sourceDriver, err := iofs.New(migrationsFS, "migrations")
+// RunMigrations borrows one connection and leaves the shared pool usable.
+func RunMigrations(db *sql.DB) (result error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	source, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
-		return fmt.Errorf("failed to create migration source: %w", err)
+		return fmt.Errorf("migration source: %w", err)
 	}
-
-	dbDriver, err := postgres.WithInstance(db, &postgres.Config{})
+	defer func() { result = errors.Join(result, source.Close()) }()
+	conn, err := db.Conn(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to create database driver: %w", err)
+		return fmt.Errorf("migration connection: %w", err)
 	}
-
-	m, err := migrate.NewWithInstance("iofs", sourceDriver, "postgres", dbDriver)
+	defer func() { result = errors.Join(result, conn.Close()) }()
+	if err := checkSchemaLineage(ctx, conn); err != nil {
+		return err
+	}
+	driver, err := postgres.WithConnection(ctx, conn, &postgres.Config{StatementTimeout: 30 * time.Second})
 	if err != nil {
-		return fmt.Errorf("failed to create migrate instance: %w", err)
+		return fmt.Errorf("migration driver: %w", err)
 	}
-
-	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+	// WithConnection does not own db. conn.Close above also covers driver setup failures.
+	m, err := migrate.NewWithInstance("iofs", source, "postgres", driver)
+	if err != nil {
+		return fmt.Errorf("migration instance: %w", err)
+	}
+	m.LockTimeout = 10 * time.Second
+	if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("migration failed: %w", err)
 	}
-
 	return nil
 }

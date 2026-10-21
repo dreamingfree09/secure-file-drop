@@ -7,13 +7,16 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"strings"
 	"time"
 
-	minio "github.com/minio/minio-go/v7"
+	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 )
 
 // FileInfo represents a file record for admin and user listings.
@@ -139,137 +142,65 @@ func (s *Server) UserDeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	// Extract file ID from URL path
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/user/files/"), "/")
-	if len(parts) == 0 || parts[0] == "" {
-		http.Error(w, "File ID required", http.StatusBadRequest)
-		return
-	}
-	fileID := parts[0]
-
-	// Get current user from session
 	userID, err := s.authCfg.getCurrentUser(r)
 	if err != nil {
 		writeAuthError(w, err)
 		return
 	}
-
-	// Look up file ensuring ownership; fetch object_key and status
-	var objectKey, status, origName, userEmail string
-	err = s.db.QueryRow(`
-		SELECT f.object_key, f.status, f.orig_name, u.email
-		FROM files f
-		JOIN users u ON u.id = f.user_id
-		WHERE f.id = $1 AND f.user_id = $2
-	`, fileID, userID).Scan(&objectKey, &status, &origName, &userEmail)
-	if err != nil {
-		log.Printf("user delete file: lookup failed: %v", err)
-		http.Error(w, "File not found", http.StatusNotFound)
-		return
-	}
-
-	// Remove object from MinIO if it exists (not pending)
-	if status != "pending" && objectKey != "" {
-		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
-		defer cancel()
-		if err := s.minio.RemoveObject(ctx, s.bucket, objectKey, minio.RemoveObjectOptions{}); err != nil {
-			log.Printf("user delete file: MinIO removal failed for %s: %v", objectKey, err)
-			// Continue with DB deletion even if MinIO fails
-		}
-	}
-
-	// Delete from database
-	res, err := s.db.Exec("DELETE FROM files WHERE id = $1 AND user_id = $2", fileID, userID)
-	if err != nil {
-		log.Printf("user delete file: db delete failed: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	if rows, _ := res.RowsAffected(); rows == 0 {
-		http.Error(w, "File not found", http.StatusNotFound)
-		return
-	}
-
-	// Send deletion notification (best-effort)
-	go func() {
-		if s.emailSvc != nil {
-			_ = s.emailSvc.SendFileDeletedNotification(userEmail, origName, "manual deletion by user")
-		}
-	}()
-
-	w.WriteHeader(http.StatusNoContent)
+	s.deleteFile(w, r, strings.TrimPrefix(r.URL.Path, "/user/files/"), userID, false)
 }
 
-// AdminDeleteFileHandler deletes a specific file from both MinIO and database.
-// It also triggers a best-effort email notification to the file owner.
+// AdminDeleteFileHandler removes the actual object before its metadata.
 func (s *Server) AdminDeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	s.deleteFile(w, r, strings.TrimPrefix(r.URL.Path, "/admin/files/"), "", true)
+}
 
-	// Extract file ID from URL path
-	// Expected: /admin/files/{id}
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/admin/files/"), "/")
-	if len(parts) == 0 || parts[0] == "" {
-		http.Error(w, "File ID required", http.StatusBadRequest)
+func (s *Server) deleteFile(w http.ResponseWriter, r *http.Request, id, owner string, admin bool) {
+	if _, err := uuid.Parse(id); err != nil {
+		http.Error(w, "bad file id", http.StatusBadRequest)
 		return
 	}
-	fileID := parts[0]
-
-	// Get file info before deletion (for MinIO cleanup and notification)
-	var status, origName, createdBy, userEmail string
-	err := s.db.QueryRow(`
-		SELECT f.status, f.orig_name, f.created_by, u.email
-		FROM files f
-		JOIN users u ON u.username = f.created_by
-		WHERE f.id = $1
-	`, fileID).Scan(&status, &origName, &createdBy, &userEmail)
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Printf("admin delete file: query failed: %v", err)
-		http.Error(w, "File not found", http.StatusNotFound)
+		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-
-	// Delete from MinIO if file was stored
-	if status != "pending" {
-		objectName := fileID
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		err := s.minio.RemoveObject(ctx, s.bucket, objectName, minio.RemoveObjectOptions{})
-		if err != nil {
-			log.Printf("admin delete file: MinIO removal failed: %v", err)
-			// Continue with database deletion even if MinIO fails
-		} else {
-			Info("admin removed stored file", map[string]interface{}{"file_id": fileID})
-		}
+	defer func() { _ = tx.Rollback() }()
+	var key, name, address string
+	err = tx.QueryRowContext(ctx, `SELECT f.object_key,f.orig_name,COALESCE(u.email,'') FROM files f LEFT JOIN users u ON u.id=f.user_id
+ WHERE f.id=$1 AND ($2 OR f.user_id::text=$3) FOR UPDATE OF f`, id, admin, owner).Scan(&key, &name, &address)
+	if errors.Is(err, sql.ErrNoRows) {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
 	}
-
-	// Delete from database
-	result, err := s.db.Exec("DELETE FROM files WHERE id = $1", fileID)
 	if err != nil {
-		log.Printf("admin delete file: db delete failed: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
+		http.Error(w, "database error", http.StatusInternalServerError)
 		return
 	}
-
-	rowsAffected, _ := result.RowsAffected()
-	if rowsAffected == 0 {
-		http.Error(w, "File not found", http.StatusNotFound)
+	if err = s.minio.RemoveObject(ctx, s.bucket, key, minio.RemoveObjectOptions{}); err != nil {
+		http.Error(w, "storage error", http.StatusBadGateway)
 		return
 	}
-
-	Info("admin deleted file metadata", map[string]interface{}{"file_id": fileID})
-
-	// Send deletion notification (fire and forget)
-	go func() {
-		if s.emailSvc != nil {
-			_ = s.emailSvc.SendFileDeletedNotification(userEmail, origName, "manual deletion by admin")
+	if _, err = tx.ExecContext(ctx, "DELETE FROM files WHERE id=$1", id); err == nil {
+		err = tx.Commit()
+	}
+	if err != nil {
+		http.Error(w, "database error", http.StatusInternalServerError)
+		return
+	}
+	if s.emailSvc != nil && address != "" {
+		reason := "manual deletion by user"
+		if admin {
+			reason = "manual deletion by admin"
 		}
-	}()
-
+		go func() { _ = s.emailSvc.SendFileDeletedNotification(address, name, reason) }()
+	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -285,87 +216,20 @@ func (s *Server) AdminManualCleanupHandler(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	// Get cleanup config from environment
 	cfg := GetCleanupConfigFromEnv(s.db, s.minio, s.bucket)
-
 	if !cfg.Enabled {
-		log.Printf("admin manual cleanup: cleanup is disabled in config")
-		http.Error(w, "Cleanup is disabled", http.StatusServiceUnavailable)
+		http.Error(w, "cleanup disabled", http.StatusServiceUnavailable)
 		return
 	}
-
-	// Run cleanup synchronously for manual trigger
-	deletedCount := 0
-	cutoff := time.Now().Add(-cfg.MaxAge)
-
-	log.Printf("admin manual cleanup: scanning for files older than %s", cutoff.Format(time.RFC3339))
-
-	rows, err := s.db.Query(`
-		SELECT id, status 
-		FROM files 
-		WHERE status IN ('pending', 'failed') 
-		  AND created_at < $1
-	`, cutoff)
-	if err != nil {
-		log.Printf("admin manual cleanup: query failed: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-	defer closeRows(rows)
-
-	var toDelete []struct {
-		ID     string
-		Status string
-	}
-
-	for rows.Next() {
-		var item struct {
-			ID     string
-			Status string
-		}
-		if err := rows.Scan(&item.ID, &item.Status); err != nil {
-			log.Printf("admin manual cleanup: scan failed: %v", err)
-			continue
-		}
-		toDelete = append(toDelete, item)
-	}
-
-	if err := rows.Err(); err != nil {
-		log.Printf("admin manual cleanup: rows error: %v", err)
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
-	}
-
-	// Delete each file
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), time.Minute)
 	defer cancel()
-
-	for _, item := range toDelete {
-		// Remove from MinIO if not pending (pending files were never uploaded)
-		if item.Status != "pending" {
-			err := s.minio.RemoveObject(ctx, s.bucket, item.ID, minio.RemoveObjectOptions{})
-			if err != nil {
-				log.Printf("admin manual cleanup: MinIO removal failed for %s: %v", item.ID, err)
-			}
-		}
-
-		// Remove from database
-		_, err := s.db.Exec("DELETE FROM files WHERE id = $1", item.ID)
-		if err != nil {
-			log.Printf("admin manual cleanup: db delete failed for %s: %v", item.ID, err)
-			continue
-		}
-
-		deletedCount++
-		log.Printf("admin manual cleanup: deleted file %s (status=%s, age > %s)",
-			item.ID, item.Status, cfg.MaxAge)
+	n, err := cleanupFiles(ctx, cfg, false)
+	if err != nil {
+		http.Error(w, "cleanup failed", http.StatusBadGateway)
+		return
 	}
-
-	log.Printf("admin manual cleanup: completed, deleted %d files", deletedCount)
-
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(CleanupResult{DeletedCount: deletedCount}); err != nil {
-		Warn("response write failed", nil)
+	if err := json.NewEncoder(w).Encode(CleanupResult{DeletedCount: n}); err != nil {
+		Warn("cleanup response write failed", nil)
 	}
 }

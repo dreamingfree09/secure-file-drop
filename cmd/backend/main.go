@@ -158,8 +158,8 @@ func main() {
 	case sig := <-sigCh:
 		// Signal received: initiate graceful shutdown.
 		log.Printf("service=backend msg=%q signal=%s", "shutting_down", sig.String())
-		// Give the server 5 seconds to finish in-flight requests and cleanup.
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		// Allow 5 seconds to drain, then reserve time for bounded upload compensation.
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
 			log.Printf("service=backend msg=%q err=%v", "shutdown_error", err)

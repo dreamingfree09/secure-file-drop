@@ -3,13 +3,15 @@
 Required: --backend-image, --postgres-image, --storage-image (already local).
 Optional --cert/--key use existing localhost TLS material read-only, with no trust changes.
 """
+import shutil, tempfile, stat as filemode
+import re
 import argparse, hashlib, http.client, http.cookiejar, http.server, json, os, pathlib, secrets, ssl, subprocess, threading, time, urllib.request, urllib.error, urllib.parse, uuid
 
 def main():
     ap=argparse.ArgumentParser();ap.add_argument('--backend-image',required=True);ap.add_argument('--rollback-image');ap.add_argument('--postgres-image',required=True);ap.add_argument('--storage-image',required=True);ap.add_argument('--output',required=True);ap.add_argument('--cert');ap.add_argument('--key');ap.add_argument('--ca');ap.add_argument('--hash-layout',choices=['bigint','bytea'],default='bigint');ap.add_argument('--browser-module');ap.add_argument('--hold-seconds',type=int,default=0);args=ap.parse_args()
     os.umask(0o077);root=pathlib.Path(args.output);root.mkdir(parents=True,exist_ok=False)
-    repo=pathlib.Path(__file__).resolve().parents[2];name='sfd-auth-'+secrets.token_hex(6);label='sfd.auth-fixture';created=[];volumes=[];network=None;server=None;thread=None
-    result={'fixture':name,'checks':[],'failures':[]};checks=result['checks']
+    repo=pathlib.Path(__file__).resolve().parents[2];name='sfd-auth-'+secrets.token_hex(6);label='sfd.auth-fixture';created=[];volumes=[];network=None;server=None;thread=None;native_dir=None
+    result={'fixture':name,'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=repo,text=True).strip(),'checks':[],'failures':[]};checks=result['checks']
     def check(value,name):
         if not value:raise AssertionError(name)
         checks.append(name)
@@ -56,7 +58,7 @@ def main():
         # Generate the bcrypt hash with the same supported Go dependency as the backend.
         helper=root/'hash.go';helper.write_text('package main\nimport("fmt";"os";"golang.org/x/crypto/bcrypt")\nfunc main(){ b,e:=bcrypt.GenerateFromPassword([]byte(os.Getenv("FIXTURE_PASSWORD")),12);if e!=nil{panic("fixture hash")};fmt.Print(string(b))}\n')
         env=dict(os.environ,GOTOOLCHAIN='go1.26.9',FIXTURE_PASSWORD=password);adminhash=command(['go','run',str(helper)],cwd=repo,env=env)
-        values={'pg':{'POSTGRES_USER':'fixture','POSTGRES_DB':dbname,'POSTGRES_PASSWORD':dbpass},'storage':{'MINIO_ROOT_USER':access,'MINIO_ROOT_PASSWORD':storagepass},'backend':{'SFD_ADDR':':8080','DATABASE_URL':'postgres://fixture:'+dbpass+'@'+name+'-pg:5432/'+dbname+'?sslmode=disable','SFD_ADMIN_USER':'admin','SFD_ADMIN_PASS':adminhash,'SFD_SESSION_SECRET':secrets.token_hex(32),'SFD_DOWNLOAD_SECRET':secrets.token_hex(32),'SFD_S3_ENDPOINT':'http://'+name+'-storage:9000','SFD_S3_ACCESS_KEY':access,'SFD_S3_SECRET_KEY':storagepass,'SFD_BUCKET':name,'SFD_HASH_TOOL':'/app/sfd-hash','SFD_PUBLIC_BASE_URL':origin,'SFD_BASE_URL':origin,'SFD_CLEANUP_ENABLED':'false','SFD_BACKUP_ENABLED':'false','PGHOST':name+'-pg','PGPORT':'5432','PGUSER':'fixture','PGPASSWORD':dbpass,'PGDATABASE':dbname,'PGSSLMODE':'disable'}}
+        values={'pg':{'POSTGRES_USER':'fixture','POSTGRES_DB':dbname,'POSTGRES_PASSWORD':dbpass},'storage':{'MINIO_ROOT_USER':access,'MINIO_ROOT_PASSWORD':storagepass},'backend':{'SFD_ADDR':':8080','DATABASE_URL':'postgres://fixture:'+dbpass+'@'+name+'-pg:5432/'+dbname+'?sslmode=disable','SFD_ADMIN_USER':'admin','SFD_ADMIN_PASS':adminhash,'SFD_SESSION_SECRET':secrets.token_hex(32),'SFD_DOWNLOAD_SECRET':secrets.token_hex(32),'SFD_S3_ENDPOINT':'http://'+name+'-storage:9000','SFD_S3_ACCESS_KEY':access,'SFD_S3_SECRET_KEY':storagepass,'SFD_BUCKET':name,'SFD_HASH_TOOL':'/app/sfd-hash','SFD_PUBLIC_BASE_URL':origin,'SFD_BASE_URL':origin,'SFD_MAX_UPLOAD_BYTES':'1024','SFD_MAX_REQUEST_BYTES':str(1024+(1<<20)),'SFD_CLEANUP_ENABLED':'false','SFD_BACKUP_ENABLED':'false','PGHOST':name+'-pg','PGPORT':'5432','PGUSER':'fixture','PGPASSWORD':dbpass,'PGDATABASE':dbname,'PGSSLMODE':'disable'}}
         for service,v in values.items():(root/(service+'.env')).write_text(''.join(k+'='+x+'\n' for k,x in v.items()))
         pg=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-pg','--network',network,'--env-file',str(root/'pg.env'),'-p','127.0.0.1::5432','-v',volumes[0]+':/var/lib/postgresql/data',args.postgres_image);created.append(pg);pginfo=owned('container',pg)
         for _ in range(60):
@@ -77,14 +79,14 @@ def main():
         sql("INSERT INTO files(id,object_key,orig_name,content_type,size_bytes,status,user_id,sha256_hex,sha256_bytes) VALUES('"+sentinel_file+"','sentinel/source','preserved.txt','text/plain',1,'hashed','"+sentinel+"','"+sentinel_digest+"',"+sentinel_value+");")
         def fingerprint():return hashlib.sha256(sql("SELECT row_to_json(u)::text FROM users u ORDER BY id; SELECT row_to_json(f)::text FROM files f ORDER BY id;").encode()).hexdigest()
         before=fingerprint()
-        storage=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-storage','--network',network,'--env-file',str(root/'storage.env'),'-v',volumes[1]+':/data',args.storage_image,'server','/data');created.append(storage);owned('container',storage)
+        storage=docker('run','-d','--pull=never','--label',label+'='+name,'--name',name+'-storage','--network',network,'-p','127.0.0.1::9000','--env-file',str(root/'storage.env'),'-v',volumes[1]+':/data',args.storage_image,'server','/data');created.append(storage);owned('container',storage)
         for _ in range(60):
             r=subprocess.run(['docker','exec',storage,'mc','alias','set','fixture','http://127.0.0.1:9000',access,storagepass],capture_output=True)
             if r.returncode==0:break
             time.sleep(.5)
         assert r.returncode==0, 'storage alias readiness';docker('exec',storage,'mc','mb','fixture/'+name)
         def start_backend(image=None):
-            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
+            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--stop-timeout','25','--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
             if not ports:
                 if image is None:raise RuntimeError('candidate exited before loopback binding')
                 Relay.backend=0;return b
@@ -96,7 +98,7 @@ def main():
             if isinstance(body,dict):body=json.dumps(body).encode();h['Content-Type']='application/json'
             req=urllib.request.Request(origin+path,body,h,method=method)
             try:
-                with who.open(req,timeout=15) as r:return r.status,r.read()
+                with who.open(req,timeout=35) as r:return r.status,r.read()
             except urllib.error.HTTPError as e:return e.code,e.read()
         def ready():
             for _ in range(60):
@@ -122,8 +124,21 @@ def main():
         owned('container',backend);docker('rm','-f',backend);created.remove(backend);backend=start_backend();ready();check(request('/me',headers={'Cookie':'sfd_session='+oldcookie},who=anonymous)[0]==401,'logout revocation survives backend recreation')
         # Run the exact handler/security suite against this uniquely guarded database.
         pgports=pginfo['NetworkSettings']['Ports']['5432/tcp'];assert pgports[0]['HostIp']=='127.0.0.1'
-        testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name)
-        output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output,'real PostgreSQL Go security regressions and race checks')
+        # DrvFS build outputs can report mode0777. Preserve executable policy:
+        # stage exact compiled bytes in a new private Linux directory, never
+        # relax the application's group/other-write rejection.
+        result['stage']='host-native-permission-staging'
+        native_dir=pathlib.Path(tempfile.mkdtemp(prefix='sfd-lifecycle-native-',dir='/tmp'));native_dir.chmod(0o700)
+        (native_dir/'owner').write_text(name)
+        native_bytes=(repo/'native/sfd-hash').read_bytes();native_tool=native_dir/'sfd-hash'
+        with native_tool.open('xb') as output:output.write(native_bytes)
+        native_tool.chmod(0o500)
+        check(hashlib.sha256(native_tool.read_bytes()).digest()==hashlib.sha256(native_bytes).digest() and filemode.S_IMODE(native_tool.stat().st_mode)==0o500,'exact host-native bytes staged with safe executable permissions')
+        result['host_native_tool_sha256']=hashlib.sha256(native_bytes).hexdigest()
+        testenv=dict(os.environ,GOTOOLCHAIN='go1.26.9',CGO_ENABLED='1',SFD_AUTH_TEST_DSN='postgres://fixture:'+dbpass+'@127.0.0.1:'+pgports[0]['HostPort']+'/'+dbname+'?sslmode=disable',SFD_AUTH_TEST_OWNER=name,SFD_LIFECYCLE_DATABASE=dbname,SFD_LIFECYCLE_BUCKET=name,SFD_LIFECYCLE_STORAGE=docker('port',storage,'9000/tcp'),SFD_LIFECYCLE_ACCESS=access,SFD_LIFECYCLE_SECRET=storagepass,SFD_HASH_TOOL=str(native_tool))
+        result['stage']='real-go-postgresql-native-commit-faults'
+        output=command(['go','test','-race','./internal/...','./cmd/...','-count=1','-v'],cwd=repo,env=testenv,timeout=180);(root/'go-tests.txt').write_text(output+'\n');result['go_security']={'passed_test_events':len(re.findall(r'(?m)^\s*--- PASS: ',output)),'skipped_test_events':len(re.findall(r'(?m)^\s*--- SKIP: ',output)),'failed_test_events':len(re.findall(r'(?m)^\s*--- FAIL: ',output)),'real_lineage_subtests':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyLineage/',output)),'real_lifecycle_ordering_cases':len(re.findall(r'(?m)^\s*--- PASS: TestLifecycleOrdering/',output)),'real_commit_fault_modes':len(re.findall(r'(?m)^\s*--- PASS: TestLegacyCommitFaults/',output))}
+        check('--- PASS: TestAuthenticatedIdentities' in output and '--- SKIP:' not in output and result['go_security']['real_lineage_subtests']==14 and result['go_security']['real_commit_fault_modes']==4 and result['go_security']['real_lifecycle_ordering_cases']==5,'real PostgreSQL Go identity/lineage/COMMIT regressions and race checks')
         # Separate ordinary browser/API account created only in the fixture.
         uploader_password='Synthetic9-'+secrets.token_hex(24)
         check(request('/register',{'email':'upload@example.invalid','username':'uploader','password':uploader_password})[0]==201,'real registration')
@@ -140,8 +155,105 @@ def main():
         check(target.scheme=='https' and target.hostname=='localhost' and target.port==server.server_port and target.username is None and target.password is None and target.path=='/download' and not target.fragment,'signed download target confined to owned HTTPS origin')
         req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
+        # Preserve existing protected-row interpretation; this is a synthetic
+        # historical fixture, not a newly implemented password-creation feature.
+        sql("UPDATE files SET link_password='owned-historical-password' WHERE id='"+fid+"';")
+        download_path=target.path+'?'+target.query
+        check(request(download_path,who=anonymous)[0]==401,'existing protected record denies absent password')
+        check(request(download_path+'&password=wrong-owned-password',who=anonymous)[0]==401,'existing protected record denies incorrect password')
+        code,body=request(download_path+'&password=owned-historical-password',who=anonymous)
+        check(code==200 and body==data,'existing protected record retains exact legacy password interpretation')
+        sql("UPDATE files SET link_password=NULL,auto_delete=TRUE,expires_at=NOW()-INTERVAL '1 minute' WHERE id='"+fid+"';")
+        check(request(download_path,who=anonymous)[0]==410,'explicitly expired file denies still-valid bearer link')
+        sql("UPDATE files SET auto_delete=FALSE,expires_at=NULL WHERE id='"+fid+"';")
         check(request('/files')[0]==200 and json.loads(request('/files')[1])==json.loads(request('/user/files')[1]) and fid.encode() in request('/files')[1],'companion GET files reuses owned listing and native metadata')
         check(request('/files',who=anonymous)[0]==401,'anonymous companion file listing rejected')
+        # Each phase uses a newly recreated owned backend, retaining the real
+        # persisted sessions. Production rate limits are unchanged; this avoids
+        # combining unrelated test cases into one limiter window.
+        def restart_phase(label_name):
+            nonlocal backend
+            owned('container',backend);docker('rm','-f',backend);created.remove(backend)
+            backend=start_backend();ready()
+            check(request('/me')[0]==200,label_name+' preserves the existing verified session')
+        result['stage']='real-https-lifecycle-preservation'
+        restart_phase('lifecycle phase restart')
+        check(request('/upload/resumable',{},method='POST')[0]==501,'unaccepted resumable path fails closed for registered users')
+        check(request('/upload/resumable',{},method='POST',who=anonymous)[0]==401,'unsupported path still requires authentication')
+        jar.clear();check(request('/login',{'username':'admin','password':password})[0]==200,'lifecycle administrator login')
+        admin_status,_=request('/admin/files/'+fid,method='DELETE')
+        admin_row=sql("SELECT EXISTS(SELECT 1 FROM files WHERE id='"+fid+"');")=='t'
+        missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+fid],capture_output=True).returncode!=0
+        check(admin_status==204 and not admin_row and missing,'administrator deletes exact stored object and metadata')
+        check(request('/upload/resumable',{},method='POST')[0]==403,'environment identity cannot acquire unsupported UUID ownership')
+        jar.clear();check(request('/login',{'username':'uploader','password':uploader_password})[0]==200,'lifecycle owner login')
+        def create_file(filename,size):
+            status,body=request('/files',{'orig_name':filename,'content_type':'text/plain','size_bytes':size})
+            check(status==201,'owned lifecycle metadata '+filename);return json.loads(body)['id']
+        def upload_bytes(file_id,value,complete=True):
+            boundary='sfd'+secrets.token_hex(12)
+            body=('--'+boundary+'\r\nContent-Disposition: form-data; name="file"; filename="fixture.txt"\r\nContent-Type: text/plain\r\n\r\n').encode()+value
+            if complete:body+=('\r\n--'+boundary+'--\r\n').encode()
+            return request('/upload?id='+file_id,body,headers={'Content-Type':'multipart/form-data; boundary='+boundary})
+        fid=create_file('storage-failure.txt',len(data));check(upload_bytes(fid,data)[0]==200,'real file exists before storage-failure deletion')
+        before_delete=hashlib.sha256(sql("SELECT row_to_json(f)::text FROM files f WHERE id='"+fid+"';").encode()).hexdigest()
+        owned('container',storage);docker('stop',storage)
+        failure_status,_=request('/user/files/'+fid,method='DELETE')
+        after_delete=hashlib.sha256(sql("SELECT row_to_json(f)::text FROM files f WHERE id='"+fid+"';").encode()).hexdigest()
+        owned('container',storage);docker('start',storage)
+        for _ in range(60):
+            stat=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+fid],capture_output=True)
+            if stat.returncode==0:break
+            time.sleep(.5)
+        check(failure_status==502 and before_delete==after_delete and stat.returncode==0,'storage outage retains exact file metadata and actual object')
+        result['deletion_preservation']={'admin_status':admin_status,'admin_object_removed':missing,'storage_failure_status':failure_status,'row_hash_unchanged':before_delete==after_delete,'object_retained':stat.returncode==0}
+        # Observe a real owned row lock during an unfinished multipart body,
+        # then send SIGTERM only to this fixture backend. Its process must leave
+        # time for storage/metadata compensation before a clean exit.
+        shutdown_id=create_file('active-shutdown.txt',3)
+        active_info=owned('container',backend);active_port=active_info['NetworkSettings']['Ports']['8080/tcp'][0]
+        assert active_port['HostIp']=='127.0.0.1'
+        stream=http.client.HTTPConnection('127.0.0.1',int(active_port['HostPort']),timeout=30)
+        shutdown_boundary='sfd-shutdown-'+secrets.token_hex(8)
+        fragment=('--'+shutdown_boundary+'\r\nContent-Disposition: form-data; name="file"; filename="active-shutdown.txt"\r\nContent-Type: text/plain\r\n\r\nabc').encode()
+        try:
+            stream.putrequest('POST','/upload?id='+shutdown_id)
+            stream.putheader('Origin',origin);stream.putheader('Cookie','; '.join(c.name+'='+c.value for c in jar))
+            stream.putheader('Content-Type','multipart/form-data; boundary='+shutdown_boundary);stream.putheader('Content-Length',str(len(fragment)+100));stream.endheaders();stream.send(fragment)
+            locked=False
+            for _ in range(30):
+                owned('container',name+'-pg')
+                lock_probe=subprocess.run(['docker','exec',name+'-pg','psql','-X','-q','-A','-t','-v','ON_ERROR_STOP=1','-v','VERBOSITY=sqlstate','-U','fixture','-d',dbname,'-c',"BEGIN; SELECT id FROM files WHERE id='"+shutdown_id+"' FOR UPDATE NOWAIT;ROLLBACK;"],capture_output=True)
+                if lock_probe.returncode!=0:
+                    assert b'55P03' in lock_probe.stderr,'unexpected owned lock diagnostic'
+                    locked=True;break
+                time.sleep(.1)
+            check(locked,'active multipart owns real PostgreSQL row lock before SIGTERM')
+            started=time.monotonic();owned('container',backend);docker('stop',backend);elapsed=time.monotonic()-started
+        finally:stream.close()
+        final_info=owned('container',backend)
+        status_after=sql("SELECT status FROM files WHERE id='"+shutdown_id+"';")
+        object_missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+shutdown_id],capture_output=True).returncode!=0
+        check(final_info['Config']['StopTimeout']==25 and final_info['State']['ExitCode']==0 and not final_info['State']['Running'] and elapsed<20 and status_after=='failed' and object_missing,'real SIGTERM finishes bounded failed-upload compensation and exits cleanly')
+        result['active_shutdown']={'exit_code':final_info['State']['ExitCode'],'elapsed_seconds':round(elapsed,3),'row_lock_observed':locked,'status':status_after,'actual_object_absent':object_missing,'configured_docker_stop_timeout_seconds':final_info['Config']['StopTimeout'],'docker_kill_budget_seconds':25,'application_budget_seconds':20}
+        restart_phase('post-SIGTERM phase restart')
+        mismatch=create_file('mismatch.txt',1);check(upload_bytes(mismatch,b'abc')[0]==400,'actual bytes must match reserved metadata')
+        check(sql("SELECT status FROM files WHERE id='"+mismatch+"';")=='failed','mismatched upload retains failed metadata')
+        truncated=create_file('truncated.txt',len(data));check(upload_bytes(truncated,data,False)[0]==400,'truncated multipart framing rejected')
+        check(sql("SELECT status FROM files WHERE id='"+truncated+"';")=='failed','truncated upload cannot become hashed')
+        boundary_id=create_file('boundary.txt',1024);check(upload_bytes(boundary_id,b'x'*1024)[0]==200,'actual backend exact file boundary accepts multipart overhead')
+        check(request('/files',{'orig_name':'over.txt','content_type':'text/plain','size_bytes':1025})[0]==413,'oversized metadata rejected before storage')
+        check(request('/files',{'orig_name':'unaccepted-password.txt','content_type':'text/plain','size_bytes':1,'link_password':'synthetic-only'})[0]==400,'unsupported password creation cannot silently issue an unprotected file')
+        check(request('/files',{'orig_name':'origin.txt','content_type':'text/plain','size_bytes':1},headers={'Origin':'https://not-this-fixture.invalid'})[0]==403,'real foreign-origin mutation rejected')
+        quota_password='Quota7-'+secrets.token_hex(24);quota_jar=http.cookiejar.CookieJar();quota_client=urllib.request.build_opener(NoRedirect(),urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust),urllib.request.HTTPCookieProcessor(quota_jar))
+        check(request('/register',{'email':'quota@example.invalid','username':'quota_probe','password':quota_password},who=quota_client)[0]==201,'synthetic quota account registration')
+        sql("UPDATE users SET email_verified=true,storage_quota_bytes=16 WHERE username='quota_probe';")
+        check(request('/login',{'username':'quota_probe','password':quota_password},who=quota_client)[0]==200,'synthetic quota account login')
+        status,body=request('/files',{'orig_name':'reserved-a.txt','content_type':'text/plain','size_bytes':10},who=quota_client);check(status==201,'pending metadata reserves existing quota');reserved=json.loads(body)['id']
+        check(request('/files',{'orig_name':'reserved-b.txt','content_type':'text/plain','size_bytes':10},who=quota_client)[0]==403,'simultaneous pending reservations cannot overrun quota')
+        check(request('/user/files/'+reserved,method='DELETE',who=quota_client)[0]==204,'owner can release an unused pending reservation')
+        check(request('/files',{'orig_name':'reserved-c.txt','content_type':'text/plain','size_bytes':10},who=quota_client)[0]==201,'released quota becomes available')
+        restart_phase('post-lifecycle phase restart')
         # Distinct account must not read, upload, link or delete the first account file.
         second_password='Synthetic9-'+secrets.token_hex(24)
         check(request('/register',{'email':'second@example.invalid','username':'second','password':second_password})[0]==201,'second isolated account');sql("UPDATE users SET email_verified=true WHERE username='second';")
@@ -162,6 +274,7 @@ def main():
             browserenv=dict(os.environ,SFD_AUTH_BROWSER_MODULE=str(pathlib.Path(args.browser_module).resolve()),NODE_EXTRA_CA_CERTS=str(pathlib.Path(args.ca) if args.ca else cert))
             browserout=command(['node',str(repo/'tests/auth/browser.cjs'),origin,str(root/'windows-fixture.json')],env=browserenv,timeout=60)
             (root/'browser-tests.txt').write_text(browserout+'\n')
+            result['browser']=json.loads(next(line.split(': ',1)[1] for line in browserout.splitlines() if line.startswith('LEGACY BROWSER CHECKS: ')))
             check('BROWSER ACCEPTANCE PASS:' in browserout,'real historical browser UI over normally validated HTTPS')
             command(['certutil','-D','-d','sql:'+str(nss),'-n',name])
         result['origin']=origin;result['backend_image']=args.backend_image;result['backend_image_id']=owned('container',backend)['Image'];result['certificate_sha256']=hashlib.sha256(ssl.PEM_cert_to_DER_cert(cert.read_text())).hexdigest();(root/'ready.json').write_text(json.dumps({'origin':origin,'ready':True}))
@@ -171,7 +284,7 @@ def main():
             if control.exists():
                 assert control.is_dir() and (control/'owner').read_text()==name,'native control owner mismatch'
                 if (control/'interrupt-backend.request').exists() and not (control/'backend-stopped').exists():
-                    owned('container',backend);docker('stop','--time','10',backend)
+                    owned('container',backend);docker('stop',backend)
                     assert not owned('container',backend)['State']['Running']
                     with (control/'backend-stopped').open('x') as ack:ack.write('stopped')
                 if (control/'restore-backend.request').exists() and not (control/'backend-restored').exists():
@@ -252,6 +365,9 @@ def main():
         for ident in reversed(created):owned('container',ident);docker('rm','-f',ident)
         if network is not None:owned('network',network);docker('network','rm',network)
         for v in reversed(volumes):owned('volume',v);docker('volume','rm',v)
+        if native_dir is not None:
+            assert native_dir.parent==pathlib.Path('/tmp') and not native_dir.is_symlink() and (native_dir/'owner').read_text()==name
+            shutil.rmtree(native_dir)
         result['existing_services_unchanged']=snapshot()==baseline;result['owned_cleanup_complete']=not docker('ps','-aq','--filter','label='+label+'='+name) and not docker('volume','ls','-q','--filter','label='+label+'='+name) and not docker('network','ls','-q','--filter','label='+label+'='+name)
         (root/'result.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
     return 0 if not result['failures'] and result['existing_services_unchanged'] and result['owned_cleanup_complete'] else 1
