@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"testing"
 	"time"
 )
@@ -64,13 +63,18 @@ func TestDeploymentTemplate(t *testing.T) {
 	if root == "" {
 		t.Fatal("explicit owned output root required")
 	}
-	file, err := os.OpenFile(filepath.Join(root, "sfd-compose-contract.json"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
+	outputRoot, err := os.OpenRoot(root)
+	if err != nil {
+		t.Fatal("open explicit owned output root")
+	}
+	defer func() { _ = outputRoot.Close() }()
+	file, err := outputRoot.OpenFile("sfd-compose-contract.json", os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0600)
 	if err != nil {
 		t.Fatal("preserve existing configuration evidence; exclusive creation failed")
 	}
 	if _, err = file.Write(output); err != nil {
 		_ = file.Close()
-		t.Fatal("write sanitised configuration evidence")
+		t.Fatal("write sanitized configuration evidence")
 	}
 	if err = file.Close(); err != nil {
 		t.Fatal("close configuration evidence")
