@@ -73,6 +73,7 @@ jobs:
         with:
           name: legacy-auth-sanitised-evidence
           path: |
+            ${{ runner.temp }}/sfd-compose-contract.json
             ${{ runner.temp }}/sfd-auth-fixture/result.json
             ${{ runner.temp }}/sfd-auth-fixture-bytea/result.json
           if-no-files-found: error
