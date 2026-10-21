@@ -45,12 +45,14 @@ jobs:
           docker build --label sfd.recovery=artifact-only -t sfd-auth-recovery -f Dockerfile.backend .
           docker build -t sfd-auth-storage -f reviewed-reference/Dockerfile.storage reviewed-reference
           docker pull postgres:16-alpine
+          docker pull traefik:v2.11
       - name: Require owned real PostgreSQL, native hash and HTTPS session acceptance
         run: |
           SFD_E2E_BACKEND_IMAGE=sfd-auth-candidate \
           SFD_E2E_ROLLBACK_IMAGE=sfd-auth-recovery \
           SFD_E2E_POSTGRES_IMAGE=postgres:16-alpine \
           SFD_E2E_STORAGE_IMAGE=sfd-auth-storage \
+          SFD_E2E_PROXY_IMAGE=traefik:v2.11 \
           SFD_E2E_OUTPUT_ROOT="$RUNNER_TEMP" \
           SFD_E2E_BROWSER_MODULE="$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core" \
           go test -v ./tests/e2e -count=1 -timeout 25m
@@ -59,7 +61,9 @@ jobs:
           for name in ['sfd-auth-fixture','sfd-auth-fixture-bytea']:
               r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/name/'result.json').read_text())
               assert not r['failures'] and r['existing_services_unchanged'] and r['owned_cleanup_complete']
-              assert len(r['checks']) == 87
+              assert len(r['checks']) >= 91
+              assert 'unaccepted reset email fails closed without token issuance' in r['checks']
+              assert any(c.startswith('real delivered verification completes') for c in r['checks'])
               assert r['active_shutdown']['exit_code']==0 and r['active_shutdown']['row_lock_observed'] and r['active_shutdown']['actual_object_absent']
               assert r['browser']['count']==27
               assert r['deletion_preservation']['admin_object_removed'] and r['deletion_preservation']['row_hash_unchanged'] and r['deletion_preservation']['storage_failure_status']==502
