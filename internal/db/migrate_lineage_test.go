@@ -43,6 +43,7 @@ func TestLegacyLineage(t *testing.T) {
 		accepted                            bool
 		extraTable                          string
 		emptyLedger                         bool
+		roleMutation                        string
 	}{
 		{name: "fresh-and-idempotent", accepted: true},
 		{name: "legacy11-bigint-role", version: 11, layout: "bigint", role: true, accepted: true},
@@ -50,6 +51,12 @@ func TestLegacyLineage(t *testing.T) {
 		{name: "legacy11-additive-role", version: 11, layout: "bigint", accepted: true},
 		{name: "legacy12-bigint", version: 12, layout: "bigint", role: true, accepted: true},
 		{name: "legacy12-bytea", version: 12, layout: "bytea", role: true, accepted: true},
+		{name: "legacy11-incompatible-role-text-rejected", version: 11, layout: "bigint", role: true, roleMutation: "ALTER TABLE users ALTER COLUMN is_admin DROP DEFAULT; ALTER TABLE users ALTER COLUMN is_admin TYPE text USING is_admin::text"},
+		{name: "legacy11-incompatible-role-nullable-rejected", version: 11, layout: "bigint", role: true, roleMutation: "ALTER TABLE users ALTER COLUMN is_admin DROP NOT NULL; UPDATE users SET is_admin=NULL"},
+		{name: "legacy11-incompatible-role-default-rejected", version: 11, layout: "bigint", role: true, roleMutation: "ALTER TABLE users ALTER COLUMN is_admin SET DEFAULT true"},
+		{name: "legacy12-incompatible-role-text-rejected", version: 12, layout: "bigint", role: true, roleMutation: "ALTER TABLE users ALTER COLUMN is_admin DROP DEFAULT; ALTER TABLE users ALTER COLUMN is_admin TYPE text USING is_admin::text"},
+		{name: "legacy12-incompatible-role-nullable-rejected", version: 12, layout: "bigint", role: true, roleMutation: "ALTER TABLE users ALTER COLUMN is_admin DROP NOT NULL; UPDATE users SET is_admin=NULL"},
+		{name: "legacy12-incompatible-role-default-rejected", version: 12, layout: "bigint", role: true, roleMutation: "ALTER TABLE users ALTER COLUMN is_admin SET DEFAULT true"},
 		{name: "canonical4-rejected-without-mutation", version: 4, layout: "bigint", canonical: true},
 		{name: "dirty11-rejected", version: 11, layout: "bigint", dirty: true},
 		{name: "future13-rejected", version: 13, layout: "bigint"},
@@ -147,6 +154,9 @@ func TestLegacyLineage(t *testing.T) {
 					execSQL("INSERT INTO auth_sessions(token_hash,expires_at) VALUES ($1,CURRENT_TIMESTAMP+interval '1 hour')", strings.Repeat("c", 64))
 				}
 			}
+			if tc.roleMutation != "" {
+				execSQL(tc.roleMutation)
+			}
 			if tc.extraTable != "" {
 				execSQL("CREATE TABLE " + tc.extraTable + "(id int PRIMARY KEY,payload text NOT NULL)")
 				execSQL("INSERT INTO " + tc.extraTable + " VALUES(1,'owned-historical-row')")
@@ -157,7 +167,7 @@ func TestLegacyLineage(t *testing.T) {
 			snapshot := func() (string, string) {
 				t.Helper()
 				var cols string
-				if err := target.QueryRowContext(ctx, `SELECT COALESCE(jsonb_agg(to_jsonb(c) ORDER BY table_name,ordinal_position),'[]')::text FROM (SELECT table_name,column_name,data_type,ordinal_position FROM information_schema.columns WHERE table_schema=current_schema()) c`).Scan(&cols); err != nil {
+				if err := target.QueryRowContext(ctx, `SELECT COALESCE(jsonb_agg(to_jsonb(c) ORDER BY table_name,ordinal_position),'[]')::text FROM (SELECT table_name,column_name,data_type,ordinal_position,is_nullable,column_default FROM information_schema.columns WHERE table_schema=current_schema()) c`).Scan(&cols); err != nil {
 					t.Fatal("schema snapshot")
 				}
 				data := ""
@@ -177,9 +187,23 @@ func TestLegacyLineage(t *testing.T) {
 				}
 				return data, cols
 			}
+			roleSnapshot := func() string {
+				if tc.roleMutation == "" {
+					return ""
+				}
+				var value string
+				if target.QueryRowContext(ctx, "SELECT COALESCE(jsonb_agg(to_jsonb(u)->'is_admin' ORDER BY id),'[]')::text FROM users u").Scan(&value) != nil {
+					t.Fatal("role snapshot failed")
+				}
+				return value
+			}
+			roleBefore := roleSnapshot()
 			before, columns := snapshot()
 			err = RunMigrations(target)
 			after, afterColumns := snapshot()
+			if roleBefore != roleSnapshot() {
+				t.Error("existing role values changed")
+			}
 			if tc.accepted {
 				if err != nil {
 					t.Fatalf("supported lineage rejected: %v", err)
