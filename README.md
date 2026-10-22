@@ -16,7 +16,7 @@ Start with [continuity](docs/CONTINUITY.md), [GHP-01](docs/GHP-01.md), [agent in
 
 ## Development and validation
 
-Use Go 1.26.9 (the module toolchain), GCC, OpenSSL development headers, Make and Python 3.
+Use Go 1.26.10 (the module toolchain), GCC, OpenSSL development headers, Make and Python 3.
 
 ```sh
 go build -o /tmp/sfd-backend ./cmd/backend
