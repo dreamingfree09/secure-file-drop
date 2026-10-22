@@ -1,0 +1,2022 @@
+{
+  "work_id": "SFD-FINAL-ACCEPTANCE-CONTINUATION-20261021",
+  "observed_utc": "2026-10-22T00:06:17.179262+00:00",
+  "tested_actual_canonical_commit": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+  "tested_tree": "f02f14c8276469fde85fa681fb26c1173c81fe49",
+  "implementation_commit": "5f847eb238d12197a74ceb290e50c1259dd4cb87",
+  "canonical_base": "8b2886590f2671dfd7e537a7446e4ce17392c316",
+  "received_source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+  "lineage": [
+    {
+      "commit": "fdf5da05eefc005c73b406c3898ea5f8570b2ce3",
+      "parent": "8b2886590f2671dfd7e537a7446e4ce17392c316",
+      "tree": "7bd7ccc5e5c89d1c327bb862b69a559a88fcc7a5"
+    },
+    {
+      "commit": "4ad958242553b1bddb8af713152ad14a743c9ffd",
+      "parent": "fdf5da05eefc005c73b406c3898ea5f8570b2ce3",
+      "tree": "212d470e3feb7c963acf7a8a84477c23fc019128"
+    },
+    {
+      "commit": "d045d1a616bb43252e408dd003e19eef4f771303",
+      "parent": "4ad958242553b1bddb8af713152ad14a743c9ffd",
+      "tree": "b9e501ea5db27888ab3b9babe1d13c309b781553"
+    },
+    {
+      "commit": "b04eb3c02b3baf19512ee328a07ab8e55eb645a8",
+      "parent": "d045d1a616bb43252e408dd003e19eef4f771303",
+      "tree": "6d3f7da3d91933e3d6895a2af9b963ec7adcf88f"
+    },
+    {
+      "commit": "6987d2c2c5d5550c13f6da727b8f26562ad7d74c",
+      "parent": "b04eb3c02b3baf19512ee328a07ab8e55eb645a8",
+      "tree": "8be5bae85576b7573fe695da70d157e01cd269a2"
+    },
+    {
+      "commit": "5f847eb238d12197a74ceb290e50c1259dd4cb87",
+      "parent": "6987d2c2c5d5550c13f6da727b8f26562ad7d74c",
+      "tree": "42a50dd41548a8c8f24cd8ff5c9d66a55d8e15d5"
+    },
+    {
+      "commit": "4d1eaf1b46188a52115896db36246d9e5895363b",
+      "parent": "5f847eb238d12197a74ceb290e50c1259dd4cb87",
+      "tree": "fc624d19f6c78449bbacd48d1771179c635604b1"
+    },
+    {
+      "commit": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+      "parent": "4d1eaf1b46188a52115896db36246d9e5895363b",
+      "tree": "f02f14c8276469fde85fa681fb26c1173c81fe49"
+    }
+  ],
+  "legacy_ancestry_imported": false,
+  "full_current_runtime_companion_deployment_inventory": [
+    {
+      "path": ".env.example",
+      "mode": "100644",
+      "blob": "8fcac1509e1305a39e4ab596ce95dd74162d596e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "Dockerfile.backend",
+      "mode": "100644",
+      "blob": "d805c168d87f4f8f8216c05abbacdd8410bbe3fa",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "cmd/backend/main.go",
+      "mode": "100644",
+      "blob": "735986353521488a21055c43d517626ccc5f44be",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "cmd/backend/main_test.go",
+      "mode": "100644",
+      "blob": "3620be4a586170691a718db29f81bb6a4c82d172",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "cmd/migrate/main.go",
+      "mode": "100644",
+      "blob": "307cc9e0437ad831ed43fe6651769005afec9e7d",
+      "in_received_122_selection": false
+    },
+    {
+      "path": "desktop/windows/.gitignore",
+      "mode": "100644",
+      "blob": "d082e62e711bb57e9d30924704740fa4604fa979",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/App.cs",
+      "mode": "100644",
+      "blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/Client.cs",
+      "mode": "100644",
+      "blob": "8978616de376687532b50e3f93cb54e1acd5785e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/FrameworkTarget.cs",
+      "mode": "100644",
+      "blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/SecureFileDrop.exe.config",
+      "mode": "100644",
+      "blob": "a6a246014513cecb03a7983b32668674babcfd59",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/WindowsIntegration.cs",
+      "mode": "100644",
+      "blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/app.manifest",
+      "mode": "100644",
+      "blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/build.ps1",
+      "mode": "100644",
+      "blob": "17da686bcb0fee69aa4dec09178956864b52c36c",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/.gitignore",
+      "mode": "100644",
+      "blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/Client.Contract.csproj",
+      "mode": "100644",
+      "blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/ContractRunner.cs",
+      "mode": "100644",
+      "blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/LiveProbe.cs",
+      "mode": "100644",
+      "blob": "4a5e797b26d370627ac47239910f50be5b2942fd",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/ProductPolicyTests.cs",
+      "mode": "100644",
+      "blob": "4436f990c197004d22119de8c542629ce4a397f7",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/ProtocolTests.cs",
+      "mode": "100644",
+      "blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/WindowsTests.cs",
+      "mode": "100644",
+      "blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/live.ps1",
+      "mode": "100644",
+      "blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "desktop/windows/tests/test.ps1",
+      "mode": "100644",
+      "blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "docker-compose.yml",
+      "mode": "100644",
+      "blob": "74d46e801aeccde13c50885a6d1be0b9b096f189",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "go.mod",
+      "mode": "100644",
+      "blob": "425e449669d52784b2861e93ed7024e05f87b0eb",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "go.sum",
+      "mode": "100644",
+      "blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/alter_001.sql",
+      "mode": "100644",
+      "blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/alter_002.sql",
+      "mode": "100644",
+      "blob": "7365e59ecb9c2901160504d57dc72d9c705595d3",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/alter_002_resumable_uploads.sql",
+      "mode": "100644",
+      "blob": "a1ec041619560f1e60e921e67909fdf9ebf95a95",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/alter_010.sql",
+      "mode": "100644",
+      "blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/alter_011.sql",
+      "mode": "100644",
+      "blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/alter_012.sql",
+      "mode": "100644",
+      "blob": "a40e83e29ef8d752791f52aacc1f145962fdcaac",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/doc.go",
+      "mode": "100644",
+      "blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/lineage.go",
+      "mode": "100644",
+      "blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrate.go",
+      "mode": "100644",
+      "blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrate_lineage_test.go",
+      "mode": "100644",
+      "blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.down.sql",
+      "mode": "100644",
+      "blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.up.sql",
+      "mode": "100644",
+      "blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.down.sql",
+      "mode": "100644",
+      "blob": "68c37777af020f629b91e0fe34974baae92555ab",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.up.sql",
+      "mode": "100644",
+      "blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.down.sql",
+      "mode": "100644",
+      "blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.up.sql",
+      "mode": "100644",
+      "blob": "088c7f7240edf55a556287c12353167af355c16a",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.down.sql",
+      "mode": "100644",
+      "blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.up.sql",
+      "mode": "100644",
+      "blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.down.sql",
+      "mode": "100644",
+      "blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.up.sql",
+      "mode": "100644",
+      "blob": "1a22e8b011c265435b76e7aeede683989a35a255",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.down.sql",
+      "mode": "100644",
+      "blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.up.sql",
+      "mode": "100644",
+      "blob": "545938530f826d509516028117ff48d3af8c21da",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.down.sql",
+      "mode": "100644",
+      "blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.up.sql",
+      "mode": "100644",
+      "blob": "779c5a06874568e5e3ac619df28ce0678e259ab4",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.down.sql",
+      "mode": "100644",
+      "blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.up.sql",
+      "mode": "100644",
+      "blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.down.sql",
+      "mode": "100644",
+      "blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.up.sql",
+      "mode": "100644",
+      "blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.down.sql",
+      "mode": "100644",
+      "blob": "165f146571ed97f93eaddb55e120809baec39846",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.up.sql",
+      "mode": "100644",
+      "blob": "b292067130128584ce644e2ca4d4f9df1552126f",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.down.sql",
+      "mode": "100644",
+      "blob": "140c983af7d109727af2761f196289cfa9063ee7",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.up.sql",
+      "mode": "100644",
+      "blob": "5e8d836ddc9b5a17919d52c9468abc065776450d",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.down.sql",
+      "mode": "100644",
+      "blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+      "mode": "100644",
+      "blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/db/schema.sql",
+      "mode": "100644",
+      "blob": "2ca9b0707d9406edabd927080ee1b77976e93203",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/admin.go",
+      "mode": "100644",
+      "blob": "f39a8f05d78cd72b4853d36f272ba4dd8af11c1a",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/admin_test.go",
+      "mode": "100644",
+      "blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/assessment_test.go",
+      "mode": "100644",
+      "blob": "0d408a4d29b7aa6d2cb642d3c8ff80d035a70cb4",
+      "in_received_122_selection": false
+    },
+    {
+      "path": "internal/server/audit.go",
+      "mode": "100644",
+      "blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/auth.go",
+      "mode": "100644",
+      "blob": "84b9b3241bc935b80f6897ee9e1f4fb8ef556ab6",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/auth_integration_test.go",
+      "mode": "100644",
+      "blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/auth_test.go",
+      "mode": "100644",
+      "blob": "5b10c766b28f2e8f23b894443128426abfa410c2",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/authorization_test.go",
+      "mode": "100644",
+      "blob": "fa8d17b20882f594fcdaf5c6cb29bac33da4b4ec",
+      "in_received_122_selection": false
+    },
+    {
+      "path": "internal/server/backup.go",
+      "mode": "100644",
+      "blob": "449c77a773817b141380e47165dec87dcb144953",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/canonical_contract_test.go",
+      "mode": "100644",
+      "blob": "6b4fafc583305b9cf1cec157e32b55243b2b8bb3",
+      "in_received_122_selection": false
+    },
+    {
+      "path": "internal/server/circuitbreaker.go",
+      "mode": "100644",
+      "blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/cleanup.go",
+      "mode": "100644",
+      "blob": "3859beb09b7f977fd7c43c0b5582f27870de4714",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/commit_fault_integration_test.go",
+      "mode": "100644",
+      "blob": "fb5bffd130fae96071188603188c79cd0395a05e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/compression.go",
+      "mode": "100644",
+      "blob": "b8fb324647cfc359c64d9ff1522325ea2d2921ea",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/config_validation.go",
+      "mode": "100644",
+      "blob": "816800cf36709fc91ccc1ec209498869d264ad36",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/corrections_test.go",
+      "mode": "100644",
+      "blob": "1800e07a0c49515df270d29b822a08c6645a34d7",
+      "in_received_122_selection": false
+    },
+    {
+      "path": "internal/server/db.go",
+      "mode": "100644",
+      "blob": "8c45355a437e48554b16a5a906b7b431d8ef910e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/db_test.go",
+      "mode": "100644",
+      "blob": "5b1f1c56a3746f90b486783aa10917efa713e712",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/doc.go",
+      "mode": "100644",
+      "blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/download.go",
+      "mode": "100644",
+      "blob": "8236c8a82e48287410cdd006d8d3cb2aa70e653a",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/download_test.go",
+      "mode": "100644",
+      "blob": "e347beb1d1556b87a13c20bf6a005db79be9a847",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/download_tokens.go",
+      "mode": "100644",
+      "blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/download_tokens_test.go",
+      "mode": "100644",
+      "blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/email.go",
+      "mode": "100644",
+      "blob": "1998a1d1ed85b3573a977d4466cc524dd027b870",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/endpoint_ratelimit.go",
+      "mode": "100644",
+      "blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/files.go",
+      "mode": "100644",
+      "blob": "95a50c0406223a37aaece5f560a8942419be5650",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/files_test.go",
+      "mode": "100644",
+      "blob": "81fddc368fe17bd48713cb118636e2b0f643db01",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/hash.go",
+      "mode": "100644",
+      "blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/health.go",
+      "mode": "100644",
+      "blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/jsonlog.go",
+      "mode": "100644",
+      "blob": "46d9f36b186b8276ea0be68d3d0288517a35d933",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/lifecycle_ordering_integration_test.go",
+      "mode": "100644",
+      "blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/lifecycle_regression_test.go",
+      "mode": "100644",
+      "blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/links.go",
+      "mode": "100644",
+      "blob": "ca532fb7961be9c89c5d9ac5b4155b98851ded2c",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/links_test.go",
+      "mode": "100644",
+      "blob": "94f4680b035b4a152cdb73f580b482ac07f34af4",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/lockout.go",
+      "mode": "100644",
+      "blob": "5047140790803471d485bf9405cc2fdaada82a16",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/logging.go",
+      "mode": "100644",
+      "blob": "68ac8439c1d10b90a02607634fab69631eec1397",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/metrics.go",
+      "mode": "100644",
+      "blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/minio.go",
+      "mode": "100644",
+      "blob": "401d11c21ae94899098affc8a2f6fc44f007ea69",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/minio_test.go",
+      "mode": "100644",
+      "blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/notifications.go",
+      "mode": "100644",
+      "blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/origin.go",
+      "mode": "100644",
+      "blob": "de10f974c51405debe54548e54a47334daf28b23",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/prometheus.go",
+      "mode": "100644",
+      "blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/quality_integration_test.go",
+      "mode": "100644",
+      "blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/quality_regression_test.go",
+      "mode": "100644",
+      "blob": "cd0db1b23c7ce17286e96435488bb94f255e9654",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/quota.go",
+      "mode": "100644",
+      "blob": "c0851509f2ed07cd28a25f72842429dc754d6386",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/ratelimit.go",
+      "mode": "100644",
+      "blob": "d71b19df33c4e14478b6a1d54a69b83fb365ec08",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/ratelimit_test.go",
+      "mode": "100644",
+      "blob": "b078578a9903d30bf3dd229411dd61b1e2a856db",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/register.go",
+      "mode": "100644",
+      "blob": "c4f78f370060148c83c6def52ae937ee8d73a0a8",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/request.go",
+      "mode": "100644",
+      "blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/resumable.go",
+      "mode": "100644",
+      "blob": "93c2fa017956c75797492ab4a0b4ed1acf1bdbd7",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/review_boundaries_test.go",
+      "mode": "100644",
+      "blob": "8d3c85dab442ffd19242e099b12e100a5277f42a",
+      "in_received_122_selection": false
+    },
+    {
+      "path": "internal/server/rows.go",
+      "mode": "100644",
+      "blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/security.go",
+      "mode": "100644",
+      "blob": "2ed986f516c8964091b6f16609c064edaf266221",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/security_regression_test.go",
+      "mode": "100644",
+      "blob": "e24ab3c7435e525325a06e48d46c8cec12071d7c",
+      "in_received_122_selection": false
+    },
+    {
+      "path": "internal/server/server.go",
+      "mode": "100644",
+      "blob": "0356647a1b2f6a39692c68a34086be619963120e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/tracing.go",
+      "mode": "100644",
+      "blob": "f26fb7230703769d122568bc87db3f0f012d998b",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/upload.go",
+      "mode": "100644",
+      "blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/upload_test.go",
+      "mode": "100644",
+      "blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/validation.go",
+      "mode": "100644",
+      "blob": "69f9012e570bd909416a28566638a4eee12005ea",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "internal/server/webhooks.go",
+      "mode": "100644",
+      "blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "native/Makefile",
+      "mode": "100644",
+      "blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "native/README.md",
+      "mode": "100644",
+      "blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "native/sfd_hash.c",
+      "mode": "100644",
+      "blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "native/sfd_hash.h",
+      "mode": "100644",
+      "blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "native/sfd_hash_cli.c",
+      "mode": "100644",
+      "blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "native/test_hash.py",
+      "mode": "100644",
+      "blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "web/static/index.html",
+      "mode": "100644",
+      "blob": "ee1fce02c3d9b93f5591fea5d58fe4757b733696",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "web/static/manifest.json",
+      "mode": "100644",
+      "blob": "25e3fad0d407016678c45d77d89ba722146fd4d4",
+      "in_received_122_selection": true
+    },
+    {
+      "path": "web/static/sw.js",
+      "mode": "100644",
+      "blob": "8c29791884b4fa1f11cf20ab41379c686f87413a",
+      "in_received_122_selection": true
+    }
+  ],
+  "selected_122_actual_blobs_verified": true,
+  "received_122_GitHub_blobs_verified": {
+    "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+    "paths_verified": 122,
+    "github_tree": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+    "complete": true
+  },
+  "local_images": {
+    "source": "4d1eaf1b46188a52115896db36246d9e5895363b",
+    "application_commit": "5f847eb238d12197a74ceb290e50c1259dd4cb87",
+    "images": {
+      "candidate": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+      "recovery": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb"
+    }
+  },
+  "local_binary_identity": {
+    "source": "4d1eaf1b46188a52115896db36246d9e5895363b",
+    "roles": {
+      "candidate": {
+        "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+        "source": "4d1eaf1b46188a52115896db36246d9e5895363b",
+        "binaries": {
+          "backend": "9a4c53a11e79fee795559bfa80f99ef65b19de5cb8d60dad5d876164f485c830",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      },
+      "recovery": {
+        "image": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "source": "4d1eaf1b46188a52115896db36246d9e5895363b",
+        "binaries": {
+          "backend": "9a4c53a11e79fee795559bfa80f99ef65b19de5cb8d60dad5d876164f485c830",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      }
+    },
+    "equal_application_binaries": true,
+    "recovery_scope": "artifact-only; shared application defects require backend-only fail-closed stop and independently reviewed forward fix",
+    "no_schema_downgrade": true,
+    "never_started_network_none_evidence_containers_removed": true
+  },
+  "runtime_advisories": {
+    "source": "4d1eaf1b46188a52115896db36246d9e5895363b",
+    "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+    "alpine_release": "3.24.3",
+    "package_count": 25,
+    "packages": [
+      {
+        "name": "alpine-baselayout",
+        "version": "3.7.2-r1",
+        "origin": "alpine-baselayout"
+      },
+      {
+        "name": "alpine-baselayout-data",
+        "version": "3.7.2-r1",
+        "origin": "alpine-baselayout"
+      },
+      {
+        "name": "alpine-keys",
+        "version": "2.6-r0",
+        "origin": "alpine-keys"
+      },
+      {
+        "name": "alpine-release",
+        "version": "3.24.3-r0",
+        "origin": "alpine-base"
+      },
+      {
+        "name": "apk-tools",
+        "version": "3.0.8-r0",
+        "origin": "apk-tools"
+      },
+      {
+        "name": "busybox",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "ca-certificates",
+        "version": "20261020-r0",
+        "origin": "ca-certificates"
+      },
+      {
+        "name": "ca-certificates-bundle",
+        "version": "20261020-r0",
+        "origin": "ca-certificates"
+      },
+      {
+        "name": "libapk",
+        "version": "3.0.8-r0",
+        "origin": "apk-tools"
+      },
+      {
+        "name": "libcrypto3",
+        "version": "3.5.9-r0",
+        "origin": "openssl"
+      },
+      {
+        "name": "libncursesw",
+        "version": "6.6_p20260516-r0",
+        "origin": "ncurses"
+      },
+      {
+        "name": "libpq",
+        "version": "18.6-r0",
+        "origin": "postgresql18"
+      },
+      {
+        "name": "libssl3",
+        "version": "3.5.9-r0",
+        "origin": "openssl"
+      },
+      {
+        "name": "lz4-libs",
+        "version": "1.10.0-r1",
+        "origin": "lz4"
+      },
+      {
+        "name": "musl",
+        "version": "1.2.6-r3",
+        "origin": "musl"
+      },
+      {
+        "name": "musl-utils",
+        "version": "1.2.6-r3",
+        "origin": "musl"
+      },
+      {
+        "name": "ncurses-terminfo-base",
+        "version": "6.6_p20260516-r0",
+        "origin": "ncurses"
+      },
+      {
+        "name": "postgresql-common",
+        "version": "1.3-r0",
+        "origin": "postgresql-common"
+      },
+      {
+        "name": "postgresql16-client",
+        "version": "16.15-r0",
+        "origin": "postgresql16"
+      },
+      {
+        "name": "readline",
+        "version": "8.3.3-r1",
+        "origin": "readline"
+      },
+      {
+        "name": "scanelf",
+        "version": "1.3.9-r1",
+        "origin": "pax-utils"
+      },
+      {
+        "name": "ssl_client",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "zlib",
+        "version": "1.3.2-r1",
+        "origin": "zlib"
+      },
+      {
+        "name": "zstd-libs",
+        "version": "1.5.7-r2",
+        "origin": "zstd"
+      }
+    ],
+    "advisory_databases": [
+      {
+        "url": "https://secdb.alpinelinux.org/v3.24/main.json",
+        "sha256": "6f31db5bd1955355d0e0c43a1f5b1984b0a832616008e88f3bb36e89b4bba1c1"
+      },
+      {
+        "url": "https://secdb.alpinelinux.org/v3.24/community.json",
+        "sha256": "e7b89087620ca34f31921e3746f272fcff55aad2e9d47a971a70dff50300edeb"
+      }
+    ],
+    "version_matches": [],
+    "reachability": "version applicability only; not exploit reachability",
+    "binary_govuln": {
+      "exit": 0,
+      "advisory_ids": {
+        "GO-2026-5932": {
+          "level": 1,
+          "module": "golang.org/x/crypto",
+          "version": "v0.57.0",
+          "package": null,
+          "symbol": null,
+          "fixed_version": null
+        }
+      },
+      "counts": {
+        "1": 1,
+        "2": 0,
+        "3": 0
+      }
+    },
+    "owned_scanner_cleanup": true
+  },
+  "local_full_stack": [
+    {
+      "hash_metadata_layout": "bytea",
+      "source_revision": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+      "checks": [
+        "local Docker target",
+        "unaccepted reset email fails closed without token issuance",
+        "actual pg_dump accepts separated connection environment without credential arguments",
+        "migration 11 to 12 preserves synthetic user/file records and role",
+        "migration reaches version 12",
+        "real login rejects trailing JSON",
+        "real login bounds total JSON including whitespace",
+        "real registration rejects trailing JSON",
+        "real environment admin login",
+        "real environment admin identity",
+        "environment admin privileged read",
+        "environment identity cannot acquire database ownership",
+        "environment identity cannot acquire owned-file listing",
+        "real logout",
+        "real logout rejects replay",
+        "logout revocation survives backend recreation",
+        "exact host-native bytes staged with safe executable permissions",
+        "real PostgreSQL Go identity/lineage/COMMIT regressions and race checks",
+        "real registration",
+        "real delivered verification completes for synthetic account upload",
+        "real registered-user login",
+        "registered identity readback",
+        "registered account denied admin permission",
+        "registered account denied aggregate administrator metrics",
+        "real metadata rejects control characters",
+        "real metadata rejects oversized filenames without truncation",
+        "owned Traefik uses loopback TLS and read-only fixture mounts",
+        "real Traefik exact-limit multipart upload and byte-equal signed download",
+        "real Traefik rejects over-envelope body before backend mutation",
+        "owned metadata creation",
+        "real native upload and hash",
+        "native SHA-256 matches uploaded bytes",
+        "legacy raw digest metadata preserved",
+        "owned signed link",
+        "signed download target confined to owned HTTPS origin",
+        "signed download bytes match",
+        "existing protected record denies absent password",
+        "existing protected record denies incorrect password",
+        "existing protected record retains exact legacy password interpretation",
+        "explicitly expired file denies still-valid bearer link",
+        "companion GET files reuses owned listing and native metadata",
+        "anonymous companion file listing rejected",
+        "lifecycle phase restart preserves the existing verified session",
+        "unaccepted resumable path fails closed for registered users",
+        "unsupported path still requires authentication",
+        "lifecycle administrator login",
+        "administrator deletes exact stored object and metadata",
+        "environment identity cannot acquire unsupported UUID ownership",
+        "lifecycle owner login",
+        "owned lifecycle metadata storage-failure.txt",
+        "real file exists before storage-failure deletion",
+        "storage outage retains exact file metadata and actual object",
+        "owned lifecycle metadata active-shutdown.txt",
+        "active multipart owns real PostgreSQL row lock before SIGTERM",
+        "real SIGTERM finishes bounded failed-upload compensation and exits cleanly",
+        "post-SIGTERM phase restart preserves the existing verified session",
+        "owned lifecycle metadata mismatch.txt",
+        "actual bytes must match reserved metadata",
+        "mismatched upload retains failed metadata",
+        "owned lifecycle metadata truncated.txt",
+        "truncated multipart framing rejected",
+        "truncated upload cannot become hashed",
+        "owned lifecycle metadata boundary.txt",
+        "actual backend exact file boundary accepts multipart overhead",
+        "oversized metadata rejected before storage",
+        "unsupported password creation cannot silently issue an unprotected file",
+        "real foreign-origin mutation rejected",
+        "synthetic quota account registration",
+        "real delivered verification completes for synthetic account quota",
+        "synthetic quota account login",
+        "pending metadata reserves existing quota",
+        "simultaneous pending reservations cannot overrun quota",
+        "owner can release an unused pending reservation",
+        "released quota becomes available",
+        "post-lifecycle phase restart preserves the existing verified session",
+        "second isolated account",
+        "real delivered verification completes for synthetic account second",
+        "second account login",
+        "cross-account link denied",
+        "cross-account upload denied",
+        "cross-account deletion denied",
+        "file list isolates accounts",
+        "companion file listing isolates different accounts",
+        "real auth endpoint rate limiter rejects excess malformed requests",
+        "prior image rollback preserves additive schema and all synthetic records/sessions",
+        "corrected candidate restored after rollback image test",
+        "selected rollback image starts against additive schema 12",
+        "rollback environment administrator login and identity",
+        "rollback logout revokes session replay",
+        "rollback registered identity and administrator isolation",
+        "rollback lockout isolates accounts",
+        "rollback account lockout is enforced before the IP request ceiling"
+      ],
+      "failures": [],
+      "go_security": {
+        "passed_test_events": 203,
+        "skipped_test_events": 0,
+        "failed_test_events": 0,
+        "real_lineage_subtests": 14,
+        "real_lifecycle_ordering_cases": 5,
+        "real_commit_fault_modes": 4
+      },
+      "proxy": {
+        "image": "sha256:bb58a3046a925d974492f2a8d12af98b44a7ed039a46d3ade1ecf470a1af96c3",
+        "exact_limit_file_bytes": 1024,
+        "request_envelope_bytes": 1049600,
+        "exact_limit_http": 200,
+        "over_envelope_http": 413,
+        "normal_certificate_validation": true,
+        "docker_socket_mounted": false
+      },
+      "active_shutdown": {
+        "exit_code": 0,
+        "elapsed_seconds": 5.786,
+        "row_lock_observed": true,
+        "status": "failed",
+        "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
+        "docker_kill_budget_seconds": 25,
+        "application_budget_seconds": 20
+      },
+      "deletion_preservation": {
+        "admin_status": 204,
+        "admin_object_removed": true,
+        "storage_failure_status": 502,
+        "row_hash_unchanged": true,
+        "object_retained": true
+      },
+      "rollback": {
+        "image": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "image_id": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      },
+      "existing_services_unchanged": true,
+      "owned_cleanup_complete": true
+    },
+    {
+      "hash_metadata_layout": "bigint",
+      "source_revision": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+      "checks": [
+        "local Docker target",
+        "unaccepted reset email fails closed without token issuance",
+        "actual pg_dump accepts separated connection environment without credential arguments",
+        "migration 11 to 12 preserves synthetic user/file records and role",
+        "migration reaches version 12",
+        "real login rejects trailing JSON",
+        "real login bounds total JSON including whitespace",
+        "real registration rejects trailing JSON",
+        "real environment admin login",
+        "real environment admin identity",
+        "environment admin privileged read",
+        "environment identity cannot acquire database ownership",
+        "environment identity cannot acquire owned-file listing",
+        "real logout",
+        "real logout rejects replay",
+        "logout revocation survives backend recreation",
+        "exact host-native bytes staged with safe executable permissions",
+        "real PostgreSQL Go identity/lineage/COMMIT regressions and race checks",
+        "real registration",
+        "real delivered verification completes for synthetic account upload",
+        "real registered-user login",
+        "registered identity readback",
+        "registered account denied admin permission",
+        "registered account denied aggregate administrator metrics",
+        "real metadata rejects control characters",
+        "real metadata rejects oversized filenames without truncation",
+        "owned Traefik uses loopback TLS and read-only fixture mounts",
+        "real Traefik exact-limit multipart upload and byte-equal signed download",
+        "real Traefik rejects over-envelope body before backend mutation",
+        "owned metadata creation",
+        "real native upload and hash",
+        "native SHA-256 matches uploaded bytes",
+        "numeric byte-count metadata correct",
+        "owned signed link",
+        "signed download target confined to owned HTTPS origin",
+        "signed download bytes match",
+        "existing protected record denies absent password",
+        "existing protected record denies incorrect password",
+        "existing protected record retains exact legacy password interpretation",
+        "explicitly expired file denies still-valid bearer link",
+        "companion GET files reuses owned listing and native metadata",
+        "anonymous companion file listing rejected",
+        "lifecycle phase restart preserves the existing verified session",
+        "unaccepted resumable path fails closed for registered users",
+        "unsupported path still requires authentication",
+        "lifecycle administrator login",
+        "administrator deletes exact stored object and metadata",
+        "environment identity cannot acquire unsupported UUID ownership",
+        "lifecycle owner login",
+        "owned lifecycle metadata storage-failure.txt",
+        "real file exists before storage-failure deletion",
+        "storage outage retains exact file metadata and actual object",
+        "owned lifecycle metadata active-shutdown.txt",
+        "active multipart owns real PostgreSQL row lock before SIGTERM",
+        "real SIGTERM finishes bounded failed-upload compensation and exits cleanly",
+        "post-SIGTERM phase restart preserves the existing verified session",
+        "owned lifecycle metadata mismatch.txt",
+        "actual bytes must match reserved metadata",
+        "mismatched upload retains failed metadata",
+        "owned lifecycle metadata truncated.txt",
+        "truncated multipart framing rejected",
+        "truncated upload cannot become hashed",
+        "owned lifecycle metadata boundary.txt",
+        "actual backend exact file boundary accepts multipart overhead",
+        "oversized metadata rejected before storage",
+        "unsupported password creation cannot silently issue an unprotected file",
+        "real foreign-origin mutation rejected",
+        "synthetic quota account registration",
+        "real delivered verification completes for synthetic account quota",
+        "synthetic quota account login",
+        "pending metadata reserves existing quota",
+        "simultaneous pending reservations cannot overrun quota",
+        "owner can release an unused pending reservation",
+        "released quota becomes available",
+        "post-lifecycle phase restart preserves the existing verified session",
+        "second isolated account",
+        "real delivered verification completes for synthetic account second",
+        "second account login",
+        "cross-account link denied",
+        "cross-account upload denied",
+        "cross-account deletion denied",
+        "file list isolates accounts",
+        "companion file listing isolates different accounts",
+        "real auth endpoint rate limiter rejects excess malformed requests",
+        "prior image rollback preserves additive schema and all synthetic records/sessions",
+        "corrected candidate restored after rollback image test",
+        "selected rollback image starts against additive schema 12",
+        "rollback environment administrator login and identity",
+        "rollback logout revokes session replay",
+        "rollback registered identity and administrator isolation",
+        "rollback lockout isolates accounts",
+        "rollback account lockout is enforced before the IP request ceiling"
+      ],
+      "failures": [],
+      "go_security": {
+        "passed_test_events": 203,
+        "skipped_test_events": 0,
+        "failed_test_events": 0,
+        "real_lineage_subtests": 14,
+        "real_lifecycle_ordering_cases": 5,
+        "real_commit_fault_modes": 4
+      },
+      "proxy": {
+        "image": "sha256:bb58a3046a925d974492f2a8d12af98b44a7ed039a46d3ade1ecf470a1af96c3",
+        "exact_limit_file_bytes": 1024,
+        "request_envelope_bytes": 1049600,
+        "exact_limit_http": 200,
+        "over_envelope_http": 413,
+        "normal_certificate_validation": true,
+        "docker_socket_mounted": false
+      },
+      "active_shutdown": {
+        "exit_code": 0,
+        "elapsed_seconds": 5.573,
+        "row_lock_observed": true,
+        "status": "failed",
+        "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
+        "docker_kill_budget_seconds": 25,
+        "application_budget_seconds": 20
+      },
+      "deletion_preservation": {
+        "admin_status": 204,
+        "admin_object_removed": true,
+        "storage_failure_status": 502,
+        "row_hash_unchanged": true,
+        "object_retained": true
+      },
+      "rollback": {
+        "image": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "image_id": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      },
+      "existing_services_unchanged": true,
+      "owned_cleanup_complete": true
+    }
+  ],
+  "root_checks": [
+    {
+      "check": "unit",
+      "exit": 0,
+      "passed": 154,
+      "skipped": [
+        "TestLegacyLineage",
+        "TestCanonicalSchema4UploadHashDownloadFlow",
+        "TestRustFSMigrationRehearsal",
+        "TestUploadHashDownloadFlow",
+        "TestDeploymentTemplate",
+        "TestAuthenticatedIdentities",
+        "TestAdministratorRequiresSignedRole",
+        "TestLoginIssuesDistinctRoleBoundCookies",
+        "TestLegacyCommitFaults",
+        "TestLifecycleOrdering",
+        "TestAuditFiltersOwnedFixture",
+        "TestReviewRegistrationDeliveryFailureRollsBack"
+      ],
+      "failed": []
+    },
+    {
+      "check": "race",
+      "exit": 0,
+      "passed": 154,
+      "skipped": [
+        "TestLegacyLineage",
+        "TestAuthenticatedIdentities",
+        "TestAdministratorRequiresSignedRole",
+        "TestLoginIssuesDistinctRoleBoundCookies",
+        "TestLegacyCommitFaults",
+        "TestLifecycleOrdering",
+        "TestAuditFiltersOwnedFixture",
+        "TestReviewRegistrationDeliveryFailureRollsBack"
+      ],
+      "failed": []
+    },
+    {
+      "check": "vet",
+      "exit": 0
+    },
+    {
+      "check": "build",
+      "exit": 0
+    },
+    {
+      "check": "native",
+      "exit": 0
+    },
+    {
+      "check": "docs",
+      "exit": 0
+    },
+    {
+      "check": "env-validator",
+      "exit": 0
+    },
+    {
+      "check": "lint",
+      "exit": 0
+    },
+    {
+      "check": "lint-enforcement",
+      "exit": 0
+    },
+    {
+      "check": "advisories",
+      "exit": 0
+    }
+  ],
+  "strict_lint_enforcement": {
+    "work_id": "SFD-LEGACY-LINT-RECONCILIATION-20261019",
+    "scenario_count": 7,
+    "checks": [
+      {
+        "scenario": "clean full lint, no baseline filtering",
+        "result": "PASS",
+        "findings": 0
+      },
+      {
+        "scenario": "reject new unused",
+        "result": "PASS",
+        "matched_linter": "unused",
+        "matched_rule": null,
+        "nonzero_exit": true
+      },
+      {
+        "scenario": "reject new unchecked-error",
+        "result": "PASS",
+        "matched_linter": "errcheck",
+        "matched_rule": null,
+        "nonzero_exit": true
+      },
+      {
+        "scenario": "reject new security-permissions",
+        "result": "PASS",
+        "matched_linter": "gosec",
+        "matched_rule": "G306",
+        "nonzero_exit": true
+      },
+      {
+        "scenario": "reject new suppression",
+        "result": "PASS"
+      },
+      {
+        "scenario": "reject new excluded Go build scope",
+        "result": "PASS"
+      },
+      {
+        "scenario": "reject disabled security rule/config expansion",
+        "result": "PASS"
+      }
+    ],
+    "probe_sources_executed": false,
+    "owned_snapshot_removed": true,
+    "config_sha256": "d983dd8f54024e41247d2e92fb51c35af7b07fa0dc97ac655a8f88dde9a6df0a",
+    "baseline_filtering": false
+  },
+  "historical_lint_identity_counts": {
+    "diagnostics": 140,
+    "structurally_matched": 140,
+    "not_independent_vulnerabilities": true,
+    "legacy_justified_diagnostic_annotations": 4,
+    "new_suppressions": 0,
+    "retained_annotation_comment_sites": 23
+  },
+  "nested_IAM": {
+    "checks": [
+      {
+        "check": "nested-iam-unit",
+        "exit": 0
+      },
+      {
+        "check": "nested-iam-vet",
+        "exit": 0
+      },
+      {
+        "check": "nested-iam-build",
+        "exit": 0
+      },
+      {
+        "check": "nested-iam-advisories",
+        "exit": 0
+      }
+    ],
+    "unit_scope": "module contains no test files; compilation/vet/build/advisory gates passed, not RustFS operational acceptance",
+    "toolchain": "go1.26.10",
+    "real_services_or_credentials_used": false
+  },
+  "final_source_CI": [
+    {
+      "run": 39696157037,
+      "url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/39696157037",
+      "proposal": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+      "event": "push",
+      "tested_revision": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+      "tested_tree": "f02f14c8276469fde85fa681fb26c1173c81fe49",
+      "actual_canonical_commit_tested": true,
+      "synthetic_PR_is_not_master_integration": true,
+      "layouts": [
+        {
+          "layout": "bigint",
+          "proxy": {
+            "image": "sha256:2f98216dc47cab36b72c31f43f0ca33822b948b5e3c9295e8e88e3afa4cbf0f6",
+            "exact_limit_file_bytes": 1024,
+            "request_envelope_bytes": 1049600,
+            "exact_limit_http": 200,
+            "over_envelope_http": 413,
+            "normal_certificate_validation": true,
+            "docker_socket_mounted": false
+          },
+          "real_SMTP_verification_cases": 3,
+          "checks": 94,
+          "browser": 27,
+          "go_security": {
+            "passed_test_events": 203,
+            "skipped_test_events": 0,
+            "failed_test_events": 0,
+            "real_lineage_subtests": 14,
+            "real_lifecycle_ordering_cases": 5,
+            "real_commit_fault_modes": 4
+          },
+          "backend_image": "sha256:e9baa68313f296a0293765a6d811c6e3741bbb1712430d9f715fe8f04a6d9369",
+          "artifact_recovery_image": "sha256:88eccdc9de6fcdc7df8e4cea940708d62321de394ee1a14fc454c04d07110fa8",
+          "active_shutdown": {
+            "exit_code": 0,
+            "elapsed_seconds": 5.182,
+            "row_lock_observed": true,
+            "status": "failed",
+            "actual_object_absent": true,
+            "configured_docker_stop_timeout_seconds": 25,
+            "docker_kill_budget_seconds": 25,
+            "application_budget_seconds": 20
+          },
+          "deletion_preservation": {
+            "admin_status": 204,
+            "admin_object_removed": true,
+            "storage_failure_status": 502,
+            "row_hash_unchanged": true,
+            "object_retained": true
+          },
+          "sanitized_result_sha256": "3e9e2a80346d3d9b5e69a05ed6f4a408f1182eebb674c0487e142c281fdce103",
+          "cleanup": true,
+          "preservation": true
+        },
+        {
+          "layout": "bytea",
+          "proxy": {
+            "image": "sha256:2f98216dc47cab36b72c31f43f0ca33822b948b5e3c9295e8e88e3afa4cbf0f6",
+            "exact_limit_file_bytes": 1024,
+            "request_envelope_bytes": 1049600,
+            "exact_limit_http": 200,
+            "over_envelope_http": 413,
+            "normal_certificate_validation": true,
+            "docker_socket_mounted": false
+          },
+          "real_SMTP_verification_cases": 3,
+          "checks": 94,
+          "browser": 27,
+          "go_security": {
+            "passed_test_events": 203,
+            "skipped_test_events": 0,
+            "failed_test_events": 0,
+            "real_lineage_subtests": 14,
+            "real_lifecycle_ordering_cases": 5,
+            "real_commit_fault_modes": 4
+          },
+          "backend_image": "sha256:e9baa68313f296a0293765a6d811c6e3741bbb1712430d9f715fe8f04a6d9369",
+          "artifact_recovery_image": "sha256:88eccdc9de6fcdc7df8e4cea940708d62321de394ee1a14fc454c04d07110fa8",
+          "active_shutdown": {
+            "exit_code": 0,
+            "elapsed_seconds": 5.18,
+            "row_lock_observed": true,
+            "status": "failed",
+            "actual_object_absent": true,
+            "configured_docker_stop_timeout_seconds": 25,
+            "docker_kill_budget_seconds": 25,
+            "application_budget_seconds": 20
+          },
+          "deletion_preservation": {
+            "admin_status": 204,
+            "admin_object_removed": true,
+            "storage_failure_status": 502,
+            "row_hash_unchanged": true,
+            "object_retained": true
+          },
+          "sanitized_result_sha256": "70f7cb6bdb9ee8b6a081811f012c35e3ecc03b19dcfe564a3aaaac4799e14c60",
+          "cleanup": true,
+          "preservation": true
+        }
+      ],
+      "configuration": 18,
+      "Windows": {
+        "checks": 32,
+        "protocol": 16,
+        "policy": 6,
+        "job": 119553917752,
+        "source_c320_checked": true,
+        "Owner_GUI": "unexecuted"
+      },
+      "all_jobs_success": true
+    },
+    {
+      "run": 39696161254,
+      "url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/39696161254",
+      "proposal": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+      "event": "pull_request",
+      "tested_revision": "8613683ce358729d6850f586e2bd95c48f1f9775",
+      "tested_tree": "f02f14c8276469fde85fa681fb26c1173c81fe49",
+      "actual_canonical_commit_tested": false,
+      "synthetic_PR_is_not_master_integration": true,
+      "layouts": [
+        {
+          "layout": "bigint",
+          "proxy": {
+            "image": "sha256:2f98216dc47cab36b72c31f43f0ca33822b948b5e3c9295e8e88e3afa4cbf0f6",
+            "exact_limit_file_bytes": 1024,
+            "request_envelope_bytes": 1049600,
+            "exact_limit_http": 200,
+            "over_envelope_http": 413,
+            "normal_certificate_validation": true,
+            "docker_socket_mounted": false
+          },
+          "real_SMTP_verification_cases": 3,
+          "checks": 94,
+          "browser": 27,
+          "go_security": {
+            "passed_test_events": 203,
+            "skipped_test_events": 0,
+            "failed_test_events": 0,
+            "real_lineage_subtests": 14,
+            "real_lifecycle_ordering_cases": 5,
+            "real_commit_fault_modes": 4
+          },
+          "backend_image": "sha256:1e2f3b0c0fee97c3206ab70d0925a1d50ddaf799704d34a86657708a9847e0fd",
+          "artifact_recovery_image": "sha256:562f62740ebd20655afbada007514c7913d8a58bd76413e81ced49221eb0ff9a",
+          "active_shutdown": {
+            "exit_code": 0,
+            "elapsed_seconds": 5.174,
+            "row_lock_observed": true,
+            "status": "failed",
+            "actual_object_absent": true,
+            "configured_docker_stop_timeout_seconds": 25,
+            "docker_kill_budget_seconds": 25,
+            "application_budget_seconds": 20
+          },
+          "deletion_preservation": {
+            "admin_status": 204,
+            "admin_object_removed": true,
+            "storage_failure_status": 502,
+            "row_hash_unchanged": true,
+            "object_retained": true
+          },
+          "sanitized_result_sha256": "b67f120d3574436f747832efa3a3bfaacffcb56df34a2b65a1728603c33616f5",
+          "cleanup": true,
+          "preservation": true
+        },
+        {
+          "layout": "bytea",
+          "proxy": {
+            "image": "sha256:2f98216dc47cab36b72c31f43f0ca33822b948b5e3c9295e8e88e3afa4cbf0f6",
+            "exact_limit_file_bytes": 1024,
+            "request_envelope_bytes": 1049600,
+            "exact_limit_http": 200,
+            "over_envelope_http": 413,
+            "normal_certificate_validation": true,
+            "docker_socket_mounted": false
+          },
+          "real_SMTP_verification_cases": 3,
+          "checks": 94,
+          "browser": 27,
+          "go_security": {
+            "passed_test_events": 203,
+            "skipped_test_events": 0,
+            "failed_test_events": 0,
+            "real_lineage_subtests": 14,
+            "real_lifecycle_ordering_cases": 5,
+            "real_commit_fault_modes": 4
+          },
+          "backend_image": "sha256:1e2f3b0c0fee97c3206ab70d0925a1d50ddaf799704d34a86657708a9847e0fd",
+          "artifact_recovery_image": "sha256:562f62740ebd20655afbada007514c7913d8a58bd76413e81ced49221eb0ff9a",
+          "active_shutdown": {
+            "exit_code": 0,
+            "elapsed_seconds": 5.162,
+            "row_lock_observed": true,
+            "status": "failed",
+            "actual_object_absent": true,
+            "configured_docker_stop_timeout_seconds": 25,
+            "docker_kill_budget_seconds": 25,
+            "application_budget_seconds": 20
+          },
+          "deletion_preservation": {
+            "admin_status": 204,
+            "admin_object_removed": true,
+            "storage_failure_status": 502,
+            "row_hash_unchanged": true,
+            "object_retained": true
+          },
+          "sanitized_result_sha256": "ce691dad2206519295bbd184288d1e16ddcb38b978380c093dd0af166ad780bc",
+          "cleanup": true,
+          "preservation": true
+        }
+      ],
+      "configuration": 18,
+      "Windows": {
+        "checks": 32,
+        "protocol": 16,
+        "policy": 6,
+        "job": 119553931721,
+        "source_c320_checked": true,
+        "Owner_GUI": "unexecuted"
+      },
+      "all_jobs_success": true
+    }
+  ],
+  "F196_release_acceptance": [
+    {
+      "role": "release-bytea",
+      "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+      "layout": "bytea",
+      "backend_fixture_exit": 0,
+      "backend_checks": 84,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 44"
+      ]
+    },
+    {
+      "role": "release-bigint",
+      "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+      "layout": "bigint",
+      "backend_fixture_exit": 0,
+      "backend_checks": 84,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 43"
+      ]
+    }
+  ],
+  "database_custom_restore": [
+    {
+      "layout": "bytea",
+      "source_revision": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+      "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+      "image_resident_pg_dump_version": "pg_dump (PostgreSQL) 16.15",
+      "custom_dump_restore": true,
+      "schema": 12,
+      "exact_user_file_session_audit_rows_equal": true,
+      "source_unchanged": true,
+      "archive_sha256": "89d4a689c3052f0f007a7073c1f48dd72344746f44f59d3f2568f05fc030e6c2",
+      "archive": "local-only synthetic private records"
+    },
+    {
+      "layout": "bigint",
+      "source_revision": "791f1adc0bed00722e3d24be73e6b07e2c32aa4e",
+      "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+      "image_resident_pg_dump_version": "pg_dump (PostgreSQL) 16.15",
+      "custom_dump_restore": true,
+      "schema": 12,
+      "exact_user_file_session_audit_rows_equal": true,
+      "source_unchanged": true,
+      "archive_sha256": "07d379bd706de91ff4b13435a1037e6b73154bbdd0529acbc2e14dee696e9509",
+      "archive": "local-only synthetic private records"
+    }
+  ],
+  "untrusted_release_TLS": {
+    "received_HTTP_requests": 0,
+    "closed": true
+  },
+  "monitoring_config": {
+    "exit": 0,
+    "image": "sha256:2b6f734e372c1b4717008f7d0a0152316aedd4d13ae17ef1e3268dbfaf68041b",
+    "promtool_syntax_check": true,
+    "owned_inert_container_removed": true,
+    "live_service_changed": false
+  },
+  "review_replies": [
+    {
+      "finding": 4343007901,
+      "reply": "https://github.com/dreamingfree09/secure-file-drop/pull/32#discussion_r4343145691",
+      "body_exact_readback": true
+    },
+    {
+      "finding": 4343007907,
+      "reply": "https://github.com/dreamingfree09/secure-file-drop/pull/32#discussion_r4343145889",
+      "body_exact_readback": true
+    },
+    {
+      "finding": 4343007913,
+      "reply": "https://github.com/dreamingfree09/secure-file-drop/pull/32#discussion_r4343146059",
+      "body_exact_readback": true
+    },
+    {
+      "finding": 4343007918,
+      "reply": "https://github.com/dreamingfree09/secure-file-drop/pull/32#discussion_r4343146272",
+      "body_exact_readback": true
+    },
+    {
+      "finding": 4343007924,
+      "reply": "https://github.com/dreamingfree09/secure-file-drop/pull/32#discussion_r4343146441",
+      "body_exact_readback": true
+    },
+    {
+      "finding": 4343007934,
+      "reply": "https://github.com/dreamingfree09/secure-file-drop/pull/32#discussion_r4343146655",
+      "body_exact_readback": true
+    },
+    {
+      "finding": 4343007939,
+      "reply": "https://github.com/dreamingfree09/secure-file-drop/pull/32#discussion_r4343146846",
+      "body_exact_readback": true
+    },
+    {
+      "finding": 4343007948,
+      "reply": "https://github.com/dreamingfree09/secure-file-drop/pull/32#discussion_r4343147060",
+      "body_exact_readback": true
+    }
+  ],
+  "fail_before_review_regressions": {
+    "base": "6987d2c2c5d5550c13f6da727b8f26562ad7d74c",
+    "exit": 1,
+    "failed": [
+      "TestReviewDownloadSecretStartup/0",
+      "TestReviewDownloadSecretStartup/1",
+      "TestReviewDownloadSecretStartup/31",
+      "TestReviewDownloadSecretStartup",
+      "TestReviewRemotePeerKey",
+      "TestReviewRegistrationNeedsDelivery"
+    ],
+    "isolated_public_source_archive": true,
+    "credentials_or_network_target_used": false,
+    "actual_tests_executed": true
+  },
+  "preservation": {
+    "observed_utc": "2026-10-22T00:02:54.520042+00:00",
+    "six_live_ids_images_starts_mounts_unchanged": true,
+    "backend_image": "sha256:7b53527539596c711a4b2e4a68d26d8e4c7a025228327e43b461b8f9b079b532",
+    "live_schema_metadata": [
+      {
+        "version": 11,
+        "dirty": false
+      },
+      [
+        {
+          "data_type": "text",
+          "table_name": "files",
+          "column_name": "created_by"
+        },
+        {
+          "data_type": "bytea",
+          "table_name": "files",
+          "column_name": "sha256_bytes"
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "files",
+          "column_name": "user_id"
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "users",
+          "column_name": "email_verified"
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "users",
+          "column_name": "is_admin"
+        }
+      ],
+      {
+        "users": 2,
+        "files": 15
+      }
+    ],
+    "environment_equals_owner_validated_candidate": true,
+    "protected_checkouts_preserved": true,
+    "original_change_entries": 5,
+    "retained_failure_counts": {
+      "container": 57,
+      "network": 5,
+      "volume": 37,
+      "image": 10
+    },
+    "retained_failure_inventory_exact_match": true,
+    "all_retained_failure_containers_stopped": true,
+    "backup_configuration": {
+      "SFD_BACKUP_ENABLED": "true",
+      "SFD_BACKUP_RETENTION_DAYS": "7",
+      "SFD_BACKUP_INTERVAL": "24h",
+      "SFD_CLEANUP_ENABLED": "unset"
+    },
+    "backup_file_metadata": [
+      {
+        "bytes": 3996,
+        "mtime": 1792617164
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792524873
+      },
+      {
+        "bytes": 3998,
+        "mtime": 1792340507
+      },
+      {
+        "bytes": 3995,
+        "mtime": 1792432701
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792323778
+      },
+      {
+        "bytes": 3993,
+        "mtime": 1792232669
+      }
+    ],
+    "adoption_performed": false,
+    "live_record_mutations": false,
+    "existing_owner_processes_stopped": false,
+    "superseded_assignment_owned_v1_probe_interrupted_with_verified_identity": true,
+    "superseded_probe_cleanup_verified": true
+  },
+  "live_secret_compatibility_booleans": {
+    "backend_image": "sha256:7b53527539596c711a4b2e4a68d26d8e4c7a025228327e43b461b8f9b079b532",
+    "download_secret_meets_new_32_byte_minimum": true,
+    "session_secret_meets_32_byte_minimum": true,
+    "administrator_verifier_bcrypt_shape": true,
+    "values_lengths_or_hashes_disclosed": false,
+    "configuration_mutated": false,
+    "adoption_performed": false
+  },
+  "current_TLS": {
+    "observed_utc": "2026-10-22T00:02:54.616913+00:00",
+    "served_leaf_sha256": "4106ecd1f0bd2d94be7a7fcf2236cb9b0119dde5aa82a97edd2cdab584809b70",
+    "distribution_crl_sha256": "d5e8ca59b3324fe4f133d2c381737bab413340085d990469d1691a9688a6b5cc",
+    "certificate_chain_hostname_and_CRL_verify": true,
+    "crl_dates": "lastUpdate=Oct 18 12:17:40 2026 GMT\nnextUpdate=Oct 25 12:17:40 2026 GMT",
+    "normal_Windows_Schannel_ready_http": 200,
+    "trust_or_security_changes": false
+  },
+  "current_Windows_TLS_and_processes": {
+    "observed_utc": "2026-10-22T00:03:36.8832328Z",
+    "schannel": [
+      {
+        "route": "health",
+        "http": 200
+      },
+      {
+        "route": "ready",
+        "http": 200
+      }
+    ],
+    "dotnet": [
+      {
+        "route": "health",
+        "revocation_enabled": true,
+        "http": 200
+      },
+      {
+        "route": "ready",
+        "revocation_enabled": true,
+        "http": 200
+      }
+    ],
+    "framework_release": 534296,
+    "corrected_executable_path": "C:\\Users\\kosta\\SecureFileDrop-Tray-Fix-20261018-c74e5a92\\preview\\SecureFileDrop.exe",
+    "corrected_executable_sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+    "windows_fetched_crl_der_sha256": "d5e8ca59b3324fe4f133d2c381737bab413340085d990469d1691a9688a6b5cc",
+    "trusted_root_der_sha256": "0f45e72366dc8ff6e3bed9323ef697bb44b21204d7e05ea303da319b5160bc28",
+    "running_owner_executables": [
+      {
+        "path": "C:\\Users\\kosta\\OneDrive\\Desktop\\windows-companion-preview-and-checks\\SecureFileDrop.exe",
+        "id": 122160,
+        "sha256": "97fc2dafbc469627f9ee90896903162c8804c01a167402f414d150857a0ed394"
+      }
+    ],
+    "owned_release_probe_processes": 0,
+    "trust_security_settings_or_owner_processes_changed": false
+  },
+  "CRL": {
+    "prepared_utc": "2026-10-21T23:04:36.488535+00:00",
+    "helper": "/home/dreamingfree09/.local/share/secure-file-drop/local-tls/sfd-local-tls-20261017-82f9b194/ca/revocation-20261018-5ac927e4/renewal-20261022-b64c3e91-v2/owner-renew-crl.py",
+    "helper_sha256": "42ecd5a1e8d4adf586c5e3c3680425fd225970b3a14a1bba919f478b7c4c7649",
+    "command": "printf '%s  %s\\n' '42ecd5a1e8d4adf586c5e3c3680425fd225970b3a14a1bba919f478b7c4c7649' '/home/dreamingfree09/.local/share/secure-file-drop/local-tls/sfd-local-tls-20261017-82f9b194/ca/revocation-20261018-5ac927e4/renewal-20261022-b64c3e91-v2/owner-renew-crl.py' | sha256sum --check --status && python3 -B '/home/dreamingfree09/.local/share/secure-file-drop/local-tls/sfd-local-tls-20261017-82f9b194/ca/revocation-20261018-5ac927e4/renewal-20261022-b64c3e91-v2/owner-renew-crl.py'",
+    "existing_crl_number": "0x1000",
+    "expected_new_number": "0x1001",
+    "existing_expiry": "2026-10-25T12:17:40Z",
+    "issuer_entries": 2,
+    "revoked_entries": 0,
+    "signing_attempted": false,
+    "publication_changed": false,
+    "owner_input": "existing CA passphrase at OpenSSL hidden prompt only",
+    "checksum_command_tested": true,
+    "noninteractive_rejection_verified": true,
+    "explicit_signature_diagnostic_required": true,
+    "superseded_preparation_preserved": true,
+    "signing_completed": false,
+    "publication_completed": false,
+    "post_renewal_Windows_checks": "unexecuted until secure Owner signing and verified publication",
+    "current_CRL_nextUpdate_utc": "2026-10-25T12:17:40Z"
+  },
+  "integration_or_live_adoption_performed": false,
+  "Aether_exact_independent_acceptance": "pending",
+  "Owner_GUI_acceptance": "unexecuted",
+  "operational_verdict": "HOLD protected integration/live adoption pending Aether exact source/image/CI/recovery acceptance, secure CRL renewal and fresh real-data preflight; no public production readiness",
+  "retained_failures_and_skips": [
+    "initial canonical import compile gaps corrected by preserving canonical safeguards",
+    "three browser assertions failed before correction; all ten pass after",
+    "first strict annotation identity encoded one source literal incorrectly; fixed without new suppression; all seven enforcement scenarios pass",
+    "4ad CI39692746938/39692755343 failed dependency/security gates; new Go/x509 and musl advisories corrected",
+    "canonical v1 Windows probe deliberately interrupted after new advisory; verified owned fixture cleanup; no completed Windows pass claimed for that run",
+    "exclusive evidence-file collision stopped only remaining local check orchestration; resumed remaining checks under unique names",
+    "698 CI39693313391/39693319158 both success but superseded by confirmed review corrections",
+    "4d CI39695497253/39695505129 fail oversized-response fixture stage; local28 completed checks/203 Go events then URLError; no413/pass was claimed; readback-only correction791 verifies actual413",
+    "root unit opt-in skips and historical schema4/RustFS suites are explicit, not full-stack passes",
+    "no prohibited MinIO signature-bypass reproduction developed/executed/published",
+    "CRL signing/publication/post-renewal validation unexecuted; current old CRL remains valid and current strict Windows health/readiness pass",
+    "Owner tray/Explorer/picker/clipboard/Quick Send visual acceptance unexecuted; actual Owner process remains97fc"
+  ]
+}

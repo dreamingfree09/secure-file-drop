@@ -40,6 +40,12 @@ func StartCleanupJob(ctx context.Context, cfg CleanupConfig) {
 	}
 }
 func runCleanup(ctx context.Context, cfg CleanupConfig) (int, error) {
+	return cleanupFiles(ctx, cfg, true)
+}
+
+// Manual cleanup retains the legacy pending/failed-only policy; background
+// cleanup also honors explicitly requested file expiration.
+func cleanupFiles(ctx context.Context, cfg CleanupConfig, includeExpired bool) (int, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 	tx, err := cfg.DB.BeginTx(ctx, nil)
@@ -47,8 +53,8 @@ func runCleanup(ctx context.Context, cfg CleanupConfig) (int, error) {
 		return 0, err
 	}
 	defer func() { _ = tx.Rollback() }()
-	rows, err := tx.QueryContext(ctx, `SELECT id,object_key FROM files WHERE created_at<$1 AND status IN ('pending','failed')
- ORDER BY created_at LIMIT 100 FOR UPDATE SKIP LOCKED`, time.Now().Add(-cfg.MaxAge))
+	rows, err := tx.QueryContext(ctx, `SELECT id,object_key FROM files WHERE (created_at<$1 AND status IN ('pending','failed')) OR ($2 AND auto_delete=TRUE AND expires_at IS NOT NULL AND expires_at<CURRENT_TIMESTAMP)
+ ORDER BY created_at LIMIT 100 FOR UPDATE SKIP LOCKED`, time.Now().Add(-cfg.MaxAge), includeExpired)
 	if err != nil {
 		return 0, err
 	}
@@ -75,7 +81,7 @@ func runCleanup(ctx context.Context, cfg CleanupConfig) (int, error) {
 			return 0, err
 		}
 	}
-	if _, err = tx.ExecContext(ctx, "DELETE FROM sessions WHERE expires_at <= CURRENT_TIMESTAMP"); err != nil {
+	if _, err = tx.ExecContext(ctx, "DELETE FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP"); err != nil {
 		return 0, err
 	}
 	if err = tx.Commit(); err != nil {
@@ -86,7 +92,7 @@ func runCleanup(ctx context.Context, cfg CleanupConfig) (int, error) {
 
 // GetCleanupConfigFromEnv reads positive durations with conservative defaults.
 func GetCleanupConfigFromEnv(db *sql.DB, mc *minio.Client, bucket string) CleanupConfig {
-	enabled := os.Getenv("SFD_CLEANUP_ENABLED") != "false"
+	enabled := os.Getenv("SFD_CLEANUP_ENABLED") == "true"
 	interval := time.Hour
 	age := 24 * time.Hour
 	if d, e := time.ParseDuration(os.Getenv("SFD_CLEANUP_INTERVAL")); e == nil && d > 0 {

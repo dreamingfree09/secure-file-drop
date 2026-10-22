@@ -16,7 +16,7 @@ func TestClampTTLSeconds(t *testing.T) {
 	}
 }
 
-func TestRequestOriginDoesNotTrustForwardedHeaders(t *testing.T) {
+func TestRequestOriginIgnoresUntrustedForwarding(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "http://example.local/", nil)
 	r.Header.Set("X-Forwarded-Proto", "https")
 	r.Header.Set("X-Forwarded-Host", "files.example.com")

@@ -1,4 +1,8 @@
-// Command backend starts Secure File Drop and applies its embedded migrations.
+// cmd/backend/main.go - Production entrypoint for Secure File Drop.
+//
+// Wires configuration, runs migrations, starts the HTTP server, and
+// performs graceful shutdown on signals. Prefers SFD_PUBLIC_BASE_URL
+// for generating absolute links.
 package main
 
 import (
@@ -7,6 +11,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -15,6 +20,17 @@ import (
 )
 
 func main() {
+	// Validate all configuration before proceeding
+	log.Printf("service=backend msg=%q", "validating_configuration")
+	if err := server.ValidateAllConfiguration(); err != nil {
+		log.Printf("service=backend msg=%q err=%v", "configuration_validation_failed", err)
+		os.Exit(1)
+	}
+	log.Printf("service=backend msg=%q", "configuration_valid")
+
+	// Log warnings for optional missing configuration
+	server.WarnOnOptionalMissingConfig()
+
 	addr := getenvDefault("SFD_ADDR", ":8080")
 
 	build := server.BuildInfo{
@@ -24,15 +40,47 @@ func main() {
 
 	auth := server.AuthConfig{
 		AdminUser:     getenvDefault("SFD_ADMIN_USER", "admin"),
-		AdminPass:     getenvDefault("SFD_ADMIN_PASS", ""),
+		AdminPass:     getenvDefault("SFD_ADMIN_PASS", ""), // Should be bcrypt hash
 		SessionSecret: getenvDefault("SFD_SESSION_SECRET", ""),
 		SessionTTL:    12 * time.Hour,
 		CookieName:    "sfd_session",
 	}
 
 	// Safety: refuse to start if secrets are missing.
-	if auth.AdminPass == "" || len(auth.SessionSecret) < 32 || len(os.Getenv("SFD_DOWNLOAD_SECRET")) < 32 {
-		log.Printf("service=backend msg=%q", "SFD_ADMIN_PASS required; signing secrets must be at least 32 bytes")
+	if auth.AdminPass == "" || auth.SessionSecret == "" {
+		log.Printf("service=backend msg=%q", "missing SFD_ADMIN_PASS or SFD_SESSION_SECRET")
+		os.Exit(1)
+	}
+
+	// Security: refuse to start with default/insecure secrets
+	insecureSecrets := []string{
+		"change-me",
+		"changeme",
+		"admin",
+		"password",
+		"secret",
+		"default",
+		"123456",
+	}
+
+	sessionSecretLower := strings.ToLower(auth.SessionSecret)
+	for _, insecure := range insecureSecrets {
+		if strings.Contains(sessionSecretLower, insecure) {
+			log.Printf("service=backend msg=%q value=%q", "SECURITY ERROR: SFD_SESSION_SECRET contains insecure default value", insecure)
+			os.Exit(1)
+		}
+	}
+
+	if len(auth.SessionSecret) < 32 {
+		log.Printf("service=backend msg=%q len=%d", "SECURITY ERROR: SFD_SESSION_SECRET too short (minimum 32 characters)", len(auth.SessionSecret))
+		os.Exit(1)
+	}
+
+	// Validate admin password is a bcrypt hash (starts with $2a$, $2b$, or $2y$)
+	if auth.AdminPass != "" && !strings.HasPrefix(auth.AdminPass, "$2a$") &&
+		!strings.HasPrefix(auth.AdminPass, "$2b$") && !strings.HasPrefix(auth.AdminPass, "$2y$") {
+		log.Printf("service=backend msg=%q", "SECURITY ERROR: SFD_ADMIN_PASS must be a bcrypt hash (use 'htpasswd -bnBC 12 \"\" password | tr -d ':'\" to generate)")
+		log.Printf("service=backend msg=%q", "Example: htpasswd -bnBC 12 '' yourpassword | tr -d ':'")
 		os.Exit(1)
 	}
 
@@ -40,10 +88,19 @@ func main() {
 	dsn := getenvDefault("DATABASE_URL", "")
 	dbConn, err := server.OpenDB(dsn)
 	if err != nil {
-		log.Printf("service=backend msg=%q", "db_connect_failed")
+		log.Printf("service=backend msg=%q err=%v", "db_connect_failed", err)
 		os.Exit(1)
 	}
 	defer func() { _ = dbConn.Close() }()
+
+	// Optimize database connection pooling for production
+	dbConn.SetMaxOpenConns(25)                 // Maximum open connections
+	dbConn.SetMaxIdleConns(5)                  // Maximum idle connections
+	dbConn.SetConnMaxLifetime(5 * time.Minute) // Maximum connection lifetime
+	dbConn.SetConnMaxIdleTime(2 * time.Minute) // Maximum idle time before closing
+
+	log.Printf("service=backend msg=%q max_open=%d max_idle=%d max_lifetime=%s max_idle_time=%s",
+		"db_pool_configured", 25, 5, "5m", "2m")
 
 	// Run migrations
 	log.Printf("service=backend msg=%q", "running_migrations")
@@ -53,14 +110,34 @@ func main() {
 	}
 	log.Printf("service=backend msg=%q", "migrations_complete")
 
-	// Add database to auth config for user authentication
+	// Initialize email service
+	emailCfg := server.LoadEmailConfig()
+	emailSvc := server.NewEmailService(emailCfg)
+
+	// Initialize account lockout (5 attempts, 15min lockout, 10min window)
+	accountLockout := server.NewAccountLockout(5, 15*time.Minute, 10*time.Minute)
+
+	// Add database and services to auth config
 	auth.DB = dbConn
+	auth.AccountLockout = accountLockout
+	auth.EmailService = emailSvc
+
+	// Get public base URL for links (prefer SFD_PUBLIC_BASE_URL, fallback to SFD_BASE_URL)
+	baseURL := getenvDefault("SFD_PUBLIC_BASE_URL", getenvDefault("SFD_BASE_URL", "http://localhost:8080"))
+
+	// Initialize automated database backup system
+	backupCfg := server.LoadBackupConfig()
+	backupMgr := server.NewBackupManager(backupCfg, dbConn, emailSvc)
+	backupMgr.Start()
+	defer backupMgr.Stop()
 
 	srv := server.New(server.Config{
-		Addr:  addr,
-		Build: build,
-		Auth:  auth,
-		DB:    dbConn,
+		Addr:     addr,
+		Build:    build,
+		Auth:     auth,
+		DB:       dbConn,
+		EmailSvc: emailSvc,
+		BaseURL:  baseURL,
 	})
 
 	// Start the HTTP server in a background goroutine.
@@ -81,7 +158,7 @@ func main() {
 	case sig := <-sigCh:
 		// Signal received: initiate graceful shutdown.
 		log.Printf("service=backend msg=%q signal=%s", "shutting_down", sig.String())
-		// Allow 5 seconds to drain, then cancel transfers and await bounded cleanup.
+		// Allow 5 seconds to drain, then reserve time for bounded upload compensation.
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
