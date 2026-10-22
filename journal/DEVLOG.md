@@ -429,3 +429,8 @@ Current authoritative scans exposed newly published GO-2026-6809 (reachable Go x
 ## 2026-10-22 - PR32 source and deployment review corrections
 
 Codex reconciled confirmed startup/download-secret, untrusted forwarded-header, multipart proxy, missing monitoring configuration and registration-delivery defects. Disabled SMTP now fails before user mutations; failed delivery rolls back; synthetic loopback SMTP exercises real verification. Unaccepted reset email fails closed501 instead of publishing a dead UI link. Ordinary fail-before unit checks and real isolated Traefik/mailer checks retain existing security assertions. Application and workflow changes remain separate normal commits. No live service/data/credential/TLS changes or new product feature. Exact final tests and revision remain in the producer handover.
+
+
+## 2026-10-22 - Final canonical source and bounded evidence
+
+Codex completed the actual normal canonical selected port and confirmed review corrections at791f1adc0bed00722e3d24be73e6b07e2c32aa4e. Local92 checks/layout and203 real PostgreSQL events/no skips, real SMTP/verification and normal-TLS Traefik200/413 pass. Actual F19644/43 and PostgreSQL16.15 private custom restore roundtrips pass. Own-head push39696157037/PR39696161254 all-success artefacts were downloaded and read back:94+27 browser/layout,203 Go,18 config and Windows32/16/6. Source/image/blob/lineage/preservation evidence is committed as structured JSON; raw logs/credentials/dumps remain private. Earlier failures and root skips remain explicit. No protected merge/live adoption or Owner GUI claim. Secure encrypted-CA CRL signing is pending Owner hidden input only; all independent work completed, final evidence-head CI and Aether exact acceptance remain distinct.
