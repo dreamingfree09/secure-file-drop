@@ -17,6 +17,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -353,22 +354,43 @@ type BackupInfo struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// Bound calendar retention to the positive range representable as a Go duration.
+// Startup validation and the scheduler use the same configuration parsers.
+const maxBackupRetentionDays = int((1<<63 - 1) / int64(24*time.Hour))
+
+func parseBackupInterval(value string) (time.Duration, error) {
+	if value == "" {
+		return 24 * time.Hour, nil
+	}
+	interval, err := time.ParseDuration(value)
+	if err != nil || interval <= 0 {
+		return 0, errors.New("must be a positive duration (e.g., 24h, 1440m)")
+	}
+	return interval, nil
+}
+
+func parseBackupRetentionDays(value string) (int, error) {
+	if value == "" {
+		return 7, nil
+	}
+	days, err := strconv.Atoi(value)
+	if err != nil || days <= 0 || days > maxBackupRetentionDays {
+		return 0, errors.New("must be a positive whole number of days no greater than 106751")
+	}
+	return days, nil
+}
+
 // LoadBackupConfig loads backup configuration from environment variables.
 func LoadBackupConfig() BackupConfig {
 	enabled := getenvDefault("SFD_BACKUP_ENABLED", "false") == "true"
 
-	interval := 24 * time.Hour // Default: daily
-	if intervalStr := os.Getenv("SFD_BACKUP_INTERVAL"); intervalStr != "" {
-		if d, err := time.ParseDuration(intervalStr); err == nil {
-			interval = d
-		}
+	interval, err := parseBackupInterval(os.Getenv("SFD_BACKUP_INTERVAL"))
+	if err != nil {
+		interval = 24 * time.Hour // Startup validation rejects invalid configured values.
 	}
-
-	retentionDays := 7 // Default: 7 days
-	if retStr := os.Getenv("SFD_BACKUP_RETENTION_DAYS"); retStr != "" {
-		if days, err := time.ParseDuration(retStr + "d"); err == nil {
-			retentionDays = int(days.Hours() / 24)
-		}
+	retentionDays, err := parseBackupRetentionDays(os.Getenv("SFD_BACKUP_RETENTION_DAYS"))
+	if err != nil {
+		retentionDays = 7
 	}
 
 	return BackupConfig{

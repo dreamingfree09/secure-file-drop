@@ -1,0 +1,2028 @@
+{
+  "work_id": "SFD-FINAL-INTEGRATION-20261022",
+  "recorded_utc": "2026-10-22T20:09:37.071185+00:00",
+  "producer": "Codex",
+  "independent_reviewer": "Aether",
+  "received_source": "e65538c8e0452cad10a996155d64129f777bfcdf",
+  "received_tree": "6d5129d9b499e4af6acbd1eae6300013b8b4433d",
+  "implementation": {
+    "head": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "parent": "e65538c8e0452cad10a996155d64129f777bfcdf",
+    "tree": "6f031b9d8020ef0c3105e5d8a1e40980fcb22ac5",
+    "changed_paths": [
+      "internal/server/backup.go",
+      "internal/server/backup_configuration_test.go",
+      "internal/server/config_validation.go"
+    ],
+    "source_finding": "non-default retention silently fell back to seven days; zero/negative intervals passed validation and could panic the scheduler",
+    "existing_live_7_day_24h_configuration_unchanged": true,
+    "frozen_Windows_and_native_source_unchanged": true
+  },
+  "Aether_checkpoint": "https://github.com/dreamingfree09/secure-file-drop/pull/32#issuecomment-6349197109",
+  "Aether_exact_source_and_images_acceptance": "not received; checkpoint is conditional and expressly HOLD",
+  "source_manifest_and_boundaries": {
+    "work_id": "SFD-FINAL-INTEGRATION-20261022",
+    "observed_utc": "2026-10-22T19:49:23.786280+00:00",
+    "reviewed_received_PR32": "e65538c8e0452cad10a996155d64129f777bfcdf",
+    "reviewed_received_tree": "6d5129d9b499e4af6acbd1eae6300013b8b4433d",
+    "all_119_GitHub_changed_blob_identities_verified": true,
+    "all_122_manifest_received_and_selected_blobs_verified_against_GitHub_trees": true,
+    "current_corrected_implementation": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "current_corrected_tree": "6f031b9d8020ef0c3105e5d8a1e40980fcb22ac5",
+    "explicit_followup_deviations": [
+      {
+        "path": "internal/server/backup.go",
+        "baseline_selected_blob": "449c77a773817b141380e47165dec87dcb144953",
+        "corrected_blob": "5816f0337a6d7047e6528dd13c5a16cf2c932d79",
+        "reason": "confirmed backup retention/interval parsing preservation defect; regression fail-before/pass-after"
+      },
+      {
+        "path": "internal/server/config_validation.go",
+        "baseline_selected_blob": "816800cf36709fc91ccc1ec209498869d264ad36",
+        "corrected_blob": "974380e93cbf5c9181974ec1e36af05b4968110b",
+        "reason": "confirmed backup retention/interval parsing preservation defect; regression fail-before/pass-after"
+      }
+    ],
+    "new_regression_test_blob": "74dffd456cc3c6fefecda185054c3758b20f1187",
+    "full_security_boundary_inventory": [
+      {
+        "path": "internal/server/auth.go",
+        "blob": "84b9b3241bc935b80f6897ee9e1f4fb8ef556ab6",
+        "sha256": "ded8e9c71c3836d594d4c060df676ab89a46cb05afc69810af449cd955df71cd"
+      },
+      {
+        "path": "internal/server/db.go",
+        "blob": "8c45355a437e48554b16a5a906b7b431d8ef910e",
+        "sha256": "e02887d0ddb42509c086e9abd40d9b63e079a6427f8e8d4d63c5d517c4a9896b"
+      },
+      {
+        "path": "internal/server/lockout.go",
+        "blob": "5047140790803471d485bf9405cc2fdaada82a16",
+        "sha256": "14bdbb74f0ca89b8ed8c947a69226d8da2be82c90b957290ce08eeb95f9cc5eb"
+      },
+      {
+        "path": "internal/server/security.go",
+        "blob": "2ed986f516c8964091b6f16609c064edaf266221",
+        "sha256": "8cf32a848289e2e506577e66494ba20040db0b110eb406da26cda1fb4059422d"
+      },
+      {
+        "path": "internal/server/files.go",
+        "blob": "95a50c0406223a37aaece5f560a8942419be5650",
+        "sha256": "fbf0c627af8fdb94e3f7c3a025262e6477bfb089644a4abad6e11ab898d74eda"
+      },
+      {
+        "path": "internal/server/quota.go",
+        "blob": "c0851509f2ed07cd28a25f72842429dc754d6386",
+        "sha256": "e1d937641082352254b243d5532703952bb6c6187ba8750597dacc2f0dd7ed34"
+      },
+      {
+        "path": "internal/server/upload.go",
+        "blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518",
+        "sha256": "a6848464ef91239db1193a6642585a27fefce666257acf938207da9fd186f558"
+      },
+      {
+        "path": "internal/server/admin.go",
+        "blob": "f39a8f05d78cd72b4853d36f272ba4dd8af11c1a",
+        "sha256": "f7d90f1f22919a6f38689b352ccc23cb74efb49bc97115708f641a31636380d8"
+      },
+      {
+        "path": "internal/server/cleanup.go",
+        "blob": "3859beb09b7f977fd7c43c0b5582f27870de4714",
+        "sha256": "955179990a737462624c21a90299ff7224341e01a96867fb620b9640dfe6f52c"
+      },
+      {
+        "path": "internal/server/hash.go",
+        "blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee",
+        "sha256": "9ac1655bf1a15048821c512d16b9213112dd3e55f8209cd783604e7333180c00"
+      },
+      {
+        "path": "internal/server/download.go",
+        "blob": "8236c8a82e48287410cdd006d8d3cb2aa70e653a",
+        "sha256": "76ba0d53a28a9e5a73897dd6b7a1258e9b4ec528103a832f1a63b63e0f247c05"
+      },
+      {
+        "path": "internal/server/download_tokens.go",
+        "blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06",
+        "sha256": "4d05005ea2c115527045d597032a2d39e8e7305cf039b2180caa6f047c26fa5e"
+      },
+      {
+        "path": "internal/server/links.go",
+        "blob": "ca532fb7961be9c89c5d9ac5b4155b98851ded2c",
+        "sha256": "49b375b9f61d96d68e07ec7f3d93f0ce6703bb37d11f1d73857fc7ef1fd29abf"
+      },
+      {
+        "path": "internal/server/origin.go",
+        "blob": "de10f974c51405debe54548e54a47334daf28b23",
+        "sha256": "8e30d0de29720bf467031388f114c8731a4d34523741a41195ba6bf8bf0d53ca"
+      },
+      {
+        "path": "internal/server/server.go",
+        "blob": "0356647a1b2f6a39692c68a34086be619963120e",
+        "sha256": "69c6574cacae7870d609025ff7695b43267346cd4463f941a99926d37b6d2e4b"
+      },
+      {
+        "path": "cmd/backend/main.go",
+        "blob": "735986353521488a21055c43d517626ccc5f44be",
+        "sha256": "b6fa862a60de07ad76feb5d4c8d74fd40956704b0b41f924fbf02ccccbb4bcba"
+      },
+      {
+        "path": "internal/db/lineage.go",
+        "blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+        "sha256": "8f05094d8aa5c017b19af116ed3f6e270ab478a8313b8c9536c8a1e3e448e9bb"
+      },
+      {
+        "path": "internal/db/migrate.go",
+        "blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47",
+        "sha256": "accc2dcd220db3964c5d6c774d4b376a23470da53e7e0e66018f22f9baa24298"
+      },
+      {
+        "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+        "blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7",
+        "sha256": "f7f2449d1ee196db7607a8068f5124e48a4866eb71b01d39e9b3d6aa25f9bc75"
+      },
+      {
+        "path": "web/static/index.html",
+        "blob": "ee1fce02c3d9b93f5591fea5d58fe4757b733696",
+        "sha256": "dcaa3a0f21a507409259ec54e1e9f9c43a5549d29db6edcc18e04314e2e1391a"
+      },
+      {
+        "path": "desktop/windows/Client.cs",
+        "blob": "8978616de376687532b50e3f93cb54e1acd5785e",
+        "sha256": "1abb2e212fe0b0de4c811550929880a2787b9e9eadef20d8644fac0ecb8e63a0"
+      },
+      {
+        "path": "desktop/windows/WindowsIntegration.cs",
+        "blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2",
+        "sha256": "ceb2ff2404e7bed54bbe5d62029ddfe0a3c8c845e47706deb9358956a8b763b6"
+      },
+      {
+        "path": "desktop/windows/App.cs",
+        "blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062",
+        "sha256": "2c0241805fa94875cb2abc5d87b00cc5ba99c0cb42c20fa54b47b3d593701b13"
+      },
+      {
+        "path": "internal/server/backup.go",
+        "blob": "5816f0337a6d7047e6528dd13c5a16cf2c932d79",
+        "sha256": "07ec070fa00f044dffac6346c547e3c605390561f01a18a02368c6c11531bcec"
+      },
+      {
+        "path": "internal/server/config_validation.go",
+        "blob": "974380e93cbf5c9181974ec1e36af05b4968110b",
+        "sha256": "cefa1704f476558d6edae411823e1cef97fa4021840cb045a8071ba86dd0c7f5"
+      }
+    ],
+    "frozen_Windows_native_equal_c320": true,
+    "legacy_ancestry_imported": false,
+    "independent_Aether_acceptance": "not received; this is Codex producer source inspection and separate replay, not Aether acceptance"
+  },
+  "full_current_runtime_companion_deployment_inventory": [
+    {
+      "path": ".env.example",
+      "mode": "100644",
+      "blob": "8fcac1509e1305a39e4ab596ce95dd74162d596e"
+    },
+    {
+      "path": "Dockerfile.backend",
+      "mode": "100644",
+      "blob": "d805c168d87f4f8f8216c05abbacdd8410bbe3fa"
+    },
+    {
+      "path": "cmd/backend/main.go",
+      "mode": "100644",
+      "blob": "735986353521488a21055c43d517626ccc5f44be"
+    },
+    {
+      "path": "cmd/backend/main_test.go",
+      "mode": "100644",
+      "blob": "3620be4a586170691a718db29f81bb6a4c82d172"
+    },
+    {
+      "path": "cmd/migrate/main.go",
+      "mode": "100644",
+      "blob": "307cc9e0437ad831ed43fe6651769005afec9e7d"
+    },
+    {
+      "path": "desktop/windows/.gitignore",
+      "mode": "100644",
+      "blob": "d082e62e711bb57e9d30924704740fa4604fa979"
+    },
+    {
+      "path": "desktop/windows/App.cs",
+      "mode": "100644",
+      "blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062"
+    },
+    {
+      "path": "desktop/windows/Client.cs",
+      "mode": "100644",
+      "blob": "8978616de376687532b50e3f93cb54e1acd5785e"
+    },
+    {
+      "path": "desktop/windows/FrameworkTarget.cs",
+      "mode": "100644",
+      "blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2"
+    },
+    {
+      "path": "desktop/windows/SecureFileDrop.exe.config",
+      "mode": "100644",
+      "blob": "a6a246014513cecb03a7983b32668674babcfd59"
+    },
+    {
+      "path": "desktop/windows/WindowsIntegration.cs",
+      "mode": "100644",
+      "blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2"
+    },
+    {
+      "path": "desktop/windows/app.manifest",
+      "mode": "100644",
+      "blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01"
+    },
+    {
+      "path": "desktop/windows/build.ps1",
+      "mode": "100644",
+      "blob": "17da686bcb0fee69aa4dec09178956864b52c36c"
+    },
+    {
+      "path": "desktop/windows/tests/.gitignore",
+      "mode": "100644",
+      "blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c"
+    },
+    {
+      "path": "desktop/windows/tests/Client.Contract.csproj",
+      "mode": "100644",
+      "blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0"
+    },
+    {
+      "path": "desktop/windows/tests/ContractRunner.cs",
+      "mode": "100644",
+      "blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299"
+    },
+    {
+      "path": "desktop/windows/tests/LiveProbe.cs",
+      "mode": "100644",
+      "blob": "4a5e797b26d370627ac47239910f50be5b2942fd"
+    },
+    {
+      "path": "desktop/windows/tests/ProductPolicyTests.cs",
+      "mode": "100644",
+      "blob": "4436f990c197004d22119de8c542629ce4a397f7"
+    },
+    {
+      "path": "desktop/windows/tests/ProtocolTests.cs",
+      "mode": "100644",
+      "blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d"
+    },
+    {
+      "path": "desktop/windows/tests/WindowsTests.cs",
+      "mode": "100644",
+      "blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f"
+    },
+    {
+      "path": "desktop/windows/tests/live.ps1",
+      "mode": "100644",
+      "blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b"
+    },
+    {
+      "path": "desktop/windows/tests/test.ps1",
+      "mode": "100644",
+      "blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2"
+    },
+    {
+      "path": "docker-compose.yml",
+      "mode": "100644",
+      "blob": "74d46e801aeccde13c50885a6d1be0b9b096f189"
+    },
+    {
+      "path": "go.mod",
+      "mode": "100644",
+      "blob": "425e449669d52784b2861e93ed7024e05f87b0eb"
+    },
+    {
+      "path": "go.sum",
+      "mode": "100644",
+      "blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e"
+    },
+    {
+      "path": "internal/db/alter_001.sql",
+      "mode": "100644",
+      "blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6"
+    },
+    {
+      "path": "internal/db/alter_002.sql",
+      "mode": "100644",
+      "blob": "7365e59ecb9c2901160504d57dc72d9c705595d3"
+    },
+    {
+      "path": "internal/db/alter_002_resumable_uploads.sql",
+      "mode": "100644",
+      "blob": "a1ec041619560f1e60e921e67909fdf9ebf95a95"
+    },
+    {
+      "path": "internal/db/alter_010.sql",
+      "mode": "100644",
+      "blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59"
+    },
+    {
+      "path": "internal/db/alter_011.sql",
+      "mode": "100644",
+      "blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a"
+    },
+    {
+      "path": "internal/db/alter_012.sql",
+      "mode": "100644",
+      "blob": "a40e83e29ef8d752791f52aacc1f145962fdcaac"
+    },
+    {
+      "path": "internal/db/doc.go",
+      "mode": "100644",
+      "blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed"
+    },
+    {
+      "path": "internal/db/lineage.go",
+      "mode": "100644",
+      "blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07"
+    },
+    {
+      "path": "internal/db/migrate.go",
+      "mode": "100644",
+      "blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47"
+    },
+    {
+      "path": "internal/db/migrate_lineage_test.go",
+      "mode": "100644",
+      "blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec"
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.down.sql",
+      "mode": "100644",
+      "blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef"
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.up.sql",
+      "mode": "100644",
+      "blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7"
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.down.sql",
+      "mode": "100644",
+      "blob": "68c37777af020f629b91e0fe34974baae92555ab"
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.up.sql",
+      "mode": "100644",
+      "blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d"
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.down.sql",
+      "mode": "100644",
+      "blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9"
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.up.sql",
+      "mode": "100644",
+      "blob": "088c7f7240edf55a556287c12353167af355c16a"
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.down.sql",
+      "mode": "100644",
+      "blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c"
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.up.sql",
+      "mode": "100644",
+      "blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c"
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.down.sql",
+      "mode": "100644",
+      "blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7"
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.up.sql",
+      "mode": "100644",
+      "blob": "1a22e8b011c265435b76e7aeede683989a35a255"
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.down.sql",
+      "mode": "100644",
+      "blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc"
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.up.sql",
+      "mode": "100644",
+      "blob": "545938530f826d509516028117ff48d3af8c21da"
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.down.sql",
+      "mode": "100644",
+      "blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d"
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.up.sql",
+      "mode": "100644",
+      "blob": "779c5a06874568e5e3ac619df28ce0678e259ab4"
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.down.sql",
+      "mode": "100644",
+      "blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0"
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.up.sql",
+      "mode": "100644",
+      "blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363"
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.down.sql",
+      "mode": "100644",
+      "blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718"
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.up.sql",
+      "mode": "100644",
+      "blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857"
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.down.sql",
+      "mode": "100644",
+      "blob": "165f146571ed97f93eaddb55e120809baec39846"
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.up.sql",
+      "mode": "100644",
+      "blob": "b292067130128584ce644e2ca4d4f9df1552126f"
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.down.sql",
+      "mode": "100644",
+      "blob": "140c983af7d109727af2761f196289cfa9063ee7"
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.up.sql",
+      "mode": "100644",
+      "blob": "5e8d836ddc9b5a17919d52c9468abc065776450d"
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.down.sql",
+      "mode": "100644",
+      "blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83"
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+      "mode": "100644",
+      "blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7"
+    },
+    {
+      "path": "internal/db/schema.sql",
+      "mode": "100644",
+      "blob": "2ca9b0707d9406edabd927080ee1b77976e93203"
+    },
+    {
+      "path": "internal/server/admin.go",
+      "mode": "100644",
+      "blob": "f39a8f05d78cd72b4853d36f272ba4dd8af11c1a"
+    },
+    {
+      "path": "internal/server/admin_test.go",
+      "mode": "100644",
+      "blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b"
+    },
+    {
+      "path": "internal/server/assessment_test.go",
+      "mode": "100644",
+      "blob": "0d408a4d29b7aa6d2cb642d3c8ff80d035a70cb4"
+    },
+    {
+      "path": "internal/server/audit.go",
+      "mode": "100644",
+      "blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e"
+    },
+    {
+      "path": "internal/server/auth.go",
+      "mode": "100644",
+      "blob": "84b9b3241bc935b80f6897ee9e1f4fb8ef556ab6"
+    },
+    {
+      "path": "internal/server/auth_integration_test.go",
+      "mode": "100644",
+      "blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e"
+    },
+    {
+      "path": "internal/server/auth_test.go",
+      "mode": "100644",
+      "blob": "5b10c766b28f2e8f23b894443128426abfa410c2"
+    },
+    {
+      "path": "internal/server/authorization_test.go",
+      "mode": "100644",
+      "blob": "fa8d17b20882f594fcdaf5c6cb29bac33da4b4ec"
+    },
+    {
+      "path": "internal/server/backup.go",
+      "mode": "100644",
+      "blob": "5816f0337a6d7047e6528dd13c5a16cf2c932d79"
+    },
+    {
+      "path": "internal/server/backup_configuration_test.go",
+      "mode": "100644",
+      "blob": "74dffd456cc3c6fefecda185054c3758b20f1187"
+    },
+    {
+      "path": "internal/server/canonical_contract_test.go",
+      "mode": "100644",
+      "blob": "6b4fafc583305b9cf1cec157e32b55243b2b8bb3"
+    },
+    {
+      "path": "internal/server/circuitbreaker.go",
+      "mode": "100644",
+      "blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77"
+    },
+    {
+      "path": "internal/server/cleanup.go",
+      "mode": "100644",
+      "blob": "3859beb09b7f977fd7c43c0b5582f27870de4714"
+    },
+    {
+      "path": "internal/server/commit_fault_integration_test.go",
+      "mode": "100644",
+      "blob": "fb5bffd130fae96071188603188c79cd0395a05e"
+    },
+    {
+      "path": "internal/server/compression.go",
+      "mode": "100644",
+      "blob": "b8fb324647cfc359c64d9ff1522325ea2d2921ea"
+    },
+    {
+      "path": "internal/server/config_validation.go",
+      "mode": "100644",
+      "blob": "974380e93cbf5c9181974ec1e36af05b4968110b"
+    },
+    {
+      "path": "internal/server/corrections_test.go",
+      "mode": "100644",
+      "blob": "1800e07a0c49515df270d29b822a08c6645a34d7"
+    },
+    {
+      "path": "internal/server/db.go",
+      "mode": "100644",
+      "blob": "8c45355a437e48554b16a5a906b7b431d8ef910e"
+    },
+    {
+      "path": "internal/server/db_test.go",
+      "mode": "100644",
+      "blob": "5b1f1c56a3746f90b486783aa10917efa713e712"
+    },
+    {
+      "path": "internal/server/doc.go",
+      "mode": "100644",
+      "blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d"
+    },
+    {
+      "path": "internal/server/download.go",
+      "mode": "100644",
+      "blob": "8236c8a82e48287410cdd006d8d3cb2aa70e653a"
+    },
+    {
+      "path": "internal/server/download_test.go",
+      "mode": "100644",
+      "blob": "e347beb1d1556b87a13c20bf6a005db79be9a847"
+    },
+    {
+      "path": "internal/server/download_tokens.go",
+      "mode": "100644",
+      "blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06"
+    },
+    {
+      "path": "internal/server/download_tokens_test.go",
+      "mode": "100644",
+      "blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e"
+    },
+    {
+      "path": "internal/server/email.go",
+      "mode": "100644",
+      "blob": "1998a1d1ed85b3573a977d4466cc524dd027b870"
+    },
+    {
+      "path": "internal/server/endpoint_ratelimit.go",
+      "mode": "100644",
+      "blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af"
+    },
+    {
+      "path": "internal/server/files.go",
+      "mode": "100644",
+      "blob": "95a50c0406223a37aaece5f560a8942419be5650"
+    },
+    {
+      "path": "internal/server/files_test.go",
+      "mode": "100644",
+      "blob": "81fddc368fe17bd48713cb118636e2b0f643db01"
+    },
+    {
+      "path": "internal/server/hash.go",
+      "mode": "100644",
+      "blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee"
+    },
+    {
+      "path": "internal/server/health.go",
+      "mode": "100644",
+      "blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539"
+    },
+    {
+      "path": "internal/server/jsonlog.go",
+      "mode": "100644",
+      "blob": "46d9f36b186b8276ea0be68d3d0288517a35d933"
+    },
+    {
+      "path": "internal/server/lifecycle_ordering_integration_test.go",
+      "mode": "100644",
+      "blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c"
+    },
+    {
+      "path": "internal/server/lifecycle_regression_test.go",
+      "mode": "100644",
+      "blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3"
+    },
+    {
+      "path": "internal/server/links.go",
+      "mode": "100644",
+      "blob": "ca532fb7961be9c89c5d9ac5b4155b98851ded2c"
+    },
+    {
+      "path": "internal/server/links_test.go",
+      "mode": "100644",
+      "blob": "94f4680b035b4a152cdb73f580b482ac07f34af4"
+    },
+    {
+      "path": "internal/server/lockout.go",
+      "mode": "100644",
+      "blob": "5047140790803471d485bf9405cc2fdaada82a16"
+    },
+    {
+      "path": "internal/server/logging.go",
+      "mode": "100644",
+      "blob": "68ac8439c1d10b90a02607634fab69631eec1397"
+    },
+    {
+      "path": "internal/server/metrics.go",
+      "mode": "100644",
+      "blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47"
+    },
+    {
+      "path": "internal/server/minio.go",
+      "mode": "100644",
+      "blob": "401d11c21ae94899098affc8a2f6fc44f007ea69"
+    },
+    {
+      "path": "internal/server/minio_test.go",
+      "mode": "100644",
+      "blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469"
+    },
+    {
+      "path": "internal/server/notifications.go",
+      "mode": "100644",
+      "blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc"
+    },
+    {
+      "path": "internal/server/origin.go",
+      "mode": "100644",
+      "blob": "de10f974c51405debe54548e54a47334daf28b23"
+    },
+    {
+      "path": "internal/server/prometheus.go",
+      "mode": "100644",
+      "blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6"
+    },
+    {
+      "path": "internal/server/quality_integration_test.go",
+      "mode": "100644",
+      "blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c"
+    },
+    {
+      "path": "internal/server/quality_regression_test.go",
+      "mode": "100644",
+      "blob": "cd0db1b23c7ce17286e96435488bb94f255e9654"
+    },
+    {
+      "path": "internal/server/quota.go",
+      "mode": "100644",
+      "blob": "c0851509f2ed07cd28a25f72842429dc754d6386"
+    },
+    {
+      "path": "internal/server/ratelimit.go",
+      "mode": "100644",
+      "blob": "d71b19df33c4e14478b6a1d54a69b83fb365ec08"
+    },
+    {
+      "path": "internal/server/ratelimit_test.go",
+      "mode": "100644",
+      "blob": "b078578a9903d30bf3dd229411dd61b1e2a856db"
+    },
+    {
+      "path": "internal/server/register.go",
+      "mode": "100644",
+      "blob": "c4f78f370060148c83c6def52ae937ee8d73a0a8"
+    },
+    {
+      "path": "internal/server/request.go",
+      "mode": "100644",
+      "blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc"
+    },
+    {
+      "path": "internal/server/resumable.go",
+      "mode": "100644",
+      "blob": "93c2fa017956c75797492ab4a0b4ed1acf1bdbd7"
+    },
+    {
+      "path": "internal/server/review_boundaries_test.go",
+      "mode": "100644",
+      "blob": "8d3c85dab442ffd19242e099b12e100a5277f42a"
+    },
+    {
+      "path": "internal/server/rows.go",
+      "mode": "100644",
+      "blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892"
+    },
+    {
+      "path": "internal/server/security.go",
+      "mode": "100644",
+      "blob": "2ed986f516c8964091b6f16609c064edaf266221"
+    },
+    {
+      "path": "internal/server/security_regression_test.go",
+      "mode": "100644",
+      "blob": "e24ab3c7435e525325a06e48d46c8cec12071d7c"
+    },
+    {
+      "path": "internal/server/server.go",
+      "mode": "100644",
+      "blob": "0356647a1b2f6a39692c68a34086be619963120e"
+    },
+    {
+      "path": "internal/server/tracing.go",
+      "mode": "100644",
+      "blob": "f26fb7230703769d122568bc87db3f0f012d998b"
+    },
+    {
+      "path": "internal/server/upload.go",
+      "mode": "100644",
+      "blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518"
+    },
+    {
+      "path": "internal/server/upload_test.go",
+      "mode": "100644",
+      "blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4"
+    },
+    {
+      "path": "internal/server/validation.go",
+      "mode": "100644",
+      "blob": "69f9012e570bd909416a28566638a4eee12005ea"
+    },
+    {
+      "path": "internal/server/webhooks.go",
+      "mode": "100644",
+      "blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2"
+    },
+    {
+      "path": "native/Makefile",
+      "mode": "100644",
+      "blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03"
+    },
+    {
+      "path": "native/README.md",
+      "mode": "100644",
+      "blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e"
+    },
+    {
+      "path": "native/sfd_hash.c",
+      "mode": "100644",
+      "blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8"
+    },
+    {
+      "path": "native/sfd_hash.h",
+      "mode": "100644",
+      "blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39"
+    },
+    {
+      "path": "native/sfd_hash_cli.c",
+      "mode": "100644",
+      "blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6"
+    },
+    {
+      "path": "native/test_hash.py",
+      "mode": "100644",
+      "blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c"
+    },
+    {
+      "path": "web/static/index.html",
+      "mode": "100644",
+      "blob": "ee1fce02c3d9b93f5591fea5d58fe4757b733696"
+    },
+    {
+      "path": "web/static/manifest.json",
+      "mode": "100644",
+      "blob": "25e3fad0d407016678c45d77d89ba722146fd4d4"
+    },
+    {
+      "path": "web/static/sw.js",
+      "mode": "100644",
+      "blob": "8c29791884b4fa1f11cf20ab41379c686f87413a"
+    }
+  ],
+  "original_formal_CI_gate_repaired": {
+    "observed_utc": "2026-10-22T19:49:44.842727+00:00",
+    "run": 39830785139,
+    "attempt": 2,
+    "url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/39830785139/attempts/2",
+    "head": "e65538c8e0452cad10a996155d64129f777bfcdf",
+    "workflow_status": "completed",
+    "workflow_conclusion": "success",
+    "all_four_jobs_terminal_success": true,
+    "artifact": {
+      "id": 12454445835,
+      "created_at": "2026-10-22T19:44:46Z",
+      "zip_sha256": "7a4698b0246e3e3335170e822ea8445f6552026750a8e17c3cab6913ee86fd84",
+      "exact_attempt2_creation_verified": true
+    },
+    "layouts": [
+      {
+        "layout": "bigint",
+        "checks": 94,
+        "browser": 27,
+        "go_security": {
+          "passed_test_events": 203,
+          "skipped_test_events": 0,
+          "failed_test_events": 0,
+          "real_lineage_subtests": 14,
+          "real_lifecycle_ordering_cases": 5,
+          "real_commit_fault_modes": 4
+        },
+        "cleanup": true,
+        "preservation": true,
+        "proxy": {
+          "image": "sha256:ec0c09f2aea697114e10ed73f0add5c646a7595e883ab0a7508966de98430d42",
+          "exact_limit_file_bytes": 1024,
+          "request_envelope_bytes": 1049600,
+          "exact_limit_http": 200,
+          "over_envelope_http": 413,
+          "normal_certificate_validation": true,
+          "docker_socket_mounted": false
+        }
+      },
+      {
+        "layout": "bytea",
+        "checks": 94,
+        "browser": 27,
+        "go_security": {
+          "passed_test_events": 203,
+          "skipped_test_events": 0,
+          "failed_test_events": 0,
+          "real_lineage_subtests": 14,
+          "real_lifecycle_ordering_cases": 5,
+          "real_commit_fault_modes": 4
+        },
+        "cleanup": true,
+        "preservation": true,
+        "proxy": {
+          "image": "sha256:ec0c09f2aea697114e10ed73f0add5c646a7595e883ab0a7508966de98430d42",
+          "exact_limit_file_bytes": 1024,
+          "request_envelope_bytes": 1049600,
+          "exact_limit_http": 200,
+          "over_envelope_http": 413,
+          "normal_certificate_validation": true,
+          "docker_socket_mounted": false
+        }
+      }
+    ],
+    "configuration": 18,
+    "Windows": {
+      "checks": 32,
+      "protocol": 16,
+      "policy": 6,
+      "job": 120040906092
+    },
+    "tested_PR_revision": "97fb5b403e221155341e468269c2ab5416cb2924",
+    "ordered_parents_and_tree_verified": true,
+    "actual_master_integration_tested": false,
+    "source_or_workflow_changed_to_fix_CI": false,
+    "original_attempt_cancelled": false,
+    "original_cancel_HTTP409": "reported run already completed despite GET in_progress",
+    "formal_CI_gate_at_e655": "PASS; not independent acceptance of backup correction6be"
+  },
+  "corrected_implementation_CI": {
+    "observed_utc": "2026-10-22T20:05:49.277118+00:00",
+    "run": 39843826965,
+    "attempt": 1,
+    "url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/39843826965",
+    "head": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "event": "push",
+    "workflow_status": "completed",
+    "workflow_conclusion": "success",
+    "all_four_jobs_terminal_success": true,
+    "tested_revision": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "tested_tree": "6f031b9d8020ef0c3105e5d8a1e40980fcb22ac5",
+    "PR_ordered_parent_verification": false,
+    "actual_master_tested": false,
+    "artifact_id": 12455215941,
+    "artifact_created_at": "2026-10-22T20:00:35Z",
+    "zip_sha256": "5805991e806d6fd84af6fd2e36cc3c92763b561b0d90b7e54944b873646336a4",
+    "layouts": [
+      {
+        "layout": "bigint",
+        "checks": 94,
+        "browser": 27,
+        "go": {
+          "passed_test_events": 224,
+          "skipped_test_events": 0,
+          "failed_test_events": 0,
+          "real_lineage_subtests": 14,
+          "real_lifecycle_ordering_cases": 5,
+          "real_commit_fault_modes": 4
+        },
+        "rollback": {
+          "image": "sfd-auth-recovery",
+          "image_id": "sha256:ef435661c0413f96e9122c1f4c0eb1e4b2fcc23406b80919a7836d4c257ff672",
+          "ready": true,
+          "schema_version": "12",
+          "lockout_statuses": [
+            401,
+            401,
+            401,
+            401,
+            401,
+            429
+          ],
+          "account_lockout_enforced": true
+        },
+        "proxy": {
+          "image": "sha256:ec0c09f2aea697114e10ed73f0add5c646a7595e883ab0a7508966de98430d42",
+          "exact_limit_file_bytes": 1024,
+          "request_envelope_bytes": 1049600,
+          "exact_limit_http": 200,
+          "over_envelope_http": 413,
+          "normal_certificate_validation": true,
+          "docker_socket_mounted": false
+        },
+        "shutdown": {
+          "exit_code": 0,
+          "elapsed_seconds": 5.179,
+          "row_lock_observed": true,
+          "status": "failed",
+          "actual_object_absent": true,
+          "configured_docker_stop_timeout_seconds": 25,
+          "docker_kill_budget_seconds": 25,
+          "application_budget_seconds": 20
+        },
+        "deletion": {
+          "admin_status": 204,
+          "admin_object_removed": true,
+          "storage_failure_status": 502,
+          "row_hash_unchanged": true,
+          "object_retained": true
+        },
+        "cleanup": true,
+        "preservation": true
+      },
+      {
+        "layout": "bytea",
+        "checks": 94,
+        "browser": 27,
+        "go": {
+          "passed_test_events": 224,
+          "skipped_test_events": 0,
+          "failed_test_events": 0,
+          "real_lineage_subtests": 14,
+          "real_lifecycle_ordering_cases": 5,
+          "real_commit_fault_modes": 4
+        },
+        "rollback": {
+          "image": "sfd-auth-recovery",
+          "image_id": "sha256:ef435661c0413f96e9122c1f4c0eb1e4b2fcc23406b80919a7836d4c257ff672",
+          "ready": true,
+          "schema_version": "12",
+          "lockout_statuses": [
+            401,
+            401,
+            401,
+            401,
+            401,
+            429
+          ],
+          "account_lockout_enforced": true
+        },
+        "proxy": {
+          "image": "sha256:ec0c09f2aea697114e10ed73f0add5c646a7595e883ab0a7508966de98430d42",
+          "exact_limit_file_bytes": 1024,
+          "request_envelope_bytes": 1049600,
+          "exact_limit_http": 200,
+          "over_envelope_http": 413,
+          "normal_certificate_validation": true,
+          "docker_socket_mounted": false
+        },
+        "shutdown": {
+          "exit_code": 0,
+          "elapsed_seconds": 5.183,
+          "row_lock_observed": true,
+          "status": "failed",
+          "actual_object_absent": true,
+          "configured_docker_stop_timeout_seconds": 25,
+          "docker_kill_budget_seconds": 25,
+          "application_budget_seconds": 20
+        },
+        "deletion": {
+          "admin_status": 204,
+          "admin_object_removed": true,
+          "storage_failure_status": 502,
+          "row_hash_unchanged": true,
+          "object_retained": true
+        },
+        "cleanup": true,
+        "preservation": true
+      }
+    ],
+    "configuration": 18,
+    "Windows": {
+      "checks": 32,
+      "protocol": 16,
+      "policy": 6,
+      "job": 120051700030
+    }
+  },
+  "source_regressions_fail_before": {
+    "base": "e65538c8e0452cad10a996155d64129f777bfcdf",
+    "exit": 1,
+    "failed_tests": [
+      "--- FAIL: TestBackupConfiguredRetentionPreservesWindow (0.00s)",
+      "--- FAIL: TestBackupIntervalConfigurationBoundary (0.00s)",
+      "--- FAIL: TestBackupIntervalConfigurationBoundary/1h30m (0.00s)",
+      "--- FAIL: TestBackupIntervalConfigurationBoundary/0h (0.00s)",
+      "--- FAIL: TestBackupIntervalConfigurationBoundary/-1h (0.00s)",
+      "--- FAIL: TestBackupIntervalConfigurationBoundary/24 (0.00s)",
+      "--- FAIL: TestBackupRetentionConfigurationBoundary (0.00s)",
+      "--- FAIL: TestBackupRetentionConfigurationBoundary/1 (0.00s)",
+      "--- FAIL: TestBackupRetentionConfigurationBoundary/30 (0.00s)",
+      "--- FAIL: TestBackupRetentionConfigurationBoundary/106751 (0.00s)",
+      "--- FAIL: TestBackupRetentionConfigurationBoundary/106752 (0.00s)"
+    ],
+    "scope": "only owned temporary backup files and synthetic configuration; no live service/data operations"
+  },
+  "source_regressions_pass_after": {
+    "base": "e65538c8e0452cad10a996155d64129f777bfcdf",
+    "exit": 0,
+    "passed_events": 21,
+    "new_production_paths": [
+      "internal/server/backup.go",
+      "internal/server/config_validation.go"
+    ],
+    "new_test": "internal/server/backup_configuration_test.go",
+    "live_seven_day_retention_and_24h_interval_unchanged": true,
+    "live_configuration_or_service_modified": false
+  },
+  "root_correction_checks": [
+    {
+      "check": "unit",
+      "exit": 0,
+      "observed_utc": "2026-10-22T19:45:32.941624+00:00",
+      "passed_test_events": 175,
+      "skipped_test_events": 12,
+      "failed_test_events": 0
+    },
+    {
+      "check": "race",
+      "exit": 0,
+      "observed_utc": "2026-10-22T19:45:46.803341+00:00",
+      "passed_test_events": 175,
+      "skipped_test_events": 8,
+      "failed_test_events": 0
+    },
+    {
+      "check": "vet",
+      "exit": 0,
+      "observed_utc": "2026-10-22T19:45:48.840531+00:00"
+    },
+    {
+      "check": "build",
+      "exit": 0,
+      "observed_utc": "2026-10-22T19:45:51.265569+00:00"
+    },
+    {
+      "check": "lint",
+      "exit": 0,
+      "observed_utc": "2026-10-22T19:46:04.101299+00:00"
+    },
+    {
+      "check": "advisories",
+      "exit": 0,
+      "observed_utc": "2026-10-22T19:46:08.139247+00:00"
+    },
+    {
+      "check": "environment-validator",
+      "exit": 0,
+      "observed_utc": "2026-10-22T19:46:08.261486+00:00"
+    }
+  ],
+  "strict_lint_enforcement": {
+    "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "actual_seven_scenarios_observed_PASS": true,
+    "scenario_count": 7,
+    "findings_on_clean_snapshot": 0,
+    "probe_sources_executed": false,
+    "owned_snapshot_removed": true,
+    "config_sha256": "d983dd8f54024e41247d2e92fb51c35af7b07fa0dc97ac655a8f88dde9a6df0a",
+    "baseline_filtering": false,
+    "new_suppressions_or_build_exclusions": 0
+  },
+  "original_image_binary_identity": {
+    "source": "4d1eaf1b46188a52115896db36246d9e5895363b",
+    "roles": {
+      "candidate": {
+        "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+        "source": "4d1eaf1b46188a52115896db36246d9e5895363b",
+        "binaries": {
+          "backend": "9a4c53a11e79fee795559bfa80f99ef65b19de5cb8d60dad5d876164f485c830",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      },
+      "recovery": {
+        "image": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "source": "4d1eaf1b46188a52115896db36246d9e5895363b",
+        "binaries": {
+          "backend": "9a4c53a11e79fee795559bfa80f99ef65b19de5cb8d60dad5d876164f485c830",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      }
+    },
+    "equal_application_binaries": true,
+    "recovery_scope": "artifact-only; shared application defects require backend-only fail-closed stop and independently reviewed forward fix",
+    "no_schema_downgrade": true,
+    "never_started_network_none_evidence_containers_removed": true
+  },
+  "corrected_images": {
+    "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "images": {
+      "candidate": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+      "recovery": "sha256:9d2d5ab836bf765c9b3b09458246dc2d566cf70fa92f33dc449dfe0290a0e10c"
+    },
+    "recovery_scope": "artifact-only; shared software defects require preserved-data backend-only fail-closed stop and reviewed forward correction",
+    "observed_utc": "2026-10-22T19:48:52.851967+00:00"
+  },
+  "corrected_binary_identity": {
+    "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "roles": {
+      "candidate": {
+        "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+        "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+        "binaries": {
+          "backend": "f5444b392a327a6626f0fbf0ce53cde3af018c585fc6cfa5f62cbc59bd284210",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      },
+      "recovery": {
+        "image": "sha256:9d2d5ab836bf765c9b3b09458246dc2d566cf70fa92f33dc449dfe0290a0e10c",
+        "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+        "binaries": {
+          "backend": "f5444b392a327a6626f0fbf0ce53cde3af018c585fc6cfa5f62cbc59bd284210",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      }
+    },
+    "equal_application_binaries": true,
+    "recovery_scope": "artifact-only; shared application defects require backend-only fail-closed stop and independently reviewed forward fix",
+    "no_schema_downgrade": true,
+    "never_started_network_none_evidence_containers_removed": true
+  },
+  "corrected_pair_filesystem": {
+    "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "candidate": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+    "recovery": "sha256:9d2d5ab836bf765c9b3b09458246dc2d566cf70fa92f33dc449dfe0290a0e10c",
+    "identical_rootfs_layers": true,
+    "layer_count": 7,
+    "configuration_difference": "artifact recovery label only"
+  },
+  "corrected_runtime_advisories": {
+    "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+    "alpine_release": "3.24.3",
+    "package_count": 25,
+    "packages": [
+      {
+        "name": "alpine-baselayout",
+        "version": "3.7.2-r1",
+        "origin": "alpine-baselayout"
+      },
+      {
+        "name": "alpine-baselayout-data",
+        "version": "3.7.2-r1",
+        "origin": "alpine-baselayout"
+      },
+      {
+        "name": "alpine-keys",
+        "version": "2.6-r0",
+        "origin": "alpine-keys"
+      },
+      {
+        "name": "alpine-release",
+        "version": "3.24.3-r0",
+        "origin": "alpine-base"
+      },
+      {
+        "name": "apk-tools",
+        "version": "3.0.8-r0",
+        "origin": "apk-tools"
+      },
+      {
+        "name": "busybox",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "ca-certificates",
+        "version": "20261020-r0",
+        "origin": "ca-certificates"
+      },
+      {
+        "name": "ca-certificates-bundle",
+        "version": "20261020-r0",
+        "origin": "ca-certificates"
+      },
+      {
+        "name": "libapk",
+        "version": "3.0.8-r0",
+        "origin": "apk-tools"
+      },
+      {
+        "name": "libcrypto3",
+        "version": "3.5.9-r0",
+        "origin": "openssl"
+      },
+      {
+        "name": "libncursesw",
+        "version": "6.6_p20260516-r0",
+        "origin": "ncurses"
+      },
+      {
+        "name": "libpq",
+        "version": "18.6-r0",
+        "origin": "postgresql18"
+      },
+      {
+        "name": "libssl3",
+        "version": "3.5.9-r0",
+        "origin": "openssl"
+      },
+      {
+        "name": "lz4-libs",
+        "version": "1.10.0-r1",
+        "origin": "lz4"
+      },
+      {
+        "name": "musl",
+        "version": "1.2.6-r3",
+        "origin": "musl"
+      },
+      {
+        "name": "musl-utils",
+        "version": "1.2.6-r3",
+        "origin": "musl"
+      },
+      {
+        "name": "ncurses-terminfo-base",
+        "version": "6.6_p20260516-r0",
+        "origin": "ncurses"
+      },
+      {
+        "name": "postgresql-common",
+        "version": "1.3-r0",
+        "origin": "postgresql-common"
+      },
+      {
+        "name": "postgresql16-client",
+        "version": "16.15-r0",
+        "origin": "postgresql16"
+      },
+      {
+        "name": "readline",
+        "version": "8.3.3-r1",
+        "origin": "readline"
+      },
+      {
+        "name": "scanelf",
+        "version": "1.3.9-r1",
+        "origin": "pax-utils"
+      },
+      {
+        "name": "ssl_client",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "zlib",
+        "version": "1.3.2-r1",
+        "origin": "zlib"
+      },
+      {
+        "name": "zstd-libs",
+        "version": "1.5.7-r2",
+        "origin": "zstd"
+      }
+    ],
+    "advisory_databases": [
+      {
+        "url": "https://secdb.alpinelinux.org/v3.24/main.json",
+        "sha256": "42fcf5439b4a7aeadc1895f5068ac57d7c0c62aa81319baf990b1a5f38271ba1"
+      },
+      {
+        "url": "https://secdb.alpinelinux.org/v3.24/community.json",
+        "sha256": "e5824d8376f69a0d3bbcc73b375a509d70a96179c62b7fcf39973894a034b550"
+      }
+    ],
+    "version_matches": [],
+    "reachability": "version applicability only; not exploit reachability",
+    "binary_govuln": {
+      "exit": 0,
+      "advisory_ids": {
+        "GO-2026-5932": {
+          "level": 1,
+          "module": "golang.org/x/crypto",
+          "version": "v0.57.0",
+          "package": null,
+          "symbol": null,
+          "fixed_version": null
+        }
+      },
+      "counts": {
+        "1": 1,
+        "2": 0,
+        "3": 0
+      }
+    },
+    "owned_scanner_cleanup": true
+  },
+  "dual_layout_security_replays": [
+    {
+      "role": "original_proposed_pair",
+      "layout": "bytea",
+      "source": "e65538c8e0452cad10a996155d64129f777bfcdf",
+      "checks": 92,
+      "go": {
+        "passed_test_events": 203,
+        "skipped_test_events": 0,
+        "failed_test_events": 0,
+        "real_lineage_subtests": 14,
+        "real_lifecycle_ordering_cases": 5,
+        "real_commit_fault_modes": 4
+      },
+      "rollback": {
+        "image": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "image_id": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      },
+      "deletion": {
+        "admin_status": 204,
+        "admin_object_removed": true,
+        "storage_failure_status": 502,
+        "row_hash_unchanged": true,
+        "object_retained": true
+      },
+      "shutdown": {
+        "exit_code": 0,
+        "elapsed_seconds": 5.506,
+        "row_lock_observed": true,
+        "status": "failed",
+        "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
+        "docker_kill_budget_seconds": 25,
+        "application_budget_seconds": 20
+      },
+      "proxy": {
+        "image": "sha256:bb58a3046a925d974492f2a8d12af98b44a7ed039a46d3ade1ecf470a1af96c3",
+        "exact_limit_file_bytes": 1024,
+        "request_envelope_bytes": 1049600,
+        "exact_limit_http": 200,
+        "over_envelope_http": 413,
+        "normal_certificate_validation": true,
+        "docker_socket_mounted": false
+      },
+      "cleanup": true,
+      "preservation": true
+    },
+    {
+      "role": "original_proposed_pair",
+      "layout": "bigint",
+      "source": "e65538c8e0452cad10a996155d64129f777bfcdf",
+      "checks": 92,
+      "go": {
+        "passed_test_events": 203,
+        "skipped_test_events": 0,
+        "failed_test_events": 0,
+        "real_lineage_subtests": 14,
+        "real_lifecycle_ordering_cases": 5,
+        "real_commit_fault_modes": 4
+      },
+      "rollback": {
+        "image": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "image_id": "sha256:3a6bcb0567411ef1f12c127ddb7c05160a16b4de64eba7670b70c48189f778cb",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      },
+      "deletion": {
+        "admin_status": 204,
+        "admin_object_removed": true,
+        "storage_failure_status": 502,
+        "row_hash_unchanged": true,
+        "object_retained": true
+      },
+      "shutdown": {
+        "exit_code": 0,
+        "elapsed_seconds": 5.488,
+        "row_lock_observed": true,
+        "status": "failed",
+        "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
+        "docker_kill_budget_seconds": 25,
+        "application_budget_seconds": 20
+      },
+      "proxy": {
+        "image": "sha256:bb58a3046a925d974492f2a8d12af98b44a7ed039a46d3ade1ecf470a1af96c3",
+        "exact_limit_file_bytes": 1024,
+        "request_envelope_bytes": 1049600,
+        "exact_limit_http": 200,
+        "over_envelope_http": 413,
+        "normal_certificate_validation": true,
+        "docker_socket_mounted": false
+      },
+      "cleanup": true,
+      "preservation": true
+    },
+    {
+      "role": "corrected_pair",
+      "layout": "bytea",
+      "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+      "checks": 92,
+      "go": {
+        "passed_test_events": 224,
+        "skipped_test_events": 0,
+        "failed_test_events": 0,
+        "real_lineage_subtests": 14,
+        "real_lifecycle_ordering_cases": 5,
+        "real_commit_fault_modes": 4
+      },
+      "rollback": {
+        "image": "sha256:9d2d5ab836bf765c9b3b09458246dc2d566cf70fa92f33dc449dfe0290a0e10c",
+        "image_id": "sha256:9d2d5ab836bf765c9b3b09458246dc2d566cf70fa92f33dc449dfe0290a0e10c",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      },
+      "deletion": {
+        "admin_status": 204,
+        "admin_object_removed": true,
+        "storage_failure_status": 502,
+        "row_hash_unchanged": true,
+        "object_retained": true
+      },
+      "shutdown": {
+        "exit_code": 0,
+        "elapsed_seconds": 5.719,
+        "row_lock_observed": true,
+        "status": "failed",
+        "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
+        "docker_kill_budget_seconds": 25,
+        "application_budget_seconds": 20
+      },
+      "proxy": {
+        "image": "sha256:bb58a3046a925d974492f2a8d12af98b44a7ed039a46d3ade1ecf470a1af96c3",
+        "exact_limit_file_bytes": 1024,
+        "request_envelope_bytes": 1049600,
+        "exact_limit_http": 200,
+        "over_envelope_http": 413,
+        "normal_certificate_validation": true,
+        "docker_socket_mounted": false
+      },
+      "cleanup": true,
+      "preservation": true
+    },
+    {
+      "role": "corrected_pair",
+      "layout": "bigint",
+      "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+      "checks": 92,
+      "go": {
+        "passed_test_events": 224,
+        "skipped_test_events": 0,
+        "failed_test_events": 0,
+        "real_lineage_subtests": 14,
+        "real_lifecycle_ordering_cases": 5,
+        "real_commit_fault_modes": 4
+      },
+      "rollback": {
+        "image": "sha256:9d2d5ab836bf765c9b3b09458246dc2d566cf70fa92f33dc449dfe0290a0e10c",
+        "image_id": "sha256:9d2d5ab836bf765c9b3b09458246dc2d566cf70fa92f33dc449dfe0290a0e10c",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      },
+      "deletion": {
+        "admin_status": 204,
+        "admin_object_removed": true,
+        "storage_failure_status": 502,
+        "row_hash_unchanged": true,
+        "object_retained": true
+      },
+      "shutdown": {
+        "exit_code": 0,
+        "elapsed_seconds": 5.458,
+        "row_lock_observed": true,
+        "status": "failed",
+        "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
+        "docker_kill_budget_seconds": 25,
+        "application_budget_seconds": 20
+      },
+      "proxy": {
+        "image": "sha256:bb58a3046a925d974492f2a8d12af98b44a7ed039a46d3ade1ecf470a1af96c3",
+        "exact_limit_file_bytes": 1024,
+        "request_envelope_bytes": 1049600,
+        "exact_limit_http": 200,
+        "over_envelope_http": 413,
+        "normal_certificate_validation": true,
+        "docker_socket_mounted": false
+      },
+      "cleanup": true,
+      "preservation": true
+    }
+  ],
+  "original_actual_F196_replay": [
+    {
+      "role": "release-bytea",
+      "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+      "layout": "bytea",
+      "backend_fixture_exit": 0,
+      "backend_checks": 92,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 44"
+      ]
+    },
+    {
+      "role": "release-bigint",
+      "image": "sha256:842f6a1daeec56a564a09c5ac74db179abab6ed6da4a0da2bbf5c9dcbb4f0d4c",
+      "layout": "bigint",
+      "backend_fixture_exit": 0,
+      "backend_checks": 92,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 43"
+      ]
+    }
+  ],
+  "corrected_actual_F196_replay": [
+    {
+      "role": "release-bytea",
+      "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+      "layout": "bytea",
+      "backend_fixture_exit": 0,
+      "backend_checks": 92,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 44"
+      ]
+    },
+    {
+      "role": "release-bigint",
+      "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+      "layout": "bigint",
+      "backend_fixture_exit": 0,
+      "backend_checks": 92,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 43"
+      ]
+    }
+  ],
+  "corrected_private_custom_restores": [
+    {
+      "layout": "bytea",
+      "source_revision": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+      "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+      "image_resident_pg_dump_version": "pg_dump (PostgreSQL) 16.15",
+      "custom_dump_restore": true,
+      "schema": 12,
+      "exact_user_file_session_audit_rows_equal": true,
+      "source_unchanged": true,
+      "archive_sha256": "5ba43cd1dfcb518e6e1df37e01009aedbd019dbd4ea419d7559aa2aa2f8bcdcf",
+      "archive": "local-only synthetic private records"
+    },
+    {
+      "layout": "bigint",
+      "source_revision": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+      "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+      "image_resident_pg_dump_version": "pg_dump (PostgreSQL) 16.15",
+      "custom_dump_restore": true,
+      "schema": 12,
+      "exact_user_file_session_audit_rows_equal": true,
+      "source_unchanged": true,
+      "archive_sha256": "b653646cda545f00c2972f3704dd64003e82f048fe486e16f4a26d3e38eed74e",
+      "archive": "local-only synthetic private records"
+    }
+  ],
+  "untrusted_endpoint_rejection": {
+    "received_HTTP_requests": 0,
+    "closed": true
+  },
+  "read_only_live_preflight": {
+    "observed_utc": "2026-10-22T19:36:59.162947+00:00",
+    "schema_records_ownership_and_traffic": [
+      {
+        "version": 11,
+        "dirty": false
+      },
+      {
+        "users": 2,
+        "files": 15,
+        "negative_sizes": 0,
+        "ownerless": 7,
+        "orphan_owner": 0,
+        "unsupported_status": 0,
+        "resumable_rows": 0
+      },
+      {
+        "failed": 1,
+        "hashed": 11,
+        "stored": 2,
+        "pending": 1
+      },
+      {
+        "sha_type": "bytea",
+        "owner_type": "uuid",
+        "admin_type": "boolean"
+      },
+      {
+        "active_other_connections": 0,
+        "idle_in_transaction": 0,
+        "waiting_locks": 0
+      }
+    ],
+    "digest_compatibility": [
+      {
+        "digest_byte_length_not_32": 0,
+        "hex_bad_shape": 0,
+        "digest_hex_mismatch": 0,
+        "finalized_missing_hash": 0
+      }
+    ],
+    "storage_policy_read_only": {
+      "bucket_exists": true,
+      "object_listing_or_mutation_attempted": false,
+      "policy_accepted_by_exact_reviewed_guard": true,
+      "policy_read_authorized": true,
+      "policy_write_attempted": false,
+      "read_only": true,
+      "storage_TLS_in_existing_config": false,
+      "exit": 0
+    },
+    "exact_reviewed_storage_guard_source_sha256": "6ed70e73ec69c13624f299f059303fb00826b023b25231323153f775e4ca91c9",
+    "existing_environment_equals_owner_validated_bytes": true,
+    "credentials_changed": false,
+    "existing_backend_stop_timeout": 1,
+    "required_successor_stop_timeout_seconds": 25,
+    "backup_configuration": {
+      "SFD_BACKUP_ENABLED": "true",
+      "SFD_BACKUP_RETENTION_DAYS": "7",
+      "SFD_BACKUP_INTERVAL": "24h",
+      "SFD_CLEANUP_ENABLED": "unset"
+    },
+    "existing_backup_metadata": [
+      {
+        "bytes": 3996,
+        "mtime": 1792617164
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792524873
+      },
+      {
+        "bytes": 3998,
+        "mtime": 1792340507
+      },
+      {
+        "bytes": 3995,
+        "mtime": 1792432701
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792323778
+      },
+      {
+        "bytes": 3993,
+        "mtime": 1792232669
+      }
+    ],
+    "storage_probe_removed": true,
+    "live_application_or_records_or_policy_mutated": false,
+    "preflight_only_no_adoption": true
+  },
+  "preservation": {
+    "observed_utc": "2026-10-22T20:03:52.823801+00:00",
+    "six_live_ids_images_starts_mounts_unchanged": true,
+    "backend_image": "sha256:7b53527539596c711a4b2e4a68d26d8e4c7a025228327e43b461b8f9b079b532",
+    "live_schema_metadata": [
+      {
+        "version": 11,
+        "dirty": false
+      },
+      [
+        {
+          "data_type": "text",
+          "table_name": "files",
+          "column_name": "created_by"
+        },
+        {
+          "data_type": "bytea",
+          "table_name": "files",
+          "column_name": "sha256_bytes"
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "files",
+          "column_name": "user_id"
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "users",
+          "column_name": "email_verified"
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "users",
+          "column_name": "is_admin"
+        }
+      ],
+      {
+        "users": 2,
+        "files": 15
+      }
+    ],
+    "environment_equals_owner_validated_candidate": true,
+    "protected_checkouts_preserved": true,
+    "original_change_entries": 5,
+    "retained_failure_counts": {
+      "container": 57,
+      "network": 5,
+      "volume": 37,
+      "image": 10
+    },
+    "retained_failure_inventory_exact_match": true,
+    "all_retained_failure_containers_stopped": true,
+    "backup_configuration": {
+      "SFD_BACKUP_ENABLED": "true",
+      "SFD_BACKUP_RETENTION_DAYS": "7",
+      "SFD_BACKUP_INTERVAL": "24h",
+      "SFD_CLEANUP_ENABLED": "unset"
+    },
+    "backup_file_metadata": [
+      {
+        "bytes": 3996,
+        "mtime": 1792617164
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792524873
+      },
+      {
+        "bytes": 3998,
+        "mtime": 1792340507
+      },
+      {
+        "bytes": 3995,
+        "mtime": 1792432701
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792323778
+      },
+      {
+        "bytes": 3993,
+        "mtime": 1792232669
+      }
+    ],
+    "adoption_performed": false,
+    "live_record_mutations": false,
+    "existing_Owner_processes_stopped": false,
+    "only_verified_new_fixture_processes_exited_and_resources_cleaned": true
+  },
+  "verified_backend_only_dry_run": {
+    "observed_utc": "2026-10-22T19:59:40.664435+00:00",
+    "provisional_image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+    "image_source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "overlay_path": "/home/dreamingfree09/.local/share/secure-file-drop/admin-session/sfd-integration-preflight-20261022-9ce73f62/reviewed-backend-only.compose.yml",
+    "overlay_sha256": "1536e01ce837f41634e085eb78de514823a769b90496c31a64f5645bccea1220",
+    "existing_compose_file_count": 2,
+    "baseline_build_only_without_explicit_image": true,
+    "actual_current_container_image_verified": true,
+    "Compose_dollar_serialization_normalized_only_for_in_memory_comparison": true,
+    "three_synthetic_roundtrip_cases_pass": true,
+    "traffic_quiescence": "not inferred from socket count; require fresh activity checks before actual stop",
+    "only_backend_image_and_25s_grace_change": true,
+    "other_five_service_configurations_unchanged": true,
+    "current_compose_image_resolves_to_running_image": true,
+    "current_rendered_environment_equals_actual_container": true,
+    "successor_rendered_environment_equals_actual_container": true,
+    "missing_or_changed_environment_key_count": 0,
+    "sensitive_values_printed_or_persisted": false,
+    "established_inbound_8080_sockets": 1,
+    "old_backend_stop_timeout_seconds": 1,
+    "stop_command_explicitly_overrides_old_budget_to_25s": true,
+    "two_hour_retention_window_backup_removal_candidates": 0,
+    "all_previous_backup_files_must_be_retained": true,
+    "commands_prepared_but_not_executed": true,
+    "implementation_preflight_compatible": true,
+    "independent_acceptance": "pending; overlay is not permission to apply",
+    "must_refresh_before_actual_stop": [
+      "accepted exact source/images/formal CI",
+      "actual integrated master tests",
+      "same six ids/images/mounts/networks/credentials/schema/owners/private policy",
+      "full-window backups and no transfer/SQL activity",
+      "strict TLS/current CRL",
+      "verified private fresh backup and fail-closed forward recovery"
+    ]
+  },
+  "Compose_literal_serialization_proof": {
+    "observed_utc": "2026-10-22T19:59:06.540230+00:00",
+    "synthetic_cases": 3,
+    "actual_Compose_runtime_values_equal_original_literals": true,
+    "JSON_config_serialization_escapes_dollar_characters": true,
+    "one_unescape_roundtrip_exact_for_all_cases": true,
+    "real_credentials_used": false,
+    "application_entrypoint_started": false,
+    "network_mode": "none",
+    "owned_fixture_cleaned": true,
+    "live_stack_or_settings_modified": false
+  },
+  "Windows_package_and_transition": {
+    "observed_utc": "2026-10-22T20:06:36.717042+00:00",
+    "executable_windows_path": "C:\\Users\\kosta\\SecureFileDrop-Tray-Fix-20261018-c74e5a92\\preview\\SecureFileDrop.exe",
+    "source_revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+    "verified_package_checksums": [
+      {
+        "file": "SecureFileDrop.exe",
+        "sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+        "matches_published_package_checksum": true
+      },
+      {
+        "file": "SecureFileDrop.exe.config",
+        "sha256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b",
+        "matches_published_package_checksum": true
+      }
+    ],
+    "seven_distributed_files_preserved": true,
+    "configuration_difference_from_Git_source": "CRLF versus LF only; XML and normalized text equal",
+    "Framework_release_on_current_host": 534296,
+    "Owner_Main_launched": false,
+    "Owner_historical_process_preserved": true,
+    "user_settings_read_or_overwritten": false,
+    "Explorer_registration_or_OS_clipboard_or_native_picker_operations": false,
+    "safe_transition_after_accepted_adoption": [
+      "Owner exits historical tray through its Exit menu; no process is terminated automatically",
+      "Confirm no SecureFileDrop.exe instance remains, then launch the verified F196 path; single-instance IPC otherwise forwards to old executable",
+      "Sign in through the local hidden-password UI; use a database-backed registered account for Quick Send, while the environment admin remains management-only",
+      "Perform actual tray/menu, native picker, opt-in Explorer, OS clipboard, Quick Send/progress/cancel/exit acceptance; do not count the automated probe as Owner acceptance"
+    ]
+  },
+  "current_strict_Windows_TLS": {
+    "observed_utc": "2026-10-22T20:01:38.4016474Z",
+    "schannel": [
+      {
+        "http": 200,
+        "route": "health"
+      },
+      {
+        "http": 200,
+        "route": "ready"
+      }
+    ],
+    "dotnet": [
+      {
+        "http": 200,
+        "revocation_enabled": true,
+        "route": "health"
+      },
+      {
+        "http": 200,
+        "revocation_enabled": true,
+        "route": "ready"
+      }
+    ],
+    "framework_release": 534296,
+    "corrected_executable_path": "C:\\Users\\kosta\\SecureFileDrop-Tray-Fix-20261018-c74e5a92\\preview\\SecureFileDrop.exe",
+    "corrected_executable_sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+    "windows_fetched_crl_der_sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+    "trusted_root_der_sha256": "0f45e72366dc8ff6e3bed9323ef697bb44b21204d7e05ea303da319b5160bc28",
+    "running_owner_executables": [
+      {
+        "id": 122160,
+        "path": "C:\\Users\\kosta\\OneDrive\\Desktop\\windows-companion-preview-and-checks\\SecureFileDrop.exe",
+        "sha256": "97fc2dafbc469627f9ee90896903162c8804c01a167402f414d150857a0ed394"
+      }
+    ],
+    "owned_release_probe_processes": 0,
+    "trust_security_settings_or_owner_processes_changed": false
+  },
+  "current_CRL": {
+    "number": "0x1001",
+    "der_sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+    "next_counter": "0x1002",
+    "renew_by_UTC": "2026-10-28T18:10:29Z",
+    "nextUpdate_UTC": "2026-10-29T18:10:29Z",
+    "signing_or_publication_changes_this_work": false
+  },
+  "integration": {
+    "performed": false,
+    "remote_master_preserved": "8d54031c26ec10027ecebadd754f34996d55e8dd",
+    "ordered_dependency_plan": "correction follow-up -> PR32 -> PR30 -> PR28 -> PR26 -> PR25 -> master",
+    "all_original_branches_and_checkouts_preserved": true,
+    "legacy_history_imported": false,
+    "actual_integrated_master_acceptance": "unexecuted pending exact independent acceptance and governed integration"
+  },
+  "live_adoption": {
+    "performed": false,
+    "image_preserved": "sha256:7b53527539596c711a4b2e4a68d26d8e4c7a025228327e43b461b8f9b079b532",
+    "schema_preserved": "11 clean/BYTEA",
+    "administrator_password_changed": false,
+    "real_records_or_storage_policy_or_objects_changed": false,
+    "authenticated_identity_on_adopted_live_backend": "unexecuted; no backend adoption occurred"
+  },
+  "retained_failures_or_preparation_issues": [
+    "original aggregate CI GET disagreed with cancel control API: HTTP409 already completed; no cancellation occurred; official all-job attempt2 reached completed/SUCCESS",
+    "three backup regression families failed on e655 before correction; all21 focused test events pass after",
+    "root unit12/race8 opt-in skips remain explicit; dual-layout security224 events have zero skips",
+    "first replay preflight compared historical V1 source filename to V7 binary; refused before fixture launch; actual V7 source matched and replay passed",
+    "initial dry-run reader expected image field in build-only Compose; refused before any apply; actual current container image was resolved and verified",
+    "initial environment diff was Compose JSON dollar escaping; three synthetic actual-runtime roundtrips proved normalization; real credentials were never printed or modified",
+    "distributed executable config differs from Git only by CRLF/LF; both public package checksums and XML semantics verified; no overwrite"
+  ],
+  "unexecuted": [
+    "independent Aether acceptance of exact corrected head/image pair",
+    "protected merges and actual integrated-master CI/acceptance",
+    "fresh full-window revalidation/private backup and backend-only apply after acceptance",
+    "real-live authenticated administrator/registered-user identity after adoption",
+    "actual Owner tray/Explorer/native picker/OS clipboard/Quick Send visual acceptance",
+    "public production deployment, RustFS real-data migration or prohibited bypass reproduction"
+  ],
+  "operational_verdict": "HOLD integration/adoption. Corrected technical evidence and conditional backend-only plan ready for exact Aether independent acceptance; no public production readiness."
+}
