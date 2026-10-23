@@ -61,6 +61,19 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	if version == 11 && sessions {
 		return incompatible
 	}
+	// An existing legacy role column must retain the ordinary-user contract.
+	// Reject incompatible metadata before migration12 can advance its ledger;
+	// never coerce existing role values or rewrite their defaults/nullability.
+	var roleCompatible bool
+	if err := conn.QueryRowContext(ctx, `SELECT NOT EXISTS (
+ SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema()
+ AND table_name='users' AND column_name='is_admin'
+ AND (data_type<>'boolean' OR is_nullable<>'NO' OR column_default IS DISTINCT FROM 'false'))`).Scan(&roleCompatible); err != nil {
+		return fmt.Errorf("legacy role contract inspection: %w", err)
+	}
+	if !roleCompatible {
+		return incompatible
+	}
 	var compatible bool
 	if err := conn.QueryRowContext(ctx, `SELECT count(*)=12 FROM information_schema.columns WHERE table_schema=current_schema() AND (
  (table_name='files' AND ((column_name='sha256_bytes' AND data_type IN ('bigint','bytea')) OR (column_name='user_id' AND data_type='uuid')

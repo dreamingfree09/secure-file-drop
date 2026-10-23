@@ -224,8 +224,8 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = tx.Rollback() }()
 	_, err = tx.ExecContext(ctx, `
-		INSERT INTO users (id, email, username, password_hash, verification_token, verification_sent_at, email_verified)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO users (id, email, username, password_hash, verification_token, verification_sent_at, email_verified, is_admin)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE)
 	`, userID, req.Email, req.Username, passwordHash, verificationToken, time.Now().UTC(), false)
 	if err != nil {
 		log.Printf("register: insert failed: %v", err)
