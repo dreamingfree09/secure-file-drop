@@ -53,6 +53,11 @@ func (p *PrometheusExporter) Handler() http.HandlerFunc {
 		output.WriteString("# TYPE sfd_downloads_total counter\n")
 		output.Write(fmt.Appendf(nil, "sfd_downloads_total %d\n\n", snapshot.DownloadsTotal))
 
+		output.WriteString("# HELP sfd_download_bytes_total Bytes in completed downloads\n# TYPE sfd_download_bytes_total counter\n")
+		output.Write(fmt.Appendf(nil, "sfd_download_bytes_total %d\n\n", snapshot.DownloadBytesTotal))
+		output.WriteString("# HELP sfd_download_errors_total Failed authorized download attempts\n# TYPE sfd_download_errors_total counter\n")
+		output.Write(fmt.Appendf(nil, "sfd_download_errors_total %d\n\n", snapshot.DownloadErrorsTotal))
+
 		// Storage metrics
 		output.WriteString("# HELP sfd_storage_bytes Total storage used in bytes\n")
 		output.WriteString("# TYPE sfd_storage_bytes gauge\n")

@@ -107,17 +107,6 @@ func generateVerificationToken() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-// sendVerificationEmail sends an email with verification link
-func sendVerificationEmail(emailSvc *EmailService, baseURL, email, token string) error {
-	if emailSvc == nil {
-		// Fallback logging without exposing the token (security risk)
-		log.Printf("EMAIL VERIFICATION: Email service not configured, verification email for %s not sent", email)
-		log.Printf("WARNING: Email verification required but no email service available")
-		return nil
-	}
-	return emailSvc.SendVerificationEmail(email, token, baseURL)
-}
-
 // generateResetToken creates a random hex token for password reset
 func generateResetToken() (string, error) {
 	bytes := make([]byte, 32)
@@ -140,8 +129,6 @@ func sendPasswordResetEmail(emailSvc *EmailService, baseURL, email, token string
 
 // RegisterHandler handles POST /register requests for user registration
 func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := sqlContext(r.Context())
-	defer cancel()
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -174,7 +161,7 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ctx.Err() != nil {
+	if r.Context().Err() != nil {
 		http.Error(w, "server error", http.StatusInternalServerError)
 		return
 	}
@@ -185,10 +172,12 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if user already exists
 	var exists bool
-	err := cfg.DB.QueryRowContext(ctx,
+	checkCtx, checkCancel := sqlContext(r.Context())
+	err := cfg.DB.QueryRowContext(checkCtx,
 		"SELECT EXISTS(SELECT 1 FROM users WHERE email = $1 OR username = $2)",
 		req.Email, req.Username,
 	).Scan(&exists)
+	checkCancel()
 	if err != nil {
 		log.Printf("register: db check failed: %v", err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
@@ -215,6 +204,10 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Hashing and validation do not consume the transaction budget. Keep SQL
+	// operations short, but reserve delivery (15s) and commit headroom (5s).
+	ctx, cancel := context.WithTimeout(r.Context(), 30*time.Second)
+	defer cancel()
 	// Create user
 	userID := uuid.New()
 	tx, err := cfg.DB.BeginTx(ctx, nil)
@@ -223,18 +216,28 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer func() { _ = tx.Rollback() }()
-	_, err = tx.ExecContext(ctx, `
+	insertCtx, insertCancel := sqlContext(ctx)
+	_, err = tx.ExecContext(insertCtx, `
 		INSERT INTO users (id, email, username, password_hash, verification_token, verification_sent_at, email_verified, is_admin)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE)
 	`, userID, req.Email, req.Username, passwordHash, verificationToken, time.Now().UTC(), false)
+	insertCancel()
 	if err != nil {
 		log.Printf("register: insert failed: %v", err)
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
+	// Never begin delivery without the full SMTP budget plus commit headroom.
+	deadline, _ := ctx.Deadline()
+	if ctx.Err() != nil || time.Until(deadline) < 20*time.Second {
+		http.Error(w, "registration unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	// SMTP and SQL cannot form a distributed transaction. Roll back on delivery
+	// failure; a post-delivery database failure is still reported as failure.
 	// Do not commit an account whose verification message could not be delivered.
-	if err := sendVerificationEmail(cfg.EmailSvc, cfg.BaseURL, req.Email, verificationToken); err != nil {
+	if err := cfg.EmailSvc.sendVerificationEmailContext(ctx, req.Email, verificationToken, cfg.BaseURL); err != nil {
 		Warn("registration delivery failed", nil)
 		http.Error(w, "registration unavailable: email delivery failed", http.StatusServiceUnavailable)
 		return

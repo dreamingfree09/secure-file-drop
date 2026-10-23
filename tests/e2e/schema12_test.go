@@ -56,7 +56,7 @@ func TestDeploymentTemplate(t *testing.T) {
 	var evidence struct {
 		Count int `json:"count"`
 	}
-	if json.Unmarshal(output, &evidence) != nil || evidence.Count != 18 {
+	if json.Unmarshal(output, &evidence) != nil || evidence.Count != 21 {
 		t.Fatal("incomplete synthetic configuration contract")
 	}
 	root := os.Getenv("SFD_E2E_OUTPUT_ROOT")

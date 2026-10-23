@@ -6,6 +6,7 @@
 package server
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"log"
@@ -62,6 +63,10 @@ func NewEmailService(cfg EmailConfig) *EmailService {
 
 // SendEmail sends an email with the given subject and body
 func (s *EmailService) SendEmail(to, subject, body string) error {
+	return s.sendEmailContext(context.Background(), to, subject, body)
+}
+
+func (s *EmailService) sendEmailContext(ctx context.Context, to, subject, body string) error {
 	if !s.config.Enabled {
 		// Email disabled, just log (sanitized - no email addresses)
 		log.Printf("EMAIL (disabled): Subject: %s", subject)
@@ -91,18 +96,22 @@ func (s *EmailService) SendEmail(to, subject, body string) error {
 
 	// Send email
 	addr := s.config.SMTPHost + ":" + s.config.SMTPPort
-	err := s.sendBounded(addr, auth, to, message)
+	err := s.sendBoundedContext(ctx, addr, auth, to, message)
 	if err != nil {
-		log.Printf("EMAIL ERROR: Failed to send to %s: %v", to, err)
+		log.Printf("EMAIL ERROR: delivery failed")
 		return err
 	}
 
-	log.Printf("EMAIL SENT: To: %s, Subject: %s", to, subject)
+	log.Printf("EMAIL SENT: delivery accepted")
 	return nil
 }
 
 // SendVerificationEmail sends email verification link
 func (s *EmailService) SendVerificationEmail(to, token, baseURL string) error {
+	return s.sendVerificationEmailContext(context.Background(), to, token, baseURL)
+}
+
+func (s *EmailService) sendVerificationEmailContext(ctx context.Context, to, token, baseURL string) error {
 	verifyURL := fmt.Sprintf("%s/verify?token=%s", baseURL, token)
 
 	subject := "Verify Your Email - Secure File Drop"
@@ -130,7 +139,7 @@ func (s *EmailService) SendVerificationEmail(to, token, baseURL string) error {
 		</html>
 	`, verifyURL, verifyURL)
 
-	return s.SendEmail(to, subject, body)
+	return s.sendEmailContext(ctx, to, subject, body)
 }
 
 // SendPasswordResetEmail sends password reset link
@@ -274,13 +283,22 @@ func (s *EmailService) SendFileDeletedNotification(to, filename, reason string) 
 }
 
 // sendBounded retains the standard SMTP STARTTLS/PlainAuth policy with a finite socket budget.
-func (s *EmailService) sendBounded(addr string, auth smtp.Auth, to string, message []byte) error {
-	conn, err := net.DialTimeout("tcp", addr, 5*time.Second)
+func (s *EmailService) sendBoundedContext(ctx context.Context, addr string, auth smtp.Auth, to string, message []byte) error {
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	dialer := net.Dialer{Timeout: 5 * time.Second}
+	conn, err := dialer.DialContext(ctx, "tcp", addr)
 	if err != nil {
 		return err
 	}
 	defer func() { _ = conn.Close() }()
-	if err = conn.SetDeadline(time.Now().Add(10 * time.Second)); err != nil {
+	stop := context.AfterFunc(ctx, func() { _ = conn.Close() })
+	defer stop()
+	deadline := time.Now().Add(10 * time.Second)
+	if limit, ok := ctx.Deadline(); ok && limit.Before(deadline) {
+		deadline = limit
+	}
+	if err = conn.SetDeadline(deadline); err != nil {
 		return err
 	}
 	client, err := smtp.NewClient(conn, s.config.SMTPHost)
@@ -313,5 +331,7 @@ func (s *EmailService) sendBounded(addr string, auth smtp.Auth, to string, messa
 	if err = writer.Close(); err != nil {
 		return err
 	}
-	return client.Quit()
+	// DATA acknowledgement is the delivery result. A failed QUIT cannot undo it.
+	_ = client.Quit()
+	return nil
 }

@@ -100,6 +100,14 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			}
 		}
 
+		// Count one outcome only after an authorized transfer is attempted.
+		started := time.Now()
+		completed := false
+		defer func() {
+			if !completed {
+				GetMetrics().RecordDownloadError()
+			}
+		}()
 		// Set a generous timeout for large file downloads (30 minutes for up to 50GB files)
 		ctx, cancel := context.WithTimeout(r.Context(), 30*time.Minute)
 		defer cancel()
@@ -150,6 +158,9 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			Warn("download stream interrupted", nil)
 			return
 		}
+
+		completed = true
+		GetMetrics().RecordDownload(n, time.Since(started))
 
 		// Track download statistics and send notification (fire and forget)
 		downloaderIP := getClientIP(r)
