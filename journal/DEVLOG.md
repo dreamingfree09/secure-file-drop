@@ -292,3 +292,14 @@ Producer preparation acceptance is complete; final draft-PR SHA/CI/readback hand
 After successful bounded acceptance, evidence-only implementation 4167a233aaaf7e8ead64564a28b71005672a2c4f records exact built source-MinIO/backend/RustFS image IDs in the sanitized rehearsal artifact. It changes only the authorised test path and does not change runtime behavior or acceptance assertions. Fixture compilation and zero-issue lint passed before the implementation commit; exact final-head hosted reruns/readback are in draft PR #24's GHP-01 handover.
 
 This entry is appended after that real implementation hash. All preceding 17,867 bytes and the original 14,783-byte preservation anchor remain byte-identical. Production/reconciliation/transport/capacity/recovery/adoption gates and independent Aether review remain open.
+
+
+## 2026-10-17 — Delegated completion: exact integrated acceptance and core closeout
+
+Owner Konstantinos Aidinidis delegated SFD-OWNER-DELEGATED-COMPLETION-20261017 to Codex, retaining Aether independent security-sensitive acceptance. Existing M24 integration 8d54031c26ec10027ecebadd754f34996d55e8dd is preserved; no repeat merge or history rewrite. Separate branch codex/sfd-integrated-acceptance-20261017 / PR #25 adds exact-M24 workflow installation 871ca4d2d2533ed0231ed36771c3ebab3aa532b6, with immutable source/tree checks and unchanged suites.
+
+Hosted run https://github.com/dreamingfree09/secure-file-drop/actions/runs/38982360717 actually passed contract 18/18 (134.04s), six-phase rehearsal 6/6 (245.85s), zero failures/skips, nested IAM vet/mod verify and three safe guard rejections. Downloaded artifacts confirm M24 and empty before/after labelled resource inventories. Four baseline/six rollback manifests, checkpoint and runtime image identities are retained for 14 days. Checkpoint SHA-256 36f37ee6df19859357e6c522136eb6b95f2b3ed14d64761b926f3aadd35a5439. No raw dump/secrets/volume publication or real-data operation.
+
+M24 default-MinIO 15/15 and root/browser/native/security/lint/docs evidence, plus passing workflow-proposal CI, support bounded core development closure. Existing MinIO 75 binary advisory IDs and backend/nested module-only finding remain; no production storage clearance. Continuity/tracker record full evidence and retained production TLS, capacity, operational ownership/rotation, schema/ownership reconciliation, cross-host DR, migration and deployment gates. Aether acknowledgement/integration of the new proposal is pending.
+
+Next authorised stage: separate lightweight native Windows companion, existing authenticated API, streaming progress, TLS validation and protected session storage. Compose 10 MiB default and five-minute upload/two-minute hash bounds remain; no arbitrary multi-GiB or resumable claim. Preserved checkouts, branches, local work, .qodo and unrelated environments remain untouched. This entry appends to all received DEVLOG bytes.
