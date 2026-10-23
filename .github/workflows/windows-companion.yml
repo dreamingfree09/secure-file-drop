@@ -164,8 +164,8 @@ jobs:
           assert r['source_revision']==subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           assert not r['failures'] and r['desktop_checks']==17 and r['portable_client_exit']==0 and r['untrusted_HTTP_requests']==0
           assert r['owned_cleanup_complete'] and r['existing_services_unchanged'] and r['browser_checks']==27 and r['backend_checks']==94
-          assert r['go_security']=={'passed_test_events':230,'skipped_test_events':0,'failed_test_events':0,'real_lineage_subtests':20,'real_lifecycle_ordering_cases':5,'real_commit_fault_modes':4}
-          print('REQUIRED EXECUTION: schema12 backend94/browser27/Go230/no skips + actual portable client17; failures0')
+          assert r['go_security']=={'passed_test_events':244,'skipped_test_events':0,'failed_test_events':0,'real_lineage_subtests':20,'real_lifecycle_ordering_cases':5,'real_commit_fault_modes':4}
+          print('REQUIRED EXECUTION: schema12 backend94/browser27/Go244/no skips + actual portable client17; failures0')
           PY
       - name: Verify owned cleanup independently
         if: always()
