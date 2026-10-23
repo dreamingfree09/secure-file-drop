@@ -61,9 +61,22 @@ def main():
                 trust=pathlib.Path(args.ca).resolve() if args.ca else fixture/'fixture.crt'
                 env=dict(os.environ,SSL_CERT_FILE=runtime_path(trust),SFD_DESKTOP_RUN=owner)
                 if args.dotnet.endswith('.exe'):env['WSLENV']=env.get('WSLENV','')+':SFD_DESKTOP_RUN:SSL_CERT_FILE'
+                # The browser and this client are independent legitimate journeys. They
+                # otherwise combine eleven login/registration calls in the unchanged
+                # production ten-per-minute window. Wait for that window to expire;
+                # never raise/reset/bypass the limiter or remove client assertions.
+                if args.browser_module:
+                    result['stage']='waiting-for-normal-authentication-window'
+                    start=time.monotonic();deadline=start+61
+                    while time.monotonic()<deadline:time.sleep(.25)
+                    result['auth_rate_window_wait_seconds']=round(time.monotonic()-start,3)
                 result['stage']='portable-client'
                 probe=subprocess.run([args.dotnet,runtime_path(pathlib.Path(args.client).resolve()),runtime_path(control)],env=env,cwd=repo,capture_output=True,text=True,timeout=120)
                 (root/'private-portable-output.txt').write_text(probe.stdout+probe.stderr)
+                result['portable_client_exit']=probe.returncode
+                result['portable_passed_check_count']=probe.stdout.count('DESKTOP PASS:')
+                kinds=re.findall(r'DESKTOP FAIL: ([A-Za-z][A-Za-z0-9]*)',probe.stderr)
+                if kinds:result['portable_failure_kind']=kinds[-1]
                 assert probe.returncode==0,'portable real-client execution failed; diagnostics preserved privately'
                 assert probe.stdout.count('DESKTOP PASS:')==17 and 'DESKTOP REAL BACKEND CHECKS PASSED: 17' in probe.stdout
                 assert Untrusted.calls==0,'untrusted TLS endpoint received an HTTP request'
