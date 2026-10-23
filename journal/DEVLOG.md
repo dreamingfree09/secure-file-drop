@@ -414,3 +414,33 @@ A valid PR30 review finding reproduced three custom-schema false acceptance/reje
 ## 2026-10-21 — reconciliation continuation and authority clarification
 
 PR30 guard b34 final CI/artifacts all pass; exact evidence is recorded in LINEAGE_RECONCILIATION. The existing standing delegation assigns bounded port design/implementation to Codex; prior direction-approval wording was an overly restrictive interpretation and is superseded. PR31 implements the schema12 lifecycle/Windows selected-port candidate with real owned migration/COMMIT/concurrency/cleanup coverage. Exact independent Aether source/security/recovery acceptance still gates integration and live adoption. This commit changes documentation only and preserves historical records; no live/protected changes.
+
+
+## 2026-10-22 - SFD-FINAL-ACCEPTANCE-CONTINUATION-20261021
+
+Codex prepared an explicit selected-source canonical worker from PR30 with PR31 runtime/schema/companion allowlist, preserving every original branch and canonical evidence/test file. Reconciled missing canonical JSON/cancellation/password/filename/browser safeguards; retained fixed uncapped lint policy and meaningful real-session tests. Source manifest and docs/CANONICAL_RECONCILIATION.md describe exact selection and limitations. No protected merge/live adoption/real migration; CRL renewal prepared against established ledger for secure OpenSSL Owner input. Final publication/tests/CI and signing state are recorded separately after execution; this entry does not claim pending checks passed.
+
+
+## 2026-10-22 - Fresh runtime advisory correction
+
+Current authoritative scans exposed newly published GO-2026-6809 (reachable Go x509 Verify, fixed1.26.10) and Alpine musl/musl-utils1.2.6-r2 below patchedr3. Codex raised actual build/test toolchain and runtime constraints; prior images retained as evidence and superseded for adoption. Rebuild and full exact-image acceptance are required; no production change or exploit reproduction.
+
+
+## 2026-10-22 - PR32 source and deployment review corrections
+
+Codex reconciled confirmed startup/download-secret, untrusted forwarded-header, multipart proxy, missing monitoring configuration and registration-delivery defects. Disabled SMTP now fails before user mutations; failed delivery rolls back; synthetic loopback SMTP exercises real verification. Unaccepted reset email fails closed501 instead of publishing a dead UI link. Ordinary fail-before unit checks and real isolated Traefik/mailer checks retain existing security assertions. Application and workflow changes remain separate normal commits. No live service/data/credential/TLS changes or new product feature. Exact final tests and revision remain in the producer handover.
+
+
+## 2026-10-22 - Final canonical source and bounded evidence
+
+Codex completed the actual normal canonical selected port and confirmed review corrections at791f1adc0bed00722e3d24be73e6b07e2c32aa4e. Local92 checks/layout and203 real PostgreSQL events/no skips, real SMTP/verification and normal-TLS Traefik200/413 pass. Actual F19644/43 and PostgreSQL16.15 private custom restore roundtrips pass. Own-head push39696157037/PR39696161254 all-success artefacts were downloaded and read back:94+27 browser/layout,203 Go,18 config and Windows32/16/6. Source/image/blob/lineage/preservation evidence is committed as structured JSON; raw logs/credentials/dumps remain private. Earlier failures and root skips remain explicit. No protected merge/live adoption or Owner GUI claim. Secure encrypted-CA CRL signing is pending Owner hidden input only; all independent work completed, final evidence-head CI and Aether exact acceptance remain distinct.
+
+
+## 2026-10-22 - Owner-signed CRL publication and preservation
+
+Owner executed the checksum-verified hidden-input helper once. Codex verified the established ledger/counter, signature/AKI/issuer/number/validity/active leaf and atomically published only CRL0x1001/hash69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e. Renew by2026-10-28T18:10:29Z; expiry2026-10-29T18:10:29Z. Normal Schannel and explicitly revocation-enabled.NET health/ready200, exact Windows DER retrieval and full before/after live preservation pass. No service restart, real-data operation, root/key/cert/config replacement or insecure fallback. Initial local wrapper syntax error failed before execution; corrected parsed wrapper published once. Prior output and old public DER are retained. Sanitised evidence and current TLS/continuity entries are added; README toolchain spelling now matches1.26.10. Application/native/desktop/build/workflow bytes unchanged. Exact final evidence-head CI and Aether review remain separate gates; no protected merge/live adoption/Owner GUI/public readiness claim.
+
+
+## 2026-10-22 - Current reconciliation summaries synchronized
+
+Final documentation readback found that the canonical assessment and reconciled-baseline summaries still described the historical prepared CRL state. Updated those current summaries to actual published0x1001, next counter1002, strict Windows verification and renewal target2026-10-28T18:10:29Z/expiry2026-10-29T18:10:29Z, linking immutable evidence. Prior historical runbook/log/evidence remain. No application/build/workflow change or runtime mutation. Earlier5d documentation-head CI remains intermediate; final exact head needs its own mandatory CI/readback and Aether acceptance.

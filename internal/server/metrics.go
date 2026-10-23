@@ -1,3 +1,8 @@
+// metrics.go - In-memory counters and snapshot for simple observability.
+//
+// Tracks request counts and file lifecycle tallies; exposes a
+// thread-safe API for handlers and a JSON snapshot for dashboards.
+
 package server
 
 import (
@@ -190,6 +195,10 @@ type MetricsSnapshot struct {
 	RequestsTotal    int64 `json:"requests_total"`
 	RequestErrors5xx int64 `json:"request_errors_5xx"`
 	RequestErrors4xx int64 `json:"request_errors_4xx"`
+
+	// Storage metrics (optional, populated from database query)
+	StorageTotalBytes int64 `json:"storage_total_bytes,omitempty"`
+	StorageTotalFiles int64 `json:"storage_total_files,omitempty"`
 }
 
 func avgDuration(total time.Duration, count int64) float64 {

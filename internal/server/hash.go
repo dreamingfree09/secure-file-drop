@@ -1,3 +1,11 @@
+// sha256FromMinioObject reads an object from MinIO, computes its SHA-256
+// and returns both hex and raw byte representations along with the number
+// of bytes processed. Errors are returned when streaming fails.
+// hash.go - SHA-256 computation via native helper for stored objects.
+//
+// Downloads MinIO objects to temp files and invokes sfd-hash to
+// produce deterministic integrity metadata.
+
 package server
 
 import (
@@ -10,6 +18,7 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -41,7 +50,15 @@ func runHashTool(ctx context.Context, filePath string) (hashToolOutput, error) {
 	if toolPath == "" {
 		toolPath = "/app/sfd-hash"
 	}
-	// #nosec G204 G702 -- Operator-configured executable, generated temp path, no shell.
+	if !filepath.IsAbs(toolPath) {
+		return hashToolOutput{}, errors.New("hash tool must be an absolute operator-configured path")
+	}
+	// #nosec G703 -- Read-only metadata check on the absolute operator-configured executable, never an HTTP path.
+	info, err := os.Stat(toolPath)
+	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0022 != 0 || info.Mode().Perm()&0111 == 0 {
+		return hashToolOutput{}, errors.New("hash tool must be a regular executable without group/other write access")
+	}
+	// #nosec G204 G702 -- Operator-only absolute regular executable; generated local file argument; no shell. Mirrors the reviewed c320861 native boundary.
 	cmd := exec.CommandContext(ctx, toolPath, filePath)
 	out, err := cmd.Output()
 	if err != nil {

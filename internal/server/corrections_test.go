@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"mime/multipart"
@@ -28,6 +29,7 @@ func TestJSONBoundariesAcrossRoutes(t *testing.T) {
 				r := httptest.NewRequest("POST", "http://fixture.test/"+name, strings.NewReader("{}"+suffix))
 				r.AddCookie(a.cookie(r, token, time.Now().Add(time.Hour)))
 				w := httptest.NewRecorder()
+				r = r.WithContext(context.WithValue(r.Context(), identityKey{}, identity{Subject: "00000000-0000-0000-0000-000000000001", Username: "fixture"}))
 				handler.ServeHTTP(w, r)
 				want := 400
 				if len(suffix) > 16<<10 {
@@ -46,7 +48,7 @@ func TestJSONTotalLimitIncludesWhitespace(t *testing.T) {
 	for _, n := range []int{(16 << 10) - len(valid), (16 << 10) - len(valid) + 1} {
 		w := httptest.NewRecorder()
 		a.loginHandler().ServeHTTP(w, httptest.NewRequest("POST", "/login", strings.NewReader(valid+strings.Repeat(" ", n))))
-		want := 200
+		want := 401 // valid bounded JSON reaches normal credential rejection; no database fixture needed
 		if len(valid)+n > 16<<10 {
 			want = 413
 		}

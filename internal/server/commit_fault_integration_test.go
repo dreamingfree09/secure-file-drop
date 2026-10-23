@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
@@ -88,17 +89,17 @@ func (tx *commitFaultTx) Commit() error {
 	return io.ErrUnexpectedEOF
 }
 
-func TestDisposableCommitFaults(t *testing.T) {
-	dsn := os.Getenv("SFD_CORRECTION_FIXTURE_DSN")
-	if dsn == "" {
+func TestLegacyCommitFaults(t *testing.T) {
+	dsn := os.Getenv("SFD_AUTH_TEST_DSN")
+	if dsn == "" || os.Getenv("SFD_LIFECYCLE_STORAGE") == "" {
 		t.Skip("requires parent-owned disposable full-stack fixture; not a real database pass")
 	}
-	expected := os.Getenv("SFD_CORRECTION_EXPECTED_DB")
-	run := os.Getenv("SFD_CORRECTION_RUN")
-	bucket := os.Getenv("SFD_CORRECTION_BUCKET")
-	endpoint := os.Getenv("SFD_CORRECTION_STORAGE")
+	expected := os.Getenv("SFD_LIFECYCLE_DATABASE")
+	run := os.Getenv("SFD_AUTH_TEST_OWNER")
+	bucket := os.Getenv("SFD_LIFECYCLE_BUCKET")
+	endpoint := os.Getenv("SFD_LIFECYCLE_STORAGE")
 	u, err := url.Parse(dsn)
-	if err != nil || u.Hostname() != "127.0.0.1" || !strings.HasPrefix(expected, "sfd_quality_") || u.Path != "/"+expected || !strings.HasPrefix(run, "sfd-quality-") || bucket != run+"-private" || !strings.HasPrefix(endpoint, "127.0.0.1:") {
+	if err != nil || u.Hostname() != "127.0.0.1" || !strings.HasPrefix(expected, "sfd_auth_") || u.Path != "/"+expected || !strings.HasPrefix(run, "sfd-auth-") || bucket != run || !strings.HasPrefix(endpoint, "127.0.0.1:") {
 		t.Fatal("refusing unverified fixture target")
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -113,7 +114,15 @@ func TestDisposableCommitFaults(t *testing.T) {
 	if err = check.QueryRowContext(ctx, "SELECT current_database()").Scan(&actual); err != nil || actual != expected {
 		t.Fatal("unexpected fixture database")
 	}
-	mc, err := minio.New(endpoint, &minio.Options{Creds: credentials.NewStaticV4("sfdtest", "SyntheticPass123456", ""), Secure: false})
+	var marker string
+	if check.QueryRowContext(ctx, "SELECT owner FROM public.sfd_test_owner").Scan(&marker) != nil || marker != run {
+		t.Fatal("fixture ownership marker mismatch")
+	}
+	access, secret := os.Getenv("SFD_LIFECYCLE_ACCESS"), os.Getenv("SFD_LIFECYCLE_SECRET")
+	if access == "" || secret == "" {
+		t.Fatal("owned storage credentials absent")
+	}
+	mc, err := minio.New(endpoint, &minio.Options{Creds: credentials.NewStaticV4(access, secret, ""), Secure: false})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -125,13 +134,20 @@ func TestDisposableCommitFaults(t *testing.T) {
 			defer func() { _ = pool.Close() }()
 			id := uuid.New()
 			key := "uploads/" + id.String()
-			if _, err := check.ExecContext(ctx, "INSERT INTO files(id,object_key,orig_name,content_type,size_bytes,created_by,status) VALUES($1,$2,'commit.bin','text/plain',3,'fixture-admin','pending')", id, key); err != nil {
-				t.Fatal(err)
+			user := uuid.NewString()
+			if _, err := check.ExecContext(ctx, "INSERT INTO users(id,email,username,password_hash,email_verified,is_active) VALUES ($1,$2,$3,'not-a-credential',TRUE,TRUE)", user, user+"@example.invalid", "fault_"+user); err != nil {
+				t.Fatal("create owned synthetic account")
 			}
-			a := AuthConfig{AdminUser: "fixture-admin", SessionSecret: "synthetic-commit-fault-session"}
-			token, _, err := a.makeSessionToken("fixture-admin", true)
+			if _, err := check.ExecContext(ctx, "INSERT INTO files(id,object_key,orig_name,content_type,size_bytes,user_id,status) VALUES ($1,$2,'commit.bin','text/plain',3,$3,'pending')", id, key, user); err != nil {
+				t.Fatal("create owned file")
+			}
+			a := AuthConfig{AdminUser: "fixture-admin", SessionSecret: "synthetic-commit-fault-session", DB: check}
+			token, expiry, err := a.makeSessionToken(user, false)
 			if err != nil {
 				t.Fatal(err)
+			}
+			if _, err := check.ExecContext(ctx, "INSERT INTO auth_sessions(token_hash,expires_at) VALUES ($1,$2)", sessionHash(token), expiry); err != nil {
+				t.Fatal("create owned synthetic session")
 			}
 			var body bytes.Buffer
 			mw := multipart.NewWriter(&body)
@@ -147,7 +163,7 @@ func TestDisposableCommitFaults(t *testing.T) {
 			}
 			r := httptest.NewRequest("POST", "/upload?id="+id.String(), &body).WithContext(ctx)
 			r.Header.Set("Content-Type", mw.FormDataContentType())
-			r.AddCookie(a.cookie(r, token, time.Now().Add(time.Hour)))
+			r.AddCookie(&http.Cookie{Name: a.cookieName(), Value: token, Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode})
 			w := httptest.NewRecorder()
 			(Config{Auth: a}).uploadHandler(pool, mc, bucket).ServeHTTP(w, r)
 			if w.Code != 500 || !connector.fired.Load() {
@@ -173,7 +189,7 @@ func TestDisposableCommitFaults(t *testing.T) {
 					t.Fatal("known rollback retained object")
 				}
 			} else if statErr != nil {
-				t.Fatal("possibly committed bytes deleted", statErr)
+				t.Fatal("possibly committed bytes deleted")
 			}
 			if pool.Stats().InUse != 0 {
 				t.Fatal("fault cleanup leaked pool connection")

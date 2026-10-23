@@ -1,0 +1,104 @@
+name: Canonical schema12 reconciliation acceptance
+on:
+  workflow_call:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sfd-canonical-reconciliation-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  backend:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: c320861536914623ea22f28c1d4ea156d4c2132a
+          path: reviewed-reference
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.10'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Prepare isolated browser dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y libnss3-tools libssl-dev
+          npm ci --prefix reviewed-reference/tests/browser --ignore-scripts
+          node reviewed-reference/tests/browser/node_modules/playwright-core/cli.js install --with-deps --only-shell chromium
+      - name: Compile all suites and require vet and reachable vulnerability gates
+        run: |
+          make -C native test
+          go test ./... -run '^$'
+          go vet ./...
+          go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --timeout 5m --max-issues-per-linter=0 --max-same-issues=0 --uniq-by-line=false
+          python3 -B tests/quality/verify_lint_gate.py
+          go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Build the exact canonical selected application and pinned synthetic storage
+        run: |
+          docker build -t sfd-auth-candidate -f Dockerfile.backend .
+          docker build --label sfd.recovery=artifact-only -t sfd-auth-recovery -f Dockerfile.backend .
+          docker build -t sfd-auth-storage -f reviewed-reference/Dockerfile.storage reviewed-reference
+          docker pull postgres:16-alpine
+          docker pull traefik:v2.11
+      - name: Require owned real PostgreSQL, native hash and HTTPS session acceptance
+        run: |
+          SFD_E2E_BACKEND_IMAGE=sfd-auth-candidate \
+          SFD_E2E_ROLLBACK_IMAGE=sfd-auth-recovery \
+          SFD_E2E_POSTGRES_IMAGE=postgres:16-alpine \
+          SFD_E2E_STORAGE_IMAGE=sfd-auth-storage \
+          SFD_E2E_PROXY_IMAGE=traefik:v2.11 \
+          SFD_E2E_OUTPUT_ROOT="$RUNNER_TEMP" \
+          SFD_E2E_BROWSER_MODULE="$GITHUB_WORKSPACE/reviewed-reference/tests/browser/node_modules/playwright-core" \
+          go test -v ./tests/e2e -count=1 -timeout 25m
+          python3 - <<'PY'
+          import json,os,pathlib
+          for name in ['sfd-auth-fixture','sfd-auth-fixture-bytea']:
+              r=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/name/'result.json').read_text())
+              assert not r['failures'] and r['existing_services_unchanged'] and r['owned_cleanup_complete']
+              assert len(r['checks']) >= 91
+              assert 'unaccepted reset email fails closed without token issuance' in r['checks']
+              assert any(c.startswith('real delivered verification completes') for c in r['checks'])
+              assert r['active_shutdown']['exit_code']==0 and r['active_shutdown']['row_lock_observed'] and r['active_shutdown']['actual_object_absent']
+              assert r['browser']['count']==27
+              assert r['deletion_preservation']['admin_object_removed'] and r['deletion_preservation']['row_hash_unchanged'] and r['deletion_preservation']['storage_failure_status']==502
+              assert r['go_security']['real_lineage_subtests']==14 and r['go_security']['real_commit_fault_modes']==4 and r['go_security']['real_lifecycle_ordering_cases']==5 and r['go_security']['skipped_test_events']==0
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: legacy-auth-sanitised-evidence
+          path: |
+            ${{ runner.temp }}/sfd-compose-contract.json
+            ${{ runner.temp }}/sfd-auth-fixture/result.json
+            ${{ runner.temp }}/sfd-auth-fixture-bytea/result.json
+          if-no-files-found: error
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: c320861536914623ea22f28c1d4ea156d4c2132a
+          path: reviewed-reference
+          persist-credentials: false
+      - name: Preserve reviewed transport and run native security regressions
+        shell: pwsh
+        run: |
+          $reference = 'c320861536914623ea22f28c1d4ea156d4c2132a'
+          foreach ($path in (git -C reviewed-reference ls-files desktop/windows)) {
+            $expected = (git -C reviewed-reference rev-parse "${reference}:$path")
+            $actual = (git rev-parse "HEAD:$path")
+            if ($actual -ne $expected) { throw "Reviewed companion source changed" }
+          }
+          ./desktop/windows/build.ps1
+          ./desktop/windows/tests/test.ps1
+          if ($LASTEXITCODE -ne 0) { throw "Windows regression failure" }

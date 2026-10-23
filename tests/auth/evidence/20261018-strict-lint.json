@@ -1,0 +1,19 @@
+{
+  "tool": "golangci-lint v2.14.0",
+  "configuration_revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+  "configuration_path": ".golangci.yml",
+  "command": "GOTOOLCHAIN=go1.26.9 go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --config <frozen-reviewed-configuration> --timeout 5m",
+  "legacy_base": "2b8e56de4b79e2508125ca02c18455ae88dee7f6",
+  "base_findings": 79,
+  "proposal_findings": 79,
+  "proposal_counts": {
+    "errcheck": 37,
+    "gosec": 10,
+    "revive": 22,
+    "staticcheck": 5,
+    "unused": 5
+  },
+  "findings_on_added_or_modified_go_lines": [],
+  "status": "FAILED: strict legacy lint remains an outstanding validation gate; no suppression or broad unrelated cleanup",
+  "integration": "pending independent Aether acceptance and resolution of mandatory gates"
+}

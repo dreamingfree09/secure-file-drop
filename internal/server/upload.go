@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"net/http"
 	"os"
@@ -134,10 +133,20 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 		defer func() { _ = tx.Rollback() }()
-		p := principal(r)
+		userID, authErr := cfg.Auth.getCurrentUser(r)
+		if authErr != nil {
+			writeAuthError(w, authErr)
+			return
+		}
+		hashLayout, layoutErr := hashMetadataLayout(ctx, conn)
+		if layoutErr != nil {
+			http.Error(w, "incompatible hash metadata schema", http.StatusInternalServerError)
+			return
+		}
 		var key, status string
+		var declaredSize int64
 		queryCtx, queryCancel := sqlContext(ctx)
-		err = tx.QueryRowContext(queryCtx, `SELECT object_key,status FROM files WHERE id=$1 AND ($2 OR user_id::text=$3) FOR UPDATE`, id, p.Admin, p.Sub).Scan(&key, &status)
+		err = tx.QueryRowContext(queryCtx, `SELECT object_key,status,size_bytes FROM files WHERE id=$1 AND user_id::text=$2 FOR UPDATE`, id, userID).Scan(&key, &status, &declaredSize)
 		queryCancel()
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "not found", http.StatusNotFound)
@@ -167,16 +176,14 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 						return mc.RemoveObject(cleanupCtx, bucket, key, minio.RemoveObjectOptions{})
 					})
 					if e != nil {
-						// #nosec G706 -- Validated UUID is quoted; no raw request text is logged.
-						log.Printf("upload commit outcome unresolved; bytes retained id=%q", id)
+						Info("upload commit outcome unresolved; bytes retained", map[string]interface{}{"file_id": id.String()})
 					}
 					GetMetrics().RecordUploadError()
 					return
 				}
 				// Keep metadata even if removal fails: cleanup can retry the exact key.
 				if e := mc.RemoveObject(cleanupCtx, bucket, key, minio.RemoveObjectOptions{}); e != nil {
-					// #nosec G706 -- Log fields are quoted with %q; the ID is also validated as UUID.
-					log.Printf("upload cleanup failed id=%q", id)
+					Warn("upload cleanup failed", map[string]interface{}{"file_id": id.String()})
 				}
 				// Remove while the transaction still holds the file lock. A
 				// canceled HTTP request must not release it before cleanup.
@@ -188,8 +195,7 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 					_ = tx.Rollback()
 					_ = conn.Close()
 					if _, e := db.ExecContext(cleanupCtx, "UPDATE files SET status='failed' WHERE id=$1 AND status='pending'", id); e != nil {
-						// #nosec G706 -- Validated UUID is quoted to prevent log control characters.
-						log.Printf("upload failure state failed id=%q", id)
+						Warn("upload failure state failed", map[string]interface{}{"file_id": id.String()})
 					}
 				}
 				GetMetrics().RecordUploadError()
@@ -259,6 +265,10 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			http.Error(w, "bad multipart", code)
 			return
 		}
+		if info.Size != declaredSize {
+			http.Error(w, "uploaded size does not match reserved metadata", http.StatusBadRequest)
+			return
+		}
 		if info.Size != limit+1-limited.N {
 			http.Error(w, "upload byte count mismatch", http.StatusBadGateway)
 			return
@@ -273,12 +283,16 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
-		sha, _, count, err := sha256FromMinioObject(ctx, mc, bucket, key)
+		sha, rawDigest, count, err := sha256FromMinioObject(ctx, mc, bucket, key)
 		if err != nil || count > math.MaxInt64 || int64(count) != info.Size {
 			http.Error(w, "hashing failed", http.StatusBadGateway)
 			return
 		}
-		if err = execSQL("UPDATE files SET sha256_hex=$2,sha256_bytes=$3,status='hashed' WHERE id=$1", id, sha, count); err != nil {
+		var hashMetadata any = rawDigest
+		if hashLayout == "bigint" {
+			hashMetadata = int64(count)
+		}
+		if err = execSQL("UPDATE files SET sha256_hex=$2,sha256_bytes=$3,status='hashed' WHERE id=$1", id, sha, hashMetadata); err != nil {
 			http.Error(w, "db error", http.StatusInternalServerError)
 			return
 		}
@@ -288,9 +302,37 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 			return
 		}
 		failed = false
+		if cfg.EmailSvc != nil {
+			go func() {
+				ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 5*time.Second)
+				defer cancel()
+				var address, name string
+				if db.QueryRowContext(ctx, "SELECT u.email,f.orig_name FROM files f JOIN users u ON u.id=f.user_id WHERE f.id=$1", id).Scan(&address, &name) == nil {
+					_ = cfg.EmailSvc.SendFileUploadNotification(address, name, id.String(), cfg.BaseURL)
+				}
+			}()
+		}
 		GetMetrics().RecordUpload(info.Size, time.Since(start))
 		GetMetrics().RecordFileStateTransition("hashed")
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(uploadResp{id.String(), key, "hashed"})
 	}))
+}
+
+// hashMetadataLayout supports the two verified historical schemas without
+// converting existing metadata or assigning a digest to a numeric column.
+func hashMetadataLayout(ctx context.Context, db interface {
+	QueryRowContext(context.Context, string, ...any) *sql.Row
+}) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	var layout string
+	err := db.QueryRowContext(ctx, `SELECT format_type(atttypid,atttypmod) FROM pg_attribute WHERE attrelid='files'::regclass AND attname='sha256_bytes' AND NOT attisdropped`).Scan(&layout)
+	if err != nil {
+		return "", err
+	}
+	if layout != "bigint" && layout != "bytea" {
+		return "", fmt.Errorf("unsupported hash metadata layout")
+	}
+	return layout, nil
 }
