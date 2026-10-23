@@ -99,12 +99,17 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   backend:
-    name: Actual HTTPS backend and portable desktop client
+    name: Actual schema12 HTTPS backend and portable desktop client
     runs-on: ubuntu-22.04
     timeout-minutes: 32
     steps:
       - uses: actions/checkout@v6
         with:
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: c320861536914623ea22f28c1d4ea156d4c2132a
+          path: reviewed-reference
           persist-credentials: false
       - uses: actions/setup-go@v6
         with:
@@ -115,46 +120,50 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
-      - name: Build client harness, native vectors and pinned Chromium
+      - name: Build unchanged client source, native vectors and pinned Chromium
         run: |
-          sudo apt-get update && sudo apt-get install -y libssl-dev
-          dotnet build desktop/windows/tests/Client.Contract.csproj --configuration Release --nologo
+          sudo apt-get update && sudo apt-get install -y libssl-dev libnss3-tools
+          dotnet build tests/auth/Portable.Contract.csproj --configuration Release --nologo -p:BaseIntermediateOutputPath="$RUNNER_TEMP/portable-obj/"
           make -C native test
           npm ci --prefix tests/browser --ignore-scripts
           node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Build exact candidate and artifact recovery with owned synthetic services
+        run: |
+          docker build --label org.opencontainers.image.revision="$(git rev-parse HEAD)" -t sfd-desktop-candidate -f Dockerfile.backend .
+          docker build --label org.opencontainers.image.revision="$(git rev-parse HEAD)" --label sfd.recovery=artifact-only -t sfd-desktop-recovery -f Dockerfile.backend .
+          docker build -t sfd-desktop-storage -f reviewed-reference/Dockerfile.storage reviewed-reference
+          docker pull postgres:16-alpine
+          docker pull traefik:v2.11
       - name: Require fresh owned namespace
         run: |
           python3 - <<'PY'
           import json, os, pathlib, subprocess
           inventory = {}
-          for kind in ["container", "network", "volume", "image"]:
-              args = ["docker", kind, "ls", "--filter", "label=sfd.quality-run", "--quiet"]
-              if kind == "container":
-                  args.append("--all")
-              inventory[kind] = subprocess.check_output(args, text=True).split()
-          pathlib.Path(os.environ["RUNNER_TEMP"], "ownership-before.json").write_text(json.dumps(inventory))
-          assert not any(inventory.values()), "pre-existing quality resources"
+          for label in ['sfd.quality-run','sfd.auth-fixture']:
+              for kind in ['container','network','volume','image']:
+                  args=['docker',kind,'ls','--filter','label='+label,'--quiet']
+                  if kind=='container':args.append('--all')
+                  inventory[label+'/'+kind]=subprocess.check_output(args,text=True).split()
+          pathlib.Path(os.environ['RUNNER_TEMP'],'ownership-before.json').write_text(json.dumps(inventory))
+          assert not any(inventory.values()), 'pre-existing owned resources; never clean them'
           PY
-      - name: Execute unchanged core assertions and actual desktop client
-        env:
-          SFD_E2E: '1'
-          SFD_BROWSER: '1'
-          SFD_DESKTOP_CLIENT: '1'
+      - name: Require current schema12 real backend and all 17 portable-client assertions
         run: |
-          go test ./tests/e2e -json -v -run '^TestUploadHashDownloadFlow$' -count=1 -timeout 27m | tee "$RUNNER_TEMP/desktop-runtime.json"
+          python3 -B tests/auth/desktop.py \
+            --backend-image sfd-desktop-candidate --rollback-image sfd-desktop-recovery \
+            --storage-image sfd-desktop-storage --postgres-image postgres:16-alpine --proxy-image traefik:v2.11 \
+            --output "$RUNNER_TEMP/desktop-schema12" \
+            --browser-module "$GITHUB_WORKSPACE/tests/browser/node_modules/playwright-core" \
+            --client "$GITHUB_WORKSPACE/desktop/windows/dist/schema12-contract/net10.0/Portable.Contract.dll"
           python3 - <<'PY'
-          import json, os, pathlib, subprocess
-          events = [json.loads(line) for line in pathlib.Path(os.environ["RUNNER_TEMP"], "desktop-runtime.json").read_text().splitlines()]
-          assert not [e for e in events if e.get("Action") in ("skip", "fail")], "failure/skip is not acceptance"
-          passed = [e for e in events if e.get("Action") == "pass" and e.get("Test", "").startswith("TestUploadHashDownloadFlow/")]
-          assert len(passed) == 15, len(passed)
-          assert any(e.get("Action") == "pass" and e.get("Test") == "TestUploadHashDownloadFlow" for e in events)
-          output = "".join(e.get("Output", "") for e in events)
-          assert "DESKTOP REAL BACKEND CHECKS PASSED: 17" in output, "desktop did not execute all real-backend checks"
-          assert output.count("DESKTOP PASS:") == 17
-          revision = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-          pathlib.Path(os.environ["RUNNER_TEMP"], "desktop-identity.json").write_text(json.dumps({"revision": revision, "default_scenarios": 15, "desktop_checks": 17, "failures": 0, "skips": 0}))
-          print("REQUIRED EXECUTION: 15 core scenarios + 17 actual desktop checks; failures=0, skips=0")
+          import json,os,pathlib,subprocess
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'desktop-schema12'
+          r=json.loads((root/'desktop-identity.json').read_text())
+          assert r['source_revision']==subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert not r['failures'] and r['desktop_checks']==17 and r['portable_client_exit']==0 and r['untrusted_HTTP_requests']==0
+          assert r['owned_cleanup_complete'] and r['existing_services_unchanged'] and r['browser_checks']==27 and r['backend_checks']==94
+          assert r['go_security']=={'passed_test_events':230,'skipped_test_events':0,'failed_test_events':0,'real_lineage_subtests':20,'real_lifecycle_ordering_cases':5,'real_commit_fault_modes':4}
+          print('REQUIRED EXECUTION: schema12 backend94/browser27/Go230/no skips + actual portable client17; failures0')
           PY
       - name: Verify owned cleanup independently
         if: always()
@@ -162,22 +171,21 @@ jobs:
           python3 - <<'PY'
           import json, os, pathlib, subprocess
           inventory = {}
-          for kind in ["container", "network", "volume", "image"]:
-              args = ["docker", kind, "ls", "--filter", "label=sfd.quality-run", "--quiet"]
-              if kind == "container":
-                  args.append("--all")
-              inventory[kind] = subprocess.check_output(args, text=True).split()
-          pathlib.Path(os.environ["RUNNER_TEMP"], "ownership-after.json").write_text(json.dumps(inventory))
-          print(json.dumps(inventory))
-          assert not any(inventory.values()), "owned resources remain; no broad cleanup"
+          for label in ['sfd.quality-run','sfd.auth-fixture']:
+              for kind in ['container','network','volume','image']:
+                  args=['docker',kind,'ls','--filter','label='+label,'--quiet']
+                  if kind=='container':args.append('--all')
+                  inventory[label+'/'+kind]=subprocess.check_output(args,text=True).split()
+          pathlib.Path(os.environ['RUNNER_TEMP'],'ownership-after.json').write_text(json.dumps(inventory))
+          assert not any(inventory.values()), 'owned resources remain; no broad cleanup'
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: desktop-real-backend-evidence
           path: |
-            ${{ runner.temp }}/desktop-runtime.json
-            ${{ runner.temp }}/desktop-identity.json
+            ${{ runner.temp }}/desktop-schema12/desktop-identity.json
+            ${{ runner.temp }}/desktop-schema12/fixture/result.json
             ${{ runner.temp }}/ownership-before.json
             ${{ runner.temp }}/ownership-after.json
           if-no-files-found: error
