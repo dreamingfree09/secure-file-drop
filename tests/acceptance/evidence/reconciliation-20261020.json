@@ -1,0 +1,890 @@
+{
+  "work_id": "SFD-FINAL-RECONCILIATION-20261020",
+  "producer": "Codex",
+  "independent_Aether_acceptance": "pending; authoritative review6301566150 holds integration/adoption",
+  "lineage": {
+    "refs": {
+      "master": "8d54031c26ec10027ecebadd754f34996d55e8dd",
+      "PR25": "aa784cab5b32860a72958e35b0b89085ff65de72",
+      "PR26": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "PR28": "2e9bbdde7222fd77c91e8a98149ba5d84996c416",
+      "feature": "2b8e56de4b79e2508125ca02c18455ae88dee7f6",
+      "PR27": "8c548d8da15e280f3a5b595eaa8a0687627f5452",
+      "PR29": "976c9a39c25f7cb38274bf066e5f7be05543813e"
+    },
+    "ancestry": [
+      {
+        "ancestor": "master",
+        "ancestor_sha": "8d54031c26ec10027ecebadd754f34996d55e8dd",
+        "descendant": "PR25",
+        "descendant_sha": "aa784cab5b32860a72958e35b0b89085ff65de72",
+        "tree": "6cf66a97668278b29eb4dd4a36f083d4b143149e",
+        "commits": 3
+      },
+      {
+        "ancestor": "PR25",
+        "ancestor_sha": "aa784cab5b32860a72958e35b0b89085ff65de72",
+        "descendant": "PR26",
+        "descendant_sha": "c320861536914623ea22f28c1d4ea156d4c2132a",
+        "tree": "cfd8d4524ab9e7917068227ce0a23d2fee2711ca",
+        "commits": 18
+      },
+      {
+        "ancestor": "PR26",
+        "ancestor_sha": "c320861536914623ea22f28c1d4ea156d4c2132a",
+        "descendant": "PR28",
+        "descendant_sha": "2e9bbdde7222fd77c91e8a98149ba5d84996c416",
+        "tree": "3a5c8129bfeb33bcb2a714a2d642d25f2229c6ab",
+        "commits": 16
+      },
+      {
+        "ancestor": "feature",
+        "ancestor_sha": "2b8e56de4b79e2508125ca02c18455ae88dee7f6",
+        "descendant": "PR27",
+        "descendant_sha": "8c548d8da15e280f3a5b595eaa8a0687627f5452",
+        "tree": "a5ece6d921e85c238f34e5f15fd2a8b6a86d0d5a",
+        "commits": 15
+      },
+      {
+        "ancestor": "PR27",
+        "ancestor_sha": "8c548d8da15e280f3a5b595eaa8a0687627f5452",
+        "descendant": "PR29",
+        "descendant_sha": "976c9a39c25f7cb38274bf066e5f7be05543813e",
+        "tree": "65ac8211022fcf3bc6c691b921d72f935d059707",
+        "commits": 14
+      }
+    ],
+    "cross_lineage_merge_base": "1a0f7715faa89c53fcec266f59e43cad9b1a057b"
+  },
+  "received_inventories": [
+    {
+      "PR": 25,
+      "head": "aa784cab5b32860a72958e35b0b89085ff65de72",
+      "base": "8d54031c26ec10027ecebadd754f34996d55e8dd",
+      "state": "open",
+      "merged": false,
+      "files": [
+        {
+          "path": ".github/workflows/integrated-rustfs-acceptance.yml",
+          "status": "added",
+          "blob": "f56995f30a0a5d1b31dab427c2dacd98d67575d5"
+        },
+        {
+          "path": "docs/CONTINUITY.md",
+          "status": "modified",
+          "blob": "9ff8681c5cd544f4f64e33954549d8426e5a39f8"
+        },
+        {
+          "path": "docs/TRACKER.md",
+          "status": "modified",
+          "blob": "9747b8b218c3858aa93e48f28e632f10c0d70664"
+        },
+        {
+          "path": "journal/DEVLOG.md",
+          "status": "modified",
+          "blob": "f3c169b9de3b15d8c2eaaa252c32ad006c3d78d8"
+        }
+      ]
+    },
+    {
+      "PR": 26,
+      "head": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "base": "aa784cab5b32860a72958e35b0b89085ff65de72",
+      "state": "open",
+      "merged": false,
+      "files": [
+        {
+          "path": ".github/workflows/windows-companion.yml",
+          "status": "added",
+          "blob": "c3d94b76d26257aefb39701ba555f2d09d2874ba"
+        },
+        {
+          "path": "AGENTS.md",
+          "status": "modified",
+          "blob": "433453a47ea607eddc390a7db7b1f82de46be0aa"
+        },
+        {
+          "path": "README.md",
+          "status": "modified",
+          "blob": "e7a11aa184e26f3789557e3a1a9e6b953ba4ab7c"
+        },
+        {
+          "path": "desktop/windows/.gitignore",
+          "status": "added",
+          "blob": "d082e62e711bb57e9d30924704740fa4604fa979"
+        },
+        {
+          "path": "desktop/windows/App.cs",
+          "status": "added",
+          "blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062"
+        },
+        {
+          "path": "desktop/windows/Client.cs",
+          "status": "added",
+          "blob": "8978616de376687532b50e3f93cb54e1acd5785e"
+        },
+        {
+          "path": "desktop/windows/FrameworkTarget.cs",
+          "status": "added",
+          "blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2"
+        },
+        {
+          "path": "desktop/windows/SecureFileDrop.exe.config",
+          "status": "added",
+          "blob": "a6a246014513cecb03a7983b32668674babcfd59"
+        },
+        {
+          "path": "desktop/windows/WindowsIntegration.cs",
+          "status": "added",
+          "blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2"
+        },
+        {
+          "path": "desktop/windows/app.manifest",
+          "status": "added",
+          "blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01"
+        },
+        {
+          "path": "desktop/windows/build.ps1",
+          "status": "added",
+          "blob": "17da686bcb0fee69aa4dec09178956864b52c36c"
+        },
+        {
+          "path": "desktop/windows/tests/.gitignore",
+          "status": "added",
+          "blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c"
+        },
+        {
+          "path": "desktop/windows/tests/Client.Contract.csproj",
+          "status": "added",
+          "blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0"
+        },
+        {
+          "path": "desktop/windows/tests/ContractRunner.cs",
+          "status": "added",
+          "blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299"
+        },
+        {
+          "path": "desktop/windows/tests/LiveProbe.cs",
+          "status": "added",
+          "blob": "4a5e797b26d370627ac47239910f50be5b2942fd"
+        },
+        {
+          "path": "desktop/windows/tests/ProductPolicyTests.cs",
+          "status": "added",
+          "blob": "4436f990c197004d22119de8c542629ce4a397f7"
+        },
+        {
+          "path": "desktop/windows/tests/ProtocolTests.cs",
+          "status": "added",
+          "blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d"
+        },
+        {
+          "path": "desktop/windows/tests/WindowsTests.cs",
+          "status": "added",
+          "blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f"
+        },
+        {
+          "path": "desktop/windows/tests/live.ps1",
+          "status": "added",
+          "blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b"
+        },
+        {
+          "path": "desktop/windows/tests/test.ps1",
+          "status": "added",
+          "blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2"
+        },
+        {
+          "path": "docs/CONTINUITY.md",
+          "status": "modified",
+          "blob": "ea278fa173eae86a0a2580ae109dd2e88e9b03e5"
+        },
+        {
+          "path": "docs/GHP-01.md",
+          "status": "modified",
+          "blob": "b6fef48fdf6d3fd1d2fd0bdc61559ed5effe2f4d"
+        },
+        {
+          "path": "docs/LOCAL_TLS.md",
+          "status": "added",
+          "blob": "e6b122d9ee39a5154add450315daac6be468294a"
+        },
+        {
+          "path": "docs/TRACKER.md",
+          "status": "modified",
+          "blob": "28d1ee0d434805574a8ea8fe7b810dc2d962d83f"
+        },
+        {
+          "path": "docs/WINDOWS_COMPANION.md",
+          "status": "added",
+          "blob": "a0b072eb75e7575e83729adadc5382c5c824df53"
+        },
+        {
+          "path": "journal/DEVLOG.md",
+          "status": "modified",
+          "blob": "5bcf8e99a4055c50bc0a253d89a59a6eee5fe8e2"
+        },
+        {
+          "path": "tests/e2e/desktop_client_test.go",
+          "status": "added",
+          "blob": "38f9f66174c97f7504fa43f95a0bcc697d1267e7"
+        },
+        {
+          "path": "tests/e2e/proxy_corrections_test.go",
+          "status": "modified",
+          "blob": "b56e9cd82f5214c2794d8dd9c63c3f73000cd036"
+        }
+      ]
+    },
+    {
+      "PR": 27,
+      "head": "8c548d8da15e280f3a5b595eaa8a0687627f5452",
+      "base": "2b8e56de4b79e2508125ca02c18455ae88dee7f6",
+      "state": "open",
+      "merged": false,
+      "files": [
+        {
+          "path": ".github/workflows/legacy-auth.yml",
+          "status": "added",
+          "blob": "9f02a2b02701542fc07bb38e9e48b20a96c007de"
+        },
+        {
+          "path": ".golangci.yml",
+          "status": "modified",
+          "blob": "7dc733e3d5a02a259bc5039c7028a83ce9e789f1"
+        },
+        {
+          "path": "Dockerfile.backend",
+          "status": "modified",
+          "blob": "d2826192dfd9597a03ded15dbbe9dffe3dcf99bd"
+        },
+        {
+          "path": "cmd/backend/main_test.go",
+          "status": "modified",
+          "blob": "3620be4a586170691a718db29f81bb6a4c82d172"
+        },
+        {
+          "path": "docs/CONTINUITY.md",
+          "status": "added",
+          "blob": "7c832c15e446c750267a78ec1b41cbeb22ef7d1e"
+        },
+        {
+          "path": "go.mod",
+          "status": "modified",
+          "blob": "cd6fd481aabebdc08e5528f0853048a7e04dbf5b"
+        },
+        {
+          "path": "go.sum",
+          "status": "modified",
+          "blob": "469cfa6c635d55164299be008d6a0a313926f868"
+        },
+        {
+          "path": "internal/db/doc.go",
+          "status": "added",
+          "blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed"
+        },
+        {
+          "path": "internal/db/migrate.go",
+          "status": "modified",
+          "blob": "fd50bd6992f5f29711c35009c4e4432e4fcb1830"
+        },
+        {
+          "path": "internal/db/migrations/000012_authenticated_sessions.down.sql",
+          "status": "added",
+          "blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83"
+        },
+        {
+          "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+          "status": "added",
+          "blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7"
+        },
+        {
+          "path": "internal/server/admin.go",
+          "status": "modified",
+          "blob": "ebb2bbc5ac446199be56f7fb68ff358f217e1dca"
+        },
+        {
+          "path": "internal/server/audit.go",
+          "status": "modified",
+          "blob": "92f470a788506c012765023a7001ba3f77730e02"
+        },
+        {
+          "path": "internal/server/auth.go",
+          "status": "modified",
+          "blob": "b1e0b4d7400b4945a2097156b6fe48360db1f77c"
+        },
+        {
+          "path": "internal/server/auth_integration_test.go",
+          "status": "added",
+          "blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e"
+        },
+        {
+          "path": "internal/server/backup.go",
+          "status": "modified",
+          "blob": "449c77a773817b141380e47165dec87dcb144953"
+        },
+        {
+          "path": "internal/server/circuitbreaker.go",
+          "status": "modified",
+          "blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77"
+        },
+        {
+          "path": "internal/server/cleanup.go",
+          "status": "modified",
+          "blob": "ab8a305dfd9dc6d935451a632cee4ec13a713fd7"
+        },
+        {
+          "path": "internal/server/compression.go",
+          "status": "modified",
+          "blob": "b0486db0da58f62b74c6a6f86b5250583a74980c"
+        },
+        {
+          "path": "internal/server/config_validation.go",
+          "status": "modified",
+          "blob": "f85df0749b9136eaeb38ab2e6f2ca1c758e88f44"
+        },
+        {
+          "path": "internal/server/db.go",
+          "status": "modified",
+          "blob": "8c45355a437e48554b16a5a906b7b431d8ef910e"
+        },
+        {
+          "path": "internal/server/download.go",
+          "status": "modified",
+          "blob": "28f2bcc91604e3ece11b03000e379d2cbfe68089"
+        },
+        {
+          "path": "internal/server/download_tokens.go",
+          "status": "modified",
+          "blob": "f607c21c7ba870ed28b28e59a8eee7937ce2f08a"
+        },
+        {
+          "path": "internal/server/email.go",
+          "status": "modified",
+          "blob": "86571b5e5d6f97db3c532d88e879d7ba94f5ac94"
+        },
+        {
+          "path": "internal/server/endpoint_ratelimit.go",
+          "status": "modified",
+          "blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af"
+        },
+        {
+          "path": "internal/server/files.go",
+          "status": "modified",
+          "blob": "162559f4ba6deb6605b9baf22d28303f9d5ef427"
+        },
+        {
+          "path": "internal/server/hash.go",
+          "status": "modified",
+          "blob": "df202512a4e69c23a168688990adde8a83c94b07"
+        },
+        {
+          "path": "internal/server/health.go",
+          "status": "modified",
+          "blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539"
+        },
+        {
+          "path": "internal/server/jsonlog.go",
+          "status": "modified",
+          "blob": "46d9f36b186b8276ea0be68d3d0288517a35d933"
+        },
+        {
+          "path": "internal/server/links.go",
+          "status": "modified",
+          "blob": "08e0338771c78b1009fcb61e04641b503a56b42c"
+        },
+        {
+          "path": "internal/server/lockout.go",
+          "status": "modified",
+          "blob": "5047140790803471d485bf9405cc2fdaada82a16"
+        },
+        {
+          "path": "internal/server/logging.go",
+          "status": "modified",
+          "blob": "a3f2778d3348d154aaf8350635e75999473131fa"
+        },
+        {
+          "path": "internal/server/metrics.go",
+          "status": "modified",
+          "blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47"
+        },
+        {
+          "path": "internal/server/minio.go",
+          "status": "modified",
+          "blob": "ba182a50fec78bdd4dfdc63fd85c9c433b39d8fc"
+        },
+        {
+          "path": "internal/server/notifications.go",
+          "status": "modified",
+          "blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc"
+        },
+        {
+          "path": "internal/server/prometheus.go",
+          "status": "modified",
+          "blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6"
+        },
+        {
+          "path": "internal/server/quality_integration_test.go",
+          "status": "added",
+          "blob": "47171fc25a92dd74a1b24ae905ac42e29cc94905"
+        },
+        {
+          "path": "internal/server/quality_regression_test.go",
+          "status": "added",
+          "blob": "cd0db1b23c7ce17286e96435488bb94f255e9654"
+        },
+        {
+          "path": "internal/server/quota.go",
+          "status": "modified",
+          "blob": "c1f4c36c5b8e01b008c6ab14c8f9dc683da9f3df"
+        },
+        {
+          "path": "internal/server/ratelimit.go",
+          "status": "modified",
+          "blob": "40a35ee613c331484d1c0a06c60ba39cb236a468"
+        },
+        {
+          "path": "internal/server/ratelimit_test.go",
+          "status": "modified",
+          "blob": "0b2b27bb4c0cb87a62bafdffd3e5ccc91c5d36de"
+        },
+        {
+          "path": "internal/server/register.go",
+          "status": "modified",
+          "blob": "b6be5b0f8600fa3a2d1ee0a0080b091e326d189e"
+        },
+        {
+          "path": "internal/server/resumable.go",
+          "status": "modified",
+          "blob": "3e25f54e92c43f98bf49dffd4b2a1f625a65d7c7"
+        },
+        {
+          "path": "internal/server/rows.go",
+          "status": "added",
+          "blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892"
+        },
+        {
+          "path": "internal/server/security.go",
+          "status": "modified",
+          "blob": "2ed986f516c8964091b6f16609c064edaf266221"
+        },
+        {
+          "path": "internal/server/server.go",
+          "status": "modified",
+          "blob": "fab92ec9a9bf1c46897214216044983ed6d7497d"
+        },
+        {
+          "path": "internal/server/tracing.go",
+          "status": "modified",
+          "blob": "cf0bdedeb7e7baf6ce393d80a8eef1c8e6dfee12"
+        },
+        {
+          "path": "internal/server/upload.go",
+          "status": "modified",
+          "blob": "74fa11bc5dcbacb285d1fb9eed18eba0d602e7e6"
+        },
+        {
+          "path": "internal/server/upload_test.go",
+          "status": "modified",
+          "blob": "39d5ed0d2eeb2d01835d4fb124bfcb9dbc33c738"
+        },
+        {
+          "path": "internal/server/validation.go",
+          "status": "modified",
+          "blob": "69f9012e570bd909416a28566638a4eee12005ea"
+        },
+        {
+          "path": "internal/server/webhooks.go",
+          "status": "modified",
+          "blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2"
+        },
+        {
+          "path": "journal/DEVLOG.md",
+          "status": "modified",
+          "blob": "f32e27dc8f5492bb705b56f1acbcb3aae322f8ab"
+        },
+        {
+          "path": "test_hash.go",
+          "status": "modified",
+          "blob": "02e7f161e69f472c7e16b29a14ab73788839152d"
+        },
+        {
+          "path": "tests/auth/WindowsProbe.cs",
+          "status": "added",
+          "blob": "374dc5310b2e5cb9182b247f2aa4006b40ed787a"
+        },
+        {
+          "path": "tests/auth/acceptance.py",
+          "status": "added",
+          "blob": "5046da759e1feb7bc5a25cf6861c4a24fe99f298"
+        },
+        {
+          "path": "tests/auth/browser.cjs",
+          "status": "added",
+          "blob": "1232861ab95fd08c66e5bab69269c69c220e1d25"
+        },
+        {
+          "path": "tests/auth/e2e.py",
+          "status": "added",
+          "blob": "e133e2921e58552ff08adc5f46dbd41527b963a9"
+        },
+        {
+          "path": "tests/auth/evidence/20261018-local.json",
+          "status": "added",
+          "blob": "ed8518a65cfbcc90080bb411e4ef7ebf7a62e72a"
+        },
+        {
+          "path": "tests/auth/evidence/20261018-strict-lint.json",
+          "status": "added",
+          "blob": "ffcc1edf3b7d86ef44346b6f3837e5239c642790"
+        },
+        {
+          "path": "tests/auth/evidence/20261019-lint-reconciliation.json",
+          "status": "added",
+          "blob": "ed496844e32dcb1760cc12339e44c4e1bc4d9667"
+        },
+        {
+          "path": "tests/auth/evidence/20261019-quality.json",
+          "status": "added",
+          "blob": "3cb8d80dcdefca33acf34299b21fca840f4a163c"
+        },
+        {
+          "path": "tests/e2e/e2e_test.go",
+          "status": "modified",
+          "blob": "3e10a7e857efb48752a9489c013af02e5972a1f5"
+        },
+        {
+          "path": "tests/quality/verify_lint_gate.py",
+          "status": "added",
+          "blob": "23642e97254350eaa0f4e89f9939398f6ddcbec8"
+        }
+      ]
+    },
+    {
+      "PR": 28,
+      "head": "2e9bbdde7222fd77c91e8a98149ba5d84996c416",
+      "base": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "state": "open",
+      "merged": false,
+      "files": [
+        {
+          "path": ".github/workflows/full-e2e-acceptance.yml",
+          "status": "added",
+          "blob": "cb3ea92e67db279837d5b7067afd626ae5c80655"
+        },
+        {
+          "path": "docs/CONTINUITY.md",
+          "status": "modified",
+          "blob": "8964c9fff456cad78c3056d2de1b76beb6c93f2f"
+        },
+        {
+          "path": "docs/TRACKER.md",
+          "status": "modified",
+          "blob": "0a1176e3cee0ce9fdcef3c38ac9d4634bf487701"
+        },
+        {
+          "path": "journal/DEVLOG.md",
+          "status": "modified",
+          "blob": "968a35bc61f21372a6d767b3a87a063f83379cd5"
+        },
+        {
+          "path": "scripts/acceptance-runtime.py",
+          "status": "added",
+          "blob": "f65615d476e3459e3f69e7a460844570f7f1a9a2"
+        },
+        {
+          "path": "tests/acceptance/evidence/20261020.json",
+          "status": "added",
+          "blob": "4b4953f2f931b21cd9d7045cf5db47057fbd72c3"
+        },
+        {
+          "path": "tests/browser/evidence/20261020-registered-mobile.png",
+          "status": "added",
+          "blob": "b62bfb6cb8acf23d1f02dc4cf661379827adfc71"
+        },
+        {
+          "path": "tests/browser/evidence/README.md",
+          "status": "added",
+          "blob": "f244dbc7a861a3b801988bcdadf27672a9d6b482"
+        },
+        {
+          "path": "tests/browser/journey.cjs",
+          "status": "modified",
+          "blob": "58db027c82be18e2f53b76148ff8ac4184ccfb68"
+        },
+        {
+          "path": "tests/e2e/e2e_test.go",
+          "status": "modified",
+          "blob": "2a9fe32bdebf835260c5cad8090aca1f70f4ebf2"
+        },
+        {
+          "path": "tests/e2e/rustfs_evaluation_test.go",
+          "status": "modified",
+          "blob": "3ee51e92c452e8f3023a76371fff11d9f946826f"
+        },
+        {
+          "path": "tests/e2e/rustfs_migration_rehearsal_test.go",
+          "status": "modified",
+          "blob": "aa04d26e2c9a60fa18378c017b867383ace572d1"
+        },
+        {
+          "path": "tests/web/session.test.cjs",
+          "status": "modified",
+          "blob": "2b0410098b8b6fb5d520b358d40708316e1c1188"
+        },
+        {
+          "path": "web/static/index.html",
+          "status": "modified",
+          "blob": "96ff32fb2aa7ff09e5b96d21938ba3f11079eb9f"
+        }
+      ]
+    },
+    {
+      "PR": 29,
+      "head": "976c9a39c25f7cb38274bf066e5f7be05543813e",
+      "base": "8c548d8da15e280f3a5b595eaa8a0687627f5452",
+      "state": "open",
+      "merged": false,
+      "files": [
+        {
+          "path": ".github/workflows/legacy-auth.yml",
+          "status": "modified",
+          "blob": "d840e87f8f0b9c0c56652993c376c1d2529d049b"
+        },
+        {
+          "path": "docs/CONTINUITY.md",
+          "status": "modified",
+          "blob": "e06ad3503aca19c9a5fbebf7bc5e4d09c9459977"
+        },
+        {
+          "path": "docs/TRACKER.md",
+          "status": "modified",
+          "blob": "edb4c0535eefc0e2269a78f87d0f4d649cd2509f"
+        },
+        {
+          "path": "internal/server/audit.go",
+          "status": "modified",
+          "blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e"
+        },
+        {
+          "path": "internal/server/quality_integration_test.go",
+          "status": "modified",
+          "blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c"
+        },
+        {
+          "path": "internal/server/server.go",
+          "status": "modified",
+          "blob": "5c17ca4c68e01eeb63e307a9dfbd9d2ba6e5ab79"
+        },
+        {
+          "path": "journal/DEVLOG.md",
+          "status": "modified",
+          "blob": "2b378cf055a79ca6710bbf84161cd13f62267328"
+        },
+        {
+          "path": "tests/auth/ReleaseBackendProbe.cs",
+          "status": "added",
+          "blob": "65091b352b51900bc049dc78b350f70479d424e9"
+        },
+        {
+          "path": "tests/auth/acceptance.py",
+          "status": "modified",
+          "blob": "bcc368e60cc466736d45e139ba9bc1489d239125"
+        },
+        {
+          "path": "tests/auth/browser.cjs",
+          "status": "modified",
+          "blob": "e05ea7d4cbc988d8a0d01aaa3e2673edbb0a51b1"
+        },
+        {
+          "path": "tests/auth/e2e.py",
+          "status": "modified",
+          "blob": "98fd4f1042f164617f0095e17b673712952198ac"
+        },
+        {
+          "path": "web/static/index.html",
+          "status": "modified",
+          "blob": "362329d0247146878c62886bbc50582d09b058d3"
+        }
+      ]
+    }
+  ],
+  "schema_guard": {
+    "implementation": "a353636571ac46eec974f7650d66a250945ca8f0",
+    "received_source_failures": [
+      "legacy-v4-collision",
+      "hybrid-v4-bytea"
+    ],
+    "corrected_subtests": 11,
+    "metadata_and_rows_unchanged_on_rejection": true,
+    "negative_fixtures_are_not_full_legacy_migrations": true,
+    "custom_schema_received_failures": [
+      "custom-canonical-public-incompatible",
+      "custom-incompatible-public-empty",
+      "custom-incompatible-public-canonical"
+    ],
+    "same_borrowed_migration_connection": true,
+    "cross_schema_application_resolution_rejected": true
+  },
+  "fresh_recovery": [
+    {
+      "layout": "bytea",
+      "checks": 42,
+      "exit": 0,
+      "failures": [],
+      "preservation": true,
+      "cleanup": true,
+      "candidate_image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad",
+      "rollback": {
+        "image": "sha256:575a6088b3e082f9a4990dcd1580ca2d5d31c2f4d639922ea3cb0c2f18179a2f",
+        "image_id": "sha256:575a6088b3e082f9a4990dcd1580ca2d5d31c2f4d639922ea3cb0c2f18179a2f",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      }
+    },
+    {
+      "layout": "bigint",
+      "checks": 42,
+      "exit": 0,
+      "failures": [],
+      "preservation": true,
+      "cleanup": true,
+      "candidate_image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad",
+      "rollback": {
+        "image": "sha256:575a6088b3e082f9a4990dcd1580ca2d5d31c2f4d639922ea3cb0c2f18179a2f",
+        "image_id": "sha256:575a6088b3e082f9a4990dcd1580ca2d5d31c2f4d639922ea3cb0c2f18179a2f",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      }
+    }
+  ],
+  "binary_equality": {
+    "candidate": {
+      "backend": "0dfdaf57c6aef80b6b8e1ffcf09c4b245a240769da85fd9e4fee57344434d562",
+      "sfd-hash": "744ebf494f5d2f1f9230afcc3e582e83137fcd8ed531c7f20074b8b3c7aa6b4f"
+    },
+    "recovery": {
+      "backend": "0dfdaf57c6aef80b6b8e1ffcf09c4b245a240769da85fd9e4fee57344434d562",
+      "sfd-hash": "744ebf494f5d2f1f9230afcc3e582e83137fcd8ed531c7f20074b8b3c7aa6b4f"
+    }
+  },
+  "operational_image_acceptance": "rejected for adoption: administrator wrong-key and user storage-failure deletion regressions FAIL on both exact images; lifecycle correction/review required",
+  "frozen_executable_sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+  "new_binary_installed": false,
+  "live_schema_observed": {
+    "version": 11,
+    "dirty": false,
+    "hash_metadata": "bytea"
+  },
+  "retained_resources_unchanged": {
+    "stopped_containers": 57,
+    "volumes": 37,
+    "networks": 5,
+    "images": 10
+  },
+  "live_runtime_modified": false,
+  "owner_visual_acceptance": "unexecuted",
+  "postintegration_acceptance": "unexecuted",
+  "fresh_deletion_preservation_failures": [
+    {
+      "inherited_revision": "976c9a39c25f7cb38274bf066e5f7be05543813e",
+      "inherited_fixture_sha256": "ae45a6d79cc6b35f85b3f023dbd6089790369ea3bec3041843fd05bd7aa55a4a",
+      "probe_source_sha256": "8c48af39597caf1ccec848725cd052566cda3196788aea5a174e0a44a0fa82fb",
+      "backend_image": "sha256:a565aec3f5e764071504ca11df11078d6c1973d1122d093ad580174c25e6f0ad",
+      "exit": 1,
+      "actual": {
+        "admin_delete_status": 204,
+        "admin_metadata_preserved": false,
+        "admin_object_present_after_success": true,
+        "owned_delete_storage_down_status": 204,
+        "metadata_preserved": false,
+        "object_present_after_owned_storage_restart": true,
+        "expected_storage_error_status": 502,
+        "expected_metadata_preserved": true,
+        "target": "only newly created synthetic fixture"
+      },
+      "failures": [
+        "deletion must remove exact object and retain metadata on storage failure"
+      ],
+      "existing_services_unchanged": true,
+      "owned_cleanup_complete": true
+    },
+    {
+      "inherited_revision": "976c9a39c25f7cb38274bf066e5f7be05543813e",
+      "inherited_fixture_sha256": "ae45a6d79cc6b35f85b3f023dbd6089790369ea3bec3041843fd05bd7aa55a4a",
+      "probe_source_sha256": "8c48af39597caf1ccec848725cd052566cda3196788aea5a174e0a44a0fa82fb",
+      "backend_image": "sha256:575a6088b3e082f9a4990dcd1580ca2d5d31c2f4d639922ea3cb0c2f18179a2f",
+      "exit": 1,
+      "actual": {
+        "admin_delete_status": 204,
+        "admin_metadata_preserved": false,
+        "admin_object_present_after_success": true,
+        "owned_delete_storage_down_status": 204,
+        "metadata_preserved": false,
+        "object_present_after_owned_storage_restart": true,
+        "expected_storage_error_status": 502,
+        "expected_metadata_preserved": true,
+        "target": "only newly created synthetic fixture"
+      },
+      "failures": [
+        "deletion must remove exact object and retain metadata on storage failure"
+      ],
+      "existing_services_unchanged": true,
+      "owned_cleanup_complete": true
+    }
+  ],
+  "local_final_quality": [
+    {
+      "step": "unit",
+      "exit": 0,
+      "passed": 111,
+      "skips": [
+        "TestSchemaLineage",
+        "TestDisposableCommitFaults",
+        "TestUploadHashDownloadFlow",
+        "TestRustFSMigrationRehearsal"
+      ],
+      "failures": []
+    },
+    {
+      "step": "vet",
+      "exit": 0
+    },
+    {
+      "step": "race",
+      "exit": 0,
+      "passed": 111,
+      "skips": [
+        "TestSchemaLineage",
+        "TestDisposableCommitFaults"
+      ],
+      "failures": []
+    },
+    {
+      "step": "build",
+      "exit": 0
+    },
+    {
+      "step": "native",
+      "exit": 0
+    }
+  ],
+  "full_configured_lint_findings": 0
+}
