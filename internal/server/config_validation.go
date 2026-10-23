@@ -247,18 +247,12 @@ func ValidateAllConfiguration() error {
 	v.ValidateEnum("SFD_LOG_LEVEL", os.Getenv("SFD_LOG_LEVEL"), []string{"", "debug", "info", "warn", "error"})
 	v.ValidateEnum("SFD_ENV", os.Getenv("SFD_ENV"), []string{"", "development", "production", "staging"})
 
-	// Backup configuration
-	if backupInterval := os.Getenv("SFD_BACKUP_INTERVAL"); backupInterval != "" {
-		// Must be a valid duration string
-		if _, err := strconv.Atoi(strings.TrimSuffix(backupInterval, "h")); err != nil {
-			if _, err := strconv.Atoi(strings.TrimSuffix(backupInterval, "m")); err != nil {
-				v.AddError("SFD_BACKUP_INTERVAL", "must be a valid duration (e.g., 24h, 1440m)")
-			}
-		}
+	// Validate with the same parsers used by the backup scheduler and retention.
+	if _, err := parseBackupInterval(os.Getenv("SFD_BACKUP_INTERVAL")); err != nil {
+		v.AddError("SFD_BACKUP_INTERVAL", err.Error())
 	}
-
-	if retentionDays := os.Getenv("SFD_BACKUP_RETENTION_DAYS"); retentionDays != "" {
-		v.ValidatePositiveInt("SFD_BACKUP_RETENTION_DAYS", retentionDays)
+	if _, err := parseBackupRetentionDays(os.Getenv("SFD_BACKUP_RETENTION_DAYS")); err != nil {
+		v.AddError("SFD_BACKUP_RETENTION_DAYS", err.Error())
 	}
 
 	// Upload limits
