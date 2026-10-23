@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>$(DefineConstants);SFD_SYNTHETIC_TESTS</DefineConstants>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors><NuGetAudit>true</NuGetAudit>
+    <OutputPath>../../desktop/windows/dist/schema12-contract/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup><Compile Include="../../desktop/windows/Client.cs"/><Compile Include="PortableContract.cs"/></ItemGroup>
+</Project>
