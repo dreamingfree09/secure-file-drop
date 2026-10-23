@@ -36,6 +36,10 @@ This builds the real runtime image and C tool, creates unique disposable Postgre
 
 For a fresh development stack, follow [deployment](docs/DEPLOYMENT.md). Never point startup migrations or cleanup at existing storage for tests. Compose uses persistent development volumes and is not the disposable test harness. Production needs a separately reviewed TLS/proxy and operations configuration.
 
+## Windows tray companion
+
+The [native Windows companion](docs/WINDOWS_COMPANION.md) adds Quick Send, verified expiring-link copying, transfer/service status and explicit per-user Explorer integration. It uses the existing authenticated backend without starting Docker or WSL. This development preview requires independent review and the documented interactive Windows acceptance; production and representative large-file gates remain open.
+
 ## Documentation
 
 - [Specification](docs/SPEC.md), [architecture](docs/ARCHITECTURE.md)
