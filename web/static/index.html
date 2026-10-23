@@ -622,7 +622,7 @@
 
           <button class="btn btn-primary" onclick="login()">Sign In</button>
 
-          <div id="loginAlert"></div>
+          <div id="loginAlert" role="alert"></div>
 
           <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border);">
             <span style="color: var(--text-secondary);">Don't have an account?</span>
@@ -700,7 +700,7 @@
             <div class="link-expires" id="linkExpires"></div>
           </div>
 
-          <div id="uploadAlert"></div>
+          <div id="uploadAlert" role="alert"></div>
         </div>
       </div>
 
@@ -742,14 +742,36 @@ function clearCredentials() {
     document.getElementById(id).value = '';
   }
 }
+function clearSessionView() {
+  clearCredentials();
+  isLoggedIn = false;
+  isAdmin = false;
+  selectedFile = null;
+  for (const id of ['username', 'password', 'fileInput', 'downloadLink']) {
+    document.getElementById(id).value = '';
+  }
+  for (const id of ['fileName', 'fileSize', 'linkExpires', 'filesOutput', 'metricsOutput', 'uploadAlert']) {
+    document.getElementById(id).textContent = '';
+  }
+  for (const id of ['fileInfo', 'linkContainer', 'progressContainer']) {
+    document.getElementById(id).classList.remove('show');
+  }
+  document.getElementById('appScreen').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
 // Keep ownership through response-body consumption, with a bounded small-request timeout.
 async function sessionFetch(url, options = {}) {
+  const generation = sessionGeneration;
   const controller = new AbortController();
   ownedRequests.add(controller);
   const timer = setTimeout(() => { controller.abort(); release(); }, 30000);
   function release() { clearTimeout(timer); ownedRequests.delete(controller); }
   try {
     const res = await fetch(url, {...options, signal: controller.signal});
+    if (res.status === 401 && isLoggedIn && generation === sessionGeneration) {
+      release(); invalidateSession(); clearSessionView();
+      return res;
+    }
     for (const method of ['json', 'text']) {
       if (typeof res[method] !== 'function') continue;
       const read = res[method].bind(res);
@@ -811,21 +833,7 @@ async function logout() {
       showAlert(document.getElementById('uploadAlert'), 'Sign out failed. Please try again.', 'error');
       return;
     }
-    clearCredentials();
-    isLoggedIn = false;
-    isAdmin = false;
-    selectedFile = null;
-    for (const id of ['username', 'password', 'fileInput', 'downloadLink']) {
-      document.getElementById(id).value = '';
-    }
-    for (const id of ['fileName', 'fileSize', 'linkExpires', 'filesOutput', 'metricsOutput', 'uploadAlert']) {
-      document.getElementById(id).textContent = '';
-    }
-    for (const id of ['fileInfo', 'linkContainer', 'progressContainer']) {
-      document.getElementById(id).classList.remove('show');
-    }
-    document.getElementById('appScreen').classList.add('hidden');
-    document.getElementById('loginScreen').classList.remove('hidden');
+    clearSessionView();
   } catch (err) {
     if (generation !== sessionGeneration) return;
     showAlert(document.getElementById('uploadAlert'), 'Sign out failed. Please try again.', 'error');
@@ -867,6 +875,7 @@ async function uploadFile() {
   const uploadAlert = document.getElementById('uploadAlert');
   
   try {
+    uploadAlert.textContent = '';
     // Show progress
     progressContainer.classList.add('show');
     progressFill.style.width = '30%';

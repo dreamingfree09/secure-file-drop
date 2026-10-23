@@ -364,3 +364,38 @@ Updated runbook/continuity/companion prerequisite only, preserving every receive
 ## 2026-10-18 — SFD-WINDOWS-TRAY-CONNECTION-20261018
 
 Owner-authorised Windows-only correction from PR #26 received 4c3c2736129a1b14238c6e0f2e3b50910a1b5311. Reproduced historical preview legacy TLS defaults from missing compiled TargetFrameworkAttribute; explicit Framework 4.8 target fixes actual credential-free HTTPS requests without trust/server changes. Added explicit revocation checks, safe transport classification and fail-closed session-verification diagnostics. Local 32 platform +16 protocol +6 release-policy and five native credential-free live HTTPS checks passed. Historical WSL account/API differences remain visible; Owner-operated authenticated tray acceptance and Aether review are separate gates. Final exact publication, CI and replacement binary identities are recorded in PR #26. Original executable/process/settings, backend/data/TLS/credentials, branches and unrelated projects remain preserved; no merge or public-production readiness claim.
+
+
+## 2026-10-20 - SFD-FULL-E2E-ACCEPTANCE-20261020: acceptance execution
+
+Received canonical combined source c320861536914623ea22f28c1d4ea156d4c2132a (PR26 over PR25), separately preserved legacy proposal 8c548d8da15e280f3a5b595eaa8a0687627f5452 (PR27 over WSL feature2b). No source-lineage substitution, live backend adoption or integration is authorised while Aether exact-revision gates remain unresolved. Baseline Go/unit/race/vet/build/native/lint/docs/environment checks passed; explicit opt-in/fault fixture skips are not runtime acceptance. Expanded the existing real browser journey with privately piped synthetic credentials, keyboard/role/file-boundary/integrity/expiry/interruption checks and isolated clipboard instrumentation. Fixed stale upload error text at the start of a subsequent attempt and marked existing feedback as alerts. Actual runtime results and remaining visual/legacy reconciliation gates will be recorded after execution. Original DEVLOG prefix and all existing worktrees/services remain preserved.
+
+
+### 2026-10-20 — Rehearsal credential handoff
+
+The expanded browser uses fresh synthetic passwords; rollback phase F still assumed its historical constant and correctly rejected authentication. Pass a fresh rehearsal-owned browser password privately through stdin and reuse it only to verify the restored synthetic account. Retain both failed rehearsal namespaces stopped with checkpoints. The five completed phases are not six-phase acceptance; rerun all six in a fresh namespace.
+
+
+### 2026-10-20 — Current-head mandatory acceptance CI
+
+Install the full E2E workflow separately from application corrections. Test the actual checkout revision, retain strict 15 default / 18 RustFS / 6 rehearsal counts and 37 real browser checks, require 17 portable real-backend client checks and native Windows 32/16/6, and independently verify fixture cleanup. Public runtime evidence contains structured assertions only; private raw logs/checkpoints cannot be uploaded by this workflow. Historical pinned integrated-master workflows remain unchanged.
+
+
+### 2026-10-20 — Bound fresh browser fixture input
+
+The fresh rehearsal browser password exceeded the registration UI maximum. Bound it to a random 41-character synthetic value. Browser registration timeout is retained as a failed fixture attempt; no six-phase pass is claimed.
+
+
+### 2026-10-20 — Full E2E current state and retained gates
+
+Record the exact received PR ancestry, scoped UI/API/audit corrections, real browser/Windows evidence, preserved reviewed executable, failed rehearsal evidence and pending independent acceptance. No live adoption or integration occurred. Retain the rejected fallback decision and explicit storage/deployment, schema/ownership, capacity and cross-host recovery gates. Canonical PR handover is the authoritative revision-specific report.
+
+
+### 2026-10-20 — Dependency scan failure attribution
+
+Hosted contract scans reached the verified RustFS binary but failed inside a Docker helper closing over the parent test, causing Goexit and hiding the actual scanner failure in the child summary. Bind the dependency scanner helper to its current subtest while keeping ownership cleanup on the parent. Do not suppress the failed scan or count later scenarios as passes. Local18/18 and hosted6/6 evidence remain separate.
+
+
+### 2026-10-20 — Public SBOM scanner permission correction
+
+Exact hosted failure: private wrapper umask0077 reduced the public upstream SBOM creation mode to0600; the restricted scanner could not read its bind mount. Explicitly apply intended0644 only to the checksum-verified public SBOM in t.TempDir. Keep private log/fixture umask0077, scanner restrictions, provenance digest and all advisory assertions. A narrow G302 annotation documents this public-only boundary; legacy lint annotations/policy remain unchanged.
