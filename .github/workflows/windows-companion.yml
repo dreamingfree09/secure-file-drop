@@ -5,6 +5,7 @@ on:
     paths:
       - desktop/**
       - tests/e2e/**
+      - tests/auth/**
       - internal/**
       - cmd/**
       - go.mod
@@ -15,6 +16,7 @@ on:
     paths:
       - desktop/**
       - tests/e2e/**
+      - tests/auth/**
       - internal/**
       - cmd/**
       - go.mod
