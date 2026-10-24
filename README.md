@@ -1,3 +1,5 @@
+> Current development candidate: [canonical schema12 selected-source reconciliation](docs/CANONICAL_RECONCILIATION.md). Historical schema4 setup/storage acceptance below is not an adoption procedure for existing11/BYTEA. No public production readiness or live replacement is claimed.
+
 # Secure File Drop
 
 Secure File Drop is a self-hosted Go application for registered-user uploads to private MinIO storage, native C SHA-256 verification and expiring bearer download links.
@@ -14,7 +16,7 @@ Start with [continuity](docs/CONTINUITY.md), [GHP-01](docs/GHP-01.md), [agent in
 
 ## Development and validation
 
-Use Go 1.26.9 (the module toolchain), GCC, OpenSSL development headers, Make and Python 3.
+Use Go 1.26.10 (the module toolchain), GCC, OpenSSL development headers, Make and Python 3.
 
 ```sh
 go build -o /tmp/sfd-backend ./cmd/backend
@@ -35,6 +37,10 @@ SFD_E2E=1 go test ./tests/e2e -v -count=1 -timeout 25m
 This builds the real runtime image and C tool, creates unique disposable PostgreSQL/MinIO resources with loopback ports, verifies upload/hash/download bytes, negative authorization and expiry, migration upgrade/idempotency and cleanup. Ownership labels are checked before resource removal. It does not read your .env or use existing volumes. CI runs this separately with opt-in, including real Chromium. To require that journey locally, install the pinned test-only package with `npm ci --prefix tests/browser --ignore-scripts`, install its Chromium with `node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium`, then set both `SFD_E2E=1 SFD_BROWSER=1`. The host native tool must first be built with `make -C native test` for the real COMMIT fault fixture.
 
 For a fresh development stack, follow [deployment](docs/DEPLOYMENT.md). Never point startup migrations or cleanup at existing storage for tests. Compose uses persistent development volumes and is not the disposable test harness. Production needs a separately reviewed TLS/proxy and operations configuration.
+
+## Windows tray companion
+
+The [native Windows companion](docs/WINDOWS_COMPANION.md) adds Quick Send, verified expiring-link copying, transfer/service status and explicit per-user Explorer integration. It uses the existing authenticated backend without starting Docker or WSL. This development preview requires independent review and the documented interactive Windows acceptance; production and representative large-file gates remain open.
 
 ## Documentation
 

@@ -263,5 +263,6 @@ func verifyProxy(ctx context.Context, t *testing.T, run, network, image string, 
 			t.Fatal("proxy/backend oversized envelope accepted", size, code)
 		}
 	}
+	verifyDesktopClient(ctx, t, base, run, filepath.Join(dir, "cert.pem"))
 	t.Log("PASS: real Traefik TLS, actual Compose envelope/redirect settings, Secure cookie, exact-file-limit multipart upload and canonical byte-equal download")
 }

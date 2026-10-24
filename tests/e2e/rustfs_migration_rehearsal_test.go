@@ -37,7 +37,7 @@ type rehearsal struct {
 	ctx                                                                              context.Context
 	cli, run, network, label, appImage, minioImage, evidence                         string
 	root, rootSecret, app, appSecret, reader, readerSecret, outsider, outsiderSecret string
-	pgSecret, adminSecret, sessionSecret, downloadSecret                             string
+	browserSecret, pgSecret, adminSecret, sessionSecret, downloadSecret              string
 	resources                                                                        [][2]string
 	rustEnv                                                                          map[string]string
 }
@@ -75,6 +75,7 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 	f.reader, f.readerSecret = "reader_"+rehearsalSecret()[:16], rehearsalSecret()
 	f.outsider, f.outsiderSecret = "outsider_"+rehearsalSecret()[:16], rehearsalSecret()
 	f.pgSecret, f.adminSecret = rehearsalSecret(), rehearsalSecret()
+	f.browserSecret = "Rehearsal7" + rehearsalSecret()[:32]
 	f.sessionSecret, f.downloadSecret = rehearsalSecret(), rehearsalSecret()
 	f.evidence = t.TempDir()
 	if base := os.Getenv("SFD_REHEARSAL_EVIDENCE"); base != "" {
@@ -221,8 +222,13 @@ func TestRustFSMigrationRehearsal(t *testing.T) {
 		}
 		// #nosec G204 G702 -- Fixed browser script; argument is the verified owned loopback port, no shell.
 		cmd := exec.CommandContext(ctx, "node", "tests/browser/journey.cjs", restoredApp.base)
+		fixture, err := json.Marshal(map[string]string{"browser_password": f.browserSecret, "max_file_bytes": "6291456", "username": "admin", "password": f.adminSecret})
+		if err != nil {
+			f.t.Fatal(err)
+		}
+		cmd.Stdin = bytes.NewReader(fixture)
+		cmd.Env = append(os.Environ(), "SFD_BROWSER_RUN="+f.run)
 		cmd.Dir = "../.."
-		cmd.Env = os.Environ()
 		out, err := cmd.CombinedOutput()
 		if err != nil {
 			f.t.Fatalf("restored-pair browser: %v %s", err, out)
@@ -492,6 +498,12 @@ func (f *rehearsal) application(suffix string, d rehearsalDB, s rehearsalStore) 
 	a := rehearsalApp{id: f.docker(args...), db: d}
 	f.own("container", a.id)
 	a.base = "http://" + f.port(a.id, "8080/tcp")
+	lastReadiness := "not attempted"
+	defer func() {
+		if lastReadiness != "HTTP 200" {
+			f.t.Log("owned backend readiness diagnostic:", lastReadiness)
+		}
+	}()
 	f.wait("unchanged backend", func() bool {
 		req, err := http.NewRequestWithContext(f.ctx, "GET", a.base+"/ready", nil)
 		if err != nil {
@@ -499,8 +511,10 @@ func (f *rehearsal) application(suffix string, d rehearsalDB, s rehearsalStore) 
 		}
 		res, err := (&http.Client{Timeout: 3 * time.Second}).Do(req)
 		if err != nil {
+			lastReadiness = fmt.Sprintf("transport error type %T", err)
 			return false
 		}
+		lastReadiness = fmt.Sprintf("HTTP %d", res.StatusCode)
 		_ = res.Body.Close()
 		return res.StatusCode == 200
 	})
@@ -767,7 +781,7 @@ func (f *rehearsal) accept(a rehearsalApp, manifest []rehearsalFile, data map[st
 			if !strings.HasPrefix(r.Username, "browser_") {
 				f.t.Fatal("unexpected synthetic owner")
 			}
-			browserLogin := f.request(a, "POST", "/login", f.json(map[string]string{"username": r.Username, "password": "SyntheticBrowser123"}), nil, "")
+			browserLogin := f.request(a, "POST", "/login", f.json(map[string]string{"username": r.Username, "password": f.browserSecret}), nil, "")
 			f.expect(browserLogin.code, 200)
 			if len(browserLogin.cookies) != 1 {
 				f.t.Fatal("browser owner missing session")

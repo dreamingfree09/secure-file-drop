@@ -61,6 +61,12 @@ func assessRustSBOM(ctx context.Context, t *testing.T, run string, docker func(.
 	if err := os.WriteFile(file, body, 0644); err != nil {
 		t.Fatal(err)
 	}
+	// The wrapper uses a private umask. This checksum-verified upstream SBOM
+	// is public data; the restricted scanner must read it through its bind mount.
+	// #nosec G302 -- Public upstream inventory only, fixed t.TempDir path; no private fixture data.
+	if err := os.Chmod(file, 0644); err != nil {
+		t.Fatal(err)
+	}
 	id := docker("create", "--name", run+"-sbom-scanner", "--label", "sfd.quality-run="+run, "--network", run+"-net",
 		"--cap-drop=ALL", "--security-opt", "no-new-privileges", "--mount", "type=bind,src="+file+",dst=/scan/sbom.json,readonly",
 		"aquasec/trivy@sha256:166061a4a15c64a94a3aab430659e2c166dc0815fbc54a222c6d56d64132f552", "sbom", "--timeout", "3m", "--list-all-pkgs", "--format", "json", "--output", "/tmp/result.json", "/scan/sbom.json")

@@ -1,0 +1,921 @@
+{
+  "work_id": "SFD-FINAL-ACCEPTANCE-CONTINUATION-20261021",
+  "canonical_parent": "8b2886590f2671dfd7e537a7446e4ce17392c316",
+  "received_selected_source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+  "source_path_count": 122,
+  "entries": [
+    {
+      "path": ".env.example",
+      "received_blob": "fd40d6a2b256deac94e698c3285e5ed427859a00",
+      "selected_blob": "8fcac1509e1305a39e4ab596ce95dd74162d596e",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+    },
+    {
+      "path": "Dockerfile.backend",
+      "received_blob": "0956918d8a5bdabdf93238f7ab7e00a2bb36d540",
+      "selected_blob": "d805c168d87f4f8f8216c05abbacdd8410bbe3fa",
+      "exact_received_bytes": false,
+      "selection": "new authoritative security advisory correction: Go1.26.10 and patched musl minimums"
+    },
+    {
+      "path": "cmd/backend/main.go",
+      "received_blob": "735986353521488a21055c43d517626ccc5f44be",
+      "selected_blob": "735986353521488a21055c43d517626ccc5f44be",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "cmd/backend/main_test.go",
+      "received_blob": "3620be4a586170691a718db29f81bb6a4c82d172",
+      "selected_blob": "3620be4a586170691a718db29f81bb6a4c82d172",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/.gitignore",
+      "received_blob": "d082e62e711bb57e9d30924704740fa4604fa979",
+      "selected_blob": "d082e62e711bb57e9d30924704740fa4604fa979",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/App.cs",
+      "received_blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062",
+      "selected_blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/Client.cs",
+      "received_blob": "8978616de376687532b50e3f93cb54e1acd5785e",
+      "selected_blob": "8978616de376687532b50e3f93cb54e1acd5785e",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/FrameworkTarget.cs",
+      "received_blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2",
+      "selected_blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/SecureFileDrop.exe.config",
+      "received_blob": "a6a246014513cecb03a7983b32668674babcfd59",
+      "selected_blob": "a6a246014513cecb03a7983b32668674babcfd59",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/WindowsIntegration.cs",
+      "received_blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2",
+      "selected_blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/app.manifest",
+      "received_blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01",
+      "selected_blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/build.ps1",
+      "received_blob": "17da686bcb0fee69aa4dec09178956864b52c36c",
+      "selected_blob": "17da686bcb0fee69aa4dec09178956864b52c36c",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/.gitignore",
+      "received_blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c",
+      "selected_blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/Client.Contract.csproj",
+      "received_blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0",
+      "selected_blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/ContractRunner.cs",
+      "received_blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299",
+      "selected_blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/LiveProbe.cs",
+      "received_blob": "4a5e797b26d370627ac47239910f50be5b2942fd",
+      "selected_blob": "4a5e797b26d370627ac47239910f50be5b2942fd",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/ProductPolicyTests.cs",
+      "received_blob": "4436f990c197004d22119de8c542629ce4a397f7",
+      "selected_blob": "4436f990c197004d22119de8c542629ce4a397f7",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/ProtocolTests.cs",
+      "received_blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d",
+      "selected_blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/WindowsTests.cs",
+      "received_blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f",
+      "selected_blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/live.ps1",
+      "received_blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b",
+      "selected_blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "desktop/windows/tests/test.ps1",
+      "received_blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2",
+      "selected_blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "docker-compose.yml",
+      "received_blob": "d8c02c8f107bd3f4dfed13ba959c30bd281d8305",
+      "selected_blob": "74d46e801aeccde13c50885a6d1be0b9b096f189",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+    },
+    {
+      "path": "go.mod",
+      "received_blob": "d62b0c5bbf4c091977631389c58bd5722d426344",
+      "selected_blob": "425e449669d52784b2861e93ed7024e05f87b0eb",
+      "exact_received_bytes": false,
+      "selection": "new authoritative security advisory correction: Go1.26.10 and patched musl minimums"
+    },
+    {
+      "path": "go.sum",
+      "received_blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e",
+      "selected_blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/alter_001.sql",
+      "received_blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6",
+      "selected_blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/alter_002.sql",
+      "received_blob": "7365e59ecb9c2901160504d57dc72d9c705595d3",
+      "selected_blob": "7365e59ecb9c2901160504d57dc72d9c705595d3",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/alter_002_resumable_uploads.sql",
+      "received_blob": "52e2b147f245378aeba2b45b4cfbc8cd5d24d159",
+      "selected_blob": "a1ec041619560f1e60e921e67909fdf9ebf95a95",
+      "exact_received_bytes": false,
+      "selection": "whitespace-only import normalization"
+    },
+    {
+      "path": "internal/db/alter_010.sql",
+      "received_blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59",
+      "selected_blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/alter_011.sql",
+      "received_blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a",
+      "selected_blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/alter_012.sql",
+      "received_blob": "39d5fe21bb330686ddb6f715bee8a108707efca3",
+      "selected_blob": "a40e83e29ef8d752791f52aacc1f145962fdcaac",
+      "exact_received_bytes": false,
+      "selection": "whitespace-only import normalization"
+    },
+    {
+      "path": "internal/db/doc.go",
+      "received_blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed",
+      "selected_blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/lineage.go",
+      "received_blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+      "selected_blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrate.go",
+      "received_blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47",
+      "selected_blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrate_lineage_test.go",
+      "received_blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec",
+      "selected_blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.down.sql",
+      "received_blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef",
+      "selected_blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.up.sql",
+      "received_blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7",
+      "selected_blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.down.sql",
+      "received_blob": "68c37777af020f629b91e0fe34974baae92555ab",
+      "selected_blob": "68c37777af020f629b91e0fe34974baae92555ab",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.up.sql",
+      "received_blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d",
+      "selected_blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.down.sql",
+      "received_blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9",
+      "selected_blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.up.sql",
+      "received_blob": "088c7f7240edf55a556287c12353167af355c16a",
+      "selected_blob": "088c7f7240edf55a556287c12353167af355c16a",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.down.sql",
+      "received_blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c",
+      "selected_blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.up.sql",
+      "received_blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c",
+      "selected_blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.down.sql",
+      "received_blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7",
+      "selected_blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.up.sql",
+      "received_blob": "1a22e8b011c265435b76e7aeede683989a35a255",
+      "selected_blob": "1a22e8b011c265435b76e7aeede683989a35a255",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.down.sql",
+      "received_blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc",
+      "selected_blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.up.sql",
+      "received_blob": "545938530f826d509516028117ff48d3af8c21da",
+      "selected_blob": "545938530f826d509516028117ff48d3af8c21da",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.down.sql",
+      "received_blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d",
+      "selected_blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.up.sql",
+      "received_blob": "779c5a06874568e5e3ac619df28ce0678e259ab4",
+      "selected_blob": "779c5a06874568e5e3ac619df28ce0678e259ab4",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.down.sql",
+      "received_blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0",
+      "selected_blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.up.sql",
+      "received_blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363",
+      "selected_blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.down.sql",
+      "received_blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718",
+      "selected_blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.up.sql",
+      "received_blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857",
+      "selected_blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.down.sql",
+      "received_blob": "165f146571ed97f93eaddb55e120809baec39846",
+      "selected_blob": "165f146571ed97f93eaddb55e120809baec39846",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.up.sql",
+      "received_blob": "1e5baa381088b17f4e4a062df9ef660dd182ca8d",
+      "selected_blob": "b292067130128584ce644e2ca4d4f9df1552126f",
+      "exact_received_bytes": false,
+      "selection": "whitespace-only import normalization"
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.down.sql",
+      "received_blob": "140c983af7d109727af2761f196289cfa9063ee7",
+      "selected_blob": "140c983af7d109727af2761f196289cfa9063ee7",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.up.sql",
+      "received_blob": "5e8d836ddc9b5a17919d52c9468abc065776450d",
+      "selected_blob": "5e8d836ddc9b5a17919d52c9468abc065776450d",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.down.sql",
+      "received_blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83",
+      "selected_blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+      "received_blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7",
+      "selected_blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/db/schema.sql",
+      "received_blob": "2ca9b0707d9406edabd927080ee1b77976e93203",
+      "selected_blob": "2ca9b0707d9406edabd927080ee1b77976e93203",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/admin.go",
+      "received_blob": "a86fa9ef0f05fbbb97f6f395ee6fc1d54176050a",
+      "selected_blob": "f39a8f05d78cd72b4853d36f272ba4dd8af11c1a",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/admin_test.go",
+      "received_blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b",
+      "selected_blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/audit.go",
+      "received_blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e",
+      "selected_blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/auth.go",
+      "received_blob": "b1e0b4d7400b4945a2097156b6fe48360db1f77c",
+      "selected_blob": "84b9b3241bc935b80f6897ee9e1f4fb8ef556ab6",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/auth_integration_test.go",
+      "received_blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e",
+      "selected_blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/auth_test.go",
+      "received_blob": "5b10c766b28f2e8f23b894443128426abfa410c2",
+      "selected_blob": "5b10c766b28f2e8f23b894443128426abfa410c2",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/backup.go",
+      "received_blob": "449c77a773817b141380e47165dec87dcb144953",
+      "selected_blob": "449c77a773817b141380e47165dec87dcb144953",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/circuitbreaker.go",
+      "received_blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77",
+      "selected_blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/cleanup.go",
+      "received_blob": "3859beb09b7f977fd7c43c0b5582f27870de4714",
+      "selected_blob": "3859beb09b7f977fd7c43c0b5582f27870de4714",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/commit_fault_integration_test.go",
+      "received_blob": "fb5bffd130fae96071188603188c79cd0395a05e",
+      "selected_blob": "fb5bffd130fae96071188603188c79cd0395a05e",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/compression.go",
+      "received_blob": "b0486db0da58f62b74c6a6f86b5250583a74980c",
+      "selected_blob": "b8fb324647cfc359c64d9ff1522325ea2d2921ea",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/config_validation.go",
+      "received_blob": "f85df0749b9136eaeb38ab2e6f2ca1c758e88f44",
+      "selected_blob": "816800cf36709fc91ccc1ec209498869d264ad36",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+    },
+    {
+      "path": "internal/server/db.go",
+      "received_blob": "8c45355a437e48554b16a5a906b7b431d8ef910e",
+      "selected_blob": "8c45355a437e48554b16a5a906b7b431d8ef910e",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/db_test.go",
+      "received_blob": "5b1f1c56a3746f90b486783aa10917efa713e712",
+      "selected_blob": "5b1f1c56a3746f90b486783aa10917efa713e712",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/doc.go",
+      "received_blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d",
+      "selected_blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/download.go",
+      "received_blob": "f946f0800df2edd4ab483cc29354ffdc258a0f08",
+      "selected_blob": "8236c8a82e48287410cdd006d8d3cb2aa70e653a",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/download_test.go",
+      "received_blob": "e347beb1d1556b87a13c20bf6a005db79be9a847",
+      "selected_blob": "e347beb1d1556b87a13c20bf6a005db79be9a847",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/download_tokens.go",
+      "received_blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06",
+      "selected_blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/download_tokens_test.go",
+      "received_blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e",
+      "selected_blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/email.go",
+      "received_blob": "86571b5e5d6f97db3c532d88e879d7ba94f5ac94",
+      "selected_blob": "1998a1d1ed85b3573a977d4466cc524dd027b870",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+    },
+    {
+      "path": "internal/server/endpoint_ratelimit.go",
+      "received_blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af",
+      "selected_blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/files.go",
+      "received_blob": "e8ba2db45076b4da3d58173bcfeb173ec4238a58",
+      "selected_blob": "95a50c0406223a37aaece5f560a8942419be5650",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/files_test.go",
+      "received_blob": "81fddc368fe17bd48713cb118636e2b0f643db01",
+      "selected_blob": "81fddc368fe17bd48713cb118636e2b0f643db01",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/hash.go",
+      "received_blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee",
+      "selected_blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/health.go",
+      "received_blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539",
+      "selected_blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/jsonlog.go",
+      "received_blob": "46d9f36b186b8276ea0be68d3d0288517a35d933",
+      "selected_blob": "46d9f36b186b8276ea0be68d3d0288517a35d933",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/lifecycle_ordering_integration_test.go",
+      "received_blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c",
+      "selected_blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/lifecycle_regression_test.go",
+      "received_blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3",
+      "selected_blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/links.go",
+      "received_blob": "fd18c03a4ab9a6b68c047b0407032b119da12718",
+      "selected_blob": "ca532fb7961be9c89c5d9ac5b4155b98851ded2c",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/links_test.go",
+      "received_blob": "94f4680b035b4a152cdb73f580b482ac07f34af4",
+      "selected_blob": "94f4680b035b4a152cdb73f580b482ac07f34af4",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/lockout.go",
+      "received_blob": "5047140790803471d485bf9405cc2fdaada82a16",
+      "selected_blob": "5047140790803471d485bf9405cc2fdaada82a16",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/logging.go",
+      "received_blob": "a3f2778d3348d154aaf8350635e75999473131fa",
+      "selected_blob": "68ac8439c1d10b90a02607634fab69631eec1397",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/metrics.go",
+      "received_blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47",
+      "selected_blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/minio.go",
+      "received_blob": "401d11c21ae94899098affc8a2f6fc44f007ea69",
+      "selected_blob": "401d11c21ae94899098affc8a2f6fc44f007ea69",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/minio_test.go",
+      "received_blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469",
+      "selected_blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/notifications.go",
+      "received_blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc",
+      "selected_blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/origin.go",
+      "received_blob": "de10f974c51405debe54548e54a47334daf28b23",
+      "selected_blob": "de10f974c51405debe54548e54a47334daf28b23",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/prometheus.go",
+      "received_blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6",
+      "selected_blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/quality_integration_test.go",
+      "received_blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c",
+      "selected_blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/quality_regression_test.go",
+      "received_blob": "cd0db1b23c7ce17286e96435488bb94f255e9654",
+      "selected_blob": "cd0db1b23c7ce17286e96435488bb94f255e9654",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/quota.go",
+      "received_blob": "c1f4c36c5b8e01b008c6ab14c8f9dc683da9f3df",
+      "selected_blob": "c0851509f2ed07cd28a25f72842429dc754d6386",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/ratelimit.go",
+      "received_blob": "40a35ee613c331484d1c0a06c60ba39cb236a468",
+      "selected_blob": "d71b19df33c4e14478b6a1d54a69b83fb365ec08",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+    },
+    {
+      "path": "internal/server/ratelimit_test.go",
+      "received_blob": "0b2b27bb4c0cb87a62bafdffd3e5ccc91c5d36de",
+      "selected_blob": "b078578a9903d30bf3dd229411dd61b1e2a856db",
+      "exact_received_bytes": false,
+      "selection": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+    },
+    {
+      "path": "internal/server/register.go",
+      "received_blob": "b6be5b0f8600fa3a2d1ee0a0080b091e326d189e",
+      "selected_blob": "c4f78f370060148c83c6def52ae937ee8d73a0a8",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/request.go",
+      "received_blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc",
+      "selected_blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/resumable.go",
+      "received_blob": "3e25f54e92c43f98bf49dffd4b2a1f625a65d7c7",
+      "selected_blob": "93c2fa017956c75797492ab4a0b4ed1acf1bdbd7",
+      "exact_received_bytes": false,
+      "selection": "whitespace-only import normalization"
+    },
+    {
+      "path": "internal/server/rows.go",
+      "received_blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892",
+      "selected_blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/security.go",
+      "received_blob": "2ed986f516c8964091b6f16609c064edaf266221",
+      "selected_blob": "2ed986f516c8964091b6f16609c064edaf266221",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/server.go",
+      "received_blob": "a097e39b157bc9a3b0a2821a0ddd5c4a29c4f84f",
+      "selected_blob": "0356647a1b2f6a39692c68a34086be619963120e",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/tracing.go",
+      "received_blob": "cf0bdedeb7e7baf6ce393d80a8eef1c8e6dfee12",
+      "selected_blob": "f26fb7230703769d122568bc87db3f0f012d998b",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "internal/server/upload.go",
+      "received_blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518",
+      "selected_blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/upload_test.go",
+      "received_blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4",
+      "selected_blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/validation.go",
+      "received_blob": "69f9012e570bd909416a28566638a4eee12005ea",
+      "selected_blob": "69f9012e570bd909416a28566638a4eee12005ea",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "internal/server/webhooks.go",
+      "received_blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2",
+      "selected_blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "native/Makefile",
+      "received_blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03",
+      "selected_blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "native/README.md",
+      "received_blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e",
+      "selected_blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "native/sfd_hash.c",
+      "received_blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8",
+      "selected_blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "native/sfd_hash.h",
+      "received_blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39",
+      "selected_blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "native/sfd_hash_cli.c",
+      "received_blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6",
+      "selected_blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "native/test_hash.py",
+      "received_blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c",
+      "selected_blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "web/static/index.html",
+      "received_blob": "362329d0247146878c62886bbc50582d09b058d3",
+      "selected_blob": "ee1fce02c3d9b93f5591fea5d58fe4757b733696",
+      "exact_received_bytes": false,
+      "selection": "preserved canonical security safeguard; inspect normal commit diff against received source"
+    },
+    {
+      "path": "web/static/manifest.json",
+      "received_blob": "25e3fad0d407016678c45d77d89ba722146fd4d4",
+      "selected_blob": "25e3fad0d407016678c45d77d89ba722146fd4d4",
+      "exact_received_bytes": true,
+      "selection": "exact reviewed source"
+    },
+    {
+      "path": "web/static/sw.js",
+      "received_blob": "ee46a54c29ed32bdfe38f274702a4220275b3827",
+      "selected_blob": "8c29791884b4fa1f11cf20ab41379c686f87413a",
+      "exact_received_bytes": false,
+      "selection": "whitespace-only import normalization"
+    }
+  ],
+  "normal_commit_single_canonical_parent_required": true,
+  "whole_legacy_ancestry_imported": false,
+  "frozen_companion_and_native": "c320861536914623ea22f28c1d4ea156d4c2132a",
+  "test_reconciliation": "All canonical test files retained; direct parser assertions adapted to verified identity context, signed-role and unique-cookie assertions now require owned real PostgreSQL. Historical schema4 E2E has a distinct name and remains guarded; schema12 full-stack adapter added. Old schema4/RustFS acceptance is not transferred or counted as schema12 acceptance.",
+  "conflicting_migration_removal": [
+    "internal/db/migrations/000004_add_sessions.up.sql",
+    "internal/db/migrations/000004_add_sessions.down.sql"
+  ],
+  "new_lint_suppressions": 0,
+  "imported_trailing_whitespace_normalized": [
+    "internal/db/alter_002_resumable_uploads.sql",
+    "internal/db/alter_012.sql",
+    "internal/db/migrations/000010_add_resumable_uploads.up.sql",
+    "internal/server/admin.go",
+    "internal/server/download.go",
+    "internal/server/quota.go",
+    "internal/server/resumable.go",
+    "internal/server/server.go",
+    "tests/auth/acceptance.py",
+    "web/static/index.html",
+    "web/static/sw.js"
+  ],
+  "auxiliary_selected_configuration": [
+    {
+      "path": "monitoring/README.md",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "fa1ba82cca67e67a9f3b5f89bd447e08f7d18219",
+      "selected_blob": "a5c7dc5a7ceae1cf9e8872d9ba9545deac8d5f7d",
+      "exact_received_bytes": false
+    },
+    {
+      "path": "monitoring/grafana/dashboards/sfd-overview.json",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "b2ced8f97c7fa11c75cfd75a06064dda56c1e2b7",
+      "selected_blob": "b2ced8f97c7fa11c75cfd75a06064dda56c1e2b7",
+      "exact_received_bytes": true
+    },
+    {
+      "path": "monitoring/grafana/provisioning/dashboards/default.yml",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "5f467af1a4b6a945584c5e32e57edd56aada2be2",
+      "selected_blob": "5f467af1a4b6a945584c5e32e57edd56aada2be2",
+      "exact_received_bytes": true
+    },
+    {
+      "path": "monitoring/grafana/provisioning/datasources/prometheus.yml",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "228561dfbab8165f5473f686ac3dd1d8f8605495",
+      "selected_blob": "228561dfbab8165f5473f686ac3dd1d8f8605495",
+      "exact_received_bytes": true
+    },
+    {
+      "path": "monitoring/prometheus.yml",
+      "source": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+      "received_blob": "e605d86ec3702d81369707401d05bc538b5d434e",
+      "selected_blob": "52f1b773ce7741f0991f21eb92b0ffdeebd2aa38",
+      "exact_received_bytes": false
+    }
+  ]
+}

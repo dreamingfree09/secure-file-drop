@@ -1,0 +1,194 @@
+name: Windows companion
+on:
+  push:
+    branches: [master, codex/sfd-windows-companion-20261017]
+    paths:
+      - desktop/**
+      - tests/e2e/**
+      - tests/auth/**
+      - internal/**
+      - cmd/**
+      - go.mod
+      - go.sum
+      - .github/workflows/windows-companion.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - desktop/**
+      - tests/e2e/**
+      - tests/auth/**
+      - internal/**
+      - cmd/**
+      - go.mod
+      - go.sum
+      - .github/workflows/windows-companion.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: windows-companion-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  DOTNET_GENERATE_ASPNET_CERTIFICATE: 'false'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_NOLOGO: 'true'
+jobs:
+  windows:
+    name: Native Windows build, security and lifecycle
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build and execute owned Windows checks
+        shell: pwsh
+        run: |
+          ./desktop/windows/build.ps1
+          ./desktop/windows/tests/test.ps1 | Tee-Object -FilePath "$env:RUNNER_TEMP/windows-results.txt"
+          $text = Get-Content -LiteralPath "$env:RUNNER_TEMP/windows-results.txt" -Raw
+          if (-not $text.Contains("PRODUCT POLICY CHECKS PASSED: 6") -or -not $text.Contains("WINDOWS CHECKS PASSED: 32") -or @($text -split "`n" | Where-Object { $_.StartsWith("PROTOCOL PASS:") }).Count -ne 16) { throw "Mandatory Windows checks did not execute" }
+          $evidence = @{
+            revision = (git rev-parse HEAD)
+            os = [Environment]::OSVersion.VersionString
+            host_shell_runtime = [Environment]::Version.ToString()
+            test_process_runtime = ($text.Split([char]10) | Where-Object { $_.StartsWith("WINDOWS TEST RUNTIME:") } | Select-Object -First 1).Trim()
+            framework_release = (Get-ItemProperty -LiteralPath 'HKLM:\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full' -Name Release).Release
+            product_target = ".NET Framework 4.8"
+            release_https_policy_checks = 6
+            executable_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/dist/SecureFileDrop.exe -Algorithm SHA256).Hash
+            client_source_sha256 = (Get-FileHash -LiteralPath ./desktop/windows/Client.cs -Algorithm SHA256).Hash
+            interactive_gui = "unexecuted; programmatic owned tray context only"
+          }
+          $evidence | ConvertTo-Json | Set-Content -LiteralPath "$env:RUNNER_TEMP/windows-identity.json"
+      - name: Stage the unsigned preview with provenance
+        if: always()
+        shell: pwsh
+        run: |
+          $package = Join-Path $env:RUNNER_TEMP ("sfd-windows-preview-" + $env:GITHUB_RUN_ID + "-" + $env:GITHUB_RUN_ATTEMPT)
+          if (Test-Path -LiteralPath $package) { throw "Preview namespace already exists; preserved" }
+          $null = New-Item -ItemType Directory -Path $package
+          $files = @(
+            @{ From = "./desktop/windows/dist/SecureFileDrop.exe"; Name = "SecureFileDrop.exe" }
+            @{ From = "./desktop/windows/dist/SecureFileDrop.exe.config"; Name = "SecureFileDrop.exe.config" }
+            @{ From = "$env:RUNNER_TEMP/windows-results.txt"; Name = "windows-results.txt" }
+            @{ From = "$env:RUNNER_TEMP/windows-identity.json"; Name = "windows-identity.json" }
+            @{ From = "./LICENSE"; Name = "LICENSE.txt" }
+          )
+          foreach ($file in $files) {
+            if (Test-Path -LiteralPath $file.From) { Copy-Item -LiteralPath $file.From -Destination (Join-Path $package $file.Name) }
+          }
+          $revision = git rev-parse HEAD
+          @(
+            "Secure File Drop - unsigned development preview."
+            "Source revision: $revision"
+            "Independent Aether review and visible Windows acceptance remain pending; consult the PR and CI outcome."
+            "Keep SecureFileDrop.exe and SecureFileDrop.exe.config together in a permanent folder."
+            "Configure the backend HTTPS origin in Settings. No Docker, WSL or backend service is started or reconfigured."
+            "Explorer integration is opt-in for the current user in Settings; Windows 11 uses Show more options."
+            "Documentation: https://github.com/dreamingfree09/secure-file-drop/blob/$revision/docs/WINDOWS_COMPANION.md"
+          ) | Set-Content -LiteralPath (Join-Path $package "README.txt") -Encoding utf8
+          $hashes = foreach ($name in @("SecureFileDrop.exe", "SecureFileDrop.exe.config")) {
+            $item = Join-Path $package $name
+            if (Test-Path -LiteralPath $item) { (Get-FileHash -LiteralPath $item -Algorithm SHA256).Hash + "  " + $name }
+          }
+          $hashes | Set-Content -LiteralPath (Join-Path $package "SHA256SUMS.txt") -Encoding utf8
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-companion-preview-and-checks
+          path: ${{ runner.temp }}/sfd-windows-preview-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          retention-days: 14
+  backend:
+    name: Actual schema12 HTTPS backend and portable desktop client
+    runs-on: ubuntu-22.04
+    timeout-minutes: 32
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: c320861536914623ea22f28c1d4ea156d4c2132a
+          path: reviewed-reference
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Build unchanged client source, native vectors and pinned Chromium
+        run: |
+          sudo apt-get update && sudo apt-get install -y libssl-dev libnss3-tools
+          dotnet build tests/auth/Portable.Contract.csproj --configuration Release --nologo -p:BaseIntermediateOutputPath="$RUNNER_TEMP/portable-obj/"
+          make -C native test
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Build exact candidate and artifact recovery with owned synthetic services
+        run: |
+          docker build --label org.opencontainers.image.revision="$(git rev-parse HEAD)" -t sfd-desktop-candidate -f Dockerfile.backend .
+          docker build --label org.opencontainers.image.revision="$(git rev-parse HEAD)" --label sfd.recovery=artifact-only -t sfd-desktop-recovery -f Dockerfile.backend .
+          docker build -t sfd-desktop-storage -f reviewed-reference/Dockerfile.storage reviewed-reference
+          docker pull postgres:16-alpine
+          docker pull traefik:v2.11
+      - name: Require fresh owned namespace
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          inventory = {}
+          for label in ['sfd.quality-run','sfd.auth-fixture']:
+              for kind in ['container','network','volume','image']:
+                  args=['docker',kind,'ls','--filter','label='+label,'--quiet']
+                  if kind=='container':args.append('--all')
+                  inventory[label+'/'+kind]=subprocess.check_output(args,text=True).split()
+          pathlib.Path(os.environ['RUNNER_TEMP'],'ownership-before.json').write_text(json.dumps(inventory))
+          assert not any(inventory.values()), 'pre-existing owned resources; never clean them'
+          PY
+      - name: Require current schema12 real backend and all 17 portable-client assertions
+        run: |
+          python3 -B tests/auth/desktop.py \
+            --backend-image sfd-desktop-candidate --rollback-image sfd-desktop-recovery \
+            --storage-image sfd-desktop-storage --postgres-image postgres:16-alpine --proxy-image traefik:v2.11 \
+            --output "$RUNNER_TEMP/desktop-schema12" \
+            --browser-module "$GITHUB_WORKSPACE/tests/browser/node_modules/playwright-core" \
+            --client "$GITHUB_WORKSPACE/desktop/windows/dist/schema12-contract/net10.0/Portable.Contract.dll"
+          python3 - <<'PY'
+          import json,os,pathlib,subprocess
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'desktop-schema12'
+          r=json.loads((root/'desktop-identity.json').read_text())
+          assert r['source_revision']==subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert not r['failures'] and r['desktop_checks']==17 and r['portable_client_exit']==0 and r['untrusted_HTTP_requests']==0
+          assert r['owned_cleanup_complete'] and r['existing_services_unchanged'] and r['browser_checks']==27 and r['backend_checks']==94
+          assert r['go_security']=={'passed_test_events':244,'skipped_test_events':0,'failed_test_events':0,'real_lineage_subtests':20,'real_lifecycle_ordering_cases':5,'real_commit_fault_modes':4}
+          print('REQUIRED EXECUTION: schema12 backend94/browser27/Go244/no skips + actual portable client17; failures0')
+          PY
+      - name: Verify owned cleanup independently
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          inventory = {}
+          for label in ['sfd.quality-run','sfd.auth-fixture']:
+              for kind in ['container','network','volume','image']:
+                  args=['docker',kind,'ls','--filter','label='+label,'--quiet']
+                  if kind=='container':args.append('--all')
+                  inventory[label+'/'+kind]=subprocess.check_output(args,text=True).split()
+          pathlib.Path(os.environ['RUNNER_TEMP'],'ownership-after.json').write_text(json.dumps(inventory))
+          assert not any(inventory.values()), 'owned resources remain; no broad cleanup'
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: desktop-real-backend-evidence
+          path: |
+            ${{ runner.temp }}/desktop-schema12/desktop-identity.json
+            ${{ runner.temp }}/desktop-schema12/fixture/result.json
+            ${{ runner.temp }}/ownership-before.json
+            ${{ runner.temp }}/ownership-after.json
+          if-no-files-found: error
+          retention-days: 14

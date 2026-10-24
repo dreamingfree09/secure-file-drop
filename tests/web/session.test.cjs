@@ -15,11 +15,13 @@ function harness(fetch) {
           toggle(x, value) { if (value) classes.add(x); else classes.delete(x); },
           contains(x) { return classes.has(x); } } });
     }
+    const element=nodes.get(id);
+    if (!element.domContent) {let content='';Object.defineProperties(element,{innerHTML:{get(){return content},set(value){content=value}},textContent:{get(){return content},set(value){content=value}}});element.domContent=true;}
     return nodes.get(id);
   }
   const context = vm.createContext({
-    document: { readyState: 'complete', getElementById: node, querySelectorAll: () => [] },
-    fetch, console, AbortController, clearTimeout, TextEncoder, setTimeout() {}
+    document: { readyState: 'loading', addEventListener() {}, getElementById: node, querySelectorAll: () => [] },
+    fetch, console, DOMException, AbortController, clearTimeout, TextEncoder, setTimeout() {}
   });
   const html = fs.readFileSync(path.join(__dirname, '../../web/static/index.html'), 'utf8');
   vm.runInContext(html.split('<script>')[1].split('</script>')[0], context);
@@ -49,7 +51,7 @@ test('a delayed file-list response cannot render into a later session', async ()
   let deliver;
   const delayed = new Promise(resolve => { deliver = resolve; });
   let signal;
-  const h = harness(async (url, options) => { if (url === '/files') { signal = options.signal; return delayed; } return {ok: true, status: 204}; });
+  const h = harness(async (url, options) => { if (url === '/admin/files') { signal = options.signal; return delayed; } return {ok: true, status: 204}; });
   vm.runInContext('isLoggedIn=true; isAdmin=false; sessionGeneration=7;', h.context);
   const pending = vm.runInContext('loadFiles()', h.context);
   await vm.runInContext('logout()', h.context);
@@ -70,7 +72,7 @@ test('alerts escape untrusted server text', () => {
 });
 
 test('successful login clears login and registration credentials', async () => {
-  const h = harness(async url => ({ok: true, json: async () => url === '/login' ? {is_admin: false} : []}));
+  const h = harness(async url => ({ok: true, json: async () => url === '/me' ? {status:'ok',username:'fixture',is_admin:false} : []}));
   h.node('username').value = 'fixture';
   h.node('password').value = 'SyntheticPass123';
   h.node('regPassword').value = 'OldRegistration123';
@@ -88,4 +90,31 @@ test('successful registration clears all submitted fields', async () => {
   h.node('regPasswordConfirm').value = 'SyntheticPass123';
   await vm.runInContext('register()',h.context);
   for (const id of ['regEmail','regUsername','regPassword','regPasswordConfirm']) assert.equal(h.node(id).value, '');
+});
+
+
+test('protected HTTP401 clears expired-session metadata, links and UI', async () => {
+  const h = harness(async () => ({ok:false,status:401}));
+  vm.runInContext('isLoggedIn=true; isAdmin=false; selectedFile={name:"synthetic"};',h.context);
+  h.node('downloadLink').value='synthetic-expired-link';h.node('filesOutput').textContent='previous synthetic file';
+  await vm.runInContext('loadFiles()',h.context);
+  assert.equal(vm.runInContext('!isLoggedIn && !isAdmin && selectedFile===null',h.context),true);
+  assert.equal(h.node('downloadLink').value,'');assert.equal(h.node('filesOutput').textContent,'');
+  assert.equal(h.node('appScreen').classList.contains('hidden'),true);
+});
+
+test('an old HTTP401 cannot sign out a newer authenticated account', async () => {
+  let deliver;const delayed=new Promise(resolve=>{deliver=resolve;});
+  const h=harness(async url=>url==='/admin/files'?delayed:{ok:true,status:204});
+  vm.runInContext('isLoggedIn=true; isAdmin=false; sessionGeneration=7;',h.context);
+  const pending=vm.runInContext('loadFiles()',h.context);await vm.runInContext('logout()',h.context);
+  vm.runInContext('isLoggedIn=true; isAdmin=false; sessionGeneration++;',h.context);
+  h.node('filesOutput').textContent='new synthetic account';deliver({ok:false,status:401});await pending;
+  assert.equal(vm.runInContext('isLoggedIn',h.context),true);assert.equal(h.node('filesOutput').textContent,'new synthetic account');
+});
+
+test('forbidden HTTP403 does not discard a valid ordinary-user session', async () => {
+  const h=harness(async()=>({ok:false,status:403}));vm.runInContext('isLoggedIn=true; isAdmin=false;',h.context);
+  const response=await vm.runInContext("sessionFetch('/admin/files')",h.context);
+  assert.equal(response.status,403);assert.equal(vm.runInContext('isLoggedIn && !isAdmin',h.context),true);
 });

@@ -1,0 +1,429 @@
+{
+  "work_id": "SFD-FINAL-ACCEPTANCE-CONTINUATION-20261021",
+  "producer": "Codex",
+  "independent_recipient": "Aether",
+  "observed_utc": "2026-10-22T18:17:46.465432+00:00",
+  "base_and_prior_tested_canonical_revision": "a7106d482cefe3a98e68982f0b07e5a705a1615e",
+  "Owner_secure_signing_report_received": true,
+  "helper_sha256": "42ecd5a1e8d4adf586c5e3c3680425fd225970b3a14a1bba919f478b7c4c7649",
+  "issuer_verification": {
+    "observed_utc": "2026-10-22T18:15:48.791219+00:00",
+    "CRL_number": "0x1001",
+    "next_counter": "0x1002",
+    "two_valid_issuer_records_zero_revocations": true,
+    "ledger_config_keys_certificates_unchanged": true,
+    "signature_explicit_verify_OK": true,
+    "CRL_AKI_matches_CA_SKI": true,
+    "only_fixed_publication_changed": true,
+    "previous_public_der_retained": true,
+    "before_after_live_preservation_exact_match": true,
+    "no_services_restarted": true,
+    "publication": {
+      "observed_utc": "2026-10-22T18:13:28.677883+00:00",
+      "number": "0x1001",
+      "issuer": "CN = Secure File Drop Local Development CA",
+      "der_sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+      "last_update": "2026-10-22T18:10:29+00:00",
+      "next_update": "2026-10-29T18:10:29+00:00",
+      "renew_before": "2026-10-28T18:10:29+00:00",
+      "ledger_and_keys_certificates_config_unchanged": true,
+      "only_public_CRL_atomically_replaced": true,
+      "HTTP_exact_der_readback": true,
+      "Windows_post_publication": "separate mandatory Schannel/.NET+CRL readback",
+      "services_restarted": false,
+      "previous_public_preserved": "/home/dreamingfree09/.local/share/secure-file-drop/local-tls/sfd-local-tls-20261017-82f9b194/ca/revocation-20261018-5ac927e4/renewal-20261022-b64c3e91-v2/previous-public-0x1000.crl.der"
+    }
+  },
+  "publication": {
+    "observed_utc": "2026-10-22T18:13:28.677883+00:00",
+    "number": "0x1001",
+    "issuer": "CN = Secure File Drop Local Development CA",
+    "der_sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+    "last_update": "2026-10-22T18:10:29+00:00",
+    "next_update": "2026-10-29T18:10:29+00:00",
+    "renew_before": "2026-10-28T18:10:29+00:00",
+    "ledger_and_keys_certificates_config_unchanged": true,
+    "only_public_CRL_atomically_replaced": true,
+    "HTTP_exact_der_readback": true,
+    "Windows_post_publication": "separate mandatory Schannel/.NET+CRL readback",
+    "services_restarted": false,
+    "previous_public_preserved": "/home/dreamingfree09/.local/share/secure-file-drop/local-tls/sfd-local-tls-20261017-82f9b194/ca/revocation-20261018-5ac927e4/renewal-20261022-b64c3e91-v2/previous-public-0x1000.crl.der"
+  },
+  "served_TLS": {
+    "observed_utc": "2026-10-22T18:14:16.059032+00:00",
+    "served_leaf_sha256": "4106ecd1f0bd2d94be7a7fcf2236cb9b0119dde5aa82a97edd2cdab584809b70",
+    "distribution_crl_sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+    "certificate_chain_hostname_and_CRL_verify": true,
+    "crl_dates": "lastUpdate=Oct 22 18:10:29 2026 GMT\nnextUpdate=Oct 29 18:10:29 2026 GMT",
+    "trust_or_security_changes": false
+  },
+  "Windows_strict_TLS": {
+    "observed_utc": "2026-10-22T18:14:08.1767801Z",
+    "schannel": [
+      {
+        "route": "health",
+        "http": 200
+      },
+      {
+        "route": "ready",
+        "http": 200
+      }
+    ],
+    "dotnet": [
+      {
+        "revocation_enabled": true,
+        "route": "health",
+        "http": 200
+      },
+      {
+        "revocation_enabled": true,
+        "route": "ready",
+        "http": 200
+      }
+    ],
+    "framework_release": 534296,
+    "corrected_executable_path": "C:\\Users\\kosta\\SecureFileDrop-Tray-Fix-20261018-c74e5a92\\preview\\SecureFileDrop.exe",
+    "corrected_executable_sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+    "windows_fetched_crl_der_sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+    "trusted_root_der_sha256": "0f45e72366dc8ff6e3bed9323ef697bb44b21204d7e05ea303da319b5160bc28",
+    "running_owner_executables": [
+      {
+        "id": 122160,
+        "path": "C:\\Users\\kosta\\OneDrive\\Desktop\\windows-companion-preview-and-checks\\SecureFileDrop.exe",
+        "sha256": "97fc2dafbc469627f9ee90896903162c8804c01a167402f414d150857a0ed394"
+      }
+    ],
+    "owned_release_probe_processes": 0,
+    "trust_security_settings_or_owner_processes_changed": false
+  },
+  "preservation": {
+    "observed_utc": "2026-10-22T18:14:15.960000+00:00",
+    "six_live_ids_images_starts_mounts_unchanged": true,
+    "backend_image": "sha256:7b53527539596c711a4b2e4a68d26d8e4c7a025228327e43b461b8f9b079b532",
+    "live_schema_metadata": [
+      {
+        "version": 11,
+        "dirty": false
+      },
+      [
+        {
+          "data_type": "text",
+          "table_name": "files",
+          "column_name": "created_by"
+        },
+        {
+          "data_type": "bytea",
+          "table_name": "files",
+          "column_name": "sha256_bytes"
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "files",
+          "column_name": "user_id"
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "users",
+          "column_name": "email_verified"
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "users",
+          "column_name": "is_admin"
+        }
+      ],
+      {
+        "users": 2,
+        "files": 15
+      }
+    ],
+    "environment_equals_owner_validated_candidate": true,
+    "protected_checkouts_preserved": true,
+    "original_change_entries": 5,
+    "retained_failure_counts": {
+      "container": 57,
+      "network": 5,
+      "volume": 37,
+      "image": 10
+    },
+    "retained_failure_inventory_exact_match": true,
+    "all_retained_failure_containers_stopped": true,
+    "backup_configuration": {
+      "SFD_BACKUP_ENABLED": "true",
+      "SFD_BACKUP_RETENTION_DAYS": "7",
+      "SFD_BACKUP_INTERVAL": "24h",
+      "SFD_CLEANUP_ENABLED": "unset"
+    },
+    "backup_file_metadata": [
+      {
+        "bytes": 3996,
+        "mtime": 1792617164
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792524873
+      },
+      {
+        "bytes": 3998,
+        "mtime": 1792340507
+      },
+      {
+        "bytes": 3995,
+        "mtime": 1792432701
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792323778
+      },
+      {
+        "bytes": 3993,
+        "mtime": 1792232669
+      }
+    ],
+    "adoption_performed": false,
+    "live_record_mutations": false,
+    "observed_processes_stopped": false
+  },
+  "prior_exact_source_CI": [
+    {
+      "run": 39697874579,
+      "url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/39697874579",
+      "proposal": "a7106d482cefe3a98e68982f0b07e5a705a1615e",
+      "event": "push",
+      "tested_revision": "a7106d482cefe3a98e68982f0b07e5a705a1615e",
+      "tested_tree": "1ee08dfc61b8087894c4dfeab3e2d69207591a57",
+      "actual_canonical_commit_tested": true,
+      "synthetic_PR_is_not_master_integration": true,
+      "layouts": [
+        {
+          "layout": "bigint",
+          "proxy": {
+            "image": "sha256:2f98216dc47cab36b72c31f43f0ca33822b948b5e3c9295e8e88e3afa4cbf0f6",
+            "exact_limit_file_bytes": 1024,
+            "request_envelope_bytes": 1049600,
+            "exact_limit_http": 200,
+            "over_envelope_http": 413,
+            "normal_certificate_validation": true,
+            "docker_socket_mounted": false
+          },
+          "real_SMTP_verification_cases": 3,
+          "checks": 94,
+          "browser": 27,
+          "go_security": {
+            "passed_test_events": 203,
+            "skipped_test_events": 0,
+            "failed_test_events": 0,
+            "real_lineage_subtests": 14,
+            "real_lifecycle_ordering_cases": 5,
+            "real_commit_fault_modes": 4
+          },
+          "backend_image": "sha256:c148fad74d730f342374f630b2b701348eaae1e5fba4c7972fa402fe0043d957",
+          "artifact_recovery_image": "sha256:7d87f79a1688df45dbfe1172b857ae55c9a0e1af2b1409a56412573194b748a7",
+          "active_shutdown": {
+            "exit_code": 0,
+            "elapsed_seconds": 5.17,
+            "row_lock_observed": true,
+            "status": "failed",
+            "actual_object_absent": true,
+            "configured_docker_stop_timeout_seconds": 25,
+            "docker_kill_budget_seconds": 25,
+            "application_budget_seconds": 20
+          },
+          "deletion_preservation": {
+            "admin_status": 204,
+            "admin_object_removed": true,
+            "storage_failure_status": 502,
+            "row_hash_unchanged": true,
+            "object_retained": true
+          },
+          "sanitized_result_sha256": "99fa356d706c7b153c383c78ca2e26915beb8d7d375b8b9b7024bdbd9125cc99",
+          "cleanup": true,
+          "preservation": true
+        },
+        {
+          "layout": "bytea",
+          "proxy": {
+            "image": "sha256:2f98216dc47cab36b72c31f43f0ca33822b948b5e3c9295e8e88e3afa4cbf0f6",
+            "exact_limit_file_bytes": 1024,
+            "request_envelope_bytes": 1049600,
+            "exact_limit_http": 200,
+            "over_envelope_http": 413,
+            "normal_certificate_validation": true,
+            "docker_socket_mounted": false
+          },
+          "real_SMTP_verification_cases": 3,
+          "checks": 94,
+          "browser": 27,
+          "go_security": {
+            "passed_test_events": 203,
+            "skipped_test_events": 0,
+            "failed_test_events": 0,
+            "real_lineage_subtests": 14,
+            "real_lifecycle_ordering_cases": 5,
+            "real_commit_fault_modes": 4
+          },
+          "backend_image": "sha256:c148fad74d730f342374f630b2b701348eaae1e5fba4c7972fa402fe0043d957",
+          "artifact_recovery_image": "sha256:7d87f79a1688df45dbfe1172b857ae55c9a0e1af2b1409a56412573194b748a7",
+          "active_shutdown": {
+            "exit_code": 0,
+            "elapsed_seconds": 5.168,
+            "row_lock_observed": true,
+            "status": "failed",
+            "actual_object_absent": true,
+            "configured_docker_stop_timeout_seconds": 25,
+            "docker_kill_budget_seconds": 25,
+            "application_budget_seconds": 20
+          },
+          "deletion_preservation": {
+            "admin_status": 204,
+            "admin_object_removed": true,
+            "storage_failure_status": 502,
+            "row_hash_unchanged": true,
+            "object_retained": true
+          },
+          "sanitized_result_sha256": "0611eeebf437cd083ee58fc824e0d3cf1e4da027c034ba9df9a701f4430e7a06",
+          "cleanup": true,
+          "preservation": true
+        }
+      ],
+      "configuration": 18,
+      "Windows": {
+        "checks": 32,
+        "protocol": 16,
+        "policy": 6,
+        "job": 119559592355,
+        "source_c320_checked": true,
+        "Owner_GUI": "unexecuted"
+      },
+      "all_jobs_success": true
+    },
+    {
+      "run": 39697879011,
+      "url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/39697879011",
+      "proposal": "a7106d482cefe3a98e68982f0b07e5a705a1615e",
+      "event": "pull_request",
+      "tested_revision": "4bcaa166cfbefc082e979141cc2cd8f0c0b295a0",
+      "tested_tree": "1ee08dfc61b8087894c4dfeab3e2d69207591a57",
+      "actual_canonical_commit_tested": false,
+      "synthetic_PR_is_not_master_integration": true,
+      "layouts": [
+        {
+          "layout": "bigint",
+          "proxy": {
+            "image": "sha256:2f98216dc47cab36b72c31f43f0ca33822b948b5e3c9295e8e88e3afa4cbf0f6",
+            "exact_limit_file_bytes": 1024,
+            "request_envelope_bytes": 1049600,
+            "exact_limit_http": 200,
+            "over_envelope_http": 413,
+            "normal_certificate_validation": true,
+            "docker_socket_mounted": false
+          },
+          "real_SMTP_verification_cases": 3,
+          "checks": 94,
+          "browser": 27,
+          "go_security": {
+            "passed_test_events": 203,
+            "skipped_test_events": 0,
+            "failed_test_events": 0,
+            "real_lineage_subtests": 14,
+            "real_lifecycle_ordering_cases": 5,
+            "real_commit_fault_modes": 4
+          },
+          "backend_image": "sha256:72577a2584c8ed8d32c73ec58eadb2234d509c55e4d7c4ecca5cfa0fd0eef2ce",
+          "artifact_recovery_image": "sha256:ee9a2de7be68abe1a3eec235cecd16a827df2b062d75543af8f05c3d557b6dc5",
+          "active_shutdown": {
+            "exit_code": 0,
+            "elapsed_seconds": 5.162,
+            "row_lock_observed": true,
+            "status": "failed",
+            "actual_object_absent": true,
+            "configured_docker_stop_timeout_seconds": 25,
+            "docker_kill_budget_seconds": 25,
+            "application_budget_seconds": 20
+          },
+          "deletion_preservation": {
+            "admin_status": 204,
+            "admin_object_removed": true,
+            "storage_failure_status": 502,
+            "row_hash_unchanged": true,
+            "object_retained": true
+          },
+          "sanitized_result_sha256": "3bb51d1ab11496b945c64a1d2f89562d988422ddd347f5d83dc4248a71910564",
+          "cleanup": true,
+          "preservation": true
+        },
+        {
+          "layout": "bytea",
+          "proxy": {
+            "image": "sha256:2f98216dc47cab36b72c31f43f0ca33822b948b5e3c9295e8e88e3afa4cbf0f6",
+            "exact_limit_file_bytes": 1024,
+            "request_envelope_bytes": 1049600,
+            "exact_limit_http": 200,
+            "over_envelope_http": 413,
+            "normal_certificate_validation": true,
+            "docker_socket_mounted": false
+          },
+          "real_SMTP_verification_cases": 3,
+          "checks": 94,
+          "browser": 27,
+          "go_security": {
+            "passed_test_events": 203,
+            "skipped_test_events": 0,
+            "failed_test_events": 0,
+            "real_lineage_subtests": 14,
+            "real_lifecycle_ordering_cases": 5,
+            "real_commit_fault_modes": 4
+          },
+          "backend_image": "sha256:72577a2584c8ed8d32c73ec58eadb2234d509c55e4d7c4ecca5cfa0fd0eef2ce",
+          "artifact_recovery_image": "sha256:ee9a2de7be68abe1a3eec235cecd16a827df2b062d75543af8f05c3d557b6dc5",
+          "active_shutdown": {
+            "exit_code": 0,
+            "elapsed_seconds": 5.162,
+            "row_lock_observed": true,
+            "status": "failed",
+            "actual_object_absent": true,
+            "configured_docker_stop_timeout_seconds": 25,
+            "docker_kill_budget_seconds": 25,
+            "application_budget_seconds": 20
+          },
+          "deletion_preservation": {
+            "admin_status": 204,
+            "admin_object_removed": true,
+            "storage_failure_status": 502,
+            "row_hash_unchanged": true,
+            "object_retained": true
+          },
+          "sanitized_result_sha256": "e49a90f177eaa56fbd227cab1b770575b3cce2fc29a4d7e2288a80f9ffed3632",
+          "cleanup": true,
+          "preservation": true
+        }
+      ],
+      "configuration": 18,
+      "Windows": {
+        "checks": 32,
+        "protocol": 16,
+        "policy": 6,
+        "job": 119559607103,
+        "source_c320_checked": true,
+        "Owner_GUI": "unexecuted"
+      },
+      "all_jobs_success": true
+    }
+  ],
+  "current_commit_scope": "documentation and sanitised evidence only; all application/native/Windows/build/workflow inputs unchanged",
+  "Aether_exact_revision_acceptance": "pending; no later acceptance or correction received on PR30/31/32 at readback",
+  "protected_integration_or_live_adoption": false,
+  "Owner_native_visual_acceptance": "unexecuted; preserved existing97fc process and F196 release",
+  "failure_record": [
+    "first local publication wrapper had a Python string-formatting syntax error; compilation failed before any publication, issuer or service mutation; corrected wrapper parsed successfully and performed one atomic publication",
+    "no signing helper rerun; no CA passphrase read or stored; no cache flush or security weakening"
+  ],
+  "next_renewal_target_UTC": "2026-10-28T18:10:29+00:00",
+  "hard_CRL_expiry_UTC": "2026-10-29T18:10:29+00:00",
+  "unexecuted_checks": [
+    "actual revoked/expired CRL Windows runtime rejection and deliberate live certificate revocation were not executed",
+    "strict HTTPS may use a still-valid cached prior CRL; independent Windows HTTP fetch proves new published DER identity, not chain-cache replacement",
+    "actual integrated-master acceptance, reviewed backend-only adoption, Owner visual/Explorer/picker/OS clipboard/Quick Send acceptance remain pending"
+  ],
+  "operational_verdict": "CRL renewal complete with normal TLS maintained. Canonical source/image/recovery preparation ready for Aether exact-head acceptance. No public production readiness."
+}

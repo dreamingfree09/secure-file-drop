@@ -1,0 +1,2168 @@
+{
+  "work_id": "SFD-FINAL-CLOSEOUT-20261022",
+  "recorded_utc": "2026-10-22T23:00:44.311853+00:00",
+  "producer": "Codex",
+  "independent_reviewer": "Aether",
+  "received_source": "9f9f050533e92f9311739b673102c8704c506386",
+  "received_tree": "94da799f9322f1a25698b3de853e49675cc2e433",
+  "Aether_received_review": "https://github.com/dreamingfree09/secure-file-drop/pull/33#issuecomment-6350680860",
+  "approval_scope": "backup correction accepted on source inspection; broader final source/images/integration/adoption remain pending independent acceptance",
+  "implementation": {
+    "work_id": "SFD-FINAL-CLOSEOUT-20261022",
+    "observed_utc": "2026-10-22T22:42:48.460941+00:00",
+    "head": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "parent": "9f9f050533e92f9311739b673102c8704c506386",
+    "tree": "b45835feb836e1e8a0931e70794e75f15e5fe6b2",
+    "paths": [
+      "internal/db/lineage.go",
+      "internal/db/migrate_lineage_test.go",
+      "internal/server/register.go",
+      "tests/auth/acceptance.py"
+    ],
+    "live_source_or_records_changed": false
+  },
+  "separate_workflow_reconciliation": {
+    "head": "4eb358afff970dbb4ad300c24e59ffb63f86c5c5",
+    "parent": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "only_path": ".github/workflows/canonical-reconciliation.yml",
+    "change": "require20 actual lineage cases instead of14; no checks removed or suppressed",
+    "application_inputs_unchanged": true
+  },
+  "complete_selected_source_verification": {
+    "work_id": "SFD-FINAL-CLOSEOUT-20261022",
+    "observed_utc": "2026-10-22T22:52:44.644997+00:00",
+    "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "parent": "9f9f050533e92f9311739b673102c8704c506386",
+    "tree": "b45835feb836e1e8a0931e70794e75f15e5fe6b2",
+    "historical_received": "d2800ccd4385282a5c9512ec5574bb63cbe57ac5",
+    "historical_selected": "e65538c8e0452cad10a996155d64129f777bfcdf",
+    "all_122_received_selected_current_identities_verified": true,
+    "complete_122_identity_inventory": [
+      {
+        "path": ".env.example",
+        "received_blob": "fd40d6a2b256deac94e698c3285e5ed427859a00",
+        "historical_selected_blob": "8fcac1509e1305a39e4ab596ce95dd74162d596e",
+        "current_blob": "8fcac1509e1305a39e4ab596ce95dd74162d596e",
+        "current_sha256": "5f946cf32afa27aec04691d0d9c31732d8cecf5fa6723fc75d9e4c7aecc22e7d",
+        "selection_reason": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+      },
+      {
+        "path": "Dockerfile.backend",
+        "received_blob": "0956918d8a5bdabdf93238f7ab7e00a2bb36d540",
+        "historical_selected_blob": "d805c168d87f4f8f8216c05abbacdd8410bbe3fa",
+        "current_blob": "d805c168d87f4f8f8216c05abbacdd8410bbe3fa",
+        "current_sha256": "f0f5b1e1b50416d59d39aa8181ac76d5f020956e99f013eb610b9986d69bf2f4",
+        "selection_reason": "new authoritative security advisory correction: Go1.26.10 and patched musl minimums"
+      },
+      {
+        "path": "cmd/backend/main.go",
+        "received_blob": "735986353521488a21055c43d517626ccc5f44be",
+        "historical_selected_blob": "735986353521488a21055c43d517626ccc5f44be",
+        "current_blob": "735986353521488a21055c43d517626ccc5f44be",
+        "current_sha256": "b6fa862a60de07ad76feb5d4c8d74fd40956704b0b41f924fbf02ccccbb4bcba",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "cmd/backend/main_test.go",
+        "received_blob": "3620be4a586170691a718db29f81bb6a4c82d172",
+        "historical_selected_blob": "3620be4a586170691a718db29f81bb6a4c82d172",
+        "current_blob": "3620be4a586170691a718db29f81bb6a4c82d172",
+        "current_sha256": "c0edae10d8e21eaa39447dfbc343742d030f5f389f1d8c32b554a6b8368235c3",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/.gitignore",
+        "received_blob": "d082e62e711bb57e9d30924704740fa4604fa979",
+        "historical_selected_blob": "d082e62e711bb57e9d30924704740fa4604fa979",
+        "current_blob": "d082e62e711bb57e9d30924704740fa4604fa979",
+        "current_sha256": "014ae69387c0c753a0e07376bd3103a4c221cb914d016f8e69271ad8a656f257",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/App.cs",
+        "received_blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062",
+        "historical_selected_blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062",
+        "current_blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062",
+        "current_sha256": "2c0241805fa94875cb2abc5d87b00cc5ba99c0cb42c20fa54b47b3d593701b13",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/Client.cs",
+        "received_blob": "8978616de376687532b50e3f93cb54e1acd5785e",
+        "historical_selected_blob": "8978616de376687532b50e3f93cb54e1acd5785e",
+        "current_blob": "8978616de376687532b50e3f93cb54e1acd5785e",
+        "current_sha256": "1abb2e212fe0b0de4c811550929880a2787b9e9eadef20d8644fac0ecb8e63a0",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/FrameworkTarget.cs",
+        "received_blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2",
+        "historical_selected_blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2",
+        "current_blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2",
+        "current_sha256": "098679fa3a7ca8ceaa855b544fa06ae4ae1c56e821618e3ad3595ac3bf4662f7",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/SecureFileDrop.exe.config",
+        "received_blob": "a6a246014513cecb03a7983b32668674babcfd59",
+        "historical_selected_blob": "a6a246014513cecb03a7983b32668674babcfd59",
+        "current_blob": "a6a246014513cecb03a7983b32668674babcfd59",
+        "current_sha256": "485ce3a5a98c7aec404071763579116372120d64bcc934d0822c677412a793d8",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/WindowsIntegration.cs",
+        "received_blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2",
+        "historical_selected_blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2",
+        "current_blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2",
+        "current_sha256": "ceb2ff2404e7bed54bbe5d62029ddfe0a3c8c845e47706deb9358956a8b763b6",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/app.manifest",
+        "received_blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01",
+        "historical_selected_blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01",
+        "current_blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01",
+        "current_sha256": "9b042aa39123d6530a1a2471aeadbca38954fae7d4fa39ff8ea39d2f4b2e1bbf",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/build.ps1",
+        "received_blob": "17da686bcb0fee69aa4dec09178956864b52c36c",
+        "historical_selected_blob": "17da686bcb0fee69aa4dec09178956864b52c36c",
+        "current_blob": "17da686bcb0fee69aa4dec09178956864b52c36c",
+        "current_sha256": "6a69e9d7c20401f71c064f56a6f4e8375d767657f8275e9f09c47e36afc593c9",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/.gitignore",
+        "received_blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c",
+        "historical_selected_blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c",
+        "current_blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c",
+        "current_sha256": "bed6308a89cccf01b2576cade9bc0e84c47e1b496ad8fc21750722966ce27692",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/Client.Contract.csproj",
+        "received_blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0",
+        "historical_selected_blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0",
+        "current_blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0",
+        "current_sha256": "3bab2ecd0d6f8ce80bed4b1ede531635c1697a533fc6bbae444c44d522cfbb2a",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/ContractRunner.cs",
+        "received_blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299",
+        "historical_selected_blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299",
+        "current_blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299",
+        "current_sha256": "03eefb6c0b4ec1aa3fbe9b19d74060b06eb2903bf4bf0c53ea623a9d234705de",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/LiveProbe.cs",
+        "received_blob": "4a5e797b26d370627ac47239910f50be5b2942fd",
+        "historical_selected_blob": "4a5e797b26d370627ac47239910f50be5b2942fd",
+        "current_blob": "4a5e797b26d370627ac47239910f50be5b2942fd",
+        "current_sha256": "75923cfb5377f42962de06d4a08aa58b44c8e6e222dc1bba5235552916f3aa1c",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/ProductPolicyTests.cs",
+        "received_blob": "4436f990c197004d22119de8c542629ce4a397f7",
+        "historical_selected_blob": "4436f990c197004d22119de8c542629ce4a397f7",
+        "current_blob": "4436f990c197004d22119de8c542629ce4a397f7",
+        "current_sha256": "ff14d2fd8b5532fa7245ca56ebce016c7b7b36bef6728313e3da288face7ee2f",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/ProtocolTests.cs",
+        "received_blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d",
+        "historical_selected_blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d",
+        "current_blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d",
+        "current_sha256": "e5a201cf28a221af1a5f64d5a0f82b2401359834792340bfbdf645ddac0b8715",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/WindowsTests.cs",
+        "received_blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f",
+        "historical_selected_blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f",
+        "current_blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f",
+        "current_sha256": "f249ba91b6bdf40d2f99a6352f8180c5d99ce81b47d471b81a70e4f4b17e792a",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/live.ps1",
+        "received_blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b",
+        "historical_selected_blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b",
+        "current_blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b",
+        "current_sha256": "46cbe1a044bd308020cc0b1b9242e2e5c73ea503c33aa2af380ab0ef435569ce",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "desktop/windows/tests/test.ps1",
+        "received_blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2",
+        "historical_selected_blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2",
+        "current_blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2",
+        "current_sha256": "4c7008f3fcf985e6b114299399eaebde9874e0afbb5e7c1fab6179def5729bdf",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "docker-compose.yml",
+        "received_blob": "d8c02c8f107bd3f4dfed13ba959c30bd281d8305",
+        "historical_selected_blob": "74d46e801aeccde13c50885a6d1be0b9b096f189",
+        "current_blob": "74d46e801aeccde13c50885a6d1be0b9b096f189",
+        "current_sha256": "db1c7b403425391ae05fa89829a8fd3d24990c1e60698aca28fb0e23f68e6b77",
+        "selection_reason": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+      },
+      {
+        "path": "go.mod",
+        "received_blob": "d62b0c5bbf4c091977631389c58bd5722d426344",
+        "historical_selected_blob": "425e449669d52784b2861e93ed7024e05f87b0eb",
+        "current_blob": "425e449669d52784b2861e93ed7024e05f87b0eb",
+        "current_sha256": "22ef4a4cf1e6feb53f305ed9269aa99beb438126740b05216731f9cbd1bff937",
+        "selection_reason": "new authoritative security advisory correction: Go1.26.10 and patched musl minimums"
+      },
+      {
+        "path": "go.sum",
+        "received_blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e",
+        "historical_selected_blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e",
+        "current_blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e",
+        "current_sha256": "486602e4ef2fa3d5ec3e1d8c8931c2d8589f82e8ab80be840918c5017d7b6c18",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/alter_001.sql",
+        "received_blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6",
+        "historical_selected_blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6",
+        "current_blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6",
+        "current_sha256": "193c649548603469cac8ed7d80ee6b32a6078a7eb5ca2ccd8c085f1757996eee",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/alter_002.sql",
+        "received_blob": "7365e59ecb9c2901160504d57dc72d9c705595d3",
+        "historical_selected_blob": "7365e59ecb9c2901160504d57dc72d9c705595d3",
+        "current_blob": "7365e59ecb9c2901160504d57dc72d9c705595d3",
+        "current_sha256": "10adb2b965aa2322021240e3d554dbfb7c1ea6f2d8fc74d41e5dde770f1f4a54",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/alter_002_resumable_uploads.sql",
+        "received_blob": "52e2b147f245378aeba2b45b4cfbc8cd5d24d159",
+        "historical_selected_blob": "a1ec041619560f1e60e921e67909fdf9ebf95a95",
+        "current_blob": "a1ec041619560f1e60e921e67909fdf9ebf95a95",
+        "current_sha256": "1538c32714526efb26fd37230f499d533bd767fe92c9565b0eb159f39c0c57b8",
+        "selection_reason": "whitespace-only import normalization"
+      },
+      {
+        "path": "internal/db/alter_010.sql",
+        "received_blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59",
+        "historical_selected_blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59",
+        "current_blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59",
+        "current_sha256": "1bc4178bb79c4bbf71a281f56643c5ceae7b60eeb5dcb292fc9a530cf3a1f329",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/alter_011.sql",
+        "received_blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a",
+        "historical_selected_blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a",
+        "current_blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a",
+        "current_sha256": "1a68e831248818c208bc4e2bb6b398a98c35114d0ff7619c07ec1116d970742b",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/alter_012.sql",
+        "received_blob": "39d5fe21bb330686ddb6f715bee8a108707efca3",
+        "historical_selected_blob": "a40e83e29ef8d752791f52aacc1f145962fdcaac",
+        "current_blob": "a40e83e29ef8d752791f52aacc1f145962fdcaac",
+        "current_sha256": "d6a3a93c4e59d8cf0dfe1b31522173ac6c213d02d7c28fc353f96b026ea13337",
+        "selection_reason": "whitespace-only import normalization"
+      },
+      {
+        "path": "internal/db/doc.go",
+        "received_blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed",
+        "historical_selected_blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed",
+        "current_blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed",
+        "current_sha256": "ee77be07aee47246d4afbcc99592fd6918b2c466eb55998fc6de3cd84e354b80",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/lineage.go",
+        "received_blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+        "historical_selected_blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+        "current_blob": "cca312ae7c551b4fc26e07f84ca8eda3902ed6eb",
+        "current_sha256": "b156859e63579022b3c9083a3159520dc2c20287cd83dd3d906d2e7d303ca65c",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrate.go",
+        "received_blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47",
+        "historical_selected_blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47",
+        "current_blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47",
+        "current_sha256": "accc2dcd220db3964c5d6c774d4b376a23470da53e7e0e66018f22f9baa24298",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrate_lineage_test.go",
+        "received_blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec",
+        "historical_selected_blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec",
+        "current_blob": "f8ca5828a857719b7a51888415c810315da56d0f",
+        "current_sha256": "cf8e1eab08ef3fbf06e088adce1e3047f44a252d5d217bbed69039446f6c0300",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000001_initial_schema.down.sql",
+        "received_blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef",
+        "historical_selected_blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef",
+        "current_blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef",
+        "current_sha256": "7a35c252e2aa55fe6534df2c44909521b6bf16f0a2431ded3e53249ef0f75fb6",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000001_initial_schema.up.sql",
+        "received_blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7",
+        "historical_selected_blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7",
+        "current_blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7",
+        "current_sha256": "cc1a3571b30245583735b3037615a90723ccdd13558e78fa72e7e4aa37bfd795",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000002_add_lifecycle_fields.down.sql",
+        "received_blob": "68c37777af020f629b91e0fe34974baae92555ab",
+        "historical_selected_blob": "68c37777af020f629b91e0fe34974baae92555ab",
+        "current_blob": "68c37777af020f629b91e0fe34974baae92555ab",
+        "current_sha256": "55dcd2e4d63612598ce1f140be42d4859cc3626fa1a2e51fecf8c3d7ba74f5cb",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000002_add_lifecycle_fields.up.sql",
+        "received_blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d",
+        "historical_selected_blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d",
+        "current_blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d",
+        "current_sha256": "7a47bbc0ceeff39b96c337d42bbb0b40387b8ee8deb0e28e5329622d3aea4ef7",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000003_add_users_table.down.sql",
+        "received_blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9",
+        "historical_selected_blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9",
+        "current_blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9",
+        "current_sha256": "bc243b5f1da4968e32378977baeef1cd4b1b789e4083b140f485fe57c34b8b6a",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000003_add_users_table.up.sql",
+        "received_blob": "088c7f7240edf55a556287c12353167af355c16a",
+        "historical_selected_blob": "088c7f7240edf55a556287c12353167af355c16a",
+        "current_blob": "088c7f7240edf55a556287c12353167af355c16a",
+        "current_sha256": "43c52fb707e68854b556fa9ffc5c540245fd82a2ba8e27a2f01f2809be965ad8",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000004_add_file_expiration.down.sql",
+        "received_blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c",
+        "historical_selected_blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c",
+        "current_blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c",
+        "current_sha256": "24dd1ee8279a7cd40a8fc50b6125bafdd8ee7addd8334b605714e31f5fa124ac",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000004_add_file_expiration.up.sql",
+        "received_blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c",
+        "historical_selected_blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c",
+        "current_blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c",
+        "current_sha256": "5098859ab24e56588a218826d2c9dbc1181aef717ce8e3d57f552285265d980c",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000005_add_link_password.down.sql",
+        "received_blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7",
+        "historical_selected_blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7",
+        "current_blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7",
+        "current_sha256": "828c8aae3d8cc0b88d743312fa2bdbb917de49e39bf1fdbb78fd206fe11613fe",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000005_add_link_password.up.sql",
+        "received_blob": "1a22e8b011c265435b76e7aeede683989a35a255",
+        "historical_selected_blob": "1a22e8b011c265435b76e7aeede683989a35a255",
+        "current_blob": "1a22e8b011c265435b76e7aeede683989a35a255",
+        "current_sha256": "f0919d4abf535f61c30dec20a52ba06a74263b7900443b561d44a4badca40084",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000006_add_email_verification.down.sql",
+        "received_blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc",
+        "historical_selected_blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc",
+        "current_blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc",
+        "current_sha256": "f03e966c659047e13104b86ca271e80c1be5021e6b26f3ea94ecec2b42f69d5a",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000006_add_email_verification.up.sql",
+        "received_blob": "545938530f826d509516028117ff48d3af8c21da",
+        "historical_selected_blob": "545938530f826d509516028117ff48d3af8c21da",
+        "current_blob": "545938530f826d509516028117ff48d3af8c21da",
+        "current_sha256": "8adac1de3a765f82d2baf9f782cd918fd591d91e794f4cd27d757e5819fe63fb",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000007_add_password_reset.down.sql",
+        "received_blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d",
+        "historical_selected_blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d",
+        "current_blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d",
+        "current_sha256": "8cff6bcade43f30c47c48fa4f6a4dfc622b65e49bd20e5fd9567f819553f4165",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000007_add_password_reset.up.sql",
+        "received_blob": "779c5a06874568e5e3ac619df28ce0678e259ab4",
+        "historical_selected_blob": "779c5a06874568e5e3ac619df28ce0678e259ab4",
+        "current_blob": "779c5a06874568e5e3ac619df28ce0678e259ab4",
+        "current_sha256": "2694e676a6e303d249ab48cbee4e8c5a7e3b5a6d560934808e3444553a447d7b",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000008_add_download_stats.down.sql",
+        "received_blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0",
+        "historical_selected_blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0",
+        "current_blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0",
+        "current_sha256": "f7ba279ad86327b260db583f7766241ef44bc49584bd37c54ca6a6e8955407c5",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000008_add_download_stats.up.sql",
+        "received_blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363",
+        "historical_selected_blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363",
+        "current_blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363",
+        "current_sha256": "b84ab8c12a773108035d4ce805e8559ba230271c8df540ccdb19cd59ebbad378",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000009_add_user_quotas.down.sql",
+        "received_blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718",
+        "historical_selected_blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718",
+        "current_blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718",
+        "current_sha256": "ddaa40b4570f35a67951c5f27900350d2cf310a89f0346050d8481299df2ff74",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000009_add_user_quotas.up.sql",
+        "received_blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857",
+        "historical_selected_blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857",
+        "current_blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857",
+        "current_sha256": "264b5f2c150c045cf3806c05357bad96ae864704245366ea4fa89e5c1f07aa37",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000010_add_resumable_uploads.down.sql",
+        "received_blob": "165f146571ed97f93eaddb55e120809baec39846",
+        "historical_selected_blob": "165f146571ed97f93eaddb55e120809baec39846",
+        "current_blob": "165f146571ed97f93eaddb55e120809baec39846",
+        "current_sha256": "71b1c8c17158b88f445abbf06b2a68cd2603195eac4b3273340faa1fb10c7037",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000010_add_resumable_uploads.up.sql",
+        "received_blob": "1e5baa381088b17f4e4a062df9ef660dd182ca8d",
+        "historical_selected_blob": "b292067130128584ce644e2ca4d4f9df1552126f",
+        "current_blob": "b292067130128584ce644e2ca4d4f9df1552126f",
+        "current_sha256": "ac0aa47d8be8db9a67f06426c34f4fa80396914c5564a8f8d1d51eab8c19967d",
+        "selection_reason": "whitespace-only import normalization"
+      },
+      {
+        "path": "internal/db/migrations/000011_add_audit_logs.down.sql",
+        "received_blob": "140c983af7d109727af2761f196289cfa9063ee7",
+        "historical_selected_blob": "140c983af7d109727af2761f196289cfa9063ee7",
+        "current_blob": "140c983af7d109727af2761f196289cfa9063ee7",
+        "current_sha256": "dcab30de54e16b2d7dab44cbee68c74b849ff7c7c6980837d27da56391a0527d",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000011_add_audit_logs.up.sql",
+        "received_blob": "5e8d836ddc9b5a17919d52c9468abc065776450d",
+        "historical_selected_blob": "5e8d836ddc9b5a17919d52c9468abc065776450d",
+        "current_blob": "5e8d836ddc9b5a17919d52c9468abc065776450d",
+        "current_sha256": "e3c7df8bede4b11b59824022b7547d9dbcfb1319c8418b21bd1fe51aa9d80285",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000012_authenticated_sessions.down.sql",
+        "received_blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83",
+        "historical_selected_blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83",
+        "current_blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83",
+        "current_sha256": "3c11ae0648300a83d40084ad149659fde1aafe92830546e45d258d2c98a055bb",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+        "received_blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7",
+        "historical_selected_blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7",
+        "current_blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7",
+        "current_sha256": "f7f2449d1ee196db7607a8068f5124e48a4866eb71b01d39e9b3d6aa25f9bc75",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/schema.sql",
+        "received_blob": "2ca9b0707d9406edabd927080ee1b77976e93203",
+        "historical_selected_blob": "2ca9b0707d9406edabd927080ee1b77976e93203",
+        "current_blob": "2ca9b0707d9406edabd927080ee1b77976e93203",
+        "current_sha256": "970fda2f15cc35e2e4974e1aafb77f3fcd7299c988bf01a7449ee574dddef2f2",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/admin.go",
+        "received_blob": "a86fa9ef0f05fbbb97f6f395ee6fc1d54176050a",
+        "historical_selected_blob": "f39a8f05d78cd72b4853d36f272ba4dd8af11c1a",
+        "current_blob": "f39a8f05d78cd72b4853d36f272ba4dd8af11c1a",
+        "current_sha256": "f7d90f1f22919a6f38689b352ccc23cb74efb49bc97115708f641a31636380d8",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/admin_test.go",
+        "received_blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b",
+        "historical_selected_blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b",
+        "current_blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b",
+        "current_sha256": "c9c0c6b9b02e4cd3c4d5cfda11cb458dd9be329f04f09ed348a9315ceda2b273",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/audit.go",
+        "received_blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e",
+        "historical_selected_blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e",
+        "current_blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e",
+        "current_sha256": "e734e3c95dfc85df2e5dbe6463d0d261072476f63371e55d9502bd2fcc8cd047",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/auth.go",
+        "received_blob": "b1e0b4d7400b4945a2097156b6fe48360db1f77c",
+        "historical_selected_blob": "84b9b3241bc935b80f6897ee9e1f4fb8ef556ab6",
+        "current_blob": "84b9b3241bc935b80f6897ee9e1f4fb8ef556ab6",
+        "current_sha256": "ded8e9c71c3836d594d4c060df676ab89a46cb05afc69810af449cd955df71cd",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/auth_integration_test.go",
+        "received_blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e",
+        "historical_selected_blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e",
+        "current_blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e",
+        "current_sha256": "3a8ed7fa98879fd8fe046bbc61a1c633c2cfed842795c6fcb1e3959fc132c656",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/auth_test.go",
+        "received_blob": "5b10c766b28f2e8f23b894443128426abfa410c2",
+        "historical_selected_blob": "5b10c766b28f2e8f23b894443128426abfa410c2",
+        "current_blob": "5b10c766b28f2e8f23b894443128426abfa410c2",
+        "current_sha256": "e61014f900dd2c56ef57fc56a05a103f2221f37ebf9aef08d521e83a325069db",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/backup.go",
+        "received_blob": "449c77a773817b141380e47165dec87dcb144953",
+        "historical_selected_blob": "449c77a773817b141380e47165dec87dcb144953",
+        "current_blob": "5816f0337a6d7047e6528dd13c5a16cf2c932d79",
+        "current_sha256": "07ec070fa00f044dffac6346c547e3c605390561f01a18a02368c6c11531bcec",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/circuitbreaker.go",
+        "received_blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77",
+        "historical_selected_blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77",
+        "current_blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77",
+        "current_sha256": "0afe6c8de952943cbe476bb7cfe4f40654091e29871943f2905d1d41738d8621",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/cleanup.go",
+        "received_blob": "3859beb09b7f977fd7c43c0b5582f27870de4714",
+        "historical_selected_blob": "3859beb09b7f977fd7c43c0b5582f27870de4714",
+        "current_blob": "3859beb09b7f977fd7c43c0b5582f27870de4714",
+        "current_sha256": "955179990a737462624c21a90299ff7224341e01a96867fb620b9640dfe6f52c",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/commit_fault_integration_test.go",
+        "received_blob": "fb5bffd130fae96071188603188c79cd0395a05e",
+        "historical_selected_blob": "fb5bffd130fae96071188603188c79cd0395a05e",
+        "current_blob": "fb5bffd130fae96071188603188c79cd0395a05e",
+        "current_sha256": "4929e58b88eef0d366c0afd332c8c57f268887342f1e55c3edb37a4cda3ea90c",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/compression.go",
+        "received_blob": "b0486db0da58f62b74c6a6f86b5250583a74980c",
+        "historical_selected_blob": "b8fb324647cfc359c64d9ff1522325ea2d2921ea",
+        "current_blob": "b8fb324647cfc359c64d9ff1522325ea2d2921ea",
+        "current_sha256": "ca6144494de50d17538d022b7c16a1ddb5b3bf6147ff6f6254aee8bbadeec934",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/config_validation.go",
+        "received_blob": "f85df0749b9136eaeb38ab2e6f2ca1c758e88f44",
+        "historical_selected_blob": "816800cf36709fc91ccc1ec209498869d264ad36",
+        "current_blob": "974380e93cbf5c9181974ec1e36af05b4968110b",
+        "current_sha256": "cefa1704f476558d6edae411823e1cef97fa4021840cb045a8071ba86dd0c7f5",
+        "selection_reason": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+      },
+      {
+        "path": "internal/server/db.go",
+        "received_blob": "8c45355a437e48554b16a5a906b7b431d8ef910e",
+        "historical_selected_blob": "8c45355a437e48554b16a5a906b7b431d8ef910e",
+        "current_blob": "8c45355a437e48554b16a5a906b7b431d8ef910e",
+        "current_sha256": "e02887d0ddb42509c086e9abd40d9b63e079a6427f8e8d4d63c5d517c4a9896b",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/db_test.go",
+        "received_blob": "5b1f1c56a3746f90b486783aa10917efa713e712",
+        "historical_selected_blob": "5b1f1c56a3746f90b486783aa10917efa713e712",
+        "current_blob": "5b1f1c56a3746f90b486783aa10917efa713e712",
+        "current_sha256": "1fc1ba2c9444e2e78fce750d79386902899c87dcd077516c6acfbd108b947c1b",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/doc.go",
+        "received_blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d",
+        "historical_selected_blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d",
+        "current_blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d",
+        "current_sha256": "c077081cbd010845f39d130f022cf437e1b3297ad483e300040016bebeab2b2c",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/download.go",
+        "received_blob": "f946f0800df2edd4ab483cc29354ffdc258a0f08",
+        "historical_selected_blob": "8236c8a82e48287410cdd006d8d3cb2aa70e653a",
+        "current_blob": "8236c8a82e48287410cdd006d8d3cb2aa70e653a",
+        "current_sha256": "76ba0d53a28a9e5a73897dd6b7a1258e9b4ec528103a832f1a63b63e0f247c05",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/download_test.go",
+        "received_blob": "e347beb1d1556b87a13c20bf6a005db79be9a847",
+        "historical_selected_blob": "e347beb1d1556b87a13c20bf6a005db79be9a847",
+        "current_blob": "e347beb1d1556b87a13c20bf6a005db79be9a847",
+        "current_sha256": "ec946990f63bf992a5523f1238ae677cfcd36764f7ff8bc8fd5e0ec12b071133",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/download_tokens.go",
+        "received_blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06",
+        "historical_selected_blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06",
+        "current_blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06",
+        "current_sha256": "4d05005ea2c115527045d597032a2d39e8e7305cf039b2180caa6f047c26fa5e",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/download_tokens_test.go",
+        "received_blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e",
+        "historical_selected_blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e",
+        "current_blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e",
+        "current_sha256": "a2a69e774d25ca41caaa72e2f9cedebe236975a1b7d7a33c8782d8197b769cbd",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/email.go",
+        "received_blob": "86571b5e5d6f97db3c532d88e879d7ba94f5ac94",
+        "historical_selected_blob": "1998a1d1ed85b3573a977d4466cc524dd027b870",
+        "current_blob": "1998a1d1ed85b3573a977d4466cc524dd027b870",
+        "current_sha256": "4f5cea4dc8075ee76cf795c6361356f68ca8f36963c57302d552c1c0c65698bd",
+        "selection_reason": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+      },
+      {
+        "path": "internal/server/endpoint_ratelimit.go",
+        "received_blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af",
+        "historical_selected_blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af",
+        "current_blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af",
+        "current_sha256": "ff3f8c77f961842e3bf5d1b60564af9a72faafa8b8c61778a732fc128a578674",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/files.go",
+        "received_blob": "e8ba2db45076b4da3d58173bcfeb173ec4238a58",
+        "historical_selected_blob": "95a50c0406223a37aaece5f560a8942419be5650",
+        "current_blob": "95a50c0406223a37aaece5f560a8942419be5650",
+        "current_sha256": "fbf0c627af8fdb94e3f7c3a025262e6477bfb089644a4abad6e11ab898d74eda",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/files_test.go",
+        "received_blob": "81fddc368fe17bd48713cb118636e2b0f643db01",
+        "historical_selected_blob": "81fddc368fe17bd48713cb118636e2b0f643db01",
+        "current_blob": "81fddc368fe17bd48713cb118636e2b0f643db01",
+        "current_sha256": "d8452099d3dbd14c6a7b6adad52187eb66073433d101a5098c32dde7812a3fab",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/hash.go",
+        "received_blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee",
+        "historical_selected_blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee",
+        "current_blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee",
+        "current_sha256": "9ac1655bf1a15048821c512d16b9213112dd3e55f8209cd783604e7333180c00",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/health.go",
+        "received_blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539",
+        "historical_selected_blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539",
+        "current_blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539",
+        "current_sha256": "d9811add796b2568571ecdb24a4b69ce76135ab4d8e724ce37b317743dff7eb5",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/jsonlog.go",
+        "received_blob": "46d9f36b186b8276ea0be68d3d0288517a35d933",
+        "historical_selected_blob": "46d9f36b186b8276ea0be68d3d0288517a35d933",
+        "current_blob": "46d9f36b186b8276ea0be68d3d0288517a35d933",
+        "current_sha256": "b527d2401a74df0a8e1bb335782eafe4d4958748538ba610e53e88b81906c7a0",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/lifecycle_ordering_integration_test.go",
+        "received_blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c",
+        "historical_selected_blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c",
+        "current_blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c",
+        "current_sha256": "ff918866942b19d8e17672b9ecf519547525ca1cea4da10c7c576fdcd911b2bc",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/lifecycle_regression_test.go",
+        "received_blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3",
+        "historical_selected_blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3",
+        "current_blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3",
+        "current_sha256": "ea78a092b749617b958a27b310e8bb0fb9f86ce33741aa3da6939c4634f5a1b4",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/links.go",
+        "received_blob": "fd18c03a4ab9a6b68c047b0407032b119da12718",
+        "historical_selected_blob": "ca532fb7961be9c89c5d9ac5b4155b98851ded2c",
+        "current_blob": "ca532fb7961be9c89c5d9ac5b4155b98851ded2c",
+        "current_sha256": "49b375b9f61d96d68e07ec7f3d93f0ce6703bb37d11f1d73857fc7ef1fd29abf",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/links_test.go",
+        "received_blob": "94f4680b035b4a152cdb73f580b482ac07f34af4",
+        "historical_selected_blob": "94f4680b035b4a152cdb73f580b482ac07f34af4",
+        "current_blob": "94f4680b035b4a152cdb73f580b482ac07f34af4",
+        "current_sha256": "f75f60fae9eeb3ffc088d131dd0a849e9ff8271d1ad12479f94f1f621950dd48",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/lockout.go",
+        "received_blob": "5047140790803471d485bf9405cc2fdaada82a16",
+        "historical_selected_blob": "5047140790803471d485bf9405cc2fdaada82a16",
+        "current_blob": "5047140790803471d485bf9405cc2fdaada82a16",
+        "current_sha256": "14bdbb74f0ca89b8ed8c947a69226d8da2be82c90b957290ce08eeb95f9cc5eb",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/logging.go",
+        "received_blob": "a3f2778d3348d154aaf8350635e75999473131fa",
+        "historical_selected_blob": "68ac8439c1d10b90a02607634fab69631eec1397",
+        "current_blob": "68ac8439c1d10b90a02607634fab69631eec1397",
+        "current_sha256": "f526cb24696b0eca32a791bec9fa80ebe052f530a9f2499277364d59762850c0",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/metrics.go",
+        "received_blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47",
+        "historical_selected_blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47",
+        "current_blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47",
+        "current_sha256": "440e166a40f5656ca2e675380d3a21e9ef037b9e5907e32e42b76719f9b74831",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/minio.go",
+        "received_blob": "401d11c21ae94899098affc8a2f6fc44f007ea69",
+        "historical_selected_blob": "401d11c21ae94899098affc8a2f6fc44f007ea69",
+        "current_blob": "401d11c21ae94899098affc8a2f6fc44f007ea69",
+        "current_sha256": "6e3e3ca62456b2af05459f418bd38e1329f9e12bf65e1d15fb7680b5524bca45",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/minio_test.go",
+        "received_blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469",
+        "historical_selected_blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469",
+        "current_blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469",
+        "current_sha256": "968236e7f54de9f695256cf9b18d6da63b4e7129dae0ba7e1f6f58d62f30c48b",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/notifications.go",
+        "received_blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc",
+        "historical_selected_blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc",
+        "current_blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc",
+        "current_sha256": "caf55b0941231170f454b3d5f68590e98aba03d3c282430dd56e5f7781a49a58",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/origin.go",
+        "received_blob": "de10f974c51405debe54548e54a47334daf28b23",
+        "historical_selected_blob": "de10f974c51405debe54548e54a47334daf28b23",
+        "current_blob": "de10f974c51405debe54548e54a47334daf28b23",
+        "current_sha256": "8e30d0de29720bf467031388f114c8731a4d34523741a41195ba6bf8bf0d53ca",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/prometheus.go",
+        "received_blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6",
+        "historical_selected_blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6",
+        "current_blob": "163b9fa4223ff8716f0b70b7fd6d19fc9ab185c6",
+        "current_sha256": "a54a2a3515d1de0d59686c6e8d4b40050d8eee716493c100f5c22ebe95e8eab5",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/quality_integration_test.go",
+        "received_blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c",
+        "historical_selected_blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c",
+        "current_blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c",
+        "current_sha256": "2524621ae8d8072935daa7aa5cdd913e00d1bcb950ed3f9e9b57c41aba13af0d",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/quality_regression_test.go",
+        "received_blob": "cd0db1b23c7ce17286e96435488bb94f255e9654",
+        "historical_selected_blob": "cd0db1b23c7ce17286e96435488bb94f255e9654",
+        "current_blob": "cd0db1b23c7ce17286e96435488bb94f255e9654",
+        "current_sha256": "4b3b0e8e3c3ce7bd2e4e8aeecf7ad3eadc7161efa32d5a674d19e8a1f4e31560",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/quota.go",
+        "received_blob": "c1f4c36c5b8e01b008c6ab14c8f9dc683da9f3df",
+        "historical_selected_blob": "c0851509f2ed07cd28a25f72842429dc754d6386",
+        "current_blob": "c0851509f2ed07cd28a25f72842429dc754d6386",
+        "current_sha256": "e1d937641082352254b243d5532703952bb6c6187ba8750597dacc2f0dd7ed34",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/ratelimit.go",
+        "received_blob": "40a35ee613c331484d1c0a06c60ba39cb236a468",
+        "historical_selected_blob": "d71b19df33c4e14478b6a1d54a69b83fb365ec08",
+        "current_blob": "d71b19df33c4e14478b6a1d54a69b83fb365ec08",
+        "current_sha256": "1718628593b0518a52a7a940b319777e4941d5d371fed2f1bf7d6d5176286654",
+        "selection_reason": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+      },
+      {
+        "path": "internal/server/ratelimit_test.go",
+        "received_blob": "0b2b27bb4c0cb87a62bafdffd3e5ccc91c5d36de",
+        "historical_selected_blob": "b078578a9903d30bf3dd229411dd61b1e2a856db",
+        "current_blob": "b078578a9903d30bf3dd229411dd61b1e2a856db",
+        "current_sha256": "c877a85322f375b5a337d9fd6f9d10692d00dab1544d5bfbecef6746bfd9b4a5",
+        "selection_reason": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+      },
+      {
+        "path": "internal/server/register.go",
+        "received_blob": "b6be5b0f8600fa3a2d1ee0a0080b091e326d189e",
+        "historical_selected_blob": "c4f78f370060148c83c6def52ae937ee8d73a0a8",
+        "current_blob": "c120c47c9a54395de2059b52bfd10f542e2ec0f1",
+        "current_sha256": "78bbcae35f173a21187536e4ef2e36fd12e69055ad50bcd4357151b22cebed67",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/request.go",
+        "received_blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc",
+        "historical_selected_blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc",
+        "current_blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc",
+        "current_sha256": "f23953867e5dd4ffb064add606a7644802609590a1e20b7fadebacb10e6dcb2c",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/resumable.go",
+        "received_blob": "3e25f54e92c43f98bf49dffd4b2a1f625a65d7c7",
+        "historical_selected_blob": "93c2fa017956c75797492ab4a0b4ed1acf1bdbd7",
+        "current_blob": "93c2fa017956c75797492ab4a0b4ed1acf1bdbd7",
+        "current_sha256": "01eb4fe0a064f4ee45750fb3b649aab171fbbca4cb5f866334359393665c0f76",
+        "selection_reason": "whitespace-only import normalization"
+      },
+      {
+        "path": "internal/server/rows.go",
+        "received_blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892",
+        "historical_selected_blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892",
+        "current_blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892",
+        "current_sha256": "69329d0a3b9d64d69ad495b41c0f28a1f92c38d8f8eae08c63352827c2de7efc",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/security.go",
+        "received_blob": "2ed986f516c8964091b6f16609c064edaf266221",
+        "historical_selected_blob": "2ed986f516c8964091b6f16609c064edaf266221",
+        "current_blob": "2ed986f516c8964091b6f16609c064edaf266221",
+        "current_sha256": "8cf32a848289e2e506577e66494ba20040db0b110eb406da26cda1fb4059422d",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/server.go",
+        "received_blob": "a097e39b157bc9a3b0a2821a0ddd5c4a29c4f84f",
+        "historical_selected_blob": "0356647a1b2f6a39692c68a34086be619963120e",
+        "current_blob": "0356647a1b2f6a39692c68a34086be619963120e",
+        "current_sha256": "69c6574cacae7870d609025ff7695b43267346cd4463f941a99926d37b6d2e4b",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/tracing.go",
+        "received_blob": "cf0bdedeb7e7baf6ce393d80a8eef1c8e6dfee12",
+        "historical_selected_blob": "f26fb7230703769d122568bc87db3f0f012d998b",
+        "current_blob": "f26fb7230703769d122568bc87db3f0f012d998b",
+        "current_sha256": "cba48ad027e8519262a6bb208f8346c546582de8c2042ef2ff8e6308fd09578a",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "internal/server/upload.go",
+        "received_blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518",
+        "historical_selected_blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518",
+        "current_blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518",
+        "current_sha256": "a6848464ef91239db1193a6642585a27fefce666257acf938207da9fd186f558",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/upload_test.go",
+        "received_blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4",
+        "historical_selected_blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4",
+        "current_blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4",
+        "current_sha256": "957cbea6a7fcec42f961f8c2c316c587708635f44822eba9cca05998dc34f7a8",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/validation.go",
+        "received_blob": "69f9012e570bd909416a28566638a4eee12005ea",
+        "historical_selected_blob": "69f9012e570bd909416a28566638a4eee12005ea",
+        "current_blob": "69f9012e570bd909416a28566638a4eee12005ea",
+        "current_sha256": "05c30d1256a1be4c58df5a1093ab1d46ad632f68f554232b68e09f07463840a7",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/webhooks.go",
+        "received_blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2",
+        "historical_selected_blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2",
+        "current_blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2",
+        "current_sha256": "f8b0235de324ce1b2f60aa8d0f4896a9a7fa47a5d2b53551cf8f529d648ee619",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "native/Makefile",
+        "received_blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03",
+        "historical_selected_blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03",
+        "current_blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03",
+        "current_sha256": "114d1202da96901f7717c1b007f9ed0c940d08e61aca770eabf40999dfc856cf",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "native/README.md",
+        "received_blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e",
+        "historical_selected_blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e",
+        "current_blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e",
+        "current_sha256": "a347ad6c6b3ba86971aa03c875e15bd06a28f247921a6ecd8a8b2128b36e6a5b",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "native/sfd_hash.c",
+        "received_blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8",
+        "historical_selected_blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8",
+        "current_blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8",
+        "current_sha256": "0dd3a66cb9072b2b0a975538a8809b53a896bdebdc35b35f619a48b947f6cb62",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "native/sfd_hash.h",
+        "received_blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39",
+        "historical_selected_blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39",
+        "current_blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39",
+        "current_sha256": "e2003a5aeaa0a4765576dc26ea5c57a442cb521405f62c18ec9aa7715e20bb40",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "native/sfd_hash_cli.c",
+        "received_blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6",
+        "historical_selected_blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6",
+        "current_blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6",
+        "current_sha256": "8a91dc89dc2e3cbe0d13cd68b209283b22bf00ef9f517418a24c106e58da0ea4",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "native/test_hash.py",
+        "received_blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c",
+        "historical_selected_blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c",
+        "current_blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c",
+        "current_sha256": "08539523196f5822baa78db569e080c1f278f05c784e06e8719f7e651905d842",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "web/static/index.html",
+        "received_blob": "362329d0247146878c62886bbc50582d09b058d3",
+        "historical_selected_blob": "ee1fce02c3d9b93f5591fea5d58fe4757b733696",
+        "current_blob": "ee1fce02c3d9b93f5591fea5d58fe4757b733696",
+        "current_sha256": "dcaa3a0f21a507409259ec54e1e9f9c43a5549d29db6edcc18e04314e2e1391a",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      },
+      {
+        "path": "web/static/manifest.json",
+        "received_blob": "25e3fad0d407016678c45d77d89ba722146fd4d4",
+        "historical_selected_blob": "25e3fad0d407016678c45d77d89ba722146fd4d4",
+        "current_blob": "25e3fad0d407016678c45d77d89ba722146fd4d4",
+        "current_sha256": "84e0f61ca3cd8454a0ea911548e355a3add7725011630d732899496d6a79a459",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "web/static/sw.js",
+        "received_blob": "ee46a54c29ed32bdfe38f274702a4220275b3827",
+        "historical_selected_blob": "8c29791884b4fa1f11cf20ab41379c686f87413a",
+        "current_blob": "8c29791884b4fa1f11cf20ab41379c686f87413a",
+        "current_sha256": "dfa2e63874e565d8352d17afc50054403b86f5156f0aba087fd365a102398178",
+        "selection_reason": "whitespace-only import normalization"
+      }
+    ],
+    "five_explicit_post_selection_deviations": [
+      {
+        "path": "internal/db/lineage.go",
+        "received_blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+        "historical_selected_blob": "fbe89e356a8fe9ec0190929b3fe095f5ad101c07",
+        "current_blob": "cca312ae7c551b4fc26e07f84ca8eda3902ed6eb",
+        "current_sha256": "b156859e63579022b3c9083a3159520dc2c20287cd83dd3d906d2e7d303ca65c",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/db/migrate_lineage_test.go",
+        "received_blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec",
+        "historical_selected_blob": "468f2c74398f43ba63bceef2db9a4fa6c979e0ec",
+        "current_blob": "f8ca5828a857719b7a51888415c810315da56d0f",
+        "current_sha256": "cf8e1eab08ef3fbf06e088adce1e3047f44a252d5d217bbed69039446f6c0300",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/backup.go",
+        "received_blob": "449c77a773817b141380e47165dec87dcb144953",
+        "historical_selected_blob": "449c77a773817b141380e47165dec87dcb144953",
+        "current_blob": "5816f0337a6d7047e6528dd13c5a16cf2c932d79",
+        "current_sha256": "07ec070fa00f044dffac6346c547e3c605390561f01a18a02368c6c11531bcec",
+        "selection_reason": "exact reviewed source"
+      },
+      {
+        "path": "internal/server/config_validation.go",
+        "received_blob": "f85df0749b9136eaeb38ab2e6f2ca1c758e88f44",
+        "historical_selected_blob": "816800cf36709fc91ccc1ec209498869d264ad36",
+        "current_blob": "974380e93cbf5c9181974ec1e36af05b4968110b",
+        "current_sha256": "cefa1704f476558d6edae411823e1cef97fa4021840cb045a8071ba86dd0c7f5",
+        "selection_reason": "confirmed review correction: delivery/startup/trusted-peer or explicit multipart envelope contract"
+      },
+      {
+        "path": "internal/server/register.go",
+        "received_blob": "b6be5b0f8600fa3a2d1ee0a0080b091e326d189e",
+        "historical_selected_blob": "c4f78f370060148c83c6def52ae937ee8d73a0a8",
+        "current_blob": "c120c47c9a54395de2059b52bfd10f542e2ec0f1",
+        "current_sha256": "78bbcae35f173a21187536e4ef2e36fd12e69055ad50bcd4357151b22cebed67",
+        "selection_reason": "preserved canonical security safeguard; inspect normal commit diff against received source"
+      }
+    ],
+    "auxiliary_configuration": [
+      {
+        "path": "monitoring/README.md",
+        "historical_selected_blob": "a5c7dc5a7ceae1cf9e8872d9ba9545deac8d5f7d",
+        "current_blob": "a5c7dc5a7ceae1cf9e8872d9ba9545deac8d5f7d"
+      },
+      {
+        "path": "monitoring/grafana/dashboards/sfd-overview.json",
+        "historical_selected_blob": "b2ced8f97c7fa11c75cfd75a06064dda56c1e2b7",
+        "current_blob": "b2ced8f97c7fa11c75cfd75a06064dda56c1e2b7"
+      },
+      {
+        "path": "monitoring/grafana/provisioning/dashboards/default.yml",
+        "historical_selected_blob": "5f467af1a4b6a945584c5e32e57edd56aada2be2",
+        "current_blob": "5f467af1a4b6a945584c5e32e57edd56aada2be2"
+      },
+      {
+        "path": "monitoring/grafana/provisioning/datasources/prometheus.yml",
+        "historical_selected_blob": "228561dfbab8165f5473f686ac3dd1d8f8605495",
+        "current_blob": "228561dfbab8165f5473f686ac3dd1d8f8605495"
+      },
+      {
+        "path": "monitoring/prometheus.yml",
+        "historical_selected_blob": "52f1b773ce7741f0991f21eb92b0ffdeebd2aa38",
+        "current_blob": "52f1b773ce7741f0991f21eb92b0ffdeebd2aa38"
+      }
+    ],
+    "four_path_implementation_inventory": [
+      "internal/db/lineage.go",
+      "internal/db/migrate_lineage_test.go",
+      "internal/server/register.go",
+      "tests/auth/acceptance.py"
+    ],
+    "source_and_test_inspection_matrix": [
+      {
+        "area": "authentication, role and ownership separation",
+        "source": [
+          "internal/server/auth.go",
+          "internal/server/register.go",
+          "internal/server/files.go",
+          "internal/server/quota.go",
+          "internal/server/admin.go"
+        ],
+        "inspection": "HMAC and expiry plus persisted token hash; current active/verified DB role rechecked; environment administrator distinct and excluded from UUID-owned paths; registration now explicitly non-admin; row-locked per-user pending reservations; ownerless rows remain admin-only",
+        "tests": "TestAuthenticatedIdentities, real registered/environment login, logout/replay/recreation, cross-account API negatives and quota fixture"
+      },
+      {
+        "area": "account lockout and request trust",
+        "source": [
+          "internal/server/lockout.go",
+          "internal/server/ratelimit.go",
+          "internal/server/endpoint_ratelimit.go"
+        ],
+        "inspection": "failure/success callbacks wired; recovery must enforce five401 then429 and different-account login; immediate peer used instead of arbitrary forwarded headers",
+        "limits": "process-local, keyed by presented login identifier; not durable/distributed or alias-canonicalised protection; proxy-shared limits remain a topology gate"
+      },
+      {
+        "area": "upload limits, hash and transaction uncertainty",
+        "source": [
+          "internal/server/upload.go",
+          "internal/server/hash.go",
+          "internal/server/request.go"
+        ],
+        "inspection": "file limit+1MiB envelope without overflow; exactly one complete multipart file; actual stored/read/native byte counts; per-file FOR UPDATE held through compensation; ambiguous COMMIT retains possibly committed bytes",
+        "tests": "four real PostgreSQL/storage driver-acknowledgement cases, five lifecycle ordering cases, native vectors, framing/size/quota fixture",
+        "limits": "driver acknowledgement injection is not a wire-fault reproduction; unknown outcomes may retain bytes for governed cleanup"
+      },
+      {
+        "area": "deletion, cleanup and shutdown",
+        "source": [
+          "internal/server/admin.go",
+          "internal/server/cleanup.go",
+          "internal/server/server.go",
+          "cmd/backend/main.go"
+        ],
+        "inspection": "exact-key storage-first removal under row lock; storage failure retains metadata; cleanup SKIP LOCKED; graceful drain5s then cancel/compensate within20s and explicit Docker25s",
+        "limits": "object storage/SQL deletion is not a distributed atomic rollback; real cleanup remains OFF and existing historical rows are not test data"
+      },
+      {
+        "area": "download authorization, integrity and expiry",
+        "source": [
+          "internal/server/download_tokens.go",
+          "internal/server/download.go",
+          "internal/server/links.go"
+        ],
+        "inspection": "HMAC/constant-time check and expiry; owner-only issuance; hashed/ready state and file expiry checked; actual storage size checked, exact bytes verified by client/native tests; canonical public origin",
+        "limits": "bearer links remain usable independently of login until expiry; no per-download native rehash or 50GiB capacity certification"
+      },
+      {
+        "area": "lineage and role metadata",
+        "source": [
+          "internal/db/lineage.go",
+          "internal/db/migrate.go",
+          "internal/db/migrate_lineage_test.go",
+          "internal/db/migrations/000012_authenticated_sessions.up.sql"
+        ],
+        "inspection": "same borrowed connection/schema; rejects incompatible/dirty/future/unversioned application data before migration; additive11\u219212 and BYTEA/BIGINT; new role guard rejects incompatible type/nullability/default without coercion or ledger change",
+        "tests": "20 real lineage cases including six role-contract negatives, exact roles/column metadata/records preserved"
+      },
+      {
+        "area": "browser and Windows boundary",
+        "source": [
+          "web/static/index.html",
+          "desktop/windows/Client.cs",
+          "desktop/windows/WindowsIntegration.cs",
+          "desktop/windows/App.cs"
+        ],
+        "inspection": "generation invalidation aborts private requests/uploads and clears private state; Framework normal certificate and revocation checks, no redirect, safe HTTP-status reporting, current-user DPAPI with exact origin, SID/session single-instance IPC",
+        "limits": "frozen c320/F196 source unchanged; actual Owner Main/Explorer/clipboard/picker/Quick Send acceptance unexecuted"
+      },
+      {
+        "area": "backup and observability deviations",
+        "source": [
+          "internal/server/backup.go",
+          "internal/server/config_validation.go",
+          "internal/server/email.go",
+          "internal/server/logging.go",
+          "internal/server/compression.go",
+          "internal/server/tracing.go"
+        ],
+        "inspection": "accepted backup parsers retained; validate before DB/migration; bounded SMTP with standard TLS/auth checks; request controllers unwrap through middleware; immediate peer logging and sanitised published diagnostics",
+        "limits": "external fresh private backup/policy preflight must precede startup because migrations and initial backup happen before HTTP readiness"
+      }
+    ],
+    "Windows_native_exact_c320": true,
+    "whole_legacy_ancestry_imported": false,
+    "independent_Aether_acceptance": "backup correction accepted at9f9f; broader final source/images remain pending independent Aether acceptance; this record is Codex producer verification, not self-acceptance"
+  },
+  "original_proposed_image_reproduction": {
+    "observed_utc": "2026-10-22T22:36:17.855969+00:00",
+    "source": "9f9f050533e92f9311739b673102c8704c506386",
+    "tree": "94da799f9322f1a25698b3de853e49675cc2e433",
+    "implementation_build_inputs_equal_6be": true,
+    "build_command": [
+      "docker",
+      "build",
+      "--no-cache",
+      "--pull=false",
+      "--target",
+      "build",
+      "--label",
+      "sfd.closeout-run=20261022-4f8d2a91",
+      "--label",
+      "org.opencontainers.image.revision=9f9f050533e92f9311739b673102c8704c506386",
+      "-f",
+      "/mnt/e/PROGRAMMING PROJECTS/secure-file-drop-quality-closeout-20261015-codex/.git/sfd-final-closeout-20261022-4f8d2a91/verification-build.Dockerfile",
+      "-t",
+      "sfd-final-closeout-20261022-4f8d2a91-source-rebuild",
+      "."
+    ],
+    "no_cache_rebuild": true,
+    "builder_base_image": "sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba",
+    "builder_base_repo_digests": [
+      "golang@sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba"
+    ],
+    "verification_build_image": "sha256:afc0c095864c9879e2102341bd993d84d5d221f1b4299a8ad7374c1b94b20067",
+    "binaries": {
+      "backend": "f5444b392a327a6626f0fbf0ce53cde3af018c585fc6cfa5f62cbc59bd284210",
+      "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+    },
+    "exact_equal_to_both_proposed_images": true,
+    "Go": "1.26.10",
+    "VCS_metadata_embedded": false,
+    "verification_container_never_started_and_removed": true,
+    "verification_image_not_an_adoption_replacement": true,
+    "limitation": "Local source-to-binary reproduction, not a signed third-party supply-chain attestation"
+  },
+  "original_image_pair_identity": {
+    "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+    "roles": {
+      "candidate": {
+        "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+        "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+        "binaries": {
+          "backend": "f5444b392a327a6626f0fbf0ce53cde3af018c585fc6cfa5f62cbc59bd284210",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      },
+      "recovery": {
+        "image": "sha256:9d2d5ab836bf765c9b3b09458246dc2d566cf70fa92f33dc449dfe0290a0e10c",
+        "source": "6be67418e07f4fc431ba5610eb549c14e400feb3",
+        "binaries": {
+          "backend": "f5444b392a327a6626f0fbf0ce53cde3af018c585fc6cfa5f62cbc59bd284210",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      }
+    },
+    "equal_application_binaries": true,
+    "recovery_scope": "artifact-only; shared application defects require backend-only fail-closed stop and independently reviewed forward fix",
+    "no_schema_downgrade": true,
+    "never_started_network_none_evidence_containers_removed": true
+  },
+  "original_actual_F196_and_restore_replay": [
+    {
+      "role": "release-bytea",
+      "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+      "layout": "bytea",
+      "backend_fixture_exit": 0,
+      "backend_checks": 92,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 44"
+      ]
+    },
+    {
+      "role": "release-bigint",
+      "image": "sha256:1eafa811382f05005cb34f9a2d2cc092b28f0a579f31e092b7161efca5e486f9",
+      "layout": "bigint",
+      "backend_fixture_exit": 0,
+      "backend_checks": 92,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 43"
+      ]
+    }
+  ],
+  "corrected_images": {
+    "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "images": {
+      "candidate": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+      "recovery": "sha256:bb37b90ece7c9a65bb983da7211a3740fd8debb6440d8998a8b604285ecadf84"
+    },
+    "recovery_scope": "artifact-only; shared software defects require preserved-data backend-only fail-closed stop and reviewed forward correction",
+    "observed_utc": "2026-10-22T22:43:58.244125+00:00"
+  },
+  "corrected_binaries": {
+    "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "roles": {
+      "candidate": {
+        "image": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+        "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+        "binaries": {
+          "backend": "6a3c180cc1724848919ccd9cdee19498899e9bcbb7644bab26b1748c949cc18c",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      },
+      "recovery": {
+        "image": "sha256:bb37b90ece7c9a65bb983da7211a3740fd8debb6440d8998a8b604285ecadf84",
+        "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+        "binaries": {
+          "backend": "6a3c180cc1724848919ccd9cdee19498899e9bcbb7644bab26b1748c949cc18c",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      }
+    },
+    "equal_application_binaries": true,
+    "recovery_scope": "artifact-only; shared application defects require backend-only fail-closed stop and independently reviewed forward fix",
+    "no_schema_downgrade": true,
+    "never_started_network_none_evidence_containers_removed": true
+  },
+  "corrected_clean_source_reproduction": {
+    "observed_utc": "2026-10-22T22:46:39.718194+00:00",
+    "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "tree": "b45835feb836e1e8a0931e70794e75f15e5fe6b2",
+    "new_reviewed_role_correction_source": true,
+    "build_command": [
+      "docker",
+      "build",
+      "--no-cache",
+      "--pull=false",
+      "--target",
+      "build",
+      "--label",
+      "sfd.closeout-run=20261022-4f8d2a91",
+      "--label",
+      "org.opencontainers.image.revision=3eeed453641e485792fa2233f7256f9c4556bef0",
+      "-f",
+      "/mnt/e/PROGRAMMING PROJECTS/secure-file-drop-quality-closeout-20261015-codex/.git/sfd-final-closeout-20261022-4f8d2a91/role-verification-build.Dockerfile",
+      "-t",
+      "sfd-final-closeout-20261022-4f8d2a91-role-source-rebuild",
+      "."
+    ],
+    "no_cache_rebuild": true,
+    "builder_base_image": "sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba",
+    "builder_base_repo_digests": [
+      "golang@sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba"
+    ],
+    "verification_build_image": "sha256:4abc77ff130bae85d72b471ddf1d73e559935bed100fc300fab63210208198a9",
+    "binaries": {
+      "backend": "6a3c180cc1724848919ccd9cdee19498899e9bcbb7644bab26b1748c949cc18c",
+      "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+    },
+    "exact_equal_to_both_proposed_images": true,
+    "Go": "1.26.10",
+    "VCS_metadata_embedded": false,
+    "verification_container_never_started_and_removed": true,
+    "verification_image_not_an_adoption_replacement": true,
+    "limitation": "Local source-to-binary reproduction, not a signed third-party supply-chain attestation"
+  },
+  "corrected_identical_rootfs": {
+    "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "candidate": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+    "recovery": "sha256:bb37b90ece7c9a65bb983da7211a3740fd8debb6440d8998a8b604285ecadf84",
+    "identical_rootfs_layers": true,
+    "layer_count": 7,
+    "configuration_difference": "artifact recovery label only"
+  },
+  "corrected_runtime_advisories": {
+    "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "image": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+    "alpine_release": "3.24.3",
+    "package_count": 25,
+    "packages": [
+      {
+        "name": "alpine-baselayout",
+        "version": "3.7.2-r1",
+        "origin": "alpine-baselayout"
+      },
+      {
+        "name": "alpine-baselayout-data",
+        "version": "3.7.2-r1",
+        "origin": "alpine-baselayout"
+      },
+      {
+        "name": "alpine-keys",
+        "version": "2.6-r0",
+        "origin": "alpine-keys"
+      },
+      {
+        "name": "alpine-release",
+        "version": "3.24.3-r0",
+        "origin": "alpine-base"
+      },
+      {
+        "name": "apk-tools",
+        "version": "3.0.8-r0",
+        "origin": "apk-tools"
+      },
+      {
+        "name": "busybox",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "busybox-binsh",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "ca-certificates",
+        "version": "20261020-r0",
+        "origin": "ca-certificates"
+      },
+      {
+        "name": "ca-certificates-bundle",
+        "version": "20261020-r0",
+        "origin": "ca-certificates"
+      },
+      {
+        "name": "libapk",
+        "version": "3.0.8-r0",
+        "origin": "apk-tools"
+      },
+      {
+        "name": "libcrypto3",
+        "version": "3.5.9-r0",
+        "origin": "openssl"
+      },
+      {
+        "name": "libncursesw",
+        "version": "6.6_p20260516-r0",
+        "origin": "ncurses"
+      },
+      {
+        "name": "libpq",
+        "version": "18.6-r0",
+        "origin": "postgresql18"
+      },
+      {
+        "name": "libssl3",
+        "version": "3.5.9-r0",
+        "origin": "openssl"
+      },
+      {
+        "name": "lz4-libs",
+        "version": "1.10.0-r1",
+        "origin": "lz4"
+      },
+      {
+        "name": "musl",
+        "version": "1.2.6-r3",
+        "origin": "musl"
+      },
+      {
+        "name": "musl-utils",
+        "version": "1.2.6-r3",
+        "origin": "musl"
+      },
+      {
+        "name": "ncurses-terminfo-base",
+        "version": "6.6_p20260516-r0",
+        "origin": "ncurses"
+      },
+      {
+        "name": "postgresql-common",
+        "version": "1.3-r0",
+        "origin": "postgresql-common"
+      },
+      {
+        "name": "postgresql16-client",
+        "version": "16.15-r0",
+        "origin": "postgresql16"
+      },
+      {
+        "name": "readline",
+        "version": "8.3.3-r1",
+        "origin": "readline"
+      },
+      {
+        "name": "scanelf",
+        "version": "1.3.9-r1",
+        "origin": "pax-utils"
+      },
+      {
+        "name": "ssl_client",
+        "version": "1.37.0-r31",
+        "origin": "busybox"
+      },
+      {
+        "name": "zlib",
+        "version": "1.3.2-r1",
+        "origin": "zlib"
+      },
+      {
+        "name": "zstd-libs",
+        "version": "1.5.7-r2",
+        "origin": "zstd"
+      }
+    ],
+    "advisory_databases": [
+      {
+        "url": "https://secdb.alpinelinux.org/v3.24/main.json",
+        "sha256": "42fcf5439b4a7aeadc1895f5068ac57d7c0c62aa81319baf990b1a5f38271ba1"
+      },
+      {
+        "url": "https://secdb.alpinelinux.org/v3.24/community.json",
+        "sha256": "e5824d8376f69a0d3bbcc73b375a509d70a96179c62b7fcf39973894a034b550"
+      }
+    ],
+    "version_matches": [],
+    "reachability": "version applicability only; not exploit reachability",
+    "binary_govuln": {
+      "exit": 0,
+      "advisory_ids": {
+        "GO-2026-5932": {
+          "level": 1,
+          "module": "golang.org/x/crypto",
+          "version": "v0.57.0",
+          "package": null,
+          "symbol": null,
+          "fixed_version": null
+        }
+      },
+      "counts": {
+        "1": 1,
+        "2": 0,
+        "3": 0
+      }
+    },
+    "owned_scanner_cleanup": true
+  },
+  "runtime_scan_readback": {
+    "actual_result": "role-closeout-runtime-advisories.json",
+    "completed_scan_verified": true,
+    "prior_postreader_filename_error": "reader expected the old evidence prefix after scan completed successfully; corrected by reading the actual new result, no scan rerun",
+    "advisory_version_matches": 0,
+    "reachable_package_or_symbol_findings": 0
+  },
+  "schema_regressions_fail_before": {
+    "work_id": "SFD-FINAL-CLOSEOUT-20261022",
+    "observed_utc": "2026-10-22T22:39:32.859444+00:00",
+    "phase": "fail-before",
+    "received_source": "9f9f050533e92f9311739b673102c8704c506386",
+    "exit": 1,
+    "passed_events": 15,
+    "failed_tests": [
+      "TestLegacyLineage/legacy11-incompatible-role-text-rejected",
+      "TestLegacyLineage/legacy11-incompatible-role-nullable-rejected",
+      "TestLegacyLineage/legacy11-incompatible-role-default-rejected",
+      "TestLegacyLineage/legacy12-incompatible-role-nullable-rejected",
+      "TestLegacyLineage/legacy12-incompatible-role-default-rejected",
+      "TestLegacyLineage"
+    ],
+    "real_lineage_subtests_passed": 15,
+    "scope": "new owned real PostgreSQL database/schemas only; no HTTP authentication-bypass reproduction",
+    "private_diagnostics_retained": true,
+    "owned_resources_cleaned": true
+  },
+  "schema_regressions_pass_after": {
+    "work_id": "SFD-FINAL-CLOSEOUT-20261022",
+    "observed_utc": "2026-10-22T22:40:37.734015+00:00",
+    "phase": "pass-after-v2",
+    "received_source": "9f9f050533e92f9311739b673102c8704c506386",
+    "exit": 0,
+    "passed_events": 21,
+    "failed_tests": [],
+    "real_lineage_subtests_passed": 20,
+    "scope": "new owned real PostgreSQL database/schemas only; no HTTP authentication-bypass reproduction",
+    "private_diagnostics_retained": true,
+    "owned_resources_cleaned": true
+  },
+  "root_checks": [
+    {
+      "check": "unit",
+      "exit": 0,
+      "observed_utc": "2026-10-22T22:41:19.624341+00:00",
+      "passed_test_events": 175,
+      "skipped_test_events": 12,
+      "failed_test_events": 0
+    },
+    {
+      "check": "race",
+      "exit": 0,
+      "observed_utc": "2026-10-22T22:41:38.749279+00:00",
+      "passed_test_events": 175,
+      "skipped_test_events": 8,
+      "failed_test_events": 0
+    },
+    {
+      "check": "vet",
+      "exit": 0,
+      "observed_utc": "2026-10-22T22:41:40.733058+00:00"
+    },
+    {
+      "check": "build",
+      "exit": 0,
+      "observed_utc": "2026-10-22T22:41:43.057824+00:00"
+    },
+    {
+      "check": "lint",
+      "exit": 0,
+      "observed_utc": "2026-10-22T22:41:53.558482+00:00"
+    },
+    {
+      "check": "advisories",
+      "exit": 0,
+      "observed_utc": "2026-10-22T22:41:57.342607+00:00"
+    },
+    {
+      "check": "environment-validator",
+      "exit": 0,
+      "observed_utc": "2026-10-22T22:41:57.461615+00:00"
+    }
+  ],
+  "corrected_dual_layout_security": [
+    {
+      "layout": "bytea",
+      "checks": 92,
+      "go": {
+        "passed_test_events": 230,
+        "skipped_test_events": 0,
+        "failed_test_events": 0,
+        "real_lineage_subtests": 20,
+        "real_lifecycle_ordering_cases": 5,
+        "real_commit_fault_modes": 4
+      },
+      "rollback": {
+        "image": "sha256:bb37b90ece7c9a65bb983da7211a3740fd8debb6440d8998a8b604285ecadf84",
+        "image_id": "sha256:bb37b90ece7c9a65bb983da7211a3740fd8debb6440d8998a8b604285ecadf84",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      },
+      "shutdown": {
+        "exit_code": 0,
+        "elapsed_seconds": 5.553,
+        "row_lock_observed": true,
+        "status": "failed",
+        "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
+        "docker_kill_budget_seconds": 25,
+        "application_budget_seconds": 20
+      },
+      "deletion": {
+        "admin_status": 204,
+        "admin_object_removed": true,
+        "storage_failure_status": 502,
+        "row_hash_unchanged": true,
+        "object_retained": true
+      },
+      "proxy": {
+        "image": "sha256:bb58a3046a925d974492f2a8d12af98b44a7ed039a46d3ade1ecf470a1af96c3",
+        "exact_limit_file_bytes": 1024,
+        "request_envelope_bytes": 1049600,
+        "exact_limit_http": 200,
+        "over_envelope_http": 413,
+        "normal_certificate_validation": true,
+        "docker_socket_mounted": false
+      },
+      "preservation": true,
+      "cleanup": true
+    },
+    {
+      "layout": "bigint",
+      "checks": 92,
+      "go": {
+        "passed_test_events": 230,
+        "skipped_test_events": 0,
+        "failed_test_events": 0,
+        "real_lineage_subtests": 20,
+        "real_lifecycle_ordering_cases": 5,
+        "real_commit_fault_modes": 4
+      },
+      "rollback": {
+        "image": "sha256:bb37b90ece7c9a65bb983da7211a3740fd8debb6440d8998a8b604285ecadf84",
+        "image_id": "sha256:bb37b90ece7c9a65bb983da7211a3740fd8debb6440d8998a8b604285ecadf84",
+        "ready": true,
+        "schema_version": "12",
+        "lockout_statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "account_lockout_enforced": true
+      },
+      "shutdown": {
+        "exit_code": 0,
+        "elapsed_seconds": 5.477,
+        "row_lock_observed": true,
+        "status": "failed",
+        "actual_object_absent": true,
+        "configured_docker_stop_timeout_seconds": 25,
+        "docker_kill_budget_seconds": 25,
+        "application_budget_seconds": 20
+      },
+      "deletion": {
+        "admin_status": 204,
+        "admin_object_removed": true,
+        "storage_failure_status": 502,
+        "row_hash_unchanged": true,
+        "object_retained": true
+      },
+      "proxy": {
+        "image": "sha256:bb58a3046a925d974492f2a8d12af98b44a7ed039a46d3ade1ecf470a1af96c3",
+        "exact_limit_file_bytes": 1024,
+        "request_envelope_bytes": 1049600,
+        "exact_limit_http": 200,
+        "over_envelope_http": 413,
+        "normal_certificate_validation": true,
+        "docker_socket_mounted": false
+      },
+      "preservation": true,
+      "cleanup": true
+    }
+  ],
+  "actual_unchanged_F196_replay": [
+    {
+      "role": "release-bytea",
+      "image": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+      "layout": "bytea",
+      "backend_fixture_exit": 0,
+      "backend_checks": 92,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 44"
+      ]
+    },
+    {
+      "role": "release-bigint",
+      "image": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+      "layout": "bigint",
+      "backend_fixture_exit": 0,
+      "backend_checks": 92,
+      "backend_failures": [],
+      "probe_exit": 0,
+      "expected_probe_pass": true,
+      "preservation": true,
+      "cleanup": true,
+      "probe_summary": [
+        "RELEASE REAL BACKEND CHECKS PASSED: 43"
+      ]
+    }
+  ],
+  "custom_restore": [
+    {
+      "layout": "bytea",
+      "source_revision": "3eeed453641e485792fa2233f7256f9c4556bef0",
+      "image": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+      "image_resident_pg_dump_version": "pg_dump (PostgreSQL) 16.15",
+      "custom_dump_restore": true,
+      "schema": 12,
+      "exact_user_file_session_audit_rows_equal": true,
+      "source_unchanged": true,
+      "archive_sha256": "fa73d02cc8e420e59ff7a9a0a35cc37d4eca29267484bc04ffe56470f52e0781",
+      "archive": "local-only synthetic private records"
+    },
+    {
+      "layout": "bigint",
+      "source_revision": "3eeed453641e485792fa2233f7256f9c4556bef0",
+      "image": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+      "image_resident_pg_dump_version": "pg_dump (PostgreSQL) 16.15",
+      "custom_dump_restore": true,
+      "schema": 12,
+      "exact_user_file_session_audit_rows_equal": true,
+      "source_unchanged": true,
+      "archive_sha256": "7955e64df07442a676cf93de7237453261ef5a3b719d3f68f82d1bf72cb3da8e",
+      "archive": "local-only synthetic private records"
+    }
+  ],
+  "untrusted_endpoint": {
+    "received_HTTP_requests": 0,
+    "closed": true
+  },
+  "hosted_implementation_failure_preserved": {
+    "run": 39867382418,
+    "source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "workflow_conclusion": "failure",
+    "cause": "separate workflow postcondition still required14 lineage cases after the actual suite grew to20",
+    "actual_runtime_suites": [
+      {
+        "layout": "bigint",
+        "checks": 94,
+        "browser": 27,
+        "go": {
+          "passed_test_events": 230,
+          "skipped_test_events": 0,
+          "failed_test_events": 0,
+          "real_lineage_subtests": 20,
+          "real_lifecycle_ordering_cases": 5,
+          "real_commit_fault_modes": 4
+        },
+        "fixture_failures": [],
+        "preservation": true,
+        "cleanup": true
+      },
+      {
+        "layout": "bytea",
+        "checks": 94,
+        "browser": 27,
+        "go": {
+          "passed_test_events": 230,
+          "skipped_test_events": 0,
+          "failed_test_events": 0,
+          "real_lineage_subtests": 20,
+          "real_lifecycle_ordering_cases": 5,
+          "real_commit_fault_modes": 4
+        },
+        "fixture_failures": [],
+        "preservation": true,
+        "cleanup": true
+      }
+    ],
+    "artifact_id": 12464468600,
+    "artifact_zip_sha256": "8aa7770ec7cbcbfaf88117be9892fa71736e8efd98e346107af957a3dc4ffb71",
+    "all_other_three_jobs_success": true,
+    "failure_not_waived": true
+  },
+  "final_head_CI": "pending at evidence commit; exact terminal artifact readback belongs in final PR handover, no success fabricated",
+  "live_readonly_preflight": {
+    "observed_utc": "2026-10-22T22:45:27.053367+00:00",
+    "schema_records_ownership_and_traffic": [
+      {
+        "version": 11,
+        "dirty": false
+      },
+      {
+        "users": 2,
+        "files": 15,
+        "negative_sizes": 0,
+        "ownerless": 7,
+        "orphan_owner": 0,
+        "unsupported_status": 0,
+        "resumable_rows": 0
+      },
+      {
+        "failed": 1,
+        "hashed": 11,
+        "stored": 2,
+        "pending": 1
+      },
+      {
+        "sha_type": "bytea",
+        "owner_type": "uuid",
+        "admin_type": "boolean"
+      },
+      {
+        "active_other_connections": 0,
+        "idle_in_transaction": 0,
+        "waiting_locks": 0
+      }
+    ],
+    "existing_administrator_column_matches_corrected_contract": true,
+    "digest_compatibility": [
+      {
+        "digest_byte_length_not_32": 0,
+        "hex_bad_shape": 0,
+        "digest_hex_mismatch": 0,
+        "finalized_missing_hash": 0
+      }
+    ],
+    "storage_policy_read_only": {
+      "bucket_exists": true,
+      "object_listing_or_mutation_attempted": false,
+      "policy_accepted_by_exact_reviewed_guard": true,
+      "policy_read_authorized": true,
+      "policy_write_attempted": false,
+      "read_only": true,
+      "storage_TLS_in_existing_config": false,
+      "exit": 0
+    },
+    "exact_reviewed_storage_guard_source_sha256": "6ed70e73ec69c13624f299f059303fb00826b023b25231323153f775e4ca91c9",
+    "existing_environment_equals_owner_validated_bytes": true,
+    "credentials_changed": false,
+    "existing_backend_stop_timeout": 1,
+    "required_successor_stop_timeout_seconds": 25,
+    "backup_configuration": {
+      "SFD_BACKUP_ENABLED": "true",
+      "SFD_BACKUP_RETENTION_DAYS": "7",
+      "SFD_BACKUP_INTERVAL": "24h",
+      "SFD_CLEANUP_ENABLED": "unset"
+    },
+    "existing_backup_metadata": [
+      {
+        "bytes": 3996,
+        "mtime": 1792617164
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792524873
+      },
+      {
+        "bytes": 3998,
+        "mtime": 1792340507
+      },
+      {
+        "bytes": 3995,
+        "mtime": 1792432701
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792323778
+      },
+      {
+        "bytes": 3993,
+        "mtime": 1792232669
+      }
+    ],
+    "storage_probe_removed": true,
+    "live_application_or_records_or_policy_mutated": false,
+    "preflight_only_no_adoption": true
+  },
+  "live_preservation": {
+    "observed_utc": "2026-10-22T22:57:26.678270+00:00",
+    "six_live_ids_images_starts_mounts_unchanged": true,
+    "backend_image": "sha256:7b53527539596c711a4b2e4a68d26d8e4c7a025228327e43b461b8f9b079b532",
+    "live_schema_metadata": [
+      {
+        "version": 11,
+        "dirty": false
+      },
+      [
+        {
+          "data_type": "text",
+          "table_name": "files",
+          "column_name": "created_by"
+        },
+        {
+          "data_type": "bytea",
+          "table_name": "files",
+          "column_name": "sha256_bytes"
+        },
+        {
+          "data_type": "uuid",
+          "table_name": "files",
+          "column_name": "user_id"
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "users",
+          "column_name": "email_verified"
+        },
+        {
+          "data_type": "boolean",
+          "table_name": "users",
+          "column_name": "is_admin"
+        }
+      ],
+      {
+        "users": 2,
+        "files": 15
+      }
+    ],
+    "environment_equals_owner_validated_candidate": true,
+    "protected_checkouts_preserved": true,
+    "original_change_entries": 5,
+    "retained_failure_counts": {
+      "container": 57,
+      "network": 5,
+      "volume": 37,
+      "image": 10
+    },
+    "retained_failure_inventory_exact_match": true,
+    "all_retained_failure_containers_stopped": true,
+    "backup_configuration": {
+      "SFD_BACKUP_ENABLED": "true",
+      "SFD_BACKUP_RETENTION_DAYS": "7",
+      "SFD_BACKUP_INTERVAL": "24h",
+      "SFD_CLEANUP_ENABLED": "unset"
+    },
+    "backup_file_metadata": [
+      {
+        "bytes": 3996,
+        "mtime": 1792617164
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792524873
+      },
+      {
+        "bytes": 3992,
+        "mtime": 1792709453
+      },
+      {
+        "bytes": 3998,
+        "mtime": 1792340507
+      },
+      {
+        "bytes": 3995,
+        "mtime": 1792432701
+      },
+      {
+        "bytes": 3994,
+        "mtime": 1792323778
+      },
+      {
+        "bytes": 3993,
+        "mtime": 1792232669
+      }
+    ],
+    "adoption_performed": false,
+    "live_record_mutations": false,
+    "observed_processes_stopped": false
+  },
+  "additional_background_backup": {
+    "original_six_backup_size_time_identities_preserved": true,
+    "original_count": 6,
+    "final_count": 7,
+    "additional_backup_metadata": [
+      {
+        "bytes": 3992,
+        "mtime": 1792709453,
+        "mtime_utc": "2026-10-22T22:50:53+00:00"
+      }
+    ],
+    "cause_statement": "one additional backup appeared while the existing enabled job and original backend remained running; Codex did not invoke a backup or adoption command",
+    "contents_or_credentials_disclosed": false
+  },
+  "live_proxy_and_session_boundaries": {
+    "observed_utc": "2026-10-22T22:57:27.032132+00:00",
+    "live_backend_file_limit_bytes": 53687091200,
+    "live_explicit_request_envelope": null,
+    "live_proxy_envelope_bytes": 53687091200,
+    "reviewed_contract_envelope_bytes": 53688139776,
+    "exact_maximum_file_plus_overhead_is_supported_by_current_proxy": false,
+    "scope": "read-only numeric configuration comparison, not a 50GiB upload test",
+    "capacity_limitations": "current proxy caps the complete body at50GiB while backend file limit is50GiB; do not claim exact-maximum support. No proxy change, maximum-size test or public deployment authorised by this check; bounded small-file Owner acceptance only after accepted adoption",
+    "schema11_session_state": {
+      "auth_sessions_table_exists": false,
+      "canonical_sessions_table_exists": false
+    },
+    "session_records_or_credentials_inspected_or_mutated": false,
+    "no_owned_schema_fixture_resources_remain": true
+  },
+  "new_backend_only_dry_run": {
+    "observed_utc": "2026-10-22T22:49:06.852102+00:00",
+    "provisional_image": "sha256:970c1c55443126dbe2d9170b0328c3f975a31de6de954b5e9e4c5b42a700b4e3",
+    "image_source": "3eeed453641e485792fa2233f7256f9c4556bef0",
+    "overlay_path": "/home/dreamingfree09/.local/share/secure-file-drop/admin-session/sfd-closeout-preflight-20261022-4f8d2a91/reviewed-backend-only.compose.yml",
+    "overlay_sha256": "2ed971b8f0a955f05154fd24fae47a550851605ccafba6211ef8f091b0b101a7",
+    "existing_compose_file_count": 2,
+    "baseline_build_only_without_explicit_image": true,
+    "Compose_literal_serialization_previously_verified_with_three_synthetic_runtime_cases": true,
+    "normalization_only_in_memory_no_environment_rewrite": true,
+    "traffic_quiescence": "not inferred from socket count; fresh checks required immediately before any stop",
+    "only_backend_image_and_25s_grace_change": true,
+    "other_five_service_configurations_unchanged": true,
+    "current_compose_image_resolves_to_running_image": true,
+    "current_rendered_environment_equals_actual_container": true,
+    "successor_rendered_environment_equals_actual_container": true,
+    "missing_or_changed_environment_key_count": 0,
+    "sensitive_values_printed_or_persisted": false,
+    "established_inbound_8080_sockets": 1,
+    "old_backend_stop_timeout_seconds": 1,
+    "stop_command_explicitly_overrides_old_budget_to_25s": true,
+    "two_hour_retention_window_backup_removal_candidates": 0,
+    "all_previous_backup_files_must_be_retained": true,
+    "commands_prepared_but_not_executed": true,
+    "implementation_preflight_compatible": true,
+    "independent_acceptance": "pending; overlay is not permission to apply",
+    "must_refresh_before_actual_stop": [
+      "accepted exact source/images/formal CI",
+      "actual integrated master tests",
+      "same six ids/images/mounts/networks/credentials/schema/owners/private policy",
+      "full-window backups and no transfer/SQL activity",
+      "strict TLS/current CRL",
+      "verified private fresh backup and fail-closed forward recovery"
+    ]
+  },
+  "current_Windows_and_TLS": {
+    "trusted_root_sha256": "0f45e72366dc8ff6e3bed9323ef697bb44b21204d7e05ea303da319b5160bc28",
+    "seven_distribution_files_preserved": true,
+    "framework_release": 534296,
+    "schannel": [
+      {
+        "http": 200,
+        "route": "health"
+      },
+      {
+        "http": 200,
+        "route": "ready"
+      }
+    ],
+    "Framework_revocation_enabled": [
+      {
+        "http": 200,
+        "revocation_enabled": true,
+        "route": "health"
+      },
+      {
+        "http": 200,
+        "revocation_enabled": true,
+        "route": "ready"
+      }
+    ],
+    "work_id": "SFD-FINAL-CLOSEOUT-20261022",
+    "processes_or_settings_or_trust_changed": false,
+    "system_default_TLS": true,
+    "executable_sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+    "published_CRL_sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+    "executable_path": "C:\\Users\\kosta\\SecureFileDrop-Tray-Fix-20261018-c74e5a92\\preview\\SecureFileDrop.exe",
+    "configuration_sha256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b",
+    "clr_version": "4.0.30319.42000",
+    "running_owner_instances": [
+      {
+        "path": "C:\\Users\\kosta\\OneDrive\\Desktop\\windows-companion-preview-and-checks\\SecureFileDrop.exe",
+        "sha256": "97fc2dafbc469627f9ee90896903162c8804c01a167402f414d150857a0ed394",
+        "id": 122160
+      }
+    ],
+    "observed_utc": "2026-10-22T22:54:31.7535363Z",
+    "custom_certificate_callback_absent": true,
+    "Owner_Main_launched": false
+  },
+  "current_CRL": {
+    "number": "0x1001",
+    "sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+    "renew_by_UTC": "2026-10-28T18:10:29Z",
+    "next_update_UTC": "2026-10-29T18:10:29Z",
+    "changed_this_work_package": false
+  },
+  "executed_failures_and_preparation_limits": [
+    {
+      "check": "source schema regressions before correction",
+      "outcome": "five negative variants accepted; six failing events including parent,15 passed events; all20 cases pass after correction",
+      "evidence": "role-schema-fail-before.json"
+    },
+    {
+      "check": "first standalone pass-after fixture setup",
+      "outcome": "temporary PostgreSQL Unix socket became ready before TCP startup completed; psql exited2 before tests; finally cleanup removed only owned resources. Private files retained. Corrected TCP readiness/new unique fixture passed."
+    },
+    {
+      "check": "independent builder prerequisite",
+      "outcome": "normal local image inspection found no Go base tag because BuildKit held the cache; no build ran. Original immutable digest recovered from retained build log, then both no-cache source reproductions passed."
+    },
+    {
+      "check": "runtime scan staging and post-reader",
+      "outcome": "initial existing-directory guard stopped before scanning; corrected new directory scan passed. Post-reader expected old prefix and failed after scan completion; actual new result read back and verified without another scan."
+    },
+    {
+      "check": "hosted implementation CI39867382418",
+      "outcome": "aggregate FAILURE retained: workflow still required14 lineage cases although both actual20-case/230-event runtime suites passed. Separate workflow-only commit requires20; no waiver/suppression. Final-head workflows must pass."
+    }
+  ],
+  "recovery_design": "artifact-only image recovery on additive12; shared software defect requires backend-only fail-closed stop and independently reviewed forward fix; never old7b after12 or schema downgrade",
+  "integration": "not performed; master8d54031c26ec10027ecebadd754f34996d55e8dd preserved; no whole legacy history imported",
+  "adoption": "not performed; original7b/schema11 backend and all other services preserved",
+  "unexecuted": [
+    "Aether exact broader corrected-source/image acceptance",
+    "normal protected integration and actual integrated-master tests",
+    "fresh immediate full-window pre-adoption traffic/private recovery backup gate and live additive12 adoption/authenticated identity readback",
+    "Owner Main/visual tray/menu, registered sign-in, picker/Quick Send/OS clipboard/Explorer/downloaded SHA256/cancellation/clean exit",
+    "50GiB capacity and current-proxy exact-maximum envelope acceptance",
+    "public production deployment/whole-service cross-host recovery"
+  ],
+  "operational_verdict": "bounded correction and local source/runtime/recovery verification complete; final CI and Aether integration review required; no public production readiness"
+}

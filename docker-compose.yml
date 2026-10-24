@@ -3,10 +3,11 @@ name: securefiledrop
 services:
   postgres:
     image: postgres:16
+    container_name: sfd_postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD locally before starting this isolated template}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -19,16 +20,15 @@ services:
     restart: unless-stopped
 
   minio:
-    build:
-      context: .
-      dockerfile: Dockerfile.storage
+    image: minio/minio:RELEASE.2024-01-31T20-20-33Z
+    container_name: sfd_minio
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      SFD_BUCKET: ${SFD_BUCKET}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?Set MINIO_ROOT_PASSWORD locally before starting this isolated template}
     command: server /data --console-address ":9001"
-    # Temporary isolation: storage has no host ingress or route through Traefik.
-    networks: [storage]
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - sfd_minio_data:/data
     healthcheck:
@@ -40,6 +40,7 @@ services:
 
   proxy:
     image: traefik:v2.11
+    container_name: sfd_proxy
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -54,32 +55,49 @@ services:
     restart: unless-stopped
 
   backend:
-    networks: [default, storage]
     stop_grace_period: 25s
     build:
       context: .
       dockerfile: Dockerfile.backend
+    container_name: sfd_backend
     ports:
       - "127.0.0.1:8080:8080"  # Direct access to backend (bypasses Traefik for easier development)
     environment:
       SFD_BUCKET: ${SFD_BUCKET}
       SFD_S3_ENDPOINT: http://minio:9000
-      SFD_S3_ACCESS_KEY: ${MINIO_ROOT_USER}
-      SFD_S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      SFD_S3_ACCESS_KEY: ${SFD_S3_ACCESS_KEY:?Set SFD_S3_ACCESS_KEY locally before starting this isolated template}
+      SFD_S3_SECRET_KEY: ${SFD_S3_SECRET_KEY:?Set SFD_S3_SECRET_KEY locally before starting this isolated template}
       SFD_MAX_UPLOAD_BYTES: ${SFD_MAX_UPLOAD_BYTES}
-      SFD_MAX_REQUEST_BYTES: ${SFD_MAX_REQUEST_BYTES:?Set file limit plus 1048576}
-      SFD_CLEANUP_ENABLED: ${SFD_CLEANUP_ENABLED:-true}
-      SFD_CLEANUP_INTERVAL: ${SFD_CLEANUP_INTERVAL:-1h}
-      SFD_CLEANUP_MAX_AGE: ${SFD_CLEANUP_MAX_AGE:-24h}
-      SFD_DOWNLOAD_SECRET: ${SFD_DOWNLOAD_SECRET}
+      SFD_MAX_REQUEST_BYTES: ${SFD_MAX_REQUEST_BYTES:?Set file limit plus 1048576 explicitly}
+      SFD_DOWNLOAD_SECRET: ${SFD_DOWNLOAD_SECRET:?Set SFD_DOWNLOAD_SECRET locally before starting this isolated template}
       SFD_PUBLIC_BASE_URL: ${SFD_PUBLIC_BASE_URL}
       SFD_ADDR: ":8080"
       SFD_VERSION: "dev"
       SFD_COMMIT: "local"
-      SFD_ADMIN_USER: ${SFD_ADMIN_USER}
-      SFD_ADMIN_PASS: ${SFD_ADMIN_PASS}
-      SFD_SESSION_SECRET: ${SFD_SESSION_SECRET}
-      DATABASE_URL: ${DATABASE_URL}
+      SFD_ADMIN_USER: ${SFD_ADMIN_USER:-admin}
+      SFD_ADMIN_PASS: ${SFD_ADMIN_PASS:?Set SFD_ADMIN_PASS locally before starting this isolated template}
+      SFD_SESSION_SECRET: ${SFD_SESSION_SECRET:?Set SFD_SESSION_SECRET locally before starting this isolated template}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL locally before starting this isolated template}
+      SFD_SMTP_HOST: ${SFD_SMTP_HOST}
+      SFD_SMTP_PORT: ${SFD_SMTP_PORT}
+      SFD_SMTP_USER: ${SFD_SMTP_USER}
+      SFD_SMTP_PASS: ${SFD_SMTP_PASS}
+      SFD_SMTP_FROM: ${SFD_SMTP_FROM}
+      # Production enhancements (enabled for production)
+      SFD_LOG_FORMAT: ${SFD_LOG_FORMAT:-json}
+      SFD_LOG_LEVEL: ${SFD_LOG_LEVEL:-info}
+      SFD_ENV: ${SFD_ENV:-production}
+      SFD_CLEANUP_ENABLED: ${SFD_CLEANUP_ENABLED:-false}
+      SFD_CLEANUP_INTERVAL: ${SFD_CLEANUP_INTERVAL:-1h}
+      SFD_CLEANUP_MAX_AGE: ${SFD_CLEANUP_MAX_AGE:-24h}
+      SFD_BACKUP_ENABLED: ${SFD_BACKUP_ENABLED:-true}
+      SFD_BACKUP_INTERVAL: ${SFD_BACKUP_INTERVAL:-24h}
+      SFD_BACKUP_RETENTION_DAYS: ${SFD_BACKUP_RETENTION_DAYS:-7}
+      SFD_BACKUP_DIR: ${SFD_BACKUP_DIR:-/var/backups/sfd}
+      SFD_BACKUP_COMPRESSION: ${SFD_BACKUP_COMPRESSION:-true}
+      SFD_BACKUP_S3_ENABLED: ${SFD_BACKUP_S3_ENABLED:-true}
+      SFD_BACKUP_S3_BUCKET: ${SFD_BACKUP_S3_BUCKET:-sfd-backups}
+      SFD_BACKUP_S3_PREFIX: ${SFD_BACKUP_S3_PREFIX:-db-backups}
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,13 +105,11 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=${COMPOSE_PROJECT_NAME:-securefiledrop}_default"
 
       - "traefik.http.routers.sfd-web.rule=Host(`localhost`)"
       - "traefik.http.routers.sfd-web.entrypoints=web"
       - "traefik.http.routers.sfd-web.middlewares=sfd-redirect-https"
       - "traefik.http.middlewares.sfd-redirect-https.redirectscheme.scheme=https"
-      - "traefik.http.middlewares.sfd-redirect-https.redirectscheme.port=8443"
       - "traefik.http.middlewares.sfd-redirect-https.redirectscheme.permanent=true"
 
       - "traefik.http.routers.sfd.rule=Host(`localhost`)"
@@ -113,16 +129,52 @@ services:
       - "traefik.http.middlewares.sfd-rl.ratelimit.average=30"
       - "traefik.http.middlewares.sfd-rl.ratelimit.burst=60"
 
-      - "traefik.http.middlewares.sfd-buf.buffering.maxRequestBodyBytes=${SFD_MAX_REQUEST_BYTES:?Set file limit plus 1048576}"
+      - "traefik.http.middlewares.sfd-buf.buffering.maxRequestBodyBytes=${SFD_MAX_REQUEST_BYTES:?Set file limit plus 1048576 explicitly}"
       - "traefik.http.middlewares.sfd-buf.buffering.memRequestBodyBytes=10485760"
 
       - "traefik.http.routers.sfd.middlewares=sfd-sec,sfd-rl,sfd-buf"
+    volumes:
+      - sfd_backups:/var/backups/sfd
+    restart: unless-stopped
+
+  # Monitoring stack
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sfd_prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - sfd_prometheus_data:/prometheus
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sfd_grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD locally}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - sfd_grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
     restart: unless-stopped
 
 volumes:
   sfd_pgdata:
   sfd_minio_data:
-
-networks:
-  storage:
-    internal: true
+  sfd_backups:
+  sfd_prometheus_data:
+  sfd_grafana_data:

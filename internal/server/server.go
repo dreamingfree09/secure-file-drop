@@ -1,3 +1,8 @@
+// server.go - HTTP server wiring and lifecycle for Secure File Drop.
+//
+// Registers routes, configures dependencies, and exposes Start/Shutdown.
+// Keeps handler logic modular for testability.
+
 package server
 
 import (
@@ -6,8 +11,6 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -17,70 +20,91 @@ import (
 // BuildInfo contains build-time metadata embedded into the server.
 //
 // Version is a semantic version string and Commit is the short git
-// commit hash used to build the binary.
+// commit hash used to build the binary. These values are exposed by
+// the /version endpoint and can be used for debugging and telemetry.
 type BuildInfo struct {
 	Version string
 	Commit  string
 }
 
-// Config contains configuration for creating a Server instance.
+// Config contains dependency injection and runtime settings for Server.
 //
-// Addr is the listen address (e.g. ":8080"). Auth and DB are required
-// for production use; other values are validated during startup.
+// Addr is the listen address (e.g. ":8080"). Auth holds middleware
+// and session handling configuration. DB is a live *sql.DB connection.
+// EmailSvc is optional; when nil, a service is constructed from env.
+// BaseURL is the publicly reachable URL used in emails and link generation.
 type Config struct {
-	Addr  string // e.g. ":8080"
-	Build BuildInfo
-	Auth  AuthConfig
-	DB    *sql.DB
+	Addr     string // e.g. ":8080"
+	Build    BuildInfo
+	Auth     AuthConfig
+	DB       *sql.DB
+	EmailSvc *EmailService
+	BaseURL  string // Base URL for email links (e.g. "http://localhost:8080")
 }
 
-// Server is the application HTTP server with its dependencies.
+// Server wires HTTP routes to handlers and holds external dependencies.
 //
 // It exposes Start and Shutdown to manage lifecycle in tests and in the
-// production entrypoint.
+// production entrypoint. The struct is intentionally simple; most logic
+// resides in handler functions to keep unit-testing straightforward.
 type Server struct {
-	httpServer    *http.Server
-	db            *sql.DB
-	minio         *minio.Client
-	bucket        string
-	cleanupDone   chan struct{}
-	cleanupCtx    context.Context
-	cleanupCancel context.CancelFunc
-	requestCancel context.CancelFunc
-	requests      sync.WaitGroup
-	requestMu     sync.Mutex
-	closing       bool
+	cleanupCtx      context.Context
+	cleanupCancel   context.CancelFunc
+	requestCancel   context.CancelFunc
+	requests        sync.WaitGroup
+	requestMu       sync.Mutex
+	closing         bool
+	httpServer      *http.Server
+	db              *sql.DB
+	minio           *minio.Client
+	bucket          string
+	cleanupDone     chan struct{}
+	authCfg         AuthConfig // Store auth config for getCurrentUser
+	emailSvc        *EmailService
+	csrf            *CSRFProtection        // CSRF token management
+	accountLockout  *AccountLockout        // Account lockout manager
+	shutdownChan    chan struct{}          // Signal for graceful shutdown
+	circuitBreakers *CircuitBreakerManager // Circuit breakers for external dependencies
 }
 
-// New constructs and returns an initialized Server wiring handlers and
-// dependencies (DB, MinIO). It panics early if required dependencies
-// are missing, to avoid running in a half-configured state.
+// New constructs and returns a Server, registers routes, and validates
+// critical dependencies (MinIO). It panics early if required dependencies
+// are missing to avoid running in a half-configured state.
 func New(cfg Config) *Server {
-	if _, err := maxRequestBytes(); err != nil {
-		panic("invalid upload envelope configuration")
-	}
 	if _, err := publicOrigin(); err != nil {
 		panic("invalid SFD_PUBLIC_BASE_URL")
 	}
-	if cfg.Auth.DB == nil {
-		cfg.Auth.DB = cfg.DB
+	if _, err := maxRequestBytes(); err != nil {
+		panic("invalid upload envelope configuration")
 	}
 	mux := http.NewServeMux()
-	webDir := os.Getenv("SFD_WEB_DIR")
-	if webDir == "" {
-		webDir = "web/static"
+
+	// Initialize CSRF protection (24-hour token TTL)
+	csrf := NewCSRFProtection(24 * time.Hour)
+
+	// Initialize account lockout (5 attempts, 15min lockout, 10min window)
+	accountLockout := NewAccountLockout(5, 15*time.Minute, 10*time.Minute)
+
+	// Initialize email service if not provided
+	if cfg.EmailSvc == nil {
+		emailCfg := LoadEmailConfig()
+		cfg.EmailSvc = NewEmailService(emailCfg)
 	}
 
-	// Minimal web UI (Milestone 7)
+	// Set default base URL if not provided
+	if cfg.BaseURL == "" {
+		cfg.BaseURL = "http://localhost:8080"
+	}
+
+	// Minimal web UI (Milestone 7): serves the SPA and static assets.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.NotFound(w, r)
 			return
 		}
-		// #nosec G703 -- Path is operator configuration plus a constant basename; request path is required to equal /.
-		http.ServeFile(w, r, filepath.Join(webDir, "index.html"))
+		http.ServeFile(w, r, "/app/web/static/index.html")
 	})
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(webDir))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("/app/web/static"))))
 
 	mc, bucket, err := newMinioClient()
 	if err != nil {
@@ -88,7 +112,7 @@ func New(cfg Config) *Server {
 		panic(err)
 	}
 
-	// Health endpoint: process is running (does not check dependencies).
+	// Health endpoint: process liveness (does not check dependencies).
 	mux.HandleFunc("/health", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -97,41 +121,104 @@ func New(cfg Config) *Server {
 		})
 	})
 
-	// Ready endpoint: dependencies are reachable (Postgres and MinIO).
+	// Ready endpoint: comprehensive dependency readiness checks with detailed status.
+	// Returns 200 OK if all dependencies are healthy, 503 if any are unhealthy.
+	// Provides detailed status for each component (postgres, minio) with latency.
 	mux.HandleFunc("/ready", func(w http.ResponseWriter, r *http.Request) {
-		if cfg.DB == nil {
-			http.Error(w, "db not configured", http.StatusServiceUnavailable)
-			return
+		type ComponentStatus struct {
+			Status  string `json:"status"` // "ok" or "error"
+			Message string `json:"message,omitempty"`
+			Latency int64  `json:"latency_ms,omitempty"`
 		}
-		ctx, cancel := context.WithTimeout(r.Context(), 1*time.Second)
-		defer cancel()
+
+		response := map[string]any{
+			"status":     "ok",
+			"components": map[string]ComponentStatus{},
+		}
+
+		overallOK := true
 
 		// Check Postgres
-		if err := cfg.DB.PingContext(ctx); err != nil {
-			http.Error(w, "db not ready", http.StatusServiceUnavailable)
-			return
+		if cfg.DB == nil {
+			response["components"].(map[string]ComponentStatus)["postgres"] = ComponentStatus{
+				Status:  "error",
+				Message: "not configured",
+			}
+			overallOK = false
+		} else {
+			ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+			defer cancel()
+
+			start := time.Now()
+			err := cfg.DB.PingContext(ctx)
+			latency := time.Since(start).Milliseconds()
+
+			if err != nil {
+				response["components"].(map[string]ComponentStatus)["postgres"] = ComponentStatus{
+					Status:  "error",
+					Message: "postgres unavailable",
+					Latency: latency,
+				}
+				overallOK = false
+			} else {
+				response["components"].(map[string]ComponentStatus)["postgres"] = ComponentStatus{
+					Status:  "ok",
+					Latency: latency,
+				}
+			}
 		}
 
 		// Check MinIO
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+
+		start := time.Now()
 		exists, err := mc.BucketExists(ctx, bucket)
+		latency := time.Since(start).Milliseconds()
+
 		if err != nil || !exists {
-			http.Error(w, "minio not ready", http.StatusServiceUnavailable)
-			return
+			msg := "bucket not found"
+			if err != nil {
+				msg = "storage unavailable"
+			}
+			response["components"].(map[string]ComponentStatus)["minio"] = ComponentStatus{
+				Status:  "error",
+				Message: msg,
+				Latency: latency,
+			}
+			overallOK = false
+		} else {
+			response["components"].(map[string]ComponentStatus)["minio"] = ComponentStatus{
+				Status:  "ok",
+				Latency: latency,
+			}
 		}
 
-		if hashToolReady(ctx) != nil {
-			http.Error(w, "native hash not ready", http.StatusServiceUnavailable)
-			return
+		nativeCtx, nativeCancel := context.WithTimeout(r.Context(), time.Second)
+		nativeErr := hashToolReady(nativeCtx)
+		nativeCancel()
+		if nativeErr != nil {
+			overallOK = false
+			response["components"].(map[string]ComponentStatus)["native_hash"] = ComponentStatus{Status: "error", Message: "native hash unavailable"}
+		} else {
+			response["components"].(map[string]ComponentStatus)["native_hash"] = ComponentStatus{Status: "ok"}
+		}
+
+		// Set overall status
+		if !overallOK {
+			response["status"] = "degraded"
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"status": "ok",
-		})
+		if overallOK {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+		_ = json.NewEncoder(w).Encode(response)
 	})
 
-	// Version endpoint (no secrets)
+	// Version endpoint (no secrets): exposes build info for debugging.
 	mux.HandleFunc("/version", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -141,9 +228,42 @@ func New(cfg Config) *Server {
 		})
 	})
 
-	// Metrics endpoint (protected)
-	mux.Handle("/metrics", cfg.Auth.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	// Config endpoint (public): exposes client-side configuration such as
+	// maximum upload size in bytes.
+	mux.HandleFunc("/config", func(w http.ResponseWriter, _ *http.Request) {
+		maxBytes, _ := maxUploadBytes()
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"max_upload_bytes": maxBytes,
+		})
+	})
+
+	// Prometheus metrics endpoint (public for scraping by Prometheus)
+	mux.Handle("/metrics/prometheus", PrometheusMetricsHandler())
+
+	// Metrics endpoint (protected): includes disk usage stats in addition to
+	// in-memory application counters.
+	mux.Handle("/metrics", cfg.Auth.requireAdmin(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		snapshot := GetMetrics().Snapshot()
+
+		// Add disk usage statistics from database
+		var totalBytes, totalFiles int64
+		ctx, cancel := sqlContext(r.Context())
+		defer cancel()
+		err := cfg.DB.QueryRowContext(ctx, `
+			SELECT
+				COALESCE(SUM(size_bytes), 0) as total_bytes,
+				COUNT(*) as total_files
+			FROM files
+			WHERE status IN ('stored', 'hashed', 'ready')
+		`).Scan(&totalBytes, &totalFiles)
+
+		if err == nil {
+			snapshot.StorageTotalBytes = totalBytes
+			snapshot.StorageTotalFiles = totalFiles
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_ = json.NewEncoder(w).Encode(snapshot)
@@ -152,33 +272,79 @@ func New(cfg Config) *Server {
 	// Login endpoint (POST JSON {username,password})
 	mux.HandleFunc("/login", cfg.Auth.loginHandler())
 
-	// Register endpoint (POST JSON {email,username,password})
-	mux.HandleFunc("/register", cfg.RegisterHandler)
-	mux.Handle("/logout", cfg.Auth.logoutHandler())
+	// CSRF token endpoint (GET) - returns token for authenticated sessions
+	mux.Handle("/csrf-token", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("sfd_session")
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-	// Protected endpoint for verification only
-	mux.Handle("/me", cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token, err := csrf.GetToken(cookie.Value)
+		if err != nil {
+			http.Error(w, "failed to generate CSRF token", http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"status": "ok", "is_admin": principal(r).Admin})
+		w.WriteHeader(http.StatusOK)
+		_ = json.NewEncoder(w).Encode(map[string]string{
+			"csrf_token": token,
+		})
 	})))
 
-	// Create file record (metadata only; proves DB writes end-to-end)
-	mux.Handle("/files", cfg.createFileHandler(cfg.DB))
+	// Logout endpoint (POST) clears session cookie
+	mux.HandleFunc("/logout", cfg.Auth.logoutHandler())
 
-	// Stream upload to MinIO (pending -> stored)
+	// Register endpoint (POST JSON {email,username,password})
+	mux.HandleFunc("/register", cfg.RegisterHandler)
+
+	// Email verification endpoint (GET /verify?token={token})
+	mux.HandleFunc("/verify", cfg.VerifyEmailHandler)
+
+	// Password reset request (POST JSON {email}) - strict rate limiting
+	// 5 requests per 15 minutes per IP to prevent email enumeration and spam
+	resetRateLimiter := newRateLimiter(5, 15*time.Minute)
+	mux.Handle("/reset-password-request", resetRateLimiter.middleware(http.HandlerFunc(passwordResetUnavailable)))
+
+	// Password reset completion (POST JSON {token, new_password})
+	// 10 attempts per hour to prevent token brute-force
+	resetCompleteLimiter := newRateLimiter(10, time.Hour)
+	mux.Handle("/reset-password", resetCompleteLimiter.middleware(http.HandlerFunc(cfg.ResetPasswordHandler)))
+
+	// Protected endpoint for user info (includes admin status for UI).
+	mux.Handle("/me", cfg.Auth.meHandler())
+
+	// Create file record (metadata only): step 1 in upload lifecycle
+	// (pending -> stored -> hashed -> ready/failed).
+	// Registered below after the shared owned-file handler is available.
+
+	// Stream upload to MinIO (pending -> stored).
 	mux.Handle("/upload", cfg.uploadHandler(cfg.DB, mc, bucket))
 
-	// Create signed, expiring download links (Milestone 6)
+	// Create signed, expiring download links.
 	mux.Handle("/links", cfg.createLinkHandler(cfg.DB))
 
-	// Download file via signed token (Milestone 6)
+	// Download file via signed token.
 	mux.Handle("/download", cfg.downloadHandler(cfg.DB, mc, bucket))
 
-	// Wrap middleware: requestID -> logging -> mux
+	// Wrap middleware stack (order matters - innermost to outermost):
+	// 1. Compression (compress responses)
+	// 2. Security headers (add security headers)
+	// 3. Per-endpoint rate limiting (specialized limits)
+	// 4. Global rate limiting (general limits)
+	// 5. Logging (log requests/responses)
+	// 6. Tracing (add correlation IDs)
+
+	endpointRateLimiter := NewEndpointRateLimiter()
+
 	var handler http.Handler = mux
 	handler = sameOriginMiddleware(handler)
+	handler = CompressionMiddleware(handler)
+	handler = securityHeadersMiddleware(handler)
+	handler = endpointRateLimiter.Middleware(handler)
 	handler = loggingMiddleware(handler)
-	handler = requestIDMiddleware(handler)
+	handler = TracingMiddleware(handler)
 
 	s := &http.Server{
 		Addr:              cfg.Addr,
@@ -189,14 +355,26 @@ func New(cfg Config) *Server {
 		IdleTimeout:       time.Minute,
 	}
 
+	// Initialize circuit breakers for external dependencies
+	circuitBreakers := NewCircuitBreakerManager()
+	circuitBreakers.GetOrCreate("database", 5, 30*time.Second)
+	circuitBreakers.GetOrCreate("minio", 5, 30*time.Second)
+	circuitBreakers.GetOrCreate("smtp", 3, 60*time.Second)
+
 	cleanupCtx, cleanupCancel := context.WithCancel(context.Background())
 	srv := &Server{
 		cleanupCtx: cleanupCtx, cleanupCancel: cleanupCancel,
-		httpServer:  s,
-		db:          cfg.DB,
-		minio:       mc,
-		bucket:      bucket,
-		cleanupDone: make(chan struct{}),
+		httpServer:      s,
+		db:              cfg.DB,
+		minio:           mc,
+		bucket:          bucket,
+		cleanupDone:     make(chan struct{}),
+		authCfg:         cfg.Auth,
+		emailSvc:        cfg.EmailSvc,
+		csrf:            csrf,
+		accountLockout:  accountLockout,
+		shutdownChan:    make(chan struct{}),
+		circuitBreakers: circuitBreakers,
 	}
 
 	requestCtx, requestCancel := context.WithCancel(context.Background())
@@ -215,18 +393,51 @@ func New(cfg Config) *Server {
 		handler.ServeHTTP(w, r)
 	})
 
-	// Admin endpoints (protected) - registered after Server creation
+	// The inherited resumable implementation has not been accepted and does
+	// not participate in the shared file transaction protocol. Keep its source
+	// and records intact, but fail closed at the existing authenticated routes.
+	unsupportedResumable := cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if _, err := cfg.Auth.getCurrentUser(r); err != nil {
+			writeAuthError(w, err)
+			return
+		}
+		http.Error(w, "resumable uploads are not accepted in this baseline", http.StatusNotImplemented)
+	}))
+	mux.Handle("/upload/resumable", unsupportedResumable)
+	mux.Handle("/upload/resumable/", unsupportedResumable)
+
+	// Admin endpoints (protected) - only accessible by admin users
 	mux.Handle("/admin/files", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminListFilesHandler)))
 	mux.HandleFunc("/admin/files/", func(w http.ResponseWriter, r *http.Request) {
 		cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminDeleteFileHandler)).ServeHTTP(w, r)
 	})
 	mux.Handle("/admin/cleanup", cfg.Auth.requireAdmin(http.HandlerFunc(srv.AdminManualCleanupHandler)))
 
+	// User endpoints (protected) - show user's own files
+	ownedFiles := cfg.Auth.requireAuth(http.HandlerFunc(srv.UserFilesHandler))
+	createFile := cfg.createFileHandler(cfg.DB)
+	// The reviewed companion verifies completion through GET /files. Reuse
+	// exactly the existing UUID-scoped listing; never expose the admin list.
+	mux.Handle("/files", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			ownedFiles.ServeHTTP(w, r)
+			return
+		}
+		createFile.ServeHTTP(w, r)
+	}))
+	mux.Handle("/user/files", ownedFiles)
+	mux.HandleFunc("/user/files/", func(w http.ResponseWriter, r *http.Request) {
+		cfg.Auth.requireAuth(http.HandlerFunc(srv.UserDeleteFileHandler)).ServeHTTP(w, r)
+	})
+
+	// User quota endpoint (protected)
+	mux.Handle("/quota", cfg.Auth.requireAuth(http.HandlerFunc(srv.UserQuotaHandler)))
+
 	return srv
 }
 
 // Start begins serving HTTP on the configured address and starts background jobs.
-// It blocks until the listener returns an error (or Shutdown is called).
+// It blocks until the listener returns an error or Shutdown is called.
 func (s *Server) Start() error {
 	// Start cleanup job in background
 	cleanupCfg := GetCleanupConfigFromEnv(s.db, s.minio, s.bucket)

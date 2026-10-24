@@ -15,6 +15,10 @@ func TestNormaliseEndpoint(t *testing.T) {
 		{"http://minio:9000/", "minio:9000", false, false},
 		{"http://minio:9000/foo", "", false, true},
 		{"", "", false, true},
+		{"ftp://minio:9000", "", false, true},
+		{"https://user:secret@minio:9000", "", false, true},
+		{"https://minio:9000?query=value", "", false, true},
+		{"https://minio:9000#fragment", "", false, true},
 	}
 
 	for _, tt := range tests {
