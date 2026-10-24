@@ -1,0 +1,240 @@
+{
+  "work_id": "SFD-PR35-FINAL-CORRECTIONS-20261023",
+  "observed_utc": "2026-10-23T23:04:25.249347+00:00",
+  "base": "66e9df9d4b3cc1a7bc6f240cd83de928af051020",
+  "base_tree": "4868ca8fc5bca1a121b29ddeba28410416a327a4",
+  "implementation": "43c1631a8522f1644ce3df25e6c31880ed7045a1",
+  "verified_application_source": "7880ca51ddda4f362e6f9c65d799ba78cf816b2d",
+  "all_seven_canonical_merges_preserved": [
+    "d08a99b69f15f201754446d887e754bb0a29d16f",
+    "be00ff2a4c9dff60fd866bfb45689204bbf63148",
+    "707aa50a711285d9ec57c8b7f1761a2463f3be13",
+    "4062a28f77cad68f4b034df784dfe655ae78a0f5",
+    "023266e489fc37eac8ba4e30f73264377d4018ee",
+    "ff3e341583712349ad9331e7788255b46c6252c3",
+    "304ea975ab024e1e59a6245c2252fd824b0db7c2"
+  ],
+  "correction_regressions": {
+    "before": {
+      "exit": 1,
+      "pass_events": 4,
+      "skip_events": 0,
+      "fail_events": [
+        "TestCorrectionRegistrationTiming (21.49s)",
+        "TestCorrectionRegistrationTiming/delayed_beyond_original_SQL_budget (8.32s)",
+        "TestCorrectionRegistrationTiming/request_cancellation_during_delivery (3.51s)",
+        "TestCorrectionSMTPCancellation (0.50s)",
+        "TestCorrectionDownloadOutcomes (0.17s)",
+        "TestCorrectionDownloadOutcomes/empty (0.04s)",
+        "TestCorrectionDownloadOutcomes/completed (0.04s)",
+        "TestCorrectionDownloadOutcomes/interrupted (0.03s)",
+        "TestCorrectionDownloadOutcomes/storage_missing (0.01s)",
+        "TestCorrectionDownloadOutcomes/stored_size_mismatch (0.02s)"
+      ]
+    },
+    "before-compose": {
+      "exit": 1,
+      "result": "missing cleanup forwarding rejected"
+    },
+    "after": {
+      "exit": 0,
+      "pass_events": 14,
+      "skip_events": 0,
+      "fail_events": []
+    },
+    "after-compose": {
+      "exit": 0,
+      "result": {
+        "suite": "synthetic-compose-contract",
+        "checks": [
+          "synthetic Compose template renders without existing .env",
+          "Compose reserves tested25s backend stop budget",
+          "disabled cleanup forwards explicit retention parameters",
+          "enabled cleanup forwards explicit retention parameters",
+          "omitted cleanup uses disabled conservative defaults",
+          "proxy and backend retain complete multipart envelope",
+          "missing multipart envelope fails closed",
+          "all referenced project configuration mounts exist",
+          "all template published ports are loopback-only",
+          "backend uses explicit existing storage variable SFD_S3_ACCESS_KEY",
+          "backend uses explicit existing storage variable SFD_S3_SECRET_KEY",
+          "missing credential/configuration fails closed POSTGRES_PASSWORD",
+          "missing credential/configuration fails closed MINIO_ROOT_PASSWORD",
+          "missing credential/configuration fails closed SFD_S3_ACCESS_KEY",
+          "missing credential/configuration fails closed SFD_S3_SECRET_KEY",
+          "missing credential/configuration fails closed SFD_ADMIN_PASS",
+          "missing credential/configuration fails closed SFD_SESSION_SECRET",
+          "missing credential/configuration fails closed SFD_DOWNLOAD_SECRET",
+          "missing credential/configuration fails closed GRAFANA_ADMIN_PASSWORD",
+          "missing credential/configuration fails closed DATABASE_URL",
+          "sample contains no usable default credential or connection identity"
+        ],
+        "count": 21,
+        "services_started": false,
+        "existing_env_read": false,
+        "real_secrets_used": false
+      }
+    },
+    "fixture": "sfd-auth-c4f399c726b0",
+    "expected_original_failures_observed": true,
+    "owned_cleanup_complete": true
+  },
+  "source_checks": [
+    {
+      "check": "browser-unit",
+      "exit": 0
+    },
+    {
+      "check": "doc-links",
+      "exit": 0
+    },
+    {
+      "check": "lint-enforcement",
+      "exit": 0
+    },
+    {
+      "check": "unit",
+      "exit": 0,
+      "passed_test_events": 176,
+      "skipped_test_events": 15,
+      "failed_test_events": 0
+    },
+    {
+      "check": "race",
+      "exit": 0,
+      "passed_test_events": 176,
+      "skipped_test_events": 11,
+      "failed_test_events": 0
+    },
+    {
+      "check": "vet",
+      "exit": 0
+    },
+    {
+      "check": "build",
+      "exit": 0
+    },
+    {
+      "check": "lint",
+      "exit": 0
+    },
+    {
+      "check": "advisories",
+      "exit": 0
+    },
+    {
+      "check": "environment-validator",
+      "exit": 0
+    }
+  ],
+  "images": {
+    "source": "7880ca51ddda4f362e6f9c65d799ba78cf816b2d",
+    "implementation": "43c1631a8522f1644ce3df25e6c31880ed7045a1",
+    "tree": "7628ba4980c750cb99c879c36d84201c11d5acac",
+    "images": {
+      "candidate": "sha256:084afb9ff9ecd6244f24e795e86f35cd8d328130915bc44aa0d96ebfe0e356f2",
+      "recovery": "sha256:4c60abc87c6d5b2b9d56f95b3d3255f1b5900695de7554ab2ca4cfe5dde47c07"
+    },
+    "builder_digest": "sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba",
+    "recovery_scope": "artifact-only; shared software defects require preserved-data backend-only fail-closed stop and independently reviewed forward correction",
+    "observed_utc": "2026-10-23T22:59:24.012134+00:00",
+    "retained_build_failure": "initial recovery FROM unqualified local image ID was interpreted as registry image name; fixed by verified local tag; no application executed"
+  },
+  "independent_binary_readback": {
+    "source": "7880ca51ddda4f362e6f9c65d799ba78cf816b2d",
+    "roles": {
+      "candidate": {
+        "image": "sha256:084afb9ff9ecd6244f24e795e86f35cd8d328130915bc44aa0d96ebfe0e356f2",
+        "source": "7880ca51ddda4f362e6f9c65d799ba78cf816b2d",
+        "binaries": {
+          "backend": "f4dc65ff58a23f1026f19b9d1eb542e70ee35a2a8d9e3c3862d044263b58f4a1",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      },
+      "recovery": {
+        "image": "sha256:4c60abc87c6d5b2b9d56f95b3d3255f1b5900695de7554ab2ca4cfe5dde47c07",
+        "source": "7880ca51ddda4f362e6f9c65d799ba78cf816b2d",
+        "binaries": {
+          "backend": "f4dc65ff58a23f1026f19b9d1eb542e70ee35a2a8d9e3c3862d044263b58f4a1",
+          "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+        }
+      }
+    },
+    "equal_application_binaries": true,
+    "recovery_scope": "artifact-only; shared application defects require backend-only fail-closed stop and independently reviewed forward fix",
+    "no_schema_downgrade": true,
+    "never_started_network_none_evidence_containers_removed": true
+  },
+  "independent_no_cache_source_reproduction": {
+    "observed_utc": "2026-10-23T23:00:55.217318+00:00",
+    "source": "7880ca51ddda4f362e6f9c65d799ba78cf816b2d",
+    "tree": "7628ba4980c750cb99c879c36d84201c11d5acac",
+    "new_reviewed_role_correction_source": true,
+    "build_command": [
+      "docker",
+      "build",
+      "--no-cache",
+      "--pull=false",
+      "--target",
+      "build",
+      "--label",
+      "sfd.closeout-run=20261023-a4f6d29c",
+      "--label",
+      "org.opencontainers.image.revision=7880ca51ddda4f362e6f9c65d799ba78cf816b2d",
+      "-f",
+      "/mnt/e/PROGRAMMING PROJECTS/secure-file-drop-quality-closeout-20261015-codex/.git/sfd-pr35-corrections-20261023-a4f6d29c/role-verification-build.Dockerfile",
+      "-t",
+      "sfd-pr35-corrections-20261023-a4f6d29c-source-rebuild",
+      "."
+    ],
+    "no_cache_rebuild": true,
+    "builder_base_image": "sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba",
+    "builder_base_repo_digests": [
+      "golang@sha256:27f2d3b83cfc5803c8078f8e730af0f7c431bf067afaec8f60a36fb763187cba"
+    ],
+    "verification_build_image": "sha256:9499698e11d8ec40fded787c18ade5efb54f962b4526ddcef9f5f370c3157dad",
+    "binaries": {
+      "backend": "f4dc65ff58a23f1026f19b9d1eb542e70ee35a2a8d9e3c3862d044263b58f4a1",
+      "sfd-hash": "3cd81bf959aca7364d646a99f0cc8498b43729cc896ea80a0a6cd861591015ab"
+    },
+    "exact_equal_to_both_proposed_images": true,
+    "Go": "1.26.10",
+    "VCS_metadata_embedded": false,
+    "verification_container_never_started_and_removed": true,
+    "verification_image_not_an_adoption_replacement": true,
+    "limitation": "Local source-to-binary reproduction, not a signed third-party supply-chain attestation"
+  },
+  "advisory_applicability": {
+    "observed_utc": "2026-10-23T23:02:44.885325+00:00",
+    "source": "7880ca51ddda4f362e6f9c65d799ba78cf816b2d",
+    "advisory": "GO-2026-5932",
+    "authoritative_url": "https://vuln.go.dev/ID/GO-2026-5932.json",
+    "authoritative_SHA256": "f277b0400996200a7d5034c676661cd8cf18adeab1fdc5d0dc369e456ddf1fad",
+    "affected_packages": [
+      "golang.org/x/crypto/openpgp",
+      "golang.org/x/crypto/openpgp/packet",
+      "golang.org/x/crypto/openpgp/armor",
+      "golang.org/x/crypto/openpgp/clearsign",
+      "golang.org/x/crypto/openpgp/errors",
+      "golang.org/x/crypto/openpgp/elgamal",
+      "golang.org/x/crypto/openpgp/s2k"
+    ],
+    "affected_backend_imports": [],
+    "go_list_backend_dependencies": 284,
+    "binary_scanner": "module-only informational match; no affected-package or reachable-symbol finding",
+    "source_scanner_exit": 0,
+    "runtime_Alpine_version_matches": 0,
+    "limitation": "Current advisory databases and static source/binary analysis, not a universal security guarantee"
+  },
+  "remaining_verification_at_this_record": [
+    "final-head CI and downloaded artifact readback",
+    "new pair BYTEA/BIGINT browser/F196/restore/recovery and actual HTTPS metrics completion",
+    "fresh strict Windows TLS and complete preservation",
+    "Aether exact-final-revision acknowledgement"
+  ],
+  "authoritative_handover": "https://github.com/dreamingfree09/secure-file-drop/pull/36",
+  "protected_integration_or_live_adoption_performed": false,
+  "Owner_visual_acceptance": false,
+  "CRL_renew_by": "2026-10-28T18:10:29Z",
+  "CRL_expires": "2026-10-29T18:10:29Z"
+}

@@ -18,6 +18,15 @@ with tempfile.TemporaryDirectory(prefix='sfd-compose-contract-') as d:
  rendered=render();check(rendered.returncode==0,'synthetic Compose template renders without existing .env')
  doc=json.loads(rendered.stdout);backend=doc['services']['backend']
  check(backend.get('stop_grace_period')=='25s','Compose reserves tested25s backend stop budget')
+ cleanup={'SFD_CLEANUP_ENABLED':'false','SFD_CLEANUP_INTERVAL':'17m','SFD_CLEANUP_MAX_AGE':'49h'}
+ values.update(cleanup);off=json.loads(render().stdout)['services']['backend']['environment']
+ check(all(off[k]==v for k,v in cleanup.items()),'disabled cleanup forwards explicit retention parameters')
+ values['SFD_CLEANUP_ENABLED']='true';on=json.loads(render().stdout)['services']['backend']['environment']
+ check(on['SFD_CLEANUP_ENABLED']=='true' and on['SFD_CLEANUP_INTERVAL']=='17m' and on['SFD_CLEANUP_MAX_AGE']=='49h','enabled cleanup forwards explicit retention parameters')
+ for k in cleanup:values.pop(k)
+ defaults=json.loads(render().stdout)['services']['backend']['environment']
+ check(all(defaults[k]==v for k,v in {'SFD_CLEANUP_ENABLED':'false','SFD_CLEANUP_INTERVAL':'1h','SFD_CLEANUP_MAX_AGE':'24h'}.items()),'omitted cleanup uses disabled conservative defaults')
+
  check(backend['labels']['traefik.http.middlewares.sfd-buf.buffering.maxRequestBodyBytes']==str(1024+(1<<20)) and backend['environment']['SFD_MAX_REQUEST_BYTES']==str(1024+(1<<20)),'proxy and backend retain complete multipart envelope')
  check(render('SFD_MAX_REQUEST_BYTES').returncode!=0,'missing multipart envelope fails closed')
  mounts=[Path(v['source']) for service in doc['services'].values() for v in service.get('volumes',[]) if v.get('type')=='bind' and str(v.get('source','')).startswith(str(root))]

@@ -88,7 +88,7 @@ def main():
         result['stage']='completed-backend-and-owned-cleanup'
         actual=json.loads((fixture/'result.json').read_text())
         assert process.returncode==0 and not actual['failures'] and actual['existing_services_unchanged'] and actual['owned_cleanup_complete']
-        assert actual['go_security']=={'passed_test_events':230,'skipped_test_events':0,'failed_test_events':0,'real_lineage_subtests':20,'real_lifecycle_ordering_cases':5,'real_commit_fault_modes':4}
+        assert actual['go_security']=={'passed_test_events':244,'skipped_test_events':0,'failed_test_events':0,'real_lineage_subtests':20,'real_lifecycle_ordering_cases':5,'real_commit_fault_modes':4}
         assert actual['rollback']['lockout_statuses']==[401]*5+[429]
         if args.browser_module:assert actual['browser']['count']==27
         result.update(backend_checks=len(actual['checks']),go_security=actual['go_security'],browser_checks=actual.get('browser',{}).get('count',0),owned_cleanup_complete=True,existing_services_unchanged=True)
