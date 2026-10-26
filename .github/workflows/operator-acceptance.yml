@@ -3,12 +3,16 @@ on:
   pull_request:
     paths:
       - 'tools/operator-acceptance/**'
+      - 'tools/operator-controller/**'
+      - 'scripts/test-operator-controller.py'
       - '.github/workflows/operator-acceptance.yml'
       - 'go.mod'
       - 'go.sum'
   push:
     paths:
       - 'tools/operator-acceptance/**'
+      - 'tools/operator-controller/**'
+      - 'scripts/test-operator-controller.py'
       - '.github/workflows/operator-acceptance.yml'
       - 'go.mod'
       - 'go.sum'
@@ -44,3 +48,31 @@ jobs:
       - name: Operator vet
         working-directory: tools/operator-acceptance/account
         run: go vet ./...
+
+  isolated-controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: tools/operator-controller/probe/go.mod
+      - name: Pull pinned synthetic storage
+        run: docker pull minio/minio@sha256:4092433a77e510826874b36f369696df43407a763d7f901a61d74e83e6fd95bc
+      - name: Controller failure guards and real isolated probe
+        run: >-
+          python3 -B scripts/test-operator-controller.py
+          --storage-image minio/minio@sha256:4092433a77e510826874b36f369696df43407a763d7f901a61d74e83e6fd95bc
+          --output "$RUNNER_TEMP/controller-evidence"
+      - name: Configured nested probe lint
+        working-directory: tools/operator-controller/probe
+        run: go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --config ../../../.golangci.yml ./...
+      - name: Reachable nested probe vulnerability check
+        working-directory: tools/operator-controller/probe
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Retain sanitised synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: one-use-controller-evidence
+          path: ${{ runner.temp }}/controller-evidence
+          if-no-files-found: error
