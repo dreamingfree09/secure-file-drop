@@ -3,12 +3,16 @@ on:
   pull_request:
     paths:
       - 'tools/operator-acceptance/**'
+      - 'tools/operator-controller/**'
+      - 'scripts/test-operator-controller.py'
       - '.github/workflows/operator-acceptance.yml'
       - 'go.mod'
       - 'go.sum'
   push:
     paths:
       - 'tools/operator-acceptance/**'
+      - 'tools/operator-controller/**'
+      - 'scripts/test-operator-controller.py'
       - '.github/workflows/operator-acceptance.yml'
       - 'go.mod'
       - 'go.sum'
@@ -44,3 +48,35 @@ jobs:
       - name: Operator vet
         working-directory: tools/operator-acceptance/account
         run: go vet ./...
+
+  isolated-controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: tools/operator-controller/probe/go.mod
+      - name: Build existing exact-source synthetic storage
+        # The archived registry digest is unavailable to hosted runners.
+        # Reuse the accepted exact-revision Dockerfile; never use live storage.
+        run: >-
+          docker build --label sfd.controller-fixture-image=${{ github.run_id }}
+          -f Dockerfile.storage -t sfd-controller-ci:${{ github.run_id }} .
+      - name: Controller failure guards and real isolated probe
+        run: >-
+          python3 -B scripts/test-operator-controller.py
+          --storage-image sfd-controller-ci:${{ github.run_id }}
+          --output "$RUNNER_TEMP/controller-evidence"
+      - name: Configured nested probe lint
+        working-directory: tools/operator-controller/probe
+        run: go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --config ../../../.golangci.yml ./...
+      - name: Reachable nested probe vulnerability check
+        working-directory: tools/operator-controller/probe
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+      - name: Retain sanitised synthetic evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: one-use-controller-evidence
+          path: ${{ runner.temp }}/controller-evidence
+          if-no-files-found: error
