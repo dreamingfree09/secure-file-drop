@@ -2,14 +2,12 @@ name: Operator acceptance proposal checks
 on:
   pull_request:
     paths:
-      - 'cmd/sfd-acceptance-account/**'
       - 'tools/operator-acceptance/**'
       - '.github/workflows/operator-acceptance.yml'
       - 'go.mod'
       - 'go.sum'
   push:
     paths:
-      - 'cmd/sfd-acceptance-account/**'
       - 'tools/operator-acceptance/**'
       - '.github/workflows/operator-acceptance.yml'
       - 'go.mod'
@@ -35,12 +33,14 @@ jobs:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version-file: go.mod
+          go-version-file: tools/operator-acceptance/account/go.mod
       - name: Staged workflow security regressions
         run: python3 -B -m unittest discover -s tools/operator-acceptance -p test_staged_account.py -v
       - name: Real isolated PostgreSQL quota and rollback guards
         env:
           SFD_ACCEPTANCE_TEST_DSN: postgres://fixture:isolated-ci-fixture-only@127.0.0.1:${{ job.services.postgres.ports[5432] }}/sfd_acceptance_fixture_0123456789ab?sslmode=disable
-        run: go test -race ./cmd/sfd-acceptance-account -v -count=1
+        working-directory: tools/operator-acceptance/account
+        run: go test -race ./... -v -count=1
       - name: Operator vet
-        run: go vet ./cmd/sfd-acceptance-account
+        working-directory: tools/operator-acceptance/account
+        run: go vet ./...
