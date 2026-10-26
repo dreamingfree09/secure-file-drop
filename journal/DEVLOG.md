@@ -496,3 +496,8 @@ The first schema12 portable workflow40030083089 failed after its backend/browser
 ## 2026-10-26 — SFD-OWNER-TEST-ACCOUNT-20261026: staged operator proposal
 
 Prepared separate one-admin-password native input and controlled-mailbox normal registration/verification workflow. Account credentials are revealed only after genuine F196 acceptance. Proposed one-use administrator-validated quota cap touches only a just-created ordinary verified account; no existing-account modification or email-verification forgery is permitted. Exact-revision Aether review is required before live use. Producer checks:28 isolated PostgreSQL Go tests/subtests with race/no skips, vet,8 Python tests,2 Windows synthetic policy/control checks, full configured lint0, reachable vulnerability0. Fresh read-only live preservation/TLS/images and isolated private restore passed. No live archive restoration, backend adoption, account creation, Owner credential entry or physical Windows acceptance. Existing deletion history and operational restrictions remain; no production-readiness claim.
+
+
+### Operator CI inventory correction — 2026-10-26
+
+Initial Windows CI40314879754 failed owned-fixture readiness because the operator command added seven application-module test events and one skipped private fixture (251 passes/1 skip; no failed events). Native Windows job passed; portable assertions were unexecuted. Moved only the operator tool into its own nested Go module with unchanged dependency versions; its dedicated real-PostgreSQL28/no-skip job remains enforced. Original application244/no-skip thresholds and source remain unchanged. Preserve failed evidence and publish new exact-head CI; no live operations.

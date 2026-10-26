@@ -2,7 +2,7 @@
 
 Work: SFD-OWNER-TEST-ACCOUNT-20261026. Status: **prepared for exact-revision Aether review; live execution disabled**.
 
-The Owner does not know an existing ordinary-user password. Preserve that account and the original two-password helper. The separate [staged driver](../tools/operator-acceptance/staged_account.py), [native interface](../tools/operator-acceptance/OwnerStagedInput.cs), [strict F196 transport](../tools/operator-acceptance/StrictTransport.cs) and [quota-only command](../cmd/sfd-acceptance-account/main.go) implement the proposed replacement. They are operator tooling; application handlers, database migrations, dependencies, F196 source and accepted runtime images are unchanged.
+The Owner does not know an existing ordinary-user password. Preserve that account and the original two-password helper. The separate [staged driver](../tools/operator-acceptance/staged_account.py), [native interface](../tools/operator-acceptance/OwnerStagedInput.cs), [strict F196 transport](../tools/operator-acceptance/StrictTransport.cs) and [quota-only command](../tools/operator-acceptance/account/main.go) implement the proposed replacement. They are operator tooling; application handlers, database migrations, dependencies, F196 source and accepted runtime images are unchanged.
 
 ## Stages and trust boundary
 
@@ -33,3 +33,10 @@ The Owner does not know an existing ordinary-user password. Preserve that accoun
 No live backup restoration, backend restart/adoption, account creation, credential entry or physical Owner acceptance has occurred in this work package. The proposed account/password is not active. The full staged workflow has not run against the real backend; the database tests inject synthetic identity responses and do not count as genuine live authentication. The strict transport policy check makes no network request; separate live Windows TLS probes supply the HTTPS evidence.
 
 Aether must review the exact new helper/quota code before a live context can be authorised. A compatible controller and fresh receipts must then be bound to that accepted identity before any Owner prompt or live operation. SMTP or preservation changes require STOP and reconciliation. Retain the historical scheduler deletions; later restoration is not continuous preservation. No public production readiness is claimed.
+
+
+## CI inventory correction
+
+The initial proposal placed the independent operator command under the application cmd tree. Windows run40314879754 tested merge preview55e79d24a564143d7253a2ce705af12c29f26c77 and failed portable-fixture readiness: its backend evidence reports251 Go passes and one skipped operator PostgreSQL fixture, rather than the unchanged application's required244/no skips. The17 early backend checks passed; the portable assertions did not execute. The native Windows job passed. This was an operator-tool test-boundary error, not a TLS diagnosis.
+
+The operator now has its own nested Go module under tools/operator-acceptance/account with the same pinned pq/crypto versions and toolchain. The dedicated CI job still requires all28 operator tests/subtests against real isolated PostgreSQL with zero skips. Application test inventory and all244/no-skip assertions remain unchanged; no test is suppressed and no acceptance threshold is relaxed. Failed-run evidence is retained. Fresh terminal CI results and the corrected exact revision belong in GitHub.
