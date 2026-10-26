@@ -501,3 +501,8 @@ Prepared separate one-admin-password native input and controlled-mailbox normal 
 ### Operator CI inventory correction — 2026-10-26
 
 Initial Windows CI40314879754 failed owned-fixture readiness because the operator command added seven application-module test events and one skipped private fixture (251 passes/1 skip; no failed events). Native Windows job passed; portable assertions were unexecuted. Moved only the operator tool into its own nested Go module with unchanged dependency versions; its dedicated real-PostgreSQL28/no-skip job remains enforced. Original application244/no-skip thresholds and source remain unchanged. Preserve failed evidence and publish new exact-head CI; no live operations.
+
+
+## 2026-10-26 - PR37 integration and separately reviewed local controller
+
+SFD-PR37-INTEGRATION-CONTROLLER-20261026, Codex producer, Aether reviewer. Normal accepted PR37 merge 61195434bee5f9221a6f55469c719cb360504ea9 retains both ordered parents and proposal tree; actual-master CI 40403320828/40403320822/40403397291 passed. Prepared new one-use privileged controller, private broker, bounded read-only storage probe and separately owned driver adaptation for exact-revision review. Original accepted operator/GUI/F196 unchanged. Local policy/adapter tests 26, isolated probe race pass events 9, vet, deterministic build, nested lint and reachable advisory checks passed. First isolated port-prerequisite failure retained/stopped; replacement owned fixtures passed. No live restoration/adoption/account or Owner input. Three-loss scope, 30-day amendment and fresh preservation/scheduler/restore/TLS gates remain mandatory. See docs/ONE_USE_CONTROLLER.md; exact final source and published CI are in the new PR, separate from accepted PR37.
