@@ -56,12 +56,16 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: tools/operator-controller/probe/go.mod
-      - name: Pull pinned synthetic storage
-        run: docker pull minio/minio@sha256:4092433a77e510826874b36f369696df43407a763d7f901a61d74e83e6fd95bc
+      - name: Build existing exact-source synthetic storage
+        # The archived registry digest is unavailable to hosted runners.
+        # Reuse the accepted exact-revision Dockerfile; never use live storage.
+        run: >-
+          docker build --label sfd.controller-fixture-image=${{ github.run_id }}
+          -f Dockerfile.storage -t sfd-controller-ci:${{ github.run_id }} .
       - name: Controller failure guards and real isolated probe
         run: >-
           python3 -B scripts/test-operator-controller.py
-          --storage-image minio/minio@sha256:4092433a77e510826874b36f369696df43407a763d7f901a61d74e83e6fd95bc
+          --storage-image sfd-controller-ci:${{ github.run_id }}
           --output "$RUNNER_TEMP/controller-evidence"
       - name: Configured nested probe lint
         working-directory: tools/operator-controller/probe
