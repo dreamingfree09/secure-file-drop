@@ -1,0 +1,46 @@
+name: Operator acceptance proposal checks
+on:
+  pull_request:
+    paths:
+      - 'tools/operator-acceptance/**'
+      - '.github/workflows/operator-acceptance.yml'
+      - 'go.mod'
+      - 'go.sum'
+  push:
+    paths:
+      - 'tools/operator-acceptance/**'
+      - '.github/workflows/operator-acceptance.yml'
+      - 'go.mod'
+      - 'go.sum'
+permissions:
+  contents: read
+jobs:
+  isolated-account-guards:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres@sha256:d4c3314b2dd74ff23cd6cd07e4d7e737cb6ef791c22a7cbd744cfbfb4815df72
+        env:
+          POSTGRES_USER: fixture
+          POSTGRES_DB: sfd_acceptance_fixture_0123456789ab
+          POSTGRES_PASSWORD: isolated-ci-fixture-only
+        ports:
+          - 5432/tcp
+        options: >-
+          --health-cmd "pg_isready -U fixture -d sfd_acceptance_fixture_0123456789ab"
+          --health-interval 2s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: tools/operator-acceptance/account/go.mod
+      - name: Staged workflow security regressions
+        run: python3 -B -m unittest discover -s tools/operator-acceptance -p test_staged_account.py -v
+      - name: Real isolated PostgreSQL quota and rollback guards
+        env:
+          SFD_ACCEPTANCE_TEST_DSN: postgres://fixture:isolated-ci-fixture-only@127.0.0.1:${{ job.services.postgres.ports[5432] }}/sfd_acceptance_fixture_0123456789ab?sslmode=disable
+        working-directory: tools/operator-acceptance/account
+        run: go test -race ./... -v -count=1
+      - name: Operator vet
+        working-directory: tools/operator-acceptance/account
+        run: go vet ./...
