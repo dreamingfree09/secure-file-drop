@@ -405,6 +405,23 @@ class Runtime:
         self.launcher=subprocess.Popen([PS,'-NoProfile','-Command',script],stdout=subprocess.PIPE,stderr=subprocess.DEVNULL)
         self.owner_pid=int(self.launcher.stdout.readline(32));self.window_alive(self.owner_pid)
         self.event('native-form-launched',pid=self.owner_pid,one_existing_admin_password_only=True)
+    def operator_context(self):
+        artifacts={self.cfg['artifacts'][r]:PINS[r] for r in ['operator_binary','operator_driver','native_form','transport','F196','framework_config','live_acceptance']}
+        live=Path(self.cfg['artifacts']['live_acceptance'])
+        artifacts[str(live.with_name('SecureFileDrop.exe'))]=PINS['F196']
+        artifacts[str(live.with_name('OwnerLiveAcceptanceV2.exe.config'))]=PINS['framework_config']
+        c={'master':MASTER,'actual_master':MASTER,'candidate':IMAGE,'execution_authorised':True,
+           'independent_review':'https://github.com/dreamingfree09/secure-file-drop/pull/37#issuecomment-6427391643',
+           'state_directory':str(self.root),'driver_sha256':self.cfg['controller_driver_sha256'],'operator_reference_head':OPERATOR_HEAD,
+           'controller_context':str(self.context),'controller_context_sha256':digest(self.context),
+           'controller_revision':self.cfg['controller_revision'],'controller_nonce':self.cfg['controller_nonce'],
+           'operator_binary':self.cfg['artifacts']['operator_binary'],'strict_transport':self.cfg['artifacts']['transport'],
+           'release':self.cfg['artifacts']['F196'],'native_form_sha256':PINS['native_form'],'artifacts':artifacts,
+           'gates_receipt':str(self.root/'operator-gates.json'),'gates_sha256':digest(self.root/'operator-gates.json'),
+           'old_backend_id':self.old_id,'initial_service_ids':self.legacy['initial_service_ids'],
+           'controlled_mailbox':self.cfg['controlled_mailbox'],'live_acceptance':self.cfg['artifacts']['live_acceptance'],
+           'Windows_payload':command(['wslpath','-w',self.cfg['windows_payload']]).decode().strip()}
+        return c
     def wait_owner(self):
         end=time.monotonic()+1200
         while time.monotonic()<end:
@@ -430,21 +447,7 @@ class Runtime:
                'Owner_credentials_requested':True,'Owner_input_in_private_broker':True,'available_acceptance_username':username,
                'actual_master':MASTER,'controller_nonce':self.cfg['controller_nonce']}
         new_json(self.root/'operator-gates.json',gates)
-        artifacts={self.cfg['artifacts'][r]:PINS[r] for r in ['operator_binary','operator_driver','native_form','transport','F196','framework_config','live_acceptance']}
-        live=Path(self.cfg['artifacts']['live_acceptance'])
-        artifacts[str(live.with_name('SecureFileDrop.exe'))]=PINS['F196']
-        artifacts[str(live.with_name('OwnerLiveAcceptanceV2.exe.config'))]=PINS['framework_config']
-        c={'master':MASTER,'actual_master':MASTER,'candidate':IMAGE,'execution_authorised':True,
-           'independent_review':'https://github.com/dreamingfree09/secure-file-drop/pull/37#issuecomment-6427391643',
-           'state_directory':str(self.root),'driver_sha256':self.cfg['controller_driver_sha256'],'operator_reference_head':OPERATOR_HEAD,
-           'controller_context':str(self.context),'controller_context_sha256':digest(self.context),
-           'controller_revision':self.cfg['controller_revision'],'controller_nonce':self.cfg['controller_nonce'],
-           'operator_binary':self.cfg['artifacts']['operator_binary'],'strict_transport':self.cfg['artifacts']['transport'],
-           'release':self.cfg['artifacts']['F196'],'native_form_sha256':PINS['native_form'],'artifacts':artifacts,
-           'gates_receipt':str(self.root/'operator-gates.json'),'gates_sha256':digest(self.root/'operator-gates.json'),
-           'old_backend_id':self.old_id,'initial_service_ids':self.legacy['initial_service_ids'],
-           'controlled_mailbox':self.cfg['controlled_mailbox'],'live_acceptance':self.cfg['artifacts']['live_acceptance'],
-           'Windows_payload':self.cfg['Windows_payload']}
+        c=self.operator_context()
         new_json(self.root/'operator-context-ready.json',c)
         new_json(self.root/'operator-ready.json',{'controller_nonce':self.cfg['controller_nonce'],'context_sha256':digest(self.root/'operator-context-ready.json')})
         end=time.monotonic()+45

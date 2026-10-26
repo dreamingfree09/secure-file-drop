@@ -46,6 +46,24 @@ class RuntimeMutationContractTests(unittest.TestCase):
  def runtime(self):
   r=object.__new__(runtime.Runtime);r.old_id='old';r.owner_pid=None;r.new_backend=None;r.handoff_released=False
   r.cfg={};r.base=[];r.pre={'synthetic':True};r.expected_env={'synthetic':'fixture'};return r
+ def test_operator_context_converts_the_prepared_unix_payload(self):
+  r=self.runtime()
+  with tempfile.TemporaryDirectory() as raw:
+   r.root=Path(raw);r.context=r.root/'controller-context.json';r.context.write_text('{}')
+   new_json(r.root/'operator-gates.json',{'synthetic':True})
+   r.legacy={'initial_service_ids':{'fixture':'id'}}
+   artifacts={role:'/fixture/'+role for role in ['operator_binary','operator_driver','native_form','transport','F196','framework_config','live_acceptance']}
+   r.cfg={'artifacts':artifacts,'controller_driver_sha256':'a'*64,'controller_revision':'b'*40,
+          'controller_nonce':'c'*48,'controlled_mailbox':'fixture@example.invalid',
+          'windows_payload':'/mnt/c/fixture/payload.txt'}
+   with patch('runtime.command',return_value=b'C:\\fixture\\payload.txt\n') as convert:
+    value=r.operator_context()
+   convert.assert_called_once_with(['wslpath','-w',r.cfg['windows_payload']])
+   self.assertEqual(value['Windows_payload'],r'C:\fixture\payload.txt')
+   self.assertEqual(value['actual_master'],MASTER)
+   self.assertEqual(value['controller_context_sha256'],runtime.digest(r.context))
+   self.assertEqual(value['gates_sha256'],runtime.digest(r.root/'operator-gates.json'))
+   self.assertEqual(value['initial_service_ids'],r.legacy['initial_service_ids'])
  def test_adoption_flags_and_backend_only(self):
   r=self.runtime();r.compose_args=['docker','compose','-p','securefiledrop']
   r.expected_env={'SFD_BACKUP_RETENTION_DAYS':'30'}

@@ -516,3 +516,8 @@ Initial hosted registry pull failed; exact-source Dockerfile.storage is used ins
 ### 2026-10-26 - Driver authority correction before execution
 
 Final producer source review found an undefined hash helper in the separately owned driver decision. It now uses its existing sha helper. Added an executed positive/mismatch context-hash regression before private authority access; 27 Python tests pass. The accepted original PR37 driver stays byte-identical. No live password input, restoration, adoption or account attempt occurred. New source bundle/revision requires exact Aether acceptance.
+
+
+### 2026-10-26 - Prepared-context payload contract
+
+Final context/source comparison found a case mismatch between the prepared Unix payload field and operator Windows payload. The adapter now converts the existing verified Unix path with wslpath for the unchanged operator. Extracted non-mutating context construction is executed in a regression, including exact context/gate hashes and identity fields. All 28 Python tests pass; no Owner form or live operation executed. New exact controller bundle and revision supersede earlier proposals.
