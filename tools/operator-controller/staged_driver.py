@@ -94,7 +94,7 @@ def decision(cfg):
     need(cfg['master']==MASTER and cfg['candidate']==IMAGE and cfg['execution_authorised'] is True)
     need(cfg['independent_review']=='https://github.com/dreamingfree09/secure-file-drop/pull/37#issuecomment-6427391643')
     need(cfg['operator_reference_head']=='47be19fa5ed0ffddd9ffea71fec84719f2a2b5cc')
-    need(digest(cfg['controller_context'])==cfg['controller_context_sha256'])
+    need(sha(cfg['controller_context'])==cfg['controller_context_sha256'])
     from runtime import Runtime
     from policy import private_json as read_controller
     ctl=read_controller(cfg['controller_context'])

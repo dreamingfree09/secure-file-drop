@@ -511,3 +511,8 @@ SFD-PR37-INTEGRATION-CONTROLLER-20261026, Codex producer, Aether reviewer. Norma
 ### 2026-10-26 - Hosted controller fixture correction
 
 Initial hosted registry pull failed; exact-source Dockerfile.storage is used instead. Its data directory belongs to the configured non-root MinIO user. Removed the fixture-only forced root user (with all capabilities dropped), which could not write that directory. The image user and all capability restrictions are now preserved; controller runtime, source bundle and actual storage remain unchanged. Failed 40415029259 and 40415245566/40415238770 evidence remains historical failure, not acceptance. Fresh exact-head CI must pass before independent controller acceptance or live input.
+
+
+### 2026-10-26 - Driver authority correction before execution
+
+Final producer source review found an undefined hash helper in the separately owned driver decision. It now uses its existing sha helper. Added an executed positive/mismatch context-hash regression before private authority access; 27 Python tests pass. The accepted original PR37 driver stays byte-identical. No live password input, restoration, adoption or account attempt occurred. New source bundle/revision requires exact Aether acceptance.

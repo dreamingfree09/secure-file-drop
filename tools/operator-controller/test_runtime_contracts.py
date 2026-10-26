@@ -19,6 +19,23 @@ class DerivedDriverScopeTests(unittest.TestCase):
   ov,nv=values(old),values(new)
   self.assertEqual({k for k in ov if ov[k]!=nv[k]},{'MASTER'})
   self.assertEqual(nv['MASTER'],MASTER);self.assertEqual(ov['MASTER'],PROTOCOL_MASTER)
+ def test_adapted_context_hash_is_checked_before_authority(self):
+  import staged_driver
+  class ReachedPrivateAuthority(Exception):pass
+  with tempfile.TemporaryDirectory() as raw:
+   path=Path(raw)/'context.json';path.write_text('{}')
+   cfg={'master':MASTER,'candidate':runtime.IMAGE,'execution_authorised':True,
+        'independent_review':'https://github.com/dreamingfree09/secure-file-drop/pull/37#issuecomment-6427391643',
+        'operator_reference_head':runtime.OPERATOR_HEAD,'controller_context':str(path),
+        'controller_context_sha256':staged_driver.sha(path)}
+   # A matching file reaches private authority, without network or live access.
+   # A changed hash must stop before any private-authority read.
+   with patch('policy.private_json',side_effect=ReachedPrivateAuthority) as read:
+    with self.assertRaises(ReachedPrivateAuthority):staged_driver.decision(cfg)
+    self.assertEqual(read.call_count,1)
+    cfg['controller_context_sha256']='0'*64
+    with self.assertRaises(RuntimeError):staged_driver.decision(cfg)
+    self.assertEqual(read.call_count,1)
  def test_no_production_shell_or_arbitrary_class_loader(self):
   r=Path(__file__).with_name('runtime.py').read_text()
   self.assertNotIn('shell=True',r);self.assertNotIn('docker compose down',r)
