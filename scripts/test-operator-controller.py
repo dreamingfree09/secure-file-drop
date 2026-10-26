@@ -16,8 +16,8 @@ def main():
         return r.stdout
     def item(kind,name):return json.loads(run(['docker',kind,'inspect',name]))[0]
     assert not os.environ.get('DOCKER_HOST') and run(['docker','context','inspect','--format','{{.Endpoints.docker.Host}}']).decode().strip()=='unix:///var/run/docker.sock'
-    image=item('image',a.storage_image)['Id']
-    report={'fixture':owner,'source_revision':run(['git','rev-parse','HEAD'],cwd=repo).decode().strip(),'live_resources_used':False}
+    image_info=item('image',a.storage_image);image=image_info['Id']
+    report={'fixture':owner,'source_revision':run(['git','rev-parse','HEAD'],cwd=repo).decode().strip(),'live_resources_used':False,'storage_image':image,'storage_image_user':image_info['Config'].get('User','')}
     env=dict(os.environ,GOTOOLCHAIN='go1.26.10',GOWORK='off')
     tests=subprocess.run(['python3','-B','-m','unittest','discover','-s','tools/operator-controller','-p','test_*.py','-v'],cwd=repo,env=env,capture_output=True,timeout=90)
     (out/'controller-unit-tests.txt').write_bytes(tests.stdout+tests.stderr)
@@ -29,7 +29,7 @@ def main():
         access='fixture'+secrets.token_hex(6);secret=secrets.token_hex(24)
         child=dict(env,MINIO_ROOT_USER=access,MINIO_ROOT_PASSWORD=secret)
         cid=run(['docker','run','-d','--pull=never','--name',owner,'--label',label+'='+owner,'--network',network,
-                 '--user','0:0','--cap-drop','ALL','--security-opt','no-new-privileges',
+                 '--cap-drop','ALL','--security-opt','no-new-privileges',
                  '-p','127.0.0.1::9000','-e','MINIO_ROOT_USER','-e','MINIO_ROOT_PASSWORD',
                  '--mount','type=volume,source='+volume+',target=/data',image,'server','/data'],env=child).decode().strip()
         current=item('container',cid)
@@ -83,6 +83,12 @@ def main():
     finally:
         if cid:
             c=item('container',cid);assert c['Config']['Labels'][label]==owner and c['Image']==image
+            if not ok:
+                # This is an owned synthetic fixture only. Scrub its synthetic
+                # credentials before retaining bounded server diagnostics.
+                logs=run(['docker','logs','--tail','100',cid]).decode(errors='replace')
+                logs=logs.replace(access,'[fixture-access]').replace(secret,'[fixture-secret]')
+                (out/'owned-storage-failure.txt').write_text(logs)
             if ok:run(['docker','rm','-f',cid])
             else:run(['docker','stop','--time','10',cid])
         v=item('volume',volume);assert v['Labels'][label]==owner

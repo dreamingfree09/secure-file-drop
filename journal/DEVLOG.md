@@ -506,3 +506,8 @@ Initial Windows CI40314879754 failed owned-fixture readiness because the operato
 ## 2026-10-26 - PR37 integration and separately reviewed local controller
 
 SFD-PR37-INTEGRATION-CONTROLLER-20261026, Codex producer, Aether reviewer. Normal accepted PR37 merge 61195434bee5f9221a6f55469c719cb360504ea9 retains both ordered parents and proposal tree; actual-master CI 40403320828/40403320822/40403397291 passed. Prepared new one-use privileged controller, private broker, bounded read-only storage probe and separately owned driver adaptation for exact-revision review. Original accepted operator/GUI/F196 unchanged. Local policy/adapter tests 26, isolated probe race pass events 9, vet, deterministic build, nested lint and reachable advisory checks passed. First isolated port-prerequisite failure retained/stopped; replacement owned fixtures passed. No live restoration/adoption/account or Owner input. Three-loss scope, 30-day amendment and fresh preservation/scheduler/restore/TLS gates remain mandatory. See docs/ONE_USE_CONTROLLER.md; exact final source and published CI are in the new PR, separate from accepted PR37.
+
+
+### 2026-10-26 - Hosted controller fixture correction
+
+Initial hosted registry pull failed; exact-source Dockerfile.storage is used instead. Its data directory belongs to the configured non-root MinIO user. Removed the fixture-only forced root user (with all capabilities dropped), which could not write that directory. The image user and all capability restrictions are now preserved; controller runtime, source bundle and actual storage remain unchanged. Failed 40415029259 and 40415245566/40415238770 evidence remains historical failure, not acceptance. Fresh exact-head CI must pass before independent controller acceptance or live input.
