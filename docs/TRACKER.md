@@ -1,5 +1,10 @@
 ## Final desktop review — 2026-10-17
 
+## CRL 0x1002 signing-only preparation - 2026-10-27
+
+SFD-CRL-1002-PREPARATION-20261027, base master 61195434bee5f9221a6f55469c719cb360504ea9. Under [Aether's Stage A/B decision](https://github.com/dreamingfree09/secure-file-drop/pull/38#issuecomment-6454489528), the [separate helper and mutation plan](../tools/local-crl-1002/README.md) are prepared for independent exact-revision review. Actual public CRL0x1001/issuer pins passed; 20 isolated non-signing tests passed. Missing future signing acceptance refused before signing; ledger/publication remained unchanged. Renew-by remains 2026-10-28T18:10:29Z. No signing, publication, Docker start or accepted-controller modification occurred. PR38 ff2f9a74bcbf2a347eed61516508910acadadfb2 stays unmerged; cold-acquisition execution evidence belongs in PR38, separately from helper review.
+
+
 SFD-DESKTOP-FINAL-REVIEW-20261017. All received PR #25/#26 paths and actual assertions reviewed; retained exact-revision CI/artifacts independently re-read by the producer. No new confirmed application defect; this update adds documentation only. [Continuity](CONTINUITY.md#final-desktop-review-and-integration-preparation--2026-10-17) and the complete [PR #26 handover](https://github.com/dreamingfree09/secure-file-drop/pull/26) record exact proposals, test evidence and merge preparation. The [fifteen-step operator checklist](WINDOWS_COMPANION.md#operator-acceptance-checklist--final-review-2026-10-17) is prepared and wholly unexecuted. Aether's independent exact-revision acceptance and GHP-01 gate remain required; no merge was performed. Existing production/advisory/storage/reconciliation/recovery gates persist.
 
 ## Windows companion — 2026-10-17
