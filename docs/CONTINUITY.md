@@ -1,5 +1,12 @@
 # Secure File Drop continuity
 
+## Synthetic forensic recovery preparation and expired CRL incident - 2026-10-29
+
+SFD-STAGE-B-RECOVERY-PREP-20261029-CODEX, producer Codex, recipient Aether, from master 61195434bee5f9221a6f55469c719cb360504ea9. [Exact Stage B authority](https://github.com/dreamingfree09/secure-file-drop/pull/38#issuecomment-6481847170). The [source-pinned disposable-child proposal](../tools/forensic_recovery/README.md) has 59 named synthetic checks passed, including coupled VHDX-then-JBD2 replay, uncommitted/checksum rejection and the independent upstream 070 sample. Tests used only newly generated/public synthetic bytes without privilege, mount, NBD, Docker or real-copy access. Real-child execution remains pending independent review; original/sealed/working images remain unchanged.
+
+[CRL incident](https://github.com/dreamingfree09/secure-file-drop/pull/39#issuecomment-6506638107): by actual preflight the 29 October 15:00Z signing acceptance and old CRL 18:10:29Z signed expiry had both passed. Accepted helper/context/issuer pins match and counter remains 1002, but the expired CRL rejects. Zero signing attempts/prompts/new DER/publication. A new exact expired-CRL incident/time-window decision is required; do not repeat unchanged-helper review or infer an extension. PR38/39 remain unmerged, protected master unchanged; no public readiness claim.
+
+
 ## Temporary acceptance account preparation — 2026-10-26
 
 SFD-OWNER-TEST-ACCOUNT-20261026 follows the Owner's explicit one-account authority and Aether's conditional three-archive scope decision. The [separate staged operator workflow](OWNER_TEST_ACCOUNT_ACCEPTANCE.md) is prepared for exact-revision independent review. SMTP/controlled-mailbox access, fresh preservation/private restore, strict Windows TLS and accepted image checks passed. Live restoration/adoption, genuine credentials and account creation remain unexecuted. Normal registration requires an independently reviewed quota-only operation to bound only the newly verified acceptance account; no existing ordinary password is requested or reset. The original helper/F196 and all existing services, records, archives and checkouts remain preserved. No public readiness claim; exact handover revisions belong in GitHub.

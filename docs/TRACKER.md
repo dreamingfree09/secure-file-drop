@@ -1,5 +1,12 @@
 ## Final desktop review — 2026-10-17
 
+## Synthetic forensic recovery preparation and expired CRL incident - 2026-10-29
+
+SFD-STAGE-B-RECOVERY-PREP-20261029-CODEX, producer Codex, recipient Aether, from master 61195434bee5f9221a6f55469c719cb360504ea9. [Exact Stage B authority](https://github.com/dreamingfree09/secure-file-drop/pull/38#issuecomment-6481847170). The [source-pinned disposable-child proposal](../tools/forensic_recovery/README.md) has 59 named synthetic checks passed, including coupled VHDX-then-JBD2 replay, uncommitted/checksum rejection and the independent upstream 070 sample. Tests used only newly generated/public synthetic bytes without privilege, mount, NBD, Docker or real-copy access. Real-child execution remains pending independent review; original/sealed/working images remain unchanged.
+
+[CRL incident](https://github.com/dreamingfree09/secure-file-drop/pull/39#issuecomment-6506638107): by actual preflight the 29 October 15:00Z signing acceptance and old CRL 18:10:29Z signed expiry had both passed. Accepted helper/context/issuer pins match and counter remains 1002, but the expired CRL rejects. Zero signing attempts/prompts/new DER/publication. A new exact expired-CRL incident/time-window decision is required; do not repeat unchanged-helper review or infer an extension. PR38/39 remain unmerged, protected master unchanged; no public readiness claim.
+
+
 SFD-DESKTOP-FINAL-REVIEW-20261017. All received PR #25/#26 paths and actual assertions reviewed; retained exact-revision CI/artifacts independently re-read by the producer. No new confirmed application defect; this update adds documentation only. [Continuity](CONTINUITY.md#final-desktop-review-and-integration-preparation--2026-10-17) and the complete [PR #26 handover](https://github.com/dreamingfree09/secure-file-drop/pull/26) record exact proposals, test evidence and merge preparation. The [fifteen-step operator checklist](WINDOWS_COMPANION.md#operator-acceptance-checklist--final-review-2026-10-17) is prepared and wholly unexecuted. Aether's independent exact-revision acceptance and GHP-01 gate remain required; no merge was performed. Existing production/advisory/storage/reconciliation/recovery gates persist.
 
 ## Windows companion — 2026-10-17

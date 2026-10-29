@@ -1,0 +1,81 @@
+{
+  "qemu": {
+    "version": "8.2.2+ds-0ubuntu1.18",
+    "dsc_url": "https://archive.ubuntu.com/ubuntu/pool/main/q/qemu/qemu_8.2.2+ds-0ubuntu1.18.dsc",
+    "dsc_sha256": "0c7baad16818c5cd29d5031dc8c88cc632f4f8bdb864e80c5c7df9db53a365f2",
+    "dsc_signature_not_independently_verified": true,
+    "acquisition_trust": "official Ubuntu HTTPS; binary archive SHA matched existing apt metadata; source archive SHA matched pinned dsc",
+    "files": [
+      {
+        "name": "qemu_8.2.2+ds.orig.tar.xz",
+        "bytes": 39678456,
+        "sha256": "5e692dd20950a819ff6550cd3974e00319a93f47c0a15f808c58df1a9e4d2478",
+        "url": "https://archive.ubuntu.com/ubuntu/pool/main/q/qemu/qemu_8.2.2+ds.orig.tar.xz",
+        "recovery_sources_or_patches": [
+          {
+            "source_path": "qemu-8.2.2/block/vhdx.h",
+            "sha256": "4ec82961ae7f9cb84224f1e37730ea6f97085c4764eaf3e48e10b6f72da76830"
+          },
+          {
+            "source_path": "qemu-8.2.2/block/vhdx.c",
+            "sha256": "e9d728423d216c5c30dda75fcec30d08dd70d91d9aa4a4b5e13345b3288dbe6d"
+          },
+          {
+            "source_path": "qemu-8.2.2/block/vhdx-log.c",
+            "sha256": "8bfafc2d92cc8fc84a113e4ada653050c59d947c7993b99f6812c4a7a3050c49"
+          }
+        ]
+      },
+      {
+        "name": "qemu_8.2.2+ds-0ubuntu1.18.debian.tar.xz",
+        "bytes": 261892,
+        "sha256": "7f1993808bbe15fee04c13aeb8ab5bc4f011b0b3b3a15d511c19d8956b34dc48",
+        "url": "https://archive.ubuntu.com/ubuntu/pool/main/q/qemu/qemu_8.2.2+ds-0ubuntu1.18.debian.tar.xz",
+        "recovery_sources_or_patches": []
+      }
+    ]
+  },
+  "e2fsprogs": {
+    "version": "1.47.0-2.4~exp1ubuntu4.1",
+    "dsc_url": "https://archive.ubuntu.com/ubuntu/pool/main/e/e2fsprogs/e2fsprogs_1.47.0-2.4~exp1ubuntu4.1.dsc",
+    "dsc_sha256": "215fe7b95c246894654c59a01514dfdc16ec17a0dcb09dc7a7c1ec1246ed4964",
+    "dsc_signature_not_independently_verified": true,
+    "acquisition_trust": "Installed ELF hashes and dpkg source-version pinned; official Ubuntu HTTPS source archives matched pinned dsc SHA fields. No independent comparison against an e2fsprogs binary deb was performed.",
+    "files": [
+      {
+        "name": "e2fsprogs_1.47.0.orig.tar.gz",
+        "bytes": 9637717,
+        "sha256": "6667afde56eef0c6af26684974400e4d2288ea49e9441bf5e6229195d51a3578",
+        "url": "https://archive.ubuntu.com/ubuntu/pool/main/e/e2fsprogs/e2fsprogs_1.47.0.orig.tar.gz",
+        "recovery_sources_or_patches": [
+          {
+            "source_path": "e2fsprogs-1.47.0/debugfs/do_journal.c",
+            "sha256": "ee1a9ccaae85c0ac823f435e98ca7e3a75c5b8611e6a80c5abfca17849758bf0"
+          },
+          {
+            "source_path": "e2fsprogs-1.47.0/e2fsck/journal.c",
+            "sha256": "156ac11543b6ce1189f840587c75b30c154d58dbef35502391db4db67d6bb1d9"
+          },
+          {
+            "source_path": "e2fsprogs-1.47.0/e2fsck/unix.c",
+            "sha256": "7159c8c5e4e5888a97ae65f732d95e3afe646281deb2312838cfeda243ea05c5"
+          }
+        ]
+      },
+      {
+        "name": "e2fsprogs_1.47.0.orig.tar.gz.asc",
+        "bytes": 488,
+        "sha256": "704928204a52ddaa0ac8ef549c1bfba3c38e66c361d3853c8a4c38e6082b90f1",
+        "url": "https://archive.ubuntu.com/ubuntu/pool/main/e/e2fsprogs/e2fsprogs_1.47.0.orig.tar.gz.asc",
+        "signature_artifact_not_executed": true
+      },
+      {
+        "name": "e2fsprogs_1.47.0-2.4~exp1ubuntu4.1.debian.tar.xz",
+        "bytes": 90580,
+        "sha256": "26b381ec175ff52d1cc2fd1b217f84b9e1d7d33a58dcbaf8942115dd27a03f84",
+        "url": "https://archive.ubuntu.com/ubuntu/pool/main/e/e2fsprogs/e2fsprogs_1.47.0-2.4~exp1ubuntu4.1.debian.tar.xz",
+        "recovery_sources_or_patches": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,709 @@
+{
+  "success": true,
+  "synthetic_only": true,
+  "real_images_opened": false,
+  "mount_nbd_privilege_used": false,
+  "checks": [
+    "committed: synthetic mkfs",
+    "committed: journal fixture command",
+    "committed: RECOVER before replay",
+    "committed: marker A before replay",
+    "committed: readonly probe preserves source",
+    "committed: pending VHDX guard",
+    "committed: unreplayed first BAT block is ZERO",
+    "committed: outer replay exit",
+    "committed: outer replay changes child only",
+    "committed: outer LogGuid cleared",
+    "committed: derived raw matches original synthetic guest",
+    "committed: journal replay exit and diagnostics",
+    "committed: replayed transaction outcome",
+    "committed: RECOVER cleared",
+    "committed: readonly validation clean",
+    "committed: protected synthetic parents unchanged",
+    "uncommitted: synthetic mkfs",
+    "uncommitted: journal fixture command",
+    "uncommitted: synthetic dirty-state mark",
+    "uncommitted: RECOVER before replay",
+    "uncommitted: marker A before replay",
+    "uncommitted: readonly probe preserves source",
+    "uncommitted: pending VHDX guard",
+    "uncommitted: unreplayed first BAT block is ZERO",
+    "uncommitted: outer replay exit",
+    "uncommitted: outer replay changes child only",
+    "uncommitted: outer LogGuid cleared",
+    "uncommitted: derived raw matches original synthetic guest",
+    "uncommitted: journal replay exit and diagnostics",
+    "uncommitted: replayed transaction outcome",
+    "uncommitted: RECOVER cleared",
+    "uncommitted: readonly validation clean",
+    "uncommitted: protected synthetic parents unchanged",
+    "bad-journal-checksum: synthetic mkfs",
+    "bad-journal-checksum: journal fixture command",
+    "bad-journal-checksum: RECOVER before replay",
+    "bad-journal-checksum: marker A before replay",
+    "bad-journal-checksum: readonly probe preserves source",
+    "bad-journal-checksum: pending VHDX guard",
+    "bad-journal-checksum: unreplayed first BAT block is ZERO",
+    "bad-journal-checksum: outer replay exit",
+    "bad-journal-checksum: outer replay changes child only",
+    "bad-journal-checksum: outer LogGuid cleared",
+    "bad-journal-checksum: derived raw matches original synthetic guest",
+    "bad-journal-checksum: corrupt committed journal not accepted",
+    "bad-journal-checksum: protected synthetic parents unchanged",
+    "invalid-log-fixture: synthetic mkfs",
+    "invalid-log-fixture: journal fixture command",
+    "invalid-log-fixture: RECOVER before replay",
+    "invalid-log-fixture: marker A before replay",
+    "invalid log: readonly probe preserves source",
+    "invalid VHDX log: fails positive active-log guard",
+    "invalid VHDX log: no mutable child created",
+    "symlink refused before tool invocation",
+    "upstream070: readonly probe preserves source",
+    "upstream070: pending log guard",
+    "upstream070: replay exit",
+    "upstream070: actual expected 18MiB data",
+    "upstream070: public fixture parent preserved"
+  ],
+  "images": [
+    {
+      "case": "committed",
+      "untouched_parent_sha256": "cb5db7e52d093f42f26bdbfe32a4223843b98d0c0e6c9e7aceb6fbca3732f134",
+      "initial_child_sha256": "cb5db7e52d093f42f26bdbfe32a4223843b98d0c0e6c9e7aceb6fbca3732f134",
+      "after_outer_sha256": "839faf839380b3e643f233a91bfbb55946ce41e2684d07cfc10920c8a37b17f7",
+      "before_inner_sha256": "e2cc4c220970599c2004067899881f1df19f5a32504433e9d104394d7459ec61",
+      "after_inner_sha256": "60af9dc0876d16d49fa0617a332d5da333c51e0ef55db551b8f40ee68244647d",
+      "journal_command_exit": 0,
+      "journal_diagnostics": "$RUN/committed/derived-journal-child.ext4: recovering journal\n",
+      "marker_sha256": "725bcd6c66d02acf6ebeab9c92410e010ea22e336876256aaf05a211f4ce1902"
+    },
+    {
+      "case": "uncommitted",
+      "untouched_parent_sha256": "24797dfd95c87aa34975585bcdec7f82819e71967a3fff3f7a1332b4decfc679",
+      "initial_child_sha256": "24797dfd95c87aa34975585bcdec7f82819e71967a3fff3f7a1332b4decfc679",
+      "after_outer_sha256": "af581ebe326ba13c5ce0db6c66e67200efb4a4efc325e2aac86237e764074f80",
+      "before_inner_sha256": "f711d223b98e9345762b4f984d355ebe5f02b5fed31464b93a6439275643c46d",
+      "after_inner_sha256": "902460e3e55f6d64691a9197ee4561c56d2ca2b83265a9e581993f0f04778db2",
+      "journal_command_exit": 0,
+      "journal_diagnostics": "$RUN/uncommitted/derived-journal-child.ext4: recovering journal\n",
+      "marker_sha256": "6896d9ea3f73a4434f5832bc65714e7d066f177373f36f34dc8a6f735daa41b1"
+    },
+    {
+      "case": "bad-journal-checksum",
+      "untouched_parent_sha256": "dd304708a72cb83012d170fcc63335dd8c9cf7b2ca5da998599466002d05f18d",
+      "initial_child_sha256": "dd304708a72cb83012d170fcc63335dd8c9cf7b2ca5da998599466002d05f18d",
+      "after_outer_sha256": "0523bf1cdafc462ab61a43b1aea884d415b9c8933357a5e3bd9467b4634451cd",
+      "before_inner_sha256": "48482ea326c883bd3945ae4e9f11e2434c683efd87f1196659e3c58d1583f535",
+      "after_inner_sha256": "9fea1be2cb025814c4941d6a6538ebeedfa44ef845b273c6430e5182894e44d6",
+      "journal_command_exit": 0,
+      "journal_diagnostics": "$RUN/bad-journal-checksum/derived-journal-child.ext4: recovering journal\nJBD2: Invalid checksum recovering data block 1549 in log\nJournal checksum error found in $RUN/bad-journal-checksum/derived-journal-child.ext4\n",
+      "marker_sha256": "6896d9ea3f73a4434f5832bc65714e7d066f177373f36f34dc8a6f735daa41b1"
+    }
+  ],
+  "commands": [
+    {
+      "label": "committed: mkfs",
+      "arguments": [
+        "/usr/sbin/mke2fs",
+        "-q",
+        "-t",
+        "ext4",
+        "-F",
+        "-b",
+        "4096",
+        "-d",
+        "$RUN/committed/tree",
+        "$RUN/committed/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "committed: bmap",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "bmap /marker.bin 0",
+        "$RUN/committed/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "1549\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "169344501217affa64f0527182f1f967e02860eaea1c958dfac89df4499279e6",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "committed: journal fixture",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-w",
+        "-f",
+        "$RUN/committed/journal.commands",
+        "$RUN/committed/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "debugfs: journal_open -c -v 3\nSetting csum v3\ndebugfs: journal_write -b 1549 \"$RUN/committed/transaction.bin\"\ndebugfs: journal_close\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "232e988ee2d34574dfe48ab1bc61cba501c199f1b458f16b9b66921cc6e7b292",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "read synthetic marker",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "cat /marker.bin",
+        "$RUN/committed/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "6896d9ea3f73a4434f5832bc65714e7d066f177373f36f34dc8a6f735daa41b1",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "committed: readonly container",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-f",
+        "vhdx",
+        "$RUN/committed/pending-parent.vhdx"
+      ],
+      "exit": 1,
+      "stdout_text": "",
+      "stderr_text": "qemu-img: Could not open '$RUN/committed/pending-parent.vhdx': VHDX image file '$RUN/committed/pending-parent.vhdx' opened read-only, but contains a log that needs to be replayed\nTo replay the log, run:\nqemu-img check -r all '$RUN/committed/pending-parent.vhdx'\n",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "8c03c71025dfbe3a27a4d8d921d6418486f092b3fa00ed7f3c7c4702dba317b5"
+    },
+    {
+      "label": "committed: outer replay",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-r",
+        "all",
+        "-f",
+        "vhdx",
+        "$RUN/committed/container-replay-child.vhdx"
+      ],
+      "exit": 0,
+      "stdout_text": "The following inconsistencies were found and repaired:\n\n    0 leaked clusters\n    1 corruptions\n\nDouble checking the fixed image now...\nNo errors were found on the image.\n",
+      "stderr_text": "",
+      "stdout_sha256": "e52f115206ce674afda47660ec8303a41f015416d348b380097ab0183894b474",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "committed: bounded 32MiB raw",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "convert",
+        "-f",
+        "vhdx",
+        "-O",
+        "raw",
+        "$RUN/committed/container-replay-child.vhdx",
+        "$RUN/committed/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "committed: journal only",
+      "arguments": [
+        "/usr/sbin/e2fsck",
+        "-p",
+        "-E",
+        "journal_only",
+        "$RUN/committed/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "$RUN/committed/derived-journal-child.ext4: recovering journal\n",
+      "stderr_text": "",
+      "stdout_sha256": "c9fedab788cd5f72e559880bcc6a5c383659cc942897f8d517c64d15240f93da",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "read synthetic marker",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "cat /marker.bin",
+        "$RUN/committed/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "725bcd6c66d02acf6ebeab9c92410e010ea22e336876256aaf05a211f4ce1902",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "committed: readonly fs validation",
+      "arguments": [
+        "/usr/sbin/e2fsck",
+        "-f",
+        "-n",
+        "$RUN/committed/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "Pass 1: Checking inodes, blocks, and sizes\nPass 2: Checking directory structure\nPass 3: Checking directory connectivity\nPass 4: Checking reference counts\nPass 5: Checking group summary information\n$RUN/committed/derived-journal-child.ext4: 12/8192 files (8.3% non-contiguous), 1550/8192 blocks\n",
+      "stderr_text": "e2fsck 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "ca8c5ab130a8fe5ae942f5afec1d6b45cd39f54283b84d8c4588109087f6843c",
+      "stderr_sha256": "f074aa9872d23bd7876c68381422f0b17c739d7dbd64d41e99dfd1398653a818"
+    },
+    {
+      "label": "uncommitted: mkfs",
+      "arguments": [
+        "/usr/sbin/mke2fs",
+        "-q",
+        "-t",
+        "ext4",
+        "-F",
+        "-b",
+        "4096",
+        "-d",
+        "$RUN/uncommitted/tree",
+        "$RUN/uncommitted/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "uncommitted: bmap",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "bmap /marker.bin 0",
+        "$RUN/uncommitted/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "1549\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "169344501217affa64f0527182f1f967e02860eaea1c958dfac89df4499279e6",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "uncommitted: journal fixture",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-w",
+        "-f",
+        "$RUN/uncommitted/journal.commands",
+        "$RUN/uncommitted/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "debugfs: journal_open -c -v 3\nSetting csum v3\ndebugfs: journal_write -c -b 1549 \"$RUN/uncommitted/transaction.bin\"\ndebugfs: journal_close\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "b66bc410f72c41b7d2c513b15b9d06fc3b6bd3b08eb354e65e1285fdd702eb54",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "uncommitted: mark synthetic crash state",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-w",
+        "-R",
+        "feature needs_recovery",
+        "$RUN/uncommitted/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "Filesystem features: has_journal ext_attr resize_inode dir_index filetype needs_recovery extent 64bit flex_bg sparse_super large_file huge_file dir_nlink extra_isize metadata_csum\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "3bb7e976c4adba2e37d5a8ad4cdfce4377a483847e546bf5a66af87958a6d67e",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "read synthetic marker",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "cat /marker.bin",
+        "$RUN/uncommitted/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "6896d9ea3f73a4434f5832bc65714e7d066f177373f36f34dc8a6f735daa41b1",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "uncommitted: readonly container",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-f",
+        "vhdx",
+        "$RUN/uncommitted/pending-parent.vhdx"
+      ],
+      "exit": 1,
+      "stdout_text": "",
+      "stderr_text": "qemu-img: Could not open '$RUN/uncommitted/pending-parent.vhdx': VHDX image file '$RUN/uncommitted/pending-parent.vhdx' opened read-only, but contains a log that needs to be replayed\nTo replay the log, run:\nqemu-img check -r all '$RUN/uncommitted/pending-parent.vhdx'\n",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "dc19321423a9734af6f00e894680bec739162a45f3e73e94b904ff72ac249cff"
+    },
+    {
+      "label": "uncommitted: outer replay",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-r",
+        "all",
+        "-f",
+        "vhdx",
+        "$RUN/uncommitted/container-replay-child.vhdx"
+      ],
+      "exit": 0,
+      "stdout_text": "The following inconsistencies were found and repaired:\n\n    0 leaked clusters\n    1 corruptions\n\nDouble checking the fixed image now...\nNo errors were found on the image.\n",
+      "stderr_text": "",
+      "stdout_sha256": "e52f115206ce674afda47660ec8303a41f015416d348b380097ab0183894b474",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "uncommitted: bounded 32MiB raw",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "convert",
+        "-f",
+        "vhdx",
+        "-O",
+        "raw",
+        "$RUN/uncommitted/container-replay-child.vhdx",
+        "$RUN/uncommitted/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "uncommitted: journal only",
+      "arguments": [
+        "/usr/sbin/e2fsck",
+        "-p",
+        "-E",
+        "journal_only",
+        "$RUN/uncommitted/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "$RUN/uncommitted/derived-journal-child.ext4: recovering journal\n",
+      "stderr_text": "",
+      "stdout_sha256": "46f51ae5a0620395739322657cf6e773776d71b5781a93c732b83e8640309cd9",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "read synthetic marker",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "cat /marker.bin",
+        "$RUN/uncommitted/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "6896d9ea3f73a4434f5832bc65714e7d066f177373f36f34dc8a6f735daa41b1",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "uncommitted: readonly fs validation",
+      "arguments": [
+        "/usr/sbin/e2fsck",
+        "-f",
+        "-n",
+        "$RUN/uncommitted/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "Pass 1: Checking inodes, blocks, and sizes\nPass 2: Checking directory structure\nPass 3: Checking directory connectivity\nPass 4: Checking reference counts\nPass 5: Checking group summary information\n$RUN/uncommitted/derived-journal-child.ext4: 12/8192 files (8.3% non-contiguous), 1550/8192 blocks\n",
+      "stderr_text": "e2fsck 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "547d6f6a4f3cee6579baea8d6c838ed0b5a7eb83aef801d756e5b06a88c42a5b",
+      "stderr_sha256": "f074aa9872d23bd7876c68381422f0b17c739d7dbd64d41e99dfd1398653a818"
+    },
+    {
+      "label": "bad-journal-checksum: mkfs",
+      "arguments": [
+        "/usr/sbin/mke2fs",
+        "-q",
+        "-t",
+        "ext4",
+        "-F",
+        "-b",
+        "4096",
+        "-d",
+        "$RUN/bad-journal-checksum/tree",
+        "$RUN/bad-journal-checksum/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "bad-journal-checksum: bmap",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "bmap /marker.bin 0",
+        "$RUN/bad-journal-checksum/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "1549\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "169344501217affa64f0527182f1f967e02860eaea1c958dfac89df4499279e6",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "bad-journal-checksum: journal fixture",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-w",
+        "-f",
+        "$RUN/bad-journal-checksum/journal.commands",
+        "$RUN/bad-journal-checksum/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "debugfs: journal_open -c -v 3\nSetting csum v3\ndebugfs: journal_write -b 1549 \"$RUN/bad-journal-checksum/transaction.bin\"\ndebugfs: journal_close\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "8690f217618aeba9cd89ffd37548c6d32b410d4d3f1023ec021f075bf14e164c",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "read synthetic marker",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "cat /marker.bin",
+        "$RUN/bad-journal-checksum/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "6896d9ea3f73a4434f5832bc65714e7d066f177373f36f34dc8a6f735daa41b1",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "bad-journal-checksum: readonly container",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-f",
+        "vhdx",
+        "$RUN/bad-journal-checksum/pending-parent.vhdx"
+      ],
+      "exit": 1,
+      "stdout_text": "",
+      "stderr_text": "qemu-img: Could not open '$RUN/bad-journal-checksum/pending-parent.vhdx': VHDX image file '$RUN/bad-journal-checksum/pending-parent.vhdx' opened read-only, but contains a log that needs to be replayed\nTo replay the log, run:\nqemu-img check -r all '$RUN/bad-journal-checksum/pending-parent.vhdx'\n",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "3c0d3dee62e2efd76119f56b3c84740a5a69953b06b1ad854e0ee37f89f6ff4c"
+    },
+    {
+      "label": "bad-journal-checksum: outer replay",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-r",
+        "all",
+        "-f",
+        "vhdx",
+        "$RUN/bad-journal-checksum/container-replay-child.vhdx"
+      ],
+      "exit": 0,
+      "stdout_text": "The following inconsistencies were found and repaired:\n\n    0 leaked clusters\n    1 corruptions\n\nDouble checking the fixed image now...\nNo errors were found on the image.\n",
+      "stderr_text": "",
+      "stdout_sha256": "e52f115206ce674afda47660ec8303a41f015416d348b380097ab0183894b474",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "bad-journal-checksum: bounded 32MiB raw",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "convert",
+        "-f",
+        "vhdx",
+        "-O",
+        "raw",
+        "$RUN/bad-journal-checksum/container-replay-child.vhdx",
+        "$RUN/bad-journal-checksum/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "bad-journal-checksum: journal only",
+      "arguments": [
+        "/usr/sbin/e2fsck",
+        "-p",
+        "-E",
+        "journal_only",
+        "$RUN/bad-journal-checksum/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "$RUN/bad-journal-checksum/derived-journal-child.ext4: recovering journal\nJBD2: Invalid checksum recovering data block 1549 in log\nJournal checksum error found in $RUN/bad-journal-checksum/derived-journal-child.ext4\n",
+      "stderr_text": "",
+      "stdout_sha256": "bdcb8bfe54924cf988cbd0a3cc8dedf19d4514385e74dc5340a3da2bce77968a",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "read synthetic marker",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "cat /marker.bin",
+        "$RUN/bad-journal-checksum/derived-journal-child.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "6896d9ea3f73a4434f5832bc65714e7d066f177373f36f34dc8a6f735daa41b1",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "invalid-log-fixture: mkfs",
+      "arguments": [
+        "/usr/sbin/mke2fs",
+        "-q",
+        "-t",
+        "ext4",
+        "-F",
+        "-b",
+        "4096",
+        "-d",
+        "$RUN/invalid-log-fixture/tree",
+        "$RUN/invalid-log-fixture/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "invalid-log-fixture: bmap",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "bmap /marker.bin 0",
+        "$RUN/invalid-log-fixture/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "1549\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "169344501217affa64f0527182f1f967e02860eaea1c958dfac89df4499279e6",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "invalid-log-fixture: journal fixture",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-w",
+        "-f",
+        "$RUN/invalid-log-fixture/journal.commands",
+        "$RUN/invalid-log-fixture/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "debugfs: journal_open -c -v 3\nSetting csum v3\ndebugfs: journal_write -b 1549 \"$RUN/invalid-log-fixture/transaction.bin\"\ndebugfs: journal_close\n",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "6e17e906385679388656665539c191ecf060ad6e1e31f0e78aa0c6a964a15372",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "read synthetic marker",
+      "arguments": [
+        "/usr/sbin/debugfs",
+        "-R",
+        "cat /marker.bin",
+        "$RUN/invalid-log-fixture/journal-parent.ext4"
+      ],
+      "exit": 0,
+      "stdout_text": "",
+      "stderr_text": "debugfs 1.47.0 (5-Feb-2023)\n",
+      "stdout_sha256": "6896d9ea3f73a4434f5832bc65714e7d066f177373f36f34dc8a6f735daa41b1",
+      "stderr_sha256": "600dc7f6657b8e8c2436ed3a67e6e8f6a58c906bc4f51012e0796673278b74c7"
+    },
+    {
+      "label": "invalid log: readonly container",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-f",
+        "vhdx",
+        "$RUN/invalid-log-fixture/invalid-log-parent.vhdx"
+      ],
+      "exit": 0,
+      "stdout_text": "No errors were found on the image.\n",
+      "stderr_text": "",
+      "stdout_sha256": "6387df5c84015661bb453a665396d838a804cc79e0ca0cb620eb578be11de26c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upstream070: readonly container",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-f",
+        "vhdx",
+        "$RUN/upstream-070/public-synthetic-parent.vhdx"
+      ],
+      "exit": 1,
+      "stdout_text": "",
+      "stderr_text": "qemu-img: Could not open '$RUN/upstream-070/public-synthetic-parent.vhdx': VHDX image file '$RUN/upstream-070/public-synthetic-parent.vhdx' opened read-only, but contains a log that needs to be replayed\nTo replay the log, run:\nqemu-img check -r all '$RUN/upstream-070/public-synthetic-parent.vhdx'\n",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "174f55f8b9c5944c692cc50b6e24c2e7a28b6250493542d5a903f2821d129f8a"
+    },
+    {
+      "label": "upstream070: replay",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-img",
+        "check",
+        "-r",
+        "all",
+        "-f",
+        "vhdx",
+        "$RUN/upstream-070/public-synthetic-child.vhdx"
+      ],
+      "exit": 0,
+      "stdout_text": "The following inconsistencies were found and repaired:\n\n    0 leaked clusters\n    1 corruptions\n\nDouble checking the fixed image now...\nNo errors were found on the image.\n",
+      "stderr_text": "",
+      "stdout_sha256": "e52f115206ce674afda47660ec8303a41f015416d348b380097ab0183894b474",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "upstream070: bounded pattern read",
+      "arguments": [
+        "$QEMU_PREFIX/usr/bin/qemu-io",
+        "-r",
+        "-f",
+        "vhdx",
+        "-c",
+        "read -P 0xa5 0 18M",
+        "$RUN/upstream-070/public-synthetic-child.vhdx"
+      ],
+      "exit": 0,
+      "stdout_text": "read 18874368/18874368 bytes at offset 0\n18 MiB, 1 ops; 00.07 sec (250.774 MiB/sec and 13.9319 ops/sec)\n",
+      "stderr_text": "",
+      "stdout_sha256": "60e978eb18a143a4bc50f15376dc186e5d0ae85d05d2e4937ace6b8faa3677e0",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "elapsed_seconds": 23.593,
+  "maximum_individual_image_bytes": 37748736,
+  "file_size_limit_bytes": 134217728,
+  "fixture_generator_sha256": "9550c44063d7dbc071f9024945c3966b64a532afeeacf85f7c87200ade010c10",
+  "runner_sha256": "1877c957e430acae51a6a335c6837f358a64c6e39c98ce80d453421c640c7863",
+  "toolchain_manifest_sha256": "f759cdb46e937f0c3c9e074c8bcbc27e80ed6d95d3fc8048b5537c3b80fef0e4",
+  "local_raw_receipt_sha256": "3894a453806f4eff55a8dfe42adb885db02bb0c40f3eb4b4439b0afaabe262e9",
+  "sanitization": "Audit/run/runtime path labels substituted in diagnostics; image hashes and hashes of raw command output are unchanged.",
+  "execution_completed_utc": "2026-10-29T20:03:36.795493+00:00"
+}

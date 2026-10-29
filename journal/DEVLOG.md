@@ -501,3 +501,10 @@ Prepared separate one-admin-password native input and controlled-mailbox normal 
 ### Operator CI inventory correction — 2026-10-26
 
 Initial Windows CI40314879754 failed owned-fixture readiness because the operator command added seven application-module test events and one skipped private fixture (251 passes/1 skip; no failed events). Native Windows job passed; portable assertions were unexecuted. Moved only the operator tool into its own nested Go module with unchanged dependency versions; its dedicated real-PostgreSQL28/no-skip job remains enforced. Original application244/no-skip thresholds and source remain unchanged. Preserve failed evidence and publish new exact-head CI; no live operations.
+
+
+## 2026-10-29 - Forensic recovery preparation and CRL time-gate incident
+
+Prepared a source/dependency-pinned disposable-child proposal and synthetic-only harness under Aether6481847170. Final rehearsal passed59 named checks, including real coupled outer VHDX and inner JBD2 replay, negative checksums/uncommitted handling, parent preservation and independent upstream070 data validation. No real images, privileged installation, mount/NBD or Docker execution. One initial uncommitted fixture needed an explicit valid crash-state mark; failed-run artifacts were preserved and corrected fresh-directory runs passed. Source-provenance/path parsing preparation errors were corrected without overwriting downloads.
+
+CRL accepted source/context/issuer pins were verified, but the fresh clock was after both the15:00Z acceptance cutoff and18:10:29Z old signed expiry. No signing attempt/prompt/new DER/publication; counter1002 unchanged. Published the exact incident directly on PR39, requesting new expired-CRL/time-window authority rather than repeated unchanged-source review. PR38/39/master remain preserved. Full review-only procedure, actual checks and limits are in tools/forensic_recovery/README.md; final revision/CI/readback belong in the PR.

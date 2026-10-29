@@ -1,0 +1,158 @@
+{
+  "schema": "SFD_SYNTHETIC_RECOVERY_TOOLCHAIN_V1",
+  "scope": "synthetic fixtures only; not permission for real-copy recovery",
+  "qemu_version": "1:8.2.2+ds-0ubuntu1.18",
+  "e2fsprogs_version": "1.47.0-2.4~exp1ubuntu4.1",
+  "qemu_source_revision": "11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea",
+  "e2fsprogs_source_revision": "25ad8a431331b4d1d444a70b6079456cc612ac40",
+  "binaries": {
+    "qemu-img": "$QEMU_PREFIX/usr/bin/qemu-img",
+    "qemu-io": "$QEMU_PREFIX/usr/bin/qemu-io",
+    "e2fsck": "/usr/sbin/e2fsck",
+    "mke2fs": "/usr/sbin/mke2fs",
+    "debugfs": "/usr/sbin/debugfs",
+    "python": "/usr/bin/python3.12"
+  },
+  "files_sha256": {
+    "$QEMU_PREFIX/usr/bin/qemu-img": "634320b91165669917123e8e79cce1c4d00cee0a4aa4d662d7c0a8186479b3fb",
+    "$QEMU_PREFIX/usr/bin/qemu-io": "71b3d50189aae57b2d01a5f16c46c1c48d006bf27403b7033478b9a6f013d414",
+    "$QEMU_PREFIX/usr/lib/x86_64-linux-gnu/libaio.so.1t64.0.2": "9dbba7441fe096f6654bfd31bfdbba52f41a209bd4a560468293c226ff63c998",
+    "$QEMU_PREFIX/usr/lib/x86_64-linux-gnu/libnuma.so.1.0.0": "02d7582c5d391e460e56aa67a414360e3183b968206645b9123f9dc7bff5d009",
+    "$QEMU_PREFIX/usr/lib/x86_64-linux-gnu/liburing.so.2.5": "51594b92ac35f96595d3fcec9c3ec5d190637d9b426d5f8a8f4207875d2962f6",
+    "/usr/bin/python3.12": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+    "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2": "c20a2dc8917c755f02b94049356320fe1f62ac7d9f8994731f807d9df39302da",
+    "/usr/lib/x86_64-linux-gnu/libblkid.so.1.1.0": "9c3860ffab5422410ff9e073d3e82267f00bc68ff1248cbb191640ee2ff045bc",
+    "/usr/lib/x86_64-linux-gnu/libc.so.6": "3a15d66867d83762c7f2f1e37359cb8f6c5743edb369c65285cb0b1c4f7498bf",
+    "/usr/lib/x86_64-linux-gnu/libcom_err.so.2.1": "022943b3b11c860b049bce41342f1c2594941b7b401d95dfdf235521099fee08",
+    "/usr/lib/x86_64-linux-gnu/libe2p.so.2.3": "471a02b06797769a6d0e11a59c138074985f56d1ec62dfcbe2feb00a31f37c28",
+    "/usr/lib/x86_64-linux-gnu/libexpat.so.1.9.1": "286682ecbc5e59a638963b1a4e6351e65eb32fcf4bdcb9cb7569b6a61fe06a8d",
+    "/usr/lib/x86_64-linux-gnu/libext2fs.so.2.4": "4b03abd4f5ec8a5d7519d34931feaa39ca73b21e6946f90b328e67e0cf95ed72",
+    "/usr/lib/x86_64-linux-gnu/libffi.so.8.1.4": "00f593fe192f2851b8ce23b25cec2488d769beb5a8f63e8c9e563071e1075153",
+    "/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.8000.0": "96ef9163aee942bdc09e6f4a1acd2fd6b178c03af824c569741440d63ac9f4f4",
+    "/usr/lib/x86_64-linux-gnu/libgmodule-2.0.so.0.8000.0": "556b3e8f3c18dbb0255971b1792a076dbd07338482927fe7f9f6c597b1801833",
+    "/usr/lib/x86_64-linux-gnu/libgmp.so.10.5.0": "0ccdfb6d6f5c039465f6d002cf7e4c072d48ac6a2cffc8dd6c748dec31592804",
+    "/usr/lib/x86_64-linux-gnu/libgnutls.so.30.37.1": "ddbae2995750875c07bc218d12a062d73f8250678f54dedda7e9be5068781c98",
+    "/usr/lib/x86_64-linux-gnu/libhogweed.so.6.8": "c3c606139d4f7776efa4dbd4a6b62e30c916b07a0cafd8c3ef173d6f093607e3",
+    "/usr/lib/x86_64-linux-gnu/libidn2.so.0.4.0": "6e632fd9a3125db60bbc623719bbc17b0470330321c5b1c57f1ff7190e5551ad",
+    "/usr/lib/x86_64-linux-gnu/libm.so.6": "fce00b6f25f459cf4ae0b7fae4257909a1a8a86f9149e7c029a5d617baf1ccd0",
+    "/usr/lib/x86_64-linux-gnu/libnettle.so.8.8": "a245ed916229583d6fe0b07657b3ed945bc148c28cc08b5266295f620d2b91cc",
+    "/usr/lib/x86_64-linux-gnu/libp11-kit.so.0.3.1": "a59efd4792d3343dedea1d26a28f5597abfe3369082deb504c4802a31b014897",
+    "/usr/lib/x86_64-linux-gnu/libpcre2-8.so.0.11.2": "e00576d71d81d3ba0cfa4903c835a44a8723aac96f72f79ff75200b4cff9071b",
+    "/usr/lib/x86_64-linux-gnu/libss.so.2.0": "74ec695f8d344c0a6a48f85d38b8ecf98f675de5ce30ed6e458c75c97f4f387d",
+    "/usr/lib/x86_64-linux-gnu/libtasn1.so.6.6.3": "59994414d0cdec4f678ef91eaaafc44b26b00bca507e4cc7978caaf79f584173",
+    "/usr/lib/x86_64-linux-gnu/libunistring.so.5.0.0": "7bcf825cd449892db5105ad2aed91dcf94a27b796426600c765720c584c54dd1",
+    "/usr/lib/x86_64-linux-gnu/libuuid.so.1.3.0": "78d7f4d6f27b7dffc1c84dfe2f83e84aefa6f6ceeffc6ac4bc41f9fbc61cb84e",
+    "/usr/lib/x86_64-linux-gnu/libz.so.1.3": "f61677c7bdb7c2aa2a243ea781bfd16afcb361cede7b4ef76127a9d8eb9a5242",
+    "/usr/lib/x86_64-linux-gnu/libzstd.so.1.5.5": "0a2128bc10841fb29e76d08d945864dfb0b6a66da5df6df5d8299197439e54bb",
+    "/usr/sbin/debugfs": "1e83118cc9582afcad2711fbb7f40f56668adccb386d988cb6d9ad5c2d001049",
+    "/usr/sbin/e2fsck": "c69c6315f602d389821b3a1dab1308618616259400f2cf5d997243c4a83c284c",
+    "/usr/sbin/mke2fs": "07cd24ce58a410cc9cee93c55ae5ac95986df016c5907dc7a49b55389bd41ed2"
+  },
+  "distro_binary_archives": [
+    {
+      "filename": "libaio1t64_0.3.113-6build1.1_amd64.deb",
+      "package": "libaio1t64",
+      "version": "0.3.113-6build1.1",
+      "sha256": "433212b33e26d424605c01cec1de33b63f2cc12870987b4cb7b3625baba66a19"
+    },
+    {
+      "filename": "libnuma1_2.0.18-1ubuntu0.24.04.1_amd64.deb",
+      "package": "libnuma1",
+      "version": "2.0.18-1ubuntu0.24.04.1",
+      "sha256": "f333b8edf6f0b705c19f2a67008194df66f7aab0fa2350dc98510569a033ff29"
+    },
+    {
+      "filename": "liburing2_2.5-1build1_amd64.deb",
+      "package": "liburing2",
+      "version": "2.5-1build1",
+      "sha256": "c2aef62accee92a06263c3ad4ef46132c13e409b54296c44792a20491830a7b0"
+    },
+    {
+      "filename": "qemu-utils_8.2.2+ds-0ubuntu1.18_amd64.deb",
+      "package": "qemu-utils",
+      "version": "1:8.2.2+ds-0ubuntu1.18",
+      "sha256": "10695e57937d8a1d0ec6d017a6770d02353ec0c9500e4a36928230b2d39026c5"
+    }
+  ],
+  "primary_source": {
+    "qemu-block_vhdx-log.c": {
+      "repo": "qemu/qemu",
+      "revision": "11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea",
+      "path": "block/vhdx-log.c",
+      "sha256": "8bfafc2d92cc8fc84a113e4ada653050c59d947c7993b99f6812c4a7a3050c49",
+      "url": "https://raw.githubusercontent.com/qemu/qemu/11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea/block/vhdx-log.c"
+    },
+    "qemu-block_vhdx.c": {
+      "repo": "qemu/qemu",
+      "revision": "11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea",
+      "path": "block/vhdx.c",
+      "sha256": "e9d728423d216c5c30dda75fcec30d08dd70d91d9aa4a4b5e13345b3288dbe6d",
+      "url": "https://raw.githubusercontent.com/qemu/qemu/11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea/block/vhdx.c"
+    },
+    "qemu-block_vhdx.h": {
+      "repo": "qemu/qemu",
+      "revision": "11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea",
+      "path": "block/vhdx.h",
+      "sha256": "4ec82961ae7f9cb84224f1e37730ea6f97085c4764eaf3e48e10b6f72da76830",
+      "url": "https://raw.githubusercontent.com/qemu/qemu/11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea/block/vhdx.h"
+    },
+    "qemu-tests_qemu-iotests_070": {
+      "repo": "qemu/qemu",
+      "revision": "11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea",
+      "path": "tests/qemu-iotests/070",
+      "sha256": "9a56d8c525830f4cd8e89258b2f6b9785d736babed66337649dcea4d1b218e40",
+      "url": "https://raw.githubusercontent.com/qemu/qemu/11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea/tests/qemu-iotests/070"
+    },
+    "qemu-tests_qemu-iotests_070.out": {
+      "repo": "qemu/qemu",
+      "revision": "11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea",
+      "path": "tests/qemu-iotests/070.out",
+      "sha256": "92f454ec2f4b6e685b5f18f7297ce91f67295e079c2d7a061c9fe240b83d5b93",
+      "url": "https://raw.githubusercontent.com/qemu/qemu/11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea/tests/qemu-iotests/070.out"
+    },
+    "e2fsprogs-debugfs_journal.c": {
+      "repo": "tytso/e2fsprogs",
+      "revision": "25ad8a431331b4d1d444a70b6079456cc612ac40",
+      "path": "debugfs/journal.c",
+      "sha256": "3c92b1a4f298245a1c893c3a7f09f5d6d0e39c9cca49f5b043d131b2791c8f3b",
+      "url": "https://raw.githubusercontent.com/tytso/e2fsprogs/25ad8a431331b4d1d444a70b6079456cc612ac40/debugfs/journal.c"
+    },
+    "e2fsprogs-debugfs_do_journal.c": {
+      "repo": "tytso/e2fsprogs",
+      "revision": "25ad8a431331b4d1d444a70b6079456cc612ac40",
+      "path": "debugfs/do_journal.c",
+      "sha256": "ee1a9ccaae85c0ac823f435e98ca7e3a75c5b8611e6a80c5abfca17849758bf0",
+      "url": "https://raw.githubusercontent.com/tytso/e2fsprogs/25ad8a431331b4d1d444a70b6079456cc612ac40/debugfs/do_journal.c"
+    },
+    "e2fsprogs-e2fsck_journal.c": {
+      "repo": "tytso/e2fsprogs",
+      "revision": "25ad8a431331b4d1d444a70b6079456cc612ac40",
+      "path": "e2fsck/journal.c",
+      "sha256": "156ac11543b6ce1189f840587c75b30c154d58dbef35502391db4db67d6bb1d9",
+      "url": "https://raw.githubusercontent.com/tytso/e2fsprogs/25ad8a431331b4d1d444a70b6079456cc612ac40/e2fsck/journal.c"
+    },
+    "e2fsprogs-e2fsck_unix.c": {
+      "repo": "tytso/e2fsprogs",
+      "revision": "25ad8a431331b4d1d444a70b6079456cc612ac40",
+      "path": "e2fsck/unix.c",
+      "sha256": "7159c8c5e4e5888a97ae65f732d95e3afe646281deb2312838cfeda243ea05c5",
+      "url": "https://raw.githubusercontent.com/tytso/e2fsprogs/25ad8a431331b4d1d444a70b6079456cc612ac40/e2fsck/unix.c"
+    },
+    "upstream-synthetic-dirtylog": {
+      "url": "https://raw.githubusercontent.com/qemu/qemu/11aa0b1ff115b86160c4d37e7c37e6a6b13b77ea/tests/qemu-iotests/sample_images/iotest-dirtylog-10G-4M.vhdx.bz2",
+      "compressed_sha256": "f294ddc9a9ab2a621cee73d6ac30ea692a8864ebd14be211e795d4c5b400adbb",
+      "bytes": 31457280,
+      "image_sha256": "511daba998dba208ffc57a7814194d5dd3afb7c314731b904ff1682e3fb4951a",
+      "virtual_size_from_upstream_description": "10GiB",
+      "purpose": "upstream synthetic fixture, not Owner data"
+    }
+  },
+  "python_version": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "kernel": "6.6.87.2-microsoft-standard-WSL2",
+  "limitations": [
+    "official vendor binaries; not independently rebuilt",
+    "dsc signature not independently authenticated",
+    "kernel and whole OS are not byte-pinned",
+    "QEMU invalid-log handling is not forensic proof of recoverability"
+  ]
+}
