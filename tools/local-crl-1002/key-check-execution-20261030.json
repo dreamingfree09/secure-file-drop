@@ -1,0 +1,33 @@
+{
+  "recorded_utc": "2026-10-30T00:51:09.116206+00:00",
+  "source_revision": "b833741c2eb512893b075b71917a72dcf080df5e",
+  "helper_sha256": "4191b785bb1ef32050a70b12eef289d8cb08777b9b7c6cb59a3fdfc7de5b9df9",
+  "private_context_sha256": "19a6cccfbc1235b7212fc3dbdcf9313e2c34de7c5095415cd90ac606c45f83b8",
+  "context_created_utc": "2026-10-30T00:45:01.010413+00:00",
+  "context_until_utc": "2026-10-30T01:00:01.010413+00:00",
+  "expected_CA_public_spki_sha256": "9874a14ecd40edf4851d55b19e5a24889fc2440ab6521fc19920d4a5dab32479",
+  "owner_clarification": "No CA passphrase was known/provided to the original signing attempt. Owner does not recall a recovery record and subsequently authorised local non-signing candidate checks.",
+  "candidate_values_copied_to_artifacts": false,
+  "candidate_values_supplied_by_agent": false,
+  "local_check_result": {
+    "success": false,
+    "signing_performed": false,
+    "issuer_changed": false,
+    "password_captured": false,
+    "attempts": 1,
+    "stop_code": "LOCAL_INPUT_TIMEOUT",
+    "utc": "2026-10-30T00:48:00.857734+00:00"
+  },
+  "verified_candidates": 0,
+  "inference": "Timeout is not evidence that any particular candidate is incorrect. Local input completion unconfirmed.",
+  "preservation_pins_verified_after": 13,
+  "original_signing_helper_invocations_total": 1,
+  "new_signing_invocations": 0,
+  "new_DER": false,
+  "public_CRL_changed": false,
+  "counter": "1002",
+  "synthetic_PTY_checks_passed": 9,
+  "original_signing_gate_unit_tests_passed": 20,
+  "original_signing_source_unchanged": true,
+  "next": "Fresh attended non-signing context only when Owner is present; never reuse consumed context. Any later signing needs a separately bound fresh one-use execution decision. No automatic CA/trust replacement."
+}

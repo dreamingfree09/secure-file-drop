@@ -30,3 +30,8 @@ The existing ff2f9a7 controller pins CRL0x1001/hash/deadline. New signed materia
 ## 2026-10-30 separate non-signing key check
 
 The consumed CRL1002 signing invocation remains spent, with no new DER. [Recovery assessment](PASSPHRASE_RECOVERY.md) and the separate owner-check-ca-key.py provide Owner-authorised hidden local candidate verification without signing or issuer changes. Nine synthetic checks pass; actual local input remains necessary. This does not reopen or alter owner-renew-crl.py, its context or outputs. Exact execution/source evidence belongs in PR39.
+
+
+### Actual local non-signing result - 2026-10-30
+
+The separate key check at source b833741c2eb512893b075b71917a72dcf080df5e reached a real native TTY and timed out after one bounded OpenSSL pkey invocation: LOCAL_INPUT_TIMEOUT, no verified candidate. It did not sign or change the issuer; all13 preservation pins still match, counter remains1002, and no DER exists. This does not establish that any candidate is incorrect. [Exact sanitized receipt](key-check-execution-20261030.json). No chat-supplied candidate value was copied into an artifact or command. Nine synthetic PTY checks and20 signing-gate unit tests passed. The consumed check context/partial public output is retained and must not be reused. Fresh local input, in a fresh bound context, remains indispensable for further non-signing checks. Signing/publication and any CA/trust replacement remain separately gated.
