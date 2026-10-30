@@ -1,5 +1,10 @@
 # Secure File Drop continuity
 
+## Spent signing attempt and non-signing key check - 2026-10-30
+
+The Owner confirms no CA passphrase was known/provided and authorises a separate local candidate check. [Recovery assessment and source](../tools/local-crl-1002/PASSPHRASE_RECOVERY.md) preserve the one spent signing invocation, empty PEM, unchanged counter1002/issuer and absent DER. Nine synthetic non-signing checks pass; original signing helper/context remain unchanged. Candidate values are excluded from all artifacts; Owner entry is only at a hidden local OpenSSL prompt. This check can confirm the same key/public identity, but cannot sign, publish, replace the CA, alter trust or enable Docker. An external recovery record/usable backup is unverified; any future CA replacement is a separate reviewed trust decision. Actual local check result and exact source revision belong in PR39. [Executed incident](https://github.com/dreamingfree09/secure-file-drop/pull/39#issuecomment-6511538660).
+
+
 ## CRL 0x1002 signing-only preparation - 2026-10-27
 
 SFD-CRL-1002-PREPARATION-20261027, base master 61195434bee5f9221a6f55469c719cb360504ea9. Under [Aether's Stage A/B decision](https://github.com/dreamingfree09/secure-file-drop/pull/38#issuecomment-6454489528), the [separate helper and mutation plan](../tools/local-crl-1002/README.md) are prepared for independent exact-revision review. Actual public CRL0x1001/issuer pins passed; 20 isolated non-signing tests passed. Missing future signing acceptance refused before signing; ledger/publication remained unchanged. Renew-by remains 2026-10-28T18:10:29Z. No signing, publication, Docker start or accepted-controller modification occurred. PR38 ff2f9a74bcbf2a347eed61516508910acadadfb2 stays unmerged; cold-acquisition execution evidence belongs in PR38, separately from helper review.

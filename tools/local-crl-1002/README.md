@@ -25,3 +25,8 @@ Isolated standard-library tests are in test_renewal.py. They mock OpenSSL where 
 This helper has no publication, listener, trust-store, cache or Docker operation. After legitimate signing and independent acceptance of the exact new DER, Codex must prepare a same-filesystem exclusive staging publication, verify signature/identity/validity, atomically replace only the public CRL, read back exact bytes over loopback and execute strict Windows Schannel plus revocation-enabled .NET checks. Preserve the old public DER as evidence and preserve root, leaf, key, TLS settings and services. Never roll back to an older CRL number to conceal failure. A publication failure is a stop requiring evidence, not a reason to disable revocation.
 
 The existing ff2f9a7 controller pins CRL0x1001/hash/deadline. New signed material makes that binding stale. A renewal-compatible controller/TLS continuation needs its own changed exact-revision review before execution. PR38 remains unmerged; Docker start, three-archive restoration, backend/schema adoption, credentials form, account creation and Windows Quick Send remain on hold. No production-readiness claim.
+
+
+## 2026-10-30 separate non-signing key check
+
+The consumed CRL1002 signing invocation remains spent, with no new DER. [Recovery assessment](PASSPHRASE_RECOVERY.md) and the separate owner-check-ca-key.py provide Owner-authorised hidden local candidate verification without signing or issuer changes. Nine synthetic checks pass; actual local input remains necessary. This does not reopen or alter owner-renew-crl.py, its context or outputs. Exact execution/source evidence belongs in PR39.

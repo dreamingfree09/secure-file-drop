@@ -506,3 +506,8 @@ Initial Windows CI40314879754 failed owned-fixture readiness because the operato
 ## 2026-10-27 - CRL 0x1002 preparation
 
 Prepared a separately reviewed signing-only helper from actual retained issuer/publication pins under Aether6454489528. Twenty non-signing fixture tests and the real read-only check passed; missing future acceptance refused signing. Existing CRL/ledger/key bytes remain preserved; no signing/publication or controller execution. Helper scope, exact local identities, interruption semantics and future publication gates are in tools/local-crl-1002/README.md. Docker cold-acquisition results are a separate PR38 execution handover. No public readiness claim.
+
+
+## 2026-10-30 - non-signing CA unlock verification
+
+Owner confirms missing CA passphrase/no input to spent signing attempt, then explicitly authorises candidate checks. Prepared separate public-output-only, deadline/TTY/source/preservation-bound key checker; no password literals or candidate values in artifacts. Nine synthetic PTY checks pass after correcting OpenSSL validity-line/public-DER framing; initial failed fixture retained. No real key check, signing retry, issuer mutation, DER publication or trust change at this preparation commit. See tools/local-crl-1002/PASSPHRASE_RECOVERY.md; original signing helper remains byte-identical to27f51df.
