@@ -1,0 +1,220 @@
+{
+  "schema": "SFD_CRL_CHILD_EXECUTION_RESULT_V1",
+  "work_id": "SFD-CRL1002-CHILD-EXECUTION-20261029-CODEX",
+  "producer": "Codex",
+  "recipient": "Aether",
+  "recorded_utc": "2026-10-30T00:23:05.205192+00:00",
+  "accepted_implementation_revision": "2087350313c5a271001a6b365f479057f49ba30c",
+  "base_master": "61195434bee5f9221a6f55469c719cb360504ea9",
+  "authority": {
+    "6508466110": {
+      "comment_id": 6508466110,
+      "body_sha256": "d154e4ed03db39fd793b93caef6a5c340cbd8f43aa28de73e91e2da0a6fce9cf",
+      "url": "https://github.com/dreamingfree09/secure-file-drop/pull/39#issuecomment-6508466110"
+    },
+    "6508485086": {
+      "comment_id": 6508485086,
+      "body_sha256": "cefd14c1c2ccc46255d5f4d4333284ace0c4760f60d97be099fd5264e00d5805",
+      "url": "https://github.com/dreamingfree09/secure-file-drop/pull/40#issuecomment-6508485086"
+    }
+  },
+  "crl": {
+    "accepted_helper_revision": "27f51df1d6486528d97e6b7ca0e79bffae99ecf4",
+    "helper_sha256": "3068ba2c960979e540b3d9b94fd977677dd2a5d351819fdc725b6614e9a37fe9",
+    "private_context_sha256": "ab8d9498a01ba0d75cca000c31037d935498522eb130cb58b31fa3045db27bc7",
+    "preconditions_passed": true,
+    "lease_created_utc": "2026-10-29T23:57:45.263690Z",
+    "lease_until_utc": "2026-10-30T00:42:45.263690Z",
+    "lease_sha256": "d4cc54e3d26b4c095074040ac5692c851572078be69d9e6484cc4dccb706f1fb",
+    "native_tty_verified": true,
+    "owner_confirmed_window_visible": true,
+    "helper_invocations": 1,
+    "helper_exit": 1,
+    "completed_utc": "2026-10-30T00:01:19.944108Z",
+    "pem_bytes": 0,
+    "der_created": false,
+    "counter_before": "1002",
+    "counter_after": "1002",
+    "all_issuer_pins_unchanged": true,
+    "key_metadata_unchanged": true,
+    "password_captured": false,
+    "console_transcript_captured": false,
+    "cause": "Owner confirms required CA passphrase was unavailable and none was provided; exact original OpenSSL/terminal exit diagnostic remains unrecorded.",
+    "partial_files_preserved": true,
+    "automatic_retry": false,
+    "public_crl_sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e",
+    "public_crl_expired": true,
+    "public_crl_used_as_tls_acceptance": false,
+    "publication": false,
+    "der_specific_publication_review": "BLOCKED: no signed DER",
+    "handover": "https://github.com/dreamingfree09/secure-file-drop/pull/39#issuecomment-6511538660",
+    "non_signing_recovery_followup": {
+      "recorded_utc": "2026-10-30T00:51:09.116206+00:00",
+      "source_revision": "b833741c2eb512893b075b71917a72dcf080df5e",
+      "helper_sha256": "4191b785bb1ef32050a70b12eef289d8cb08777b9b7c6cb59a3fdfc7de5b9df9",
+      "private_context_sha256": "19a6cccfbc1235b7212fc3dbdcf9313e2c34de7c5095415cd90ac606c45f83b8",
+      "context_created_utc": "2026-10-30T00:45:01.010413+00:00",
+      "context_until_utc": "2026-10-30T01:00:01.010413+00:00",
+      "expected_CA_public_spki_sha256": "9874a14ecd40edf4851d55b19e5a24889fc2440ab6521fc19920d4a5dab32479",
+      "owner_clarification": "No CA passphrase was known/provided to the original signing attempt. Owner does not recall a recovery record and subsequently authorised local non-signing candidate checks.",
+      "candidate_values_copied_to_artifacts": false,
+      "candidate_values_supplied_by_agent": false,
+      "local_check_result": {
+        "success": false,
+        "signing_performed": false,
+        "issuer_changed": false,
+        "password_captured": false,
+        "attempts": 1,
+        "stop_code": "LOCAL_INPUT_TIMEOUT",
+        "utc": "2026-10-30T00:48:00.857734+00:00"
+      },
+      "verified_candidates": 0,
+      "inference": "Timeout is not evidence that any particular candidate is incorrect. Local input completion unconfirmed.",
+      "preservation_pins_verified_after": 13,
+      "original_signing_helper_invocations_total": 1,
+      "new_signing_invocations": 0,
+      "new_DER": false,
+      "public_CRL_changed": false,
+      "counter": "1002",
+      "synthetic_PTY_checks_passed": 9,
+      "original_signing_gate_unit_tests_passed": 20,
+      "original_signing_source_unchanged": true,
+      "next": "Fresh attended non-signing context only when Owner is present; never reuse consumed context. Any later signing needs a separately bound fresh one-use execution decision. No automatic CA/trust replacement."
+    }
+  },
+  "disk": {
+    "toolchain": {
+      "utc": "2026-10-29T23:59:20.515574+00:00",
+      "passed": true,
+      "review_comment_id": 6508485086,
+      "review_body_sha256": "cefd14c1c2ccc46255d5f4d4333284ace0c4760f60d97be099fd5264e00d5805",
+      "revision": "2087350313c5a271001a6b365f479057f49ba30c",
+      "worker_clean": true,
+      "source_pins": 4,
+      "runtime_pins": 33,
+      "primary_source_pins": 9,
+      "distro_source_archives_verified": true,
+      "existing_drvfs_mapping": "Z:\\    9p     rw,noatime,aname=drvfs;path=Z:\\;uid=1000;gid=1000;symlinkroot=/mnt/,cache=5,access=client,msize=65536,trans=fd,rfd=6,wfd=6",
+      "issuer_counter": "1002",
+      "issuer_mutation_scope": "Independent authorised one-use CRL1002 signing only; pending or verified1003",
+      "engine_started": false
+    },
+    "fresh_hashes": {
+      "docker_data.vhdx": {
+        "utc": "2026-10-30T00:02:16.9331887Z",
+        "bytes": 45807042560,
+        "sha256": "8707c924fbe16c07f259ac2b9434cd008c485f2af8ac9a5d9912baca7aee2a6a",
+        "times_unchanged": true
+      },
+      "sealed-cold.vhdx": {
+        "utc": "2026-10-30T00:09:02.3349150Z",
+        "bytes": 45807042560,
+        "sha256": "8707c924fbe16c07f259ac2b9434cd008c485f2af8ac9a5d9912baca7aee2a6a",
+        "times_unchanged": true
+      },
+      "working-copy.vhdx": {
+        "utc": "2026-10-30T00:16:11.2968881Z",
+        "bytes": 45807042560,
+        "sha256": "8707c924fbe16c07f259ac2b9434cd008c485f2af8ac9a5d9912baca7aee2a6a",
+        "times_unchanged": true
+      }
+    },
+    "copy_phase": {
+      "status": "STOPPED_BEFORE_RECOVERY_TOOLS",
+      "stopped_utc": "2026-10-30T00:20:54.2204186Z",
+      "elapsed_seconds": 282.7318943,
+      "average_bytes_per_second": 1127453.6422189563,
+      "required_remaining_bytes_per_second": 8889171.82301465,
+      "projected_total_seconds": 40628.759218735206,
+      "reason": "Proactive feasibility stop; 90-minute timeout was not reached or extended",
+      "attempts": 1,
+      "partial_bytes": 318767104,
+      "partial_sha256": "956c8b7e91a61e10ef285f3543a75130d3eccd3385ea77086f38a58936b0d195",
+      "partial_readonly": true,
+      "new_child_complete": false,
+      "new_child_independently_verified": false,
+      "retry": false,
+      "partial_reused": false
+    },
+    "preservation": {
+      "original_sealed_working_identity_size_three_timestamps_attributes_acl_unchanged": true,
+      "private_fixed_NTFS_Z": true,
+      "destination_physical_disk": 0,
+      "original_physical_disk": 3,
+      "allow_only_owner_system_admins": true,
+      "NETWORK_denied": true,
+      "ordinary_share": false,
+      "administrative_share_present": true,
+      "encryption": "UNKNOWN; ACL-only; not WORM/offsite",
+      "free_before": 3872612323328,
+      "free_after": 3872293552128,
+      "copy_process_exited": true
+    },
+    "qemu_repair_invocations": 0,
+    "qemu_readonly_checks": 0,
+    "raw_created": false,
+    "ext4_replay_invocations": 0,
+    "archive_extraction": false,
+    "persisted_restart_state": "UNVERIFIED",
+    "actual_archive_inventory": "UNVERIFIED",
+    "tail_reconciliation": "UNEXECUTED: incomplete child is not a valid recovery input",
+    "filesystem_recovered": false,
+    "postgres_consistency": "NOT ESTABLISHED",
+    "docker_started": false,
+    "docker_startup_decision": "HOLD: no complete verified child or coherent derived inventory; no containment/startup approval",
+    "backup_restorations": 0,
+    "restoration_scope_expanded": false,
+    "supplementary_provenance_audit": {
+      "utc": "2026-10-30T00:24:32.193404+00:00",
+      "binary_archive_pins": 4,
+      "source_descriptor_pins": 2,
+      "passed": true,
+      "timing": "Post-stop supplementary provenance audit; no recovery tool had run"
+    }
+  },
+  "validation": {
+    "prior_synthetic_checks": 59,
+    "prior_synthetic_checks_scope": "Historical exact208735 source receipt; not rerun or real recovery evidence",
+    "prior_CI_runs": [
+      40947978570,
+      40948329077
+    ],
+    "prior_CI_scope": "8/8 jobs per run at208735; application CI, not real disk recovery",
+    "new_recovery_tests": "Not executed: mandatory complete-child/time-feasibility gate failed",
+    "application_tests": "Not rerun: no application changes and Docker startup prohibited",
+    "TLS_acceptance": "Not run: public CRL expired; no new DER; engine remains off",
+    "observer_crc32c_known_vector": true,
+    "sha256_known_vector": true,
+    "observer_real_metadata_IO_executed": false,
+    "verification_preparation_errors": [
+      "Initial archived-source preflight used the wrong parent directory; corrected in a separate preserved script before protected image data access.",
+      "Final checkout assertion initially assumed local master matched origin/master; corrected by read-only reflog comparison. Local0c63d33 remains at its October15 state; GitHub master61195434 is separate."
+    ]
+  },
+  "remaining": [
+    "Review spent signing failure and any non-secret terminal status before fresh one-use authority/context; preserve consumed outputs. Unchanged helper source need not be re-reviewed unless modified.",
+    "Establish destination copy performance feasibility before proposing another separately authorised new child; preserve304MiB partial and sacred images",
+    "No filesystem replay, original backup restore, Docker start, stale controller, backend adoption, account creation or merge"
+  ],
+  "protected_master_unchanged": true,
+  "public_production_readiness": false,
+  "final_issuer_checkout_preservation": {
+    "utc": "2026-10-30T00:26:43.623327+00:00",
+    "all_issuer_pins_unchanged": true,
+    "counter": "1002",
+    "key_metadata_unchanged": true,
+    "assigned_signing_processes_exited": true,
+    "original_checkout_head": "853b865e30872964a556c225335eb2191928972b",
+    "original_status_sha256": "cfd90c22d5da74d22009f003ac3906402f957be535b37cf7217a111689e3a41f",
+    "original_status_entries": 8,
+    "original_origin_absent": true,
+    "canonical_producer_head": "6d076944a0874a39124f7e8d7ee921c32ef77411",
+    "canonical_producer_clean": true,
+    "protected_remote_master": "61195434bee5f9221a6f55469c719cb360504ea9",
+    "local_master_preserved": "0c63d33b037f4720789353ecc0d0ecf6e2c5f9a7",
+    "local_master_last_reflog": "2026-10-15T21:55:32+01:00",
+    "WSL_feature_head": "2b8e56de4b79e2508125ca02c18455ae88dee7f6",
+    "WSL_feature_clean": true
+  },
+  "last_updated_utc": "2026-10-30T00:51:12.226657+00:00"
+}
