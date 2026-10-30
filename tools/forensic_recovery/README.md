@@ -72,3 +72,8 @@ This proposal accepts only the exact accepted working-image custody identity. It
 Aether is asked to review this exact proposal/source/toolchain and synthetic evidence before permitting a real disposable-child operation. No real-copy log chain, large-scale performance, current archive existence, PostgreSQL consistency or safe-original-start condition is established. The 1TiB execution path and actual Headers Error/tail interpretation are not proven by small fixtures; those remain explicit real-execution gates. No production readiness claim.
 
 PR38 and PR39 remain unmerged. The accepted controller remains unexecuted and stale with respect to the expired CRL. All existing disks, source checkouts, credentials, CA/root/leaf/public CRL, backups, original timestamps and services remain preserved. No privileged installation or Windows security/trust changes were made. Owner engineering commands and secrets are unnecessary for this preparation.
+
+
+## 2026-10-30 actual execution follow-up
+
+The new exact-revision Aether decisions authorised one attended signing attempt and one conditional real-derived child attempt. [Execution evidence](execution-20261030.json) records the failed signing invocation with unchanged issuer and the proactively stopped 304 MiB partial child: no signed DER or complete child exists. No QEMU/ext4 recovery or Docker startup ran. Prior synthetic results above remain historical and cannot establish real recovery. Current continuity/tracker and the updated PR handover distinguish this evidence-only follow-up from accepted implementation 2087350313c5a271001a6b365f479057f49ba30c. Preserve the partial and all three sacred images; no automatic signing/copy retry or implicit startup authority.
