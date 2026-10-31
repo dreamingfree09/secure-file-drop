@@ -1,0 +1,63 @@
+{
+  "schema": "SFD_DESIGN_SOURCE_MANIFEST_V1",
+  "base": "0254b7bf02fdee55dfbcc624d68653e9c6294539",
+  "authority_body_SHA256": "a13fb71af75f76c1614a694dbb842c980400cbd080fb3f9e40ea347e7bd8d0a4",
+  "self_exclusion": "This manifest excludes itself; final commit binds it.",
+  "files": [
+    {
+      "path": "docs/LOCAL_PKI_TRANSITION_DESIGN.md",
+      "bytes": 28340,
+      "sha256": "9697d5ef54af9535f5e9063cbd26f7376d1bd432a534edf73816761503004e19"
+    },
+    {
+      "path": "docs/CONTINUITY.md",
+      "bytes": 76641,
+      "sha256": "072923b411671c751b179ba5f8d36efc606b14edd281cd2e1a34550595f5a008"
+    },
+    {
+      "path": "docs/TRACKER.md",
+      "bytes": 40423,
+      "sha256": "85b8450ed5819cd1bd5139b0588beb3ce5e0e3e4058d8d84ab3e5cbf29caf714"
+    },
+    {
+      "path": "journal/DEVLOG.md",
+      "bytes": 62045,
+      "sha256": "560a2a6e968b0b8423e2f4199f4744b2763037c026dc1673693409e4c0b56c15"
+    },
+    {
+      "path": "tools/pki-transition-design/README.md",
+      "bytes": 1363,
+      "sha256": "a7dc28889d4ccbc7298caaa6688505367d76a9325bb81236c41523b4a22c98dd"
+    },
+    {
+      "path": "tools/pki-transition-design/dependency-inventory.json",
+      "bytes": 19997,
+      "sha256": "deb038f8730a30efd021c1ca58cd8b635c988f88e4fb857b4923b3a3f28b11d2"
+    },
+    {
+      "path": "tools/pki-transition-design/model.py",
+      "bytes": 5815,
+      "sha256": "ec99c19ad1570ed3a58fa602abb04c7ddaa905277521d95b840aad7b93f98991"
+    },
+    {
+      "path": "tools/pki-transition-design/policy.json",
+      "bytes": 2441,
+      "sha256": "649de9ec615c9d39d5fc3d4c8184dcde2361334161eafbc1d588c1c82d2b2d9a"
+    },
+    {
+      "path": "tools/pki-transition-design/synthetic-results.json",
+      "bytes": 2600,
+      "sha256": "5e5bac5eb60c4cd60895ba6ff97486c4c27e6ce64b18707c01f752cc24852e10"
+    },
+    {
+      "path": "tools/pki-transition-design/test_model.py",
+      "bytes": 9679,
+      "sha256": "a8e2f7095da48d3fd0254fbf71bdc7fe5250090720b1e697137be0c57bb459ea"
+    },
+    {
+      "path": "tools/pki-transition-design/verification.json",
+      "bytes": 4892,
+      "sha256": "5db9d2c208a159adf0cd6aa96ec83957f2ada7b5042c2cc3f86db1878b6699cc"
+    }
+  ]
+}

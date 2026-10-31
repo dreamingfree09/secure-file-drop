@@ -1,5 +1,10 @@
 ## Final desktop review — 2026-10-17
 
+## Independent CA/trust-transition design - 2026-10-31
+
+Aether6541856546 accepts the preserved recovery assessment and authorises design only. [Separate technical design](LOCAL_PKI_TRANSITION_DESIGN.md) and [hash-bound inventory/fixtures](../tools/pki-transition-design/README.md) cover independent recoverable custody/ledger, new leaf/CRL lifecycle, Windows-native public CDP, phased Owner-user trust addition/retirement, strict Schannel/Framework4.8/F196 and fail-closed rollback. All future real identities remain unset;48 inert policy tests pass with no failures/errors/skips. No real keys/certs/CRLs, signing/key checks, prompts, trust edits, publication, Docker, backups or application changes. Old CRL1001 is expired; no usable old signing capability established, not proof of permanent loss. PR38/39/40/master, all existing checkouts/history/custody and failed outputs stay preserved. Exact-revision Aether review and genuine Owner creation/trust/selection authority precede any implementation; distinct Docker/recovery/adoption/Windows visual/production gates remain open. Final revision and full GHP-01 handover are in the separate design PR.
+
+
 
 ## CA recovery preservation-only assessment - 2026-10-31
 

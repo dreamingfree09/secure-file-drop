@@ -1,0 +1,95 @@
+{
+  "schema": "SFD_CA_TRANSITION_DESIGN_V1",
+  "work_id": "SFD-CA-TRUST-TRANSITION-DESIGN-20261031",
+  "mode": "design_only",
+  "real_execution_authorized": false,
+  "base": "0254b7bf02fdee55dfbcc624d68653e9c6294539",
+  "authority": {
+    "comment": 6541856546,
+    "body_sha256": "a13fb71af75f76c1614a694dbb842c980400cbd080fb3f9e40ea347e7bd8d0a4"
+  },
+  "future_real_identity": {
+    "issuer_id": null,
+    "root_der_sha256": null,
+    "root_spki_sha256": null,
+    "root_thumbprint": null,
+    "leaf_der_sha256": null,
+    "leaf_serial": null,
+    "crl_der_sha256": null,
+    "Owner_SID": null,
+    "private_context_sha256": null
+  },
+  "proposed": {
+    "CA": {
+      "algorithm": "RSA",
+      "bits": 3072,
+      "digest": "SHA256",
+      "days": 730,
+      "pathlen": 0
+    },
+    "custody": {
+      "format": "encrypted PKCS8",
+      "cipher": "AES256-CBC",
+      "KDF": "PBKDF2-HMAC-SHA256",
+      "minimum_iterations": 600000,
+      "passphrase_characters": 32,
+      "uniform_alphabet_size": 64,
+      "separate_location_backup_required": true,
+      "recovered_credential_restore_required": true
+    },
+    "leaf": {
+      "days": 90,
+      "SAN": [
+        "DNS:localhost",
+        "IP:127.0.0.1",
+        "IP:::1"
+      ],
+      "EKU": [
+        "serverAuth"
+      ],
+      "KU": [
+        "digitalSignature",
+        "keyEncipherment"
+      ],
+      "CA": false
+    },
+    "crl": {
+      "initial_number_hex": "2000",
+      "days": 7,
+      "renew_before_hours": 72,
+      "warning_hours": 48,
+      "critical_hours": 24,
+      "minimum_execution_margin_hours": 24,
+      "execution_extra_margin_hours": 6,
+      "one_use_lease_minutes": 60
+    },
+    "root_rotation_before_days": 90,
+    "leaf_renew_before_days": 30,
+    "trust": {
+      "addition_store": "CurrentUser/Root",
+      "owner_only": true,
+      "account_wide_effect": true,
+      "local_machine_allowed": false
+    },
+    "endpoint": {
+      "bind": "127.0.0.1",
+      "candidate_port": 18082,
+      "path_template": "/sfd-local-ca-NEW_ISSUER_ID.crl",
+      "max_der_bytes": 1048576,
+      "requires_separate_launch_authority": true
+    },
+    "preview_port": 18443,
+    "application_origin": "https://localhost:8443"
+  },
+  "forbidden_now": [
+    "private_key_read_or_check",
+    "key_or_cert_or_CRL_generation",
+    "trust_changes",
+    "publication",
+    "signing",
+    "Docker",
+    "backups_mutation",
+    "old_controller_retry",
+    "protected_merge"
+  ]
+}

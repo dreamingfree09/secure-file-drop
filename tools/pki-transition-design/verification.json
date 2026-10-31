@@ -1,0 +1,141 @@
+{
+  "UTC": "2026-10-31T11:23:26.188856+00:00",
+  "public_store_sets_before": [
+    {
+      "count": 80,
+      "location": "CurrentUser",
+      "store": "Root",
+      "public_set_sha256": "cdc8340170e439019617b682e809c0509940b826447711332bb4d1179019351b"
+    },
+    {
+      "count": 3,
+      "location": "CurrentUser",
+      "store": "My",
+      "public_set_sha256": "9d2558eddf901f85d5906b2cb74f9a89ebb0e66a11d052c4ece38c946b32c8ad"
+    },
+    {
+      "count": 25,
+      "location": "CurrentUser",
+      "store": "CA",
+      "public_set_sha256": "868a381d8bbf86cef648c8013592e3cdda55ce1a14df23975a15e9b2abc18c5e"
+    },
+    {
+      "count": 79,
+      "location": "LocalMachine",
+      "store": "Root",
+      "public_set_sha256": "bf70e775f129f41924752e08d5295b5afe1ac846f3376e5d372a6a93b5fab711"
+    },
+    {
+      "count": 0,
+      "location": "LocalMachine",
+      "store": "My",
+      "public_set_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "count": 3,
+      "location": "LocalMachine",
+      "store": "CA",
+      "public_set_sha256": "9e5d8420a80b47fa469489052f30ff632f73c5a8d5b2cdad0bba3a501eb73cd1"
+    }
+  ],
+  "public_store_sets_after": [
+    {
+      "count": 80,
+      "location": "CurrentUser",
+      "store": "Root",
+      "public_set_sha256": "cdc8340170e439019617b682e809c0509940b826447711332bb4d1179019351b"
+    },
+    {
+      "count": 3,
+      "location": "CurrentUser",
+      "store": "My",
+      "public_set_sha256": "9d2558eddf901f85d5906b2cb74f9a89ebb0e66a11d052c4ece38c946b32c8ad"
+    },
+    {
+      "count": 25,
+      "location": "CurrentUser",
+      "store": "CA",
+      "public_set_sha256": "868a381d8bbf86cef648c8013592e3cdda55ce1a14df23975a15e9b2abc18c5e"
+    },
+    {
+      "count": 79,
+      "location": "LocalMachine",
+      "store": "Root",
+      "public_set_sha256": "bf70e775f129f41924752e08d5295b5afe1ac846f3376e5d372a6a93b5fab711"
+    },
+    {
+      "count": 0,
+      "location": "LocalMachine",
+      "store": "My",
+      "public_set_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "count": 3,
+      "location": "LocalMachine",
+      "store": "CA",
+      "public_set_sha256": "9e5d8420a80b47fa469489052f30ff632f73c5a8d5b2cdad0bba3a501eb73cd1"
+    }
+  ],
+  "Windows_trust_set_unchanged": true,
+  "original_context_SHA256": "ab8d9498a01ba0d75cca000c31037d935498522eb130cb58b31fa3045db27bc7",
+  "scope": "design and pure policy fixtures only",
+  "real_private_key_operations": 0,
+  "real_generation_or_signing": 0,
+  "real_CRL_publication": 0,
+  "Docker_operations": 0,
+  "backup_operations": 0,
+  "live_HTTPS_tests_executed": false,
+  "actual_application_acceptance_executed": false,
+  "public_crypto_checks": "OpenSSL public certificate/CRL metadata decoding only; no old-key checks",
+  "unexecuted_checks": [
+    "new issuer signature/profile/custody restore",
+    "new CRL publication and endpoint behavior",
+    "new-root Schannel/Framework/F196 HTTPS",
+    "real backend/session/storage/schema/recovery",
+    "Owner visual Quick Send"
+  ],
+  "design_tests": {
+    "command": "python3 -I -B tools/pki-transition-design/test_model.py",
+    "also_executed_native_python": true,
+    "passed": 48,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0,
+    "Linux_Python_result": "48 passed, 0 failures/errors/skips"
+  },
+  "original_public_pins_unchanged": {
+    "config": true,
+    "index": true,
+    "index_attr": true,
+    "serial": true,
+    "counter": true,
+    "counter_old": true,
+    "root": true,
+    "leaf": true,
+    "published": true
+  },
+  "key_metadata_unchanged_no_bytes_read": true,
+  "consumed_failure_files_unchanged": true,
+  "producer_and_WSL_checkout_preserved": true,
+  "local_master_preserved": true,
+  "new_relative_links_checked": 5,
+  "DEVLOG_prefix_unchanged": true,
+  "old_context_bound_public_SHA256": {
+    "config": "f58ea8f95b678b190dd175027ba210c2f948431d6aa5427643aa9a6f0915ca43",
+    "index": "2274b08a36f7ffa6015c02168ebffff5850f5d6637abf8d2e6581d44dac2469f",
+    "index_attr": "8a5810d71338d736b81a3ee0e91aca117a2480085bc7073dc986bb8b0ca6593f",
+    "serial": "7a18b2c8a21338c5846ad6fe1aa9cf65c41ab4acdad64214dee4056791d22d4f",
+    "counter": "8d2510d85c94c519a91dbab464e232a824442bc7f6ef8901d8b5534825373878",
+    "counter_old": "d6a1a767319c3bf2a337b16e3a14916f63e432872e0f8df1cb73b32a8b338ae4",
+    "root": "8e9e9782bc4c2705ee9b7adc60e5e6b3095b6e21dbbcf0d02a31b198bcaf30fd",
+    "leaf": "7861c72df55e0ea1a08a0fab93c33ec604412738ddaa65e320634e1438c87fd7",
+    "published": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e"
+  },
+  "preserved_no_origin_checkout": {
+    "HEAD": "853b865e30872964a556c225335eb2191928972b",
+    "status_records": 8,
+    "status_SHA256": "cfd90c22d5da74d22009f003ac3906402f957be535b37cf7217a111689e3a41f",
+    "remote_count": 0,
+    "matches_initial_preserved_summary": true
+  }
+}

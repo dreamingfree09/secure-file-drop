@@ -1,0 +1,551 @@
+{
+  "schema": 1,
+  "UTC": "2026-10-31T11:14:51.407050+00:00",
+  "scope": "read-only public/source/metadata; no private-key bytes or credentials",
+  "observed_public_files": [
+    {
+      "relative": "$OLD_TLS/ca/root-ca.crt",
+      "bytes": 1562,
+      "sha256": "8e9e9782bc4c2705ee9b7adc60e5e6b3095b6e21dbbcf0d02a31b198bcaf30fd"
+    },
+    {
+      "relative": "$OLD_TLS/server/localhost.crt",
+      "bytes": 1578,
+      "sha256": "82408ba401d038145a0436f3d9e4c5c1358819bdb1508ac81a0212ab40f26f57"
+    },
+    {
+      "relative": "$OLD_TLS/server/localhost-with-cdp-20261018-5ac927e4.crt",
+      "bytes": 1651,
+      "sha256": "7861c72df55e0ea1a08a0fab93c33ec604412738ddaa65e320634e1438c87fd7"
+    },
+    {
+      "relative": "$OLD_TLS/revocation-public-20261018-5ac927e4/sfd-local-ca.crl",
+      "bytes": 559,
+      "sha256": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e"
+    },
+    {
+      "relative": "$OLD_TLS/dynamic/localhost-tls.yml",
+      "bytes": 182,
+      "sha256": "488025e1f1fa5efb7ed803041ca528f5604734c2cda3bc8aadf60e4da2c18c4d"
+    },
+    {
+      "relative": "$OLD_TLS/ca/revocation-20261018-5ac927e4/openssl-ca.cnf",
+      "bytes": 1100,
+      "sha256": "f58ea8f95b678b190dd175027ba210c2f948431d6aa5427643aa9a6f0915ca43"
+    },
+    {
+      "relative": "$OLD_TLS/ca/revocation-20261018-5ac927e4/index.txt",
+      "bytes": 152,
+      "sha256": "2274b08a36f7ffa6015c02168ebffff5850f5d6637abf8d2e6581d44dac2469f"
+    },
+    {
+      "relative": "$OLD_TLS/ca/revocation-20261018-5ac927e4/crlnumber",
+      "bytes": 5,
+      "sha256": "8d2510d85c94c519a91dbab464e232a824442bc7f6ef8901d8b5534825373878"
+    },
+    {
+      "relative": "$OLD_TLS/ca/revocation-20261018-5ac927e4/crl-control.py",
+      "bytes": 3852,
+      "sha256": "3823826dafdaa086a3924bfcad4689e45ff1654388dda6e8954e42e280529e84"
+    },
+    {
+      "relative": "$OLD_TLS/ca/revocation-20261018-5ac927e4/crl_endpoint.py",
+      "bytes": 1488,
+      "sha256": "fb6ec00ee90b95c35b1fd28badaf0497eccfaadf8fb1a7b367a5d480cba37bd6"
+    },
+    {
+      "relative": "$OWNER_CONFIG/local-tls-20261017-82f9b194.compose.yml",
+      "bytes": 655,
+      "sha256": "c8c560a451f1d460b76d8054bf632ffc8927bb6fca369d9cdfea36e1b5339b14"
+    }
+  ],
+  "issuer_summary": {
+    "next_crl_counter": "1002",
+    "valid_rows": 2,
+    "revoked_rows": 0
+  },
+  "private_key_metadata": [
+    {
+      "role": "old_CA",
+      "mode": "0o600",
+      "uid": 1000,
+      "bytes": 2654,
+      "mtime_ns": 1792292277491022021,
+      "bytes_read": false,
+      "hash_computed": false
+    },
+    {
+      "role": "old_server",
+      "mode": "0o600",
+      "uid": 1000,
+      "bytes": 2484,
+      "mtime_ns": 1792292513008166843,
+      "bytes_read": false,
+      "hash_computed": false
+    }
+  ],
+  "openssl_version": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+  "openssl_binary_sha256": "b4f547c0f16272d1cc7f870330a6f2c243710c335e7a99c734ff7a0c6fdb2503",
+  "consumer_sources": [
+    {
+      "revision": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "path": "tools/operator-controller/policy.py",
+      "sha256": "833921bfe8fb664dfdcb8b63cd830c33f59692c5b1f9df9de60711c86a0fe811",
+      "blob": "c623139b774e5bdfbef6e47e66117c25c5764fea"
+    },
+    {
+      "revision": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "path": "tools/operator-controller/runtime.py",
+      "sha256": "a1b908d5e29582180b826759d1595e5bb232990938af817d085aee14615ae3ad",
+      "blob": "5e17be8ee990f86c6662f114a8b18797448da316"
+    },
+    {
+      "revision": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "path": "tools/operator-controller/strict_tls.ps1",
+      "sha256": "56c6b560a3ed7dd324f29af1aa5190eb63cb18973188fe21614e229a110bcde8",
+      "blob": "d7067eff076524104b754bdfb66df43a61dc110d"
+    },
+    {
+      "revision": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "path": "tools/operator-controller/prepare_context.py",
+      "sha256": "b8469be38b1ee95f144b262b4a7181ade3738eb418c4389881da098ffc9cd4d4",
+      "blob": "411b7b2e244817913391be290a63bd0cbf495e27"
+    },
+    {
+      "revision": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "path": "tools/operator-acceptance/StrictTransport.cs",
+      "sha256": "b9466a3d3cffa4c51699aca7352c7f7a74b823bc9a55e292d37aa1bdeca29bd2",
+      "blob": "0f69274d0af64cbf17b7a8d13c2ade05e447325b"
+    },
+    {
+      "revision": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "path": "tools/operator-acceptance/OwnerStagedInput.cs",
+      "sha256": "771616a7616da953f5c8e5611d514e4a7674e14543b95f4c1262b2feeb3331c7",
+      "blob": "885c360413e574ae19f8b96786cbeaf76f68227e"
+    },
+    {
+      "revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "path": "desktop/windows/Client.cs",
+      "sha256": "1abb2e212fe0b0de4c811550929880a2787b9e9eadef20d8644fac0ecb8e63a0",
+      "blob": "8978616de376687532b50e3f93cb54e1acd5785e"
+    },
+    {
+      "revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "path": "desktop/windows/FrameworkTarget.cs",
+      "sha256": "098679fa3a7ca8ceaa855b544fa06ae4ae1c56e821618e3ad3595ac3bf4662f7",
+      "blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2"
+    },
+    {
+      "revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "path": "desktop/windows/SecureFileDrop.exe.config",
+      "sha256": "485ce3a5a98c7aec404071763579116372120d64bcc934d0822c677412a793d8",
+      "blob": "a6a246014513cecb03a7983b32668674babcfd59"
+    },
+    {
+      "revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "path": "desktop/windows/WindowsIntegration.cs",
+      "sha256": "ceb2ff2404e7bed54bbe5d62029ddfe0a3c8c845e47706deb9358956a8b763b6",
+      "blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2"
+    },
+    {
+      "revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "path": "desktop/windows/App.cs",
+      "sha256": "2c0241805fa94875cb2abc5d87b00cc5ba99c0cb42c20fa54b47b3d593701b13",
+      "blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062"
+    }
+  ],
+  "windows": {
+    "listeners_or_processes_launched": 0,
+    "framework_release": 534296,
+    "private_settings_or_session_contents_read": false,
+    "running_companion": [],
+    "curl_binary_sha256": "a6092ef37a7f41cc7cf1a8ff1192aa294e82c73fda0fd2143d813c46b81e55a2",
+    "certificate_stores": [
+      {
+        "store": "Root",
+        "old_CA": [
+          {
+            "HasPrivateKey": false,
+            "DER_sha256": "0f45e72366dc8ff6e3bed9323ef697bb44b21204d7e05ea303da319b5160bc28",
+            "thumbprint": "A67604D69C6BFC32E77CE2933E0096C14462367C"
+          }
+        ],
+        "public_count": 80,
+        "location": "CurrentUser"
+      },
+      {
+        "store": "My",
+        "old_CA": [],
+        "public_count": 3,
+        "location": "CurrentUser"
+      },
+      {
+        "store": "CA",
+        "old_CA": [],
+        "public_count": 25,
+        "location": "CurrentUser"
+      },
+      {
+        "store": "Root",
+        "old_CA": [],
+        "public_count": 79,
+        "location": "LocalMachine"
+      },
+      {
+        "store": "My",
+        "old_CA": [],
+        "public_count": 0,
+        "location": "LocalMachine"
+      },
+      {
+        "store": "CA",
+        "old_CA": [],
+        "public_count": 3,
+        "location": "LocalMachine"
+      }
+    ],
+    "UTC": "2026-10-31T11:05:07.8776404Z",
+    "package_binaries": [
+      {
+        "relative": "OwnerStagedInput.exe",
+        "sha256": "91bec8d81a9b3918c0b0cfda09d0182cc0b7b9329541a680c09c5b609c79300d",
+        "namespace": "SecureFileDrop-Staged-Acceptance-20261026-593cd1a8",
+        "bytes": 15360
+      },
+      {
+        "relative": "SecureFileDrop.exe",
+        "sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+        "namespace": "SecureFileDrop-Staged-Acceptance-20261026-593cd1a8",
+        "bytes": 73728
+      },
+      {
+        "relative": "StrictTransport.exe",
+        "sha256": "11a12387243855c29064e7cda9d029161c495cc73e05d435b4dbfa1df829726a",
+        "namespace": "SecureFileDrop-Staged-Acceptance-20261026-593cd1a8",
+        "bytes": 11776
+      },
+      {
+        "relative": "StrictTransport.exe.config",
+        "sha256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b",
+        "namespace": "SecureFileDrop-Staged-Acceptance-20261026-593cd1a8",
+        "bytes": 307
+      },
+      {
+        "relative": "app\\SecureFileDrop.exe",
+        "sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+        "namespace": "SecureFileDrop-Owner-Acceptance-20261024-6ea5f817",
+        "bytes": 73728
+      },
+      {
+        "relative": "app\\SecureFileDrop.exe.config",
+        "sha256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b",
+        "namespace": "SecureFileDrop-Owner-Acceptance-20261024-6ea5f817",
+        "bytes": 307
+      },
+      {
+        "relative": "tools\\OwnerLiveAcceptanceV2.exe",
+        "sha256": "6fc1bf1e95ebe929440f038ee6a8538adcdb44ea0d6a02c174ccb751ea9f2456",
+        "namespace": "SecureFileDrop-Owner-Acceptance-20261024-6ea5f817",
+        "bytes": 15360
+      },
+      {
+        "relative": "tools\\OwnerLiveAcceptanceV2.exe.config",
+        "sha256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b",
+        "namespace": "SecureFileDrop-Owner-Acceptance-20261024-6ea5f817",
+        "bytes": 307
+      },
+      {
+        "relative": "tools\\SecureFileDrop.exe",
+        "sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca",
+        "namespace": "SecureFileDrop-Owner-Acceptance-20261024-6ea5f817",
+        "bytes": 73728
+      },
+      {
+        "relative": "preview\\SecureFileDrop.exe",
+        "sha256": "97fc2dafbc469627f9ee90896903162c8804c01a167402f414d150857a0ed394",
+        "namespace": "SecureFileDrop-Operator-Test-20261017-2c886aa6",
+        "bytes": 71680
+      },
+      {
+        "relative": "preview\\SecureFileDrop.exe.config",
+        "sha256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b",
+        "namespace": "SecureFileDrop-Operator-Test-20261017-2c886aa6",
+        "bytes": 307
+      }
+    ],
+    "key_material_accessed": false,
+    "scoped_listening_ports": [],
+    "F196_archive": {
+      "entries": [
+        {
+          "bytes": 652,
+          "name": "README.txt"
+        },
+        {
+          "bytes": 1092,
+          "name": "LICENSE.txt"
+        },
+        {
+          "bytes": 73728,
+          "name": "SecureFileDrop.exe"
+        },
+        {
+          "bytes": 307,
+          "name": "SecureFileDrop.exe.config"
+        },
+        {
+          "bytes": 179,
+          "name": "SHA256SUMS.txt"
+        },
+        {
+          "bytes": 587,
+          "name": "windows-identity.json"
+        },
+        {
+          "bytes": 3581,
+          "name": "windows-results.txt"
+        }
+      ],
+      "sha256": "86ae181cb53d098586abcaf70201d7f740f3c7be9ee94e40734bf81009dd906c"
+    },
+    "trust_changes": 0,
+    "Docker_service": "Stopped",
+    "python_binary_sha256": "03573716a7fcbd8b7fed8fe0163bbfbd3a852546920d6a666123f307c8dac7d9",
+    "scoped_scheduled_tasks": []
+  },
+  "seven_file_archive": {
+    "sha256": "86ae181cb53d098586abcaf70201d7f740f3c7be9ee94e40734bf81009dd906c",
+    "entries": [
+      {
+        "name": "README.txt",
+        "bytes": 652,
+        "sha256": "3d2e9089c18e8d95ffd0532aa151b58b8419182b85da6de13aef08dd10625f2c"
+      },
+      {
+        "name": "LICENSE.txt",
+        "bytes": 1092,
+        "sha256": "cd8ba281a1e5988222e691b599e6120d855c0ce82a529a19c0e48c098546bca1"
+      },
+      {
+        "name": "SecureFileDrop.exe",
+        "bytes": 73728,
+        "sha256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca"
+      },
+      {
+        "name": "SecureFileDrop.exe.config",
+        "bytes": 307,
+        "sha256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b"
+      },
+      {
+        "name": "SHA256SUMS.txt",
+        "bytes": 179,
+        "sha256": "d9c315bf87f7dd84cdc1c13429708daf814fa559d153f51db3e047aa1d2dd862"
+      },
+      {
+        "name": "windows-identity.json",
+        "bytes": 587,
+        "sha256": "0e59fb4dc9a1affbda47fb2f713919761f32ca0822d4809d2da4ccfcbaf77567"
+      },
+      {
+        "name": "windows-results.txt",
+        "bytes": 3581,
+        "sha256": "d4340e7069e3157a78b170dd38e0d7e6adc50e9b280eb1ab737ba064e14cbb24"
+      }
+    ],
+    "identity": {
+      "interactive_gui": "unexecuted; programmatic owned tray context only",
+      "os": "Microsoft Windows NT 10.0.20348.0",
+      "release_https_policy_checks": 6,
+      "framework_release": 533325,
+      "test_process_runtime": "WINDOWS TEST RUNTIME: 4.0.30319.42000",
+      "executable_sha256": "F196BAB87A426D6A5D287F16C199259EDB7993E15C4E35D2886D4A196A6FA0CA",
+      "client_source_sha256": "C9CC52CE47C9A0359FD7FE8EE16E0D16E74E6A8027B3175008E106CAA42D7C16",
+      "revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+      "host_shell_runtime": "10.0.12",
+      "product_target": ".NET Framework 4.8"
+    }
+  },
+  "known_public_crl_candidates": [
+    "revocation-public-20261018-5ac927e4/sfd-local-ca.crl",
+    "ca/revocation-20261018-5ac927e4/issuer-ca.crl.pem",
+    "ca/revocation-20261018-5ac927e4/renewal-1002-20261027-1da96c45/new-crl.pem",
+    "ca/revocation-20261018-5ac927e4/renewal-20261022-b64c3e91-v2/renewed-ca.crl.der",
+    "ca/revocation-20261018-5ac927e4/renewal-20261022-b64c3e91-v2/renewed-ca.crl.pem",
+    "ca/revocation-20261018-5ac927e4/renewal-20261022-b64c3e91-v2/previous-public-0x1000.crl.der",
+    "ca/revocation-20261018-5ac927e4/defensive-public-checks-4106ecd1/signature-corrupt-public.crl.pem",
+    "ca/revocation-20261018-5ac927e4/defensive-public-checks-4106ecd1/signature-corrupt-public.crl.der",
+    "ca/revocation-20261018-5ac927e4/newcerts/8C6395BB851AF8FE0E80DA3C71763916.pem"
+  ],
+  "backend_TLS_source_matches": [
+    {
+      "path": "internal/server/backup.go",
+      "line": 169,
+      "classification": "source comment documents internal PostgreSQL sslmode=disable; does not consume Windows local CA"
+    }
+  ],
+  "mutation_counts": {
+    "signing": 0,
+    "key_checks": 0,
+    "key_generation": 0,
+    "trust": 0,
+    "CRL_publication": 0,
+    "Docker": 0,
+    "backup": 0,
+    "network_acceptance": 0
+  },
+  "historical_CRL1000": {
+    "path": "$OLD_ISSUER/renewal-20261022-b64c3e91-v2/previous-public-0x1000.crl.der",
+    "sha256": "d5e8ca59b3324fe4f133d2c381737bab413340085d990469d1691a9688a6b5cc",
+    "status": "historical, expired; preservation evidence only"
+  },
+  "public_certificate_metadata": {
+    "root": {
+      "DER_sha256": "0f45e72366dc8ff6e3bed9323ef697bb44b21204d7e05ea303da319b5160bc28",
+      "metadata": "subject=CN = Secure File Drop Local Development CA\nissuer=CN = Secure File Drop Local Development CA\nserial=24AD2F57495F31BDE8C7C2FC7D4EFD32FDA88AD1\nnotBefore=Oct 18 02:59:17 2026 GMT\nnotAfter=Oct 18 02:59:17 2027 GMT"
+    },
+    "leaf": {
+      "DER_sha256": "4106ecd1f0bd2d94be7a7fcf2236cb9b0119dde5aa82a97edd2cdab584809b70",
+      "metadata": "subject=CN = localhost\nissuer=CN = Secure File Drop Local Development CA\nserial=8C6395BB851AF8FE0E80DA3C71763916\nnotBefore=Oct 18 12:17:28 2026 GMT\nnotAfter=Jan 16 12:17:28 2027 GMT"
+    }
+  },
+  "CRL1001_metadata": "issuer=CN = Secure File Drop Local Development CA\ncrlNumber=0x1001\nlastUpdate=Oct 22 18:10:29 2026 GMT\nnextUpdate=Oct 29 18:10:29 2026 GMT",
+  "failed_signing_files": [
+    {
+      "name": "owner-renew-crl.py",
+      "exists": true,
+      "bytes": 11173,
+      "sha256": "3068ba2c960979e540b3d9b94fd977677dd2a5d351819fdc725b6614e9a37fe9"
+    },
+    {
+      "name": "context.json",
+      "exists": true,
+      "bytes": 3172,
+      "sha256": "ab8d9498a01ba0d75cca000c31037d935498522eb130cb58b31fa3045db27bc7"
+    },
+    {
+      "name": "started.json",
+      "exists": true,
+      "bytes": 129,
+      "sha256": "de259593000019bbf707729b5827210ff8be43932089a3c27a490a890e950c08"
+    },
+    {
+      "name": "new-crl.pem",
+      "exists": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "new-crl.der",
+      "exists": false,
+      "bytes": null,
+      "sha256": null
+    },
+    {
+      "name": "verification.json",
+      "exists": false,
+      "bytes": null,
+      "sha256": null
+    },
+    {
+      "name": "counter-before.txt",
+      "exists": true,
+      "bytes": 5,
+      "sha256": "8d2510d85c94c519a91dbab464e232a824442bc7f6ef8901d8b5534825373878"
+    },
+    {
+      "name": "counter-old-before.txt",
+      "exists": true,
+      "bytes": 5,
+      "sha256": "d6a1a767319c3bf2a337b16e3a14916f63e432872e0f8df1cb73b32a8b338ae4"
+    }
+  ],
+  "framework_capabilities_and_store_sets": {
+    "TrustMode_present": false,
+    "Revocation_property_present": true,
+    "UTC": "2026-10-31T11:15:25.2983308Z",
+    "CLR": "4.0.30319.42000",
+    "certificate_stores": [
+      {
+        "count": 80,
+        "location": "CurrentUser",
+        "store": "Root",
+        "public_set_sha256": "cdc8340170e439019617b682e809c0509940b826447711332bb4d1179019351b"
+      },
+      {
+        "count": 3,
+        "location": "CurrentUser",
+        "store": "My",
+        "public_set_sha256": "9d2558eddf901f85d5906b2cb74f9a89ebb0e66a11d052c4ece38c946b32c8ad"
+      },
+      {
+        "count": 25,
+        "location": "CurrentUser",
+        "store": "CA",
+        "public_set_sha256": "868a381d8bbf86cef648c8013592e3cdda55ce1a14df23975a15e9b2abc18c5e"
+      },
+      {
+        "count": 79,
+        "location": "LocalMachine",
+        "store": "Root",
+        "public_set_sha256": "bf70e775f129f41924752e08d5295b5afe1ac846f3376e5d372a6a93b5fab711"
+      },
+      {
+        "count": 0,
+        "location": "LocalMachine",
+        "store": "My",
+        "public_set_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "count": 3,
+        "location": "LocalMachine",
+        "store": "CA",
+        "public_set_sha256": "9e5d8420a80b47fa469489052f30ff632f73c5a8d5b2cdad0bba3a501eb73cd1"
+      }
+    ],
+    "trust_changes": 0,
+    "network_requests": 0,
+    "CustomTrustStore_present": false
+  },
+  "authority": {
+    "work_id": "SFD-CA-TRUST-TRANSITION-DESIGN-20261031",
+    "utc": "2026-10-31T10:59:57.801975+00:00",
+    "authority_comment": "https://github.com/dreamingfree09/secure-file-drop/pull/39#issuecomment-6541856546",
+    "authority_id": 6541856546,
+    "authority_author": "dreamingfree09",
+    "authority_body_sha256": "a13fb71af75f76c1614a694dbb842c980400cbd080fb3f9e40ea347e7bd8d0a4",
+    "base": "0254b7bf02fdee55dfbcc624d68653e9c6294539",
+    "base_branch": "codex/sfd-crl-1002-preparation-20261027",
+    "protected_master": "61195434bee5f9221a6f55469c719cb360504ea9",
+    "preserved_PR_heads": {
+      "38": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "39": "0254b7bf02fdee55dfbcc624d68653e9c6294539",
+      "40": "6625a4f5ae44e019eb4c9680e0570f1da9f4fc41"
+    },
+    "branch": "codex/sfd-ca-trust-transition-design-20261031",
+    "design_only": true,
+    "crypto_material_generation_authorized": false,
+    "trust_mutation_authorized": false,
+    "Docker_authorized": false,
+    "signing_or_unlock_authorized": false
+  },
+  "historical_disk_evidence": {
+    "provenance": "accepted prior GHP-01 PR38/40 receipts, not rehashed or copied in this design",
+    "original_sealed_working_bytes_each": 45807042560,
+    "reported_SHA256": "8707c924fbe16c07f259ac2b9434cd008c485f2af8ac9a5d9912baca7aee2a6a",
+    "derived_child_partial_SHA256": "956c8b7e91a61e10ef285f3543a75130d3eccd3385ea77086f38a58936b0d195",
+    "actual_filesystem_recovery_completed": false,
+    "current_backup_inventory_verified": false,
+    "engine_started": false,
+    "reference": "https://github.com/dreamingfree09/secure-file-drop/pull/40#issuecomment-6508485086"
+  },
+  "scoped_user_integration_metadata": {
+    "settings_exists": true,
+    "settings_or_session_contents_read": false,
+    "Explorer_entry": {
+      "exists": false
+    },
+    "session_file_count": 0,
+    "UTC": "2026-10-31T11:26:10.8402924Z",
+    "registry_changes": 0
+  }
+}
