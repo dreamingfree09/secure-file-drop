@@ -501,3 +501,20 @@ Prepared separate one-admin-password native input and controlled-mailbox normal 
 ### Operator CI inventory correction — 2026-10-26
 
 Initial Windows CI40314879754 failed owned-fixture readiness because the operator command added seven application-module test events and one skipped private fixture (251 passes/1 skip; no failed events). Native Windows job passed; portable assertions were unexecuted. Moved only the operator tool into its own nested Go module with unchanged dependency versions; its dedicated real-PostgreSQL28/no-skip job remains enforced. Original application244/no-skip thresholds and source remain unchanged. Preserve failed evidence and publish new exact-head CI; no live operations.
+
+
+## 2026-10-27 - CRL 0x1002 preparation
+
+Prepared a separately reviewed signing-only helper from actual retained issuer/publication pins under Aether6454489528. Twenty non-signing fixture tests and the real read-only check passed; missing future acceptance refused signing. Existing CRL/ledger/key bytes remain preserved; no signing/publication or controller execution. Helper scope, exact local identities, interruption semantics and future publication gates are in tools/local-crl-1002/README.md. Docker cold-acquisition results are a separate PR38 execution handover. No public readiness claim.
+
+
+## 2026-10-30 - non-signing CA unlock verification
+
+Owner confirms missing CA passphrase/no input to spent signing attempt, then explicitly authorises candidate checks. Prepared separate public-output-only, deadline/TTY/source/preservation-bound key checker; no password literals or candidate values in artifacts. Nine synthetic PTY checks pass after correcting OpenSSL validity-line/public-DER framing; initial failed fixture retained. No real key check, signing retry, issuer mutation, DER publication or trust change at this preparation commit. See tools/local-crl-1002/PASSPHRASE_RECOVERY.md; original signing helper remains byte-identical to27f51df.
+
+Actual Owner-authorised non-signing key check reached native TTY, then LOCAL_INPUT_TIMEOUT after one bounded pkey invocation; no candidate verified. All13 issuer/consumed-signing pins and counter1002 unchanged. No new signing/DER, candidate values in commands/artifacts, or automatic retry. Added sanitized execution receipt;20 original signing-gate synthetic unit tests passed. Original missing passphrase is Owner-confirmed; no terminal error code was captured for the original signing invocation.
+
+
+## 2026-10-31 - CA recovery preservation-only investigation
+
+Owner reiterates no passphrase was provided and requests recovery-option investigation without retrying. Fresh issuer/publication/consumed-output hashes and key metadata match; counter1002/two V/zero R, no DER. Bounded94-entry TLS metadata census finds no alternate CA key/bundle or clearly named custody record. Six Windows stores opened read-only:167 public RSA SPKI comparisons, only the known CA public certificate matches and it has no private-key association; no public-export errors, private key access, trust changes or crypto attempts. Published metadata-only evidence and a preservation-first contingency for separate review if existing secret/usable backup cannot be recovered. No candidate values, prompts, key reads/hashes/exports/copies, signing/decryption retries, CA generation/replacement, Docker, backups, controller, adoption or protected merge. Historical failures remain preserved. Source helpers unchanged; documentation/JSON/link/whitespace checks only, no helper/test execution.

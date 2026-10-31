@@ -1,5 +1,24 @@
 # Secure File Drop continuity
 
+
+## CA recovery preservation-only assessment - 2026-10-31
+
+Latest Owner direction is to preserve the failed signing state and investigate without retrying. [Fresh evidence](../tools/local-crl-1002/preservation-only-20261031.json) verifies unchanged issuer pins/key metadata/consumed outputs, counter1002, two V/zero R entries, no signed DER or publication. No signing, decryption, candidate check or prompt was attempted. The known TLS metadata census found no alternate CA bundle/named recovery record. Six read-only Windows certificate stores/public-SPKI comparison found the known CA certificate only, with no private-key association. No private key or credential content was read/exported/copied.
+
+[Recovery assessment and contingency](../tools/local-crl-1002/PASSPHRASE_RECOVERY.md) distinguish recovery of an existing secret/usable same-CA backup from a new, separately authorised CA/trust transition if recovery is unavailable. External/unnamed custody is not ruled out. No CA replacement, trust change, Docker operation, stale-controller enablement, backup restore, adoption or merge. Earlier signing/non-signing failure evidence remains dated history; it is not automatically retried.
+
+## Spent signing attempt and non-signing key check - 2026-10-30
+
+The Owner confirms no CA passphrase was known/provided and authorises a separate local candidate check. [Recovery assessment and source](../tools/local-crl-1002/PASSPHRASE_RECOVERY.md) preserve the one spent signing invocation, empty PEM, unchanged counter1002/issuer and absent DER. Nine synthetic non-signing checks pass; original signing helper/context remain unchanged. Candidate values are excluded from all artifacts; Owner entry is only at a hidden local OpenSSL prompt. This check can confirm the same key/public identity, but cannot sign, publish, replace the CA, alter trust or enable Docker. An external recovery record/usable backup is unverified; any future CA replacement is a separate reviewed trust decision. Actual local check result and exact source revision belong in PR39. [Executed incident](https://github.com/dreamingfree09/secure-file-drop/pull/39#issuecomment-6511538660).
+
+
+The subsequent Owner-authorised non-signing check timed out after one pkey invocation; no candidate was verified, issuer/counter1002 unchanged, no signing or DER. Its [actual receipt](../tools/local-crl-1002/key-check-execution-20261030.json) and assessment retain the current secure-input gate. This timeout does not show that any candidate is incorrect.
+
+## CRL 0x1002 signing-only preparation - 2026-10-27
+
+SFD-CRL-1002-PREPARATION-20261027, base master 61195434bee5f9221a6f55469c719cb360504ea9. Under [Aether's Stage A/B decision](https://github.com/dreamingfree09/secure-file-drop/pull/38#issuecomment-6454489528), the [separate helper and mutation plan](../tools/local-crl-1002/README.md) are prepared for independent exact-revision review. Actual public CRL0x1001/issuer pins passed; 20 isolated non-signing tests passed. Missing future signing acceptance refused before signing; ledger/publication remained unchanged. Renew-by remains 2026-10-28T18:10:29Z. No signing, publication, Docker start or accepted-controller modification occurred. PR38 ff2f9a74bcbf2a347eed61516508910acadadfb2 stays unmerged; cold-acquisition execution evidence belongs in PR38, separately from helper review.
+
+
 ## Temporary acceptance account preparation — 2026-10-26
 
 SFD-OWNER-TEST-ACCOUNT-20261026 follows the Owner's explicit one-account authority and Aether's conditional three-archive scope decision. The [separate staged operator workflow](OWNER_TEST_ACCOUNT_ACCEPTANCE.md) is prepared for exact-revision independent review. SMTP/controlled-mailbox access, fresh preservation/private restore, strict Windows TLS and accepted image checks passed. Live restoration/adoption, genuine credentials and account creation remain unexecuted. Normal registration requires an independently reviewed quota-only operation to bound only the newly verified acceptance account; no existing ordinary password is requested or reset. The original helper/F196 and all existing services, records, archives and checkouts remain preserved. No public readiness claim; exact handover revisions belong in GitHub.

@@ -1,0 +1,78 @@
+{
+  "synthetic_only": true,
+  "owner_key_opened": false,
+  "owner_password_used": false,
+  "passed": 9,
+  "failed": 0,
+  "helper_sha256": "4191b785bb1ef32050a70b12eef289d8cb08777b9b7c6cb59a3fdfc7de5b9df9",
+  "openssl_sha256": "b4f547c0f16272d1cc7f870330a6f2c243710c335e7a99c734ff7a0c6fdb2503",
+  "cases": [
+    {
+      "name": "correct-hidden-input",
+      "passed": true,
+      "exit": 0,
+      "attempts": 1,
+      "signing": false,
+      "key_metadata_preserved": true
+    },
+    {
+      "name": "wrong-then-owner-stop",
+      "passed": true,
+      "exit": 1,
+      "attempts": 1,
+      "signing": false,
+      "key_metadata_preserved": true
+    },
+    {
+      "name": "wrong-next-correct",
+      "passed": true,
+      "exit": 0,
+      "attempts": 2,
+      "signing": false,
+      "key_metadata_preserved": true
+    },
+    {
+      "name": "three-attempt-limit",
+      "passed": true,
+      "exit": 1,
+      "attempts": 3,
+      "signing": false,
+      "key_metadata_preserved": true
+    },
+    {
+      "name": "wrong-public-identity",
+      "passed": true,
+      "exit": 1,
+      "attempts": 1,
+      "signing": false,
+      "key_metadata_preserved": true
+    },
+    {
+      "name": "changed-preservation-pin",
+      "passed": true,
+      "exit": 1,
+      "attempts": 0,
+      "signing": false,
+      "key_metadata_preserved": true
+    },
+    {
+      "name": "expired-window",
+      "passed": true,
+      "exit": 1,
+      "attempts": 0,
+      "signing": false,
+      "key_metadata_preserved": true
+    },
+    {
+      "name": "noninteractive-refused",
+      "passed": true,
+      "attempts": 0,
+      "signing": false
+    },
+    {
+      "name": "fixed-public-output-operation",
+      "passed": true,
+      "signing": false
+    }
+  ]
+}
