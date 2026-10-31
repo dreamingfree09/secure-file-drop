@@ -1,5 +1,25 @@
 # Non-signing CA passphrase recovery assessment - 2026-10-30
 
+
+## Preservation-only follow-up - 2026-10-31
+
+**Current Owner instruction: investigate recovery options without retrying. No signing, key-unlock/candidate check or new prompt was attempted in this follow-up.** Prior candidate-check instructions are historical and do not cause automatic reopening.
+
+[Fresh read-only evidence](preservation-only-20261031.json): all original issuer/publication pins and key metadata still match; counter1002, two V ledger entries, zero R entries. The consumed marker, empty PEM and both counter preimages match their failure-state hashes; signed DER remains absent. Original signing helper/context and the spent non-signing context remain untouched.
+
+The bounded metadata census examined94 entries in the known SFD TLS tree to maximum depth7: only the known CA key and separate server key; no alternate key/PKCS12 bundle or clearly named passphrase/escrow record. No key/bundle/credential contents or password-manager/history data was read. This is not an exhaustive search of external or unnamed records.
+
+Six Windows certificate stores (CurrentUser/LocalMachine Root, My and CA) were opened read-only. Comparing167 public RSA SPKI entries, including certificates with different thumbprints, found only the known CurrentUser Root certificate for CA public identity9874a14ecd40edf4851d55b19e5a24889fc2440ab6521fc19920d4a5dab32479. Its HasPrivateKey association is false. Zero public-export errors, zero private-key accesses or trust changes. Thus these certificate stores do not provide an identified associated CA signing key. Orphan containers, hardware tokens and external escrow were not examined. The trusted public certificate is not a private-key backup.
+
+### Recovery options and bounded contingency
+
+1. Locate an existing Owner-controlled recovery record, original custodian, or independently verifiable usable backup for the same CA. Merely duplicating the existing encrypted key does not remove its input-passphrase requirement. No usable record/alternative is currently established.
+2. If such custody cannot be recovered, prepare a **separately authorised CA/trust transition**, not a reset or CRL1002 renewal of this issuer. The existing key, ledger, counters, certificates, CRLs, failed outputs and backups remain preserved.
+3. The reviewable contingency is: establish new private secret custody first; stage an independent new issuer/ledger and localhost leaf in a new namespace; independently verify new public identities, CDP/CRL publication configuration and strict revocation-enabled Windows TLS in an authorised isolated fixture; obtain exact trust-addition/old-root-retirement and leaf-selection authority; perform a separately gated service adoption. No new key/certificate was generated here, and no trust/service selection was changed. A new issuer has its own sequence; old counter1002 must not be reset or its ledger reused.
+4. Any future transition must preserve the separate Docker cold-start, backup/recovery, existing-data and independent-review gates. This assessment does not enable Docker, the stale controller, backup restoration or backend adoption.
+
+The supported OpenSSL input flow requires unlocking the encrypted key before an output passphrase can be changed; changing the output option does not recover the old input secret. Sources: [OpenSSL pkey input/output](https://docs.openssl.org/3.0/man1/openssl-pkey/), [hidden passphrase input](https://docs.openssl.org/3.0/man1/openssl-passphrase-options/). These references support the recovery distinction, not an executed decryption test. Investigation is complete within this bounded scope; signing remains blocked by unavailable verified key access. No candidate value is recorded.
+
 Producer Codex; independent recipient Aether. This assessment follows the Owner's clarification that the CA passphrase was not known and none was provided to the consumed signing attempt. The Owner subsequently authorised checking candidate values. Candidate values are excluded from source, context, commands, files, logs and GitHub. The Owner enters any candidate only at a hidden local OpenSSL prompt.
 
 ## Preserved incident

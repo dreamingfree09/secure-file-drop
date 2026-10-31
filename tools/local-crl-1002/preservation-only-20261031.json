@@ -1,0 +1,155 @@
+{
+  "schema": "SFD_CA_RECOVERY_OPTIONS_READONLY_V1",
+  "work_id": "SFD-CA-PASSPHRASE-PRESERVATION-20261031",
+  "producer": "Codex",
+  "recipient": "Aether",
+  "recorded_utc": "2026-10-31T01:44:15.580036+00:00",
+  "received_revision": "aa842784dc4254c7cd00bb5c48b303f1fd1b8c0c",
+  "base_master": "61195434bee5f9221a6f55469c719cb360504ea9",
+  "authority": "Latest Owner request: preserve signing state; investigate safe recovery options without retrying. No signing/unlock/candidate retry or prompt in this work.",
+  "issuer": {
+    "counter": "1002",
+    "ledger_valid": 2,
+    "ledger_revoked": 0,
+    "public_pin_matches": {
+      "config": true,
+      "index": true,
+      "index_attr": true,
+      "serial": true,
+      "counter": true,
+      "counter_old": true,
+      "root": true,
+      "leaf": true,
+      "published": true
+    },
+    "key_metadata_unchanged": true,
+    "private_key_bytes_opened_or_hashed": false,
+    "consumed_outputs_unchanged": true,
+    "consumed_outputs": {
+      "started.json": {
+        "exists": true,
+        "bytes": 129,
+        "sha256": "de259593000019bbf707729b5827210ff8be43932089a3c27a490a890e950c08"
+      },
+      "new-crl.pem": {
+        "exists": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "new-crl.der": {
+        "exists": false,
+        "bytes": null
+      },
+      "verification.json": {
+        "exists": false,
+        "bytes": null
+      },
+      "counter-before.txt": {
+        "exists": true,
+        "bytes": 5,
+        "sha256": "8d2510d85c94c519a91dbab464e232a824442bc7f6ef8901d8b5534825373878"
+      },
+      "counter-old-before.txt": {
+        "exists": true,
+        "bytes": 5,
+        "sha256": "d6a1a767319c3bf2a337b16e3a14916f63e432872e0f8df1cb73b32a8b338ae4"
+      }
+    },
+    "new_signed_DER": false,
+    "publication_changed": false,
+    "signer_sha256": "3068ba2c960979e540b3d9b94fd977677dd2a5d351819fdc725b6614e9a37fe9",
+    "original_context_sha256": "ab8d9498a01ba0d75cca000c31037d935498522eb130cb58b31fa3045db27bc7"
+  },
+  "known_TLS_metadata": {
+    "entries_examined": 94,
+    "maximum_depth": 7,
+    "symlinks_followed": 0,
+    "CA_keys": 1,
+    "separate_server_keys": 1,
+    "alternate_key_or_PKCS12_bundle_found": false,
+    "named_passphrase_or_escrow_record_found": false,
+    "file_contents_inspected": false
+  },
+  "Windows_public_association_audit": {
+    "private_key_material_accessed": false,
+    "scope": "Public SPKI identity comparison only; includes certificates with different thumbprints",
+    "signing_or_decryption_attempts": 0,
+    "trust_changes": 0,
+    "orphan_private_key_containers_examined": false,
+    "UTC": "2026-10-31T01:41:01.9212893Z",
+    "stores": [
+      {
+        "public_export_errors": 0,
+        "RSA_public_keys_compared": 71,
+        "location": "CurrentUser",
+        "matching_public_keys": [
+          {
+            "private_key_association": false,
+            "private_key_access_tested": false,
+            "certificate_thumbprint": "A67604D69C6BFC32E77CE2933E0096C14462367C",
+            "public_SPKI_sha256": "9874a14ecd40edf4851d55b19e5a24889fc2440ab6521fc19920d4a5dab32479"
+          }
+        ],
+        "store": "Root",
+        "read_only": true
+      },
+      {
+        "public_export_errors": 0,
+        "RSA_public_keys_compared": 1,
+        "location": "CurrentUser",
+        "matching_public_keys": [],
+        "store": "My",
+        "read_only": true
+      },
+      {
+        "public_export_errors": 0,
+        "RSA_public_keys_compared": 22,
+        "location": "CurrentUser",
+        "matching_public_keys": [],
+        "store": "CA",
+        "read_only": true
+      },
+      {
+        "public_export_errors": 0,
+        "RSA_public_keys_compared": 70,
+        "location": "LocalMachine",
+        "matching_public_keys": [],
+        "store": "Root",
+        "read_only": true
+      },
+      {
+        "public_export_errors": 0,
+        "RSA_public_keys_compared": 0,
+        "location": "LocalMachine",
+        "matching_public_keys": [],
+        "store": "My",
+        "read_only": true
+      },
+      {
+        "public_export_errors": 0,
+        "RSA_public_keys_compared": 3,
+        "location": "LocalMachine",
+        "matching_public_keys": [],
+        "store": "CA",
+        "read_only": true
+      }
+    ]
+  },
+  "new_operations": {
+    "signing": 0,
+    "decryption": 0,
+    "candidate_checks": 0,
+    "prompts": 0,
+    "private_key_exports_or_copies": 0,
+    "trust_changes": 0,
+    "certificate_or_CA_replacement": 0,
+    "Docker_operations": 0
+  },
+  "limits": [
+    "Metadata census limited to the known SFD TLS root; external vault/offline/cloud/archive/custodian records not searched.",
+    "Public certificate associations only; orphan key containers/hardware tokens not examined and no private-key access tested.",
+    "No claim that all backups have been searched or that a secret cannot exist elsewhere."
+  ],
+  "finding": "No currently established unlocking secret or alternative certificate-associated CA private key found in examined locations.",
+  "next": "Locate an existing authorised recovery record/usable same-CA backup; if unavailable, review a preservation-first new-CA/trust-transition plan. Current request does not authorise attempts or transition execution."
+}

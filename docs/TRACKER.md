@@ -1,5 +1,12 @@
 ## Final desktop review — 2026-10-17
 
+
+## CA recovery preservation-only assessment - 2026-10-31
+
+Latest Owner direction is to preserve the failed signing state and investigate without retrying. [Fresh evidence](../tools/local-crl-1002/preservation-only-20261031.json) verifies unchanged issuer pins/key metadata/consumed outputs, counter1002, two V/zero R entries, no signed DER or publication. No signing, decryption, candidate check or prompt was attempted. The known TLS metadata census found no alternate CA bundle/named recovery record. Six read-only Windows certificate stores/public-SPKI comparison found the known CA certificate only, with no private-key association. No private key or credential content was read/exported/copied.
+
+[Recovery assessment and contingency](../tools/local-crl-1002/PASSPHRASE_RECOVERY.md) distinguish recovery of an existing secret/usable same-CA backup from a new, separately authorised CA/trust transition if recovery is unavailable. External/unnamed custody is not ruled out. No CA replacement, trust change, Docker operation, stale-controller enablement, backup restore, adoption or merge. Earlier signing/non-signing failure evidence remains dated history; it is not automatically retried.
+
 ## Spent signing attempt and non-signing key check - 2026-10-30
 
 The Owner confirms no CA passphrase was known/provided and authorises a separate local candidate check. [Recovery assessment and source](../tools/local-crl-1002/PASSPHRASE_RECOVERY.md) preserve the one spent signing invocation, empty PEM, unchanged counter1002/issuer and absent DER. Nine synthetic non-signing checks pass; original signing helper/context remain unchanged. Candidate values are excluded from all artifacts; Owner entry is only at a hidden local OpenSSL prompt. This check can confirm the same key/public identity, but cannot sign, publish, replace the CA, alter trust or enable Docker. An external recovery record/usable backup is unverified; any future CA replacement is a separate reviewed trust decision. Actual local check result and exact source revision belong in PR39. [Executed incident](https://github.com/dreamingfree09/secure-file-drop/pull/39#issuecomment-6511538660).
