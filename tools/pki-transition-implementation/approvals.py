@@ -5,10 +5,10 @@ SCOPES=("create_issuer","install_current_user_root","select_endpoint","retire_ol
 COMMON=("owner_sid","implementation_sha","aether_comment_sha256","lease_id","expires_utc")
 ROOT=("root_sha256","root_spki_sha256","root_thumbprint")
 EXTRA={
- "create_issuer":("new_issuer_namespace","key_profile","custody_record_reference","backup_location_reference"),
- "install_current_user_root":("store","store_baseline_sha256"),
- "select_endpoint":("leaf_sha256","CDP","proxy_config_sha256","separate_adoption_review_sha256"),
- "retire_old_root":("store","store_baseline_sha256","replacement_root_sha256","consumer_inventory_sha256","retirement_deadline")
+ "create_issuer":("new_issuer_namespace","key_profile","custody_record_reference","backup_location_reference","custody_review_sha256","archive_restore_evidence_sha256","secret_interface_sha256","toolchain_sha256","kdf_iterations"),
+ "install_current_user_root":("store","store_baseline_sha256","isolated_default_TLS_evidence_sha256","Owner_trust_approval_reference"),
+ "select_endpoint":("leaf_sha256","CDP","proxy_config_sha256","separate_adoption_review_sha256","new_root_trust_receipt_sha256","Windows_F196_evidence_sha256","traffic_preservation_sha256"),
+ "retire_old_root":("store","store_baseline_sha256","replacement_root_sha256","consumer_inventory_sha256","retirement_deadline","replacement_acceptance_sha256","Owner_retirement_approval_reference")
 }
 def screen(scope,identity):
     if scope not in SCOPES:raise Stop("approval-scope")
@@ -25,6 +25,8 @@ def screen(scope,identity):
     if not re.fullmatch(r"S-1-[0-9-]+",identity["owner_sid"]):raise Stop("approval-owner")
     if scope!="create_issuer" and not re.fullmatch("[A-F0-9]{40}",identity["root_thumbprint"]):
         raise Stop("approval-thumbprint")
+    if scope=="create_issuer" and (not identity["kdf_iterations"].isdigit() or not 600000<=int(identity["kdf_iterations"])<=3000000):
+        raise Stop("approval-KDF-policy")
     if "store" in identity and identity["store"]!="CurrentUser/Root":
         raise Stop("approval-trust-scope")
     if scope=="select_endpoint" and not re.fullmatch(r"http://127\.0\.0\.1:18082/sfd-local-ca-[A-Za-z0-9-]+\.crl",identity["CDP"]):
@@ -49,7 +51,10 @@ def fixture_approval(scope):
                       custody_record_reference="SYNTHETIC memory vault; not real escrow",
                       backup_location_reference="SYNTHETIC temp directory; not distinct physical custody")
     else:values["root_thumbprint"]="A"*40
+    if scope=="create_issuer":values["kdf_iterations"]="1000000"
     if "store" in values:values["store"]="CurrentUser/Root"
+    for key in ("Owner_trust_approval_reference","Owner_retirement_approval_reference"):
+        if key in values:values[key]="SYNTHETIC-NO-REAL-APPROVAL"
     if scope=="select_endpoint":values["CDP"]="http://127.0.0.1:18082/sfd-local-ca-SYNTHETIC.crl"
     if scope=="retire_old_root":values["retirement_deadline"]="2000-01-01T00:00:00Z"
     return values

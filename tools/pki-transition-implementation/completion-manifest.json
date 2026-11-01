@@ -1,0 +1,180 @@
+{
+  "schema": "SFD_PKI_COMPLETION_MANIFEST_V1",
+  "base": "36685fc23e401a6ef3f549541b602df5f9e608a0",
+  "workflow_commit": "dcbf4f3db770a04912d359867144c5f1d5de18b5",
+  "authority_comment": 6556054845,
+  "authority_body_SHA256": "83c4d3a6ccbd559b214fe61b5e2acae97ad3d4d269016d92794fe759c54560dd",
+  "self_exclusion": "This file is excluded; the final normal Git commit binds it.",
+  "files": [
+    {
+      "path": ".github/workflows/pki-preparation.yml",
+      "bytes": 4092,
+      "sha256": "76912c84111a15f0d1917aa57ea4b22304fd43ed49ed29cac1376a06ae2a3ee6"
+    },
+    {
+      "path": "docs/CONTINUITY.md",
+      "bytes": 78774,
+      "sha256": "32c299881b3d72590bc374185793a5e54d7f8870cb87aec72a2731fed1f7c9b2"
+    },
+    {
+      "path": "docs/PKI_COMPLETION_PREP.md",
+      "bytes": 16787,
+      "sha256": "5a5a9d32821733c82f080841637af1ee85aee21cf7c610538660254eac75a2f5"
+    },
+    {
+      "path": "docs/TRACKER.md",
+      "bytes": 42556,
+      "sha256": "4a90c2ee18714f24e93af09a264f7e9cc659c71067eb440590ccbe7bc4e7de8c"
+    },
+    {
+      "path": "journal/DEVLOG.md",
+      "bytes": 64845,
+      "sha256": "b69b385e2105e9a81afd8d5d38947dc3a0b0b5b7dc194c75b1317a4a905f25f1"
+    },
+    {
+      "path": "tools/pki-transition-implementation/MemoryChainFixture.cs",
+      "bytes": 8909,
+      "sha256": "31bd158b22dd24957c79e309e4689a6fdf1a9aa03eaed97dacf2e4b2bc60391d"
+    },
+    {
+      "path": "tools/pki-transition-implementation/README.md",
+      "bytes": 3727,
+      "sha256": "ff1c804339ec2b6c0a896520ca3143c9316cfb346621f4ddd61be7e48a2374b3"
+    },
+    {
+      "path": "tools/pki-transition-implementation/SecretEntryFixture.cs",
+      "bytes": 10429,
+      "sha256": "1b788d193c22d877e1529ada7f5f82c3bc85a082d1b6911a5cfd8849f36d32ec"
+    },
+    {
+      "path": "tools/pki-transition-implementation/approvals.py",
+      "bytes": 5158,
+      "sha256": "2d0976814679e57db5215240ff472063582374fae614e90fde833f8f5fcf959e"
+    },
+    {
+      "path": "tools/pki-transition-implementation/archive-results.json",
+      "bytes": 4029,
+      "sha256": "fb028c690b5b7ac363a02baa99a3e85e775c3201a11ec39b2479a80847bf9ecf"
+    },
+    {
+      "path": "tools/pki-transition-implementation/archive_recovery.py",
+      "bytes": 12694,
+      "sha256": "9ffd1fd4acde71d31a149cb998205090023eeb29c039ae93d088a352d57698af"
+    },
+    {
+      "path": "tools/pki-transition-implementation/authority.json",
+      "bytes": 854,
+      "sha256": "cf86e86da53ddf6d8b347f0662adec04197519cd16807ac14a3931bcf85693d0"
+    },
+    {
+      "path": "tools/pki-transition-implementation/completion-verification.json",
+      "bytes": 4292,
+      "sha256": "5009e20c23430f4ceb56fc84b0473bb1acad061dd454dfa73c38d109f1cf133e"
+    },
+    {
+      "path": "tools/pki-transition-implementation/context.py",
+      "bytes": 2843,
+      "sha256": "16369f96c258377521cde7f4a7050948d95a5e4184ae771a04207aa862b145bf"
+    },
+    {
+      "path": "tools/pki-transition-implementation/export_memory_fixture.py",
+      "bytes": 1700,
+      "sha256": "6453f6947f5f7b37efb4d70af84a3eb5e9fac129fa5aa8d3bfa993b300714ff9"
+    },
+    {
+      "path": "tools/pki-transition-implementation/issuer_fixture.py",
+      "bytes": 12647,
+      "sha256": "926dbeda011dbe6cb924b9c5bfe96c7b77e4fa74e43020e9f86d9809b689d149"
+    },
+    {
+      "path": "tools/pki-transition-implementation/kdf_profile.py",
+      "bytes": 1031,
+      "sha256": "a07c6109c214121032a035a254a5ebc05664e6df0cc91674a5e05f26b24f6031"
+    },
+    {
+      "path": "tools/pki-transition-implementation/linux-results.json",
+      "bytes": 5794,
+      "sha256": "b3a70219f900ec118d643216c613bc81a3812888064eec7343d20562b5d6e84b"
+    },
+    {
+      "path": "tools/pki-transition-implementation/make_public_packet.py",
+      "bytes": 1493,
+      "sha256": "25553bbafa952bb1dd88863300ea99dbbd0a9920a63ef204e9a4da07a4f90ce6"
+    },
+    {
+      "path": "tools/pki-transition-implementation/memory-chain-results.json",
+      "bytes": 3764,
+      "sha256": "3a0aeb0e20122e502a5cc0e4240a80ab7d7daf96e3ac8a464e0d71f5a261e7e9"
+    },
+    {
+      "path": "tools/pki-transition-implementation/publisher-recovery-results.json",
+      "bytes": 3331,
+      "sha256": "bdff8ecfb399e8a10a3213aa3f27c3d742b7f6898fcae6afc970a54d1e226614"
+    },
+    {
+      "path": "tools/pki-transition-implementation/publisher_crash_worker.py",
+      "bytes": 1222,
+      "sha256": "8708a93b4a2aac0af1496050a386145c70660345f9f08be54e0b9f3e04722d5c"
+    },
+    {
+      "path": "tools/pki-transition-implementation/publisher_fixture.py",
+      "bytes": 6600,
+      "sha256": "df71b97cc11ec631cffaaa05a4dcea311331c48b40dc83b98d0ec03de4178c95"
+    },
+    {
+      "path": "tools/pki-transition-implementation/publisher_recovery.py",
+      "bytes": 3538,
+      "sha256": "6069dc60fba06d20e03813a6869f21208b20026f08a8bf2230804d75e701e0e8"
+    },
+    {
+      "path": "tools/pki-transition-implementation/readiness-results.json",
+      "bytes": 2807,
+      "sha256": "5a7e227ad453533aa884615850479bb567f9f66ee2ed05fe549bb02a4335eab9"
+    },
+    {
+      "path": "tools/pki-transition-implementation/readiness.py",
+      "bytes": 2210,
+      "sha256": "dff48f290120471c3d5cd93124449bc00b657bd89707eb928e887e44c7b4174b"
+    },
+    {
+      "path": "tools/pki-transition-implementation/secret-results.json",
+      "bytes": 2949,
+      "sha256": "2c52e80eb90689bfce7e55f9d9c069f53738f924f16f7f18deefcf9f891cd082"
+    },
+    {
+      "path": "tools/pki-transition-implementation/test_archive_recovery.py",
+      "bytes": 7967,
+      "sha256": "2077b761125ff3178ae0a1c44a78be1b63e1f1cc41d04058266c24c39139b84d"
+    },
+    {
+      "path": "tools/pki-transition-implementation/test_linux.py",
+      "bytes": 15893,
+      "sha256": "c704f452d16c9ebca355d7fdebb2cf899127c8fd8ef116ab08cc023d131cf073"
+    },
+    {
+      "path": "tools/pki-transition-implementation/test_memory_chain.py",
+      "bytes": 6795,
+      "sha256": "038e57ed29d1658746f760820577c00f732582b574244a021b9b1f6ceb6fc123"
+    },
+    {
+      "path": "tools/pki-transition-implementation/test_publisher_recovery.py",
+      "bytes": 5958,
+      "sha256": "c94d0307011005cb39cd0679fe79b01eafbe89fd394f30d016f9beddc4ab3951"
+    },
+    {
+      "path": "tools/pki-transition-implementation/test_readiness.py",
+      "bytes": 2661,
+      "sha256": "35a550176a46e923778b0e0fbdc282d3a415605f8df46270b2161cee1b639406"
+    },
+    {
+      "path": "tools/pki-transition-implementation/test_secret_entry.py",
+      "bytes": 5269,
+      "sha256": "b0367770bfffb104f52dea48dca589f2b558dcf0c2c62fefa7a9928ff5900500"
+    },
+    {
+      "path": "tools/pki-transition-implementation/toolchain.json",
+      "bytes": 3874,
+      "sha256": "f761dad3ee17d73cb1b909c828de05f04a297a21c1a4ecaf476abf5f5134fcc3"
+    }
+  ]
+}

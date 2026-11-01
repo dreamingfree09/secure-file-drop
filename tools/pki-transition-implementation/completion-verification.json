@@ -1,0 +1,108 @@
+{
+  "work_id": "SFD-PKI-IMPLEMENTATION-COMPLETION-PREP-20261101",
+  "UTC": "2026-11-01T10:29:37.367004+00:00",
+  "base": "36685fc23e401a6ef3f549541b602df5f9e608a0",
+  "authority": {
+    "comment": 6556054845,
+    "body_SHA256": "83c4d3a6ccbd559b214fe61b5e2acae97ad3d4d269016d92794fe759c54560dd"
+  },
+  "final_results": {
+    "linux": {
+      "tests": 40,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "b3a70219f900ec118d643216c613bc81a3812888064eec7343d20562b5d6e84b"
+    },
+    "archive": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "fb028c690b5b7ac363a02baa99a3e85e775c3201a11ec39b2479a80847bf9ecf"
+    },
+    "publisher-recovery": {
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "bdff8ecfb399e8a10a3213aa3f27c3d742b7f6898fcae6afc970a54d1e226614"
+    },
+    "readiness": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "5a7e227ad453533aa884615850479bb567f9f66ee2ed05fe549bb02a4335eab9"
+    },
+    "secret": {
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "2c52e80eb90689bfce7e55f9d9c069f53738f924f16f7f18deefcf9f891cd082"
+    },
+    "memory-chain": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "3a0aeb0e20122e502a5cc0e4240a80ab7d7daf96e3ac8a464e0d71f5a261e7e9"
+    }
+  },
+  "total_logical_local_cases": 85,
+  "current_source_files_bound": 28,
+  "earlier_failures": [
+    {
+      "cause": "Missing guarded PKCS8 role:0 tests/1 setup error",
+      "receipt_SHA256": "3d204086a58d6e356399c12f25d83023a5f96bda87fbec70e94ba18ca9be33e9",
+      "retained": true
+    },
+    {
+      "cause": "Used-destination exception mismatch:13 tests/1 error",
+      "receipt_SHA256": "8e95ec3f8a332eb767d949befe3d0479a535a8724c48b6184451baddda4e47d4",
+      "retained": true
+    },
+    {
+      "cause": "Unsupported restricted private-chain configuration:12 failures",
+      "receipt_SHA256": "98a3cec7953d4f8143aa6faa01d3823f1bdfcd787017b424fd197ea9c8da9795",
+      "retained": true
+    },
+    {
+      "cause": "Isolated Python receipt import path missing; corrected before final native suites",
+      "tests_executed_by_failed_invocation": 0
+    },
+    {
+      "cause": "Portable preflight started before its public packet producer completed;0 tests/1 setup error; corrected dependency wait; final12 cases pass",
+      "private_receipt_SHA256": "1d49c7ee96782f60e66b243e0cd2fcc92c78dbf56b74af8e0feaf41f1c89cba5"
+    }
+  ],
+  "native_pins": {
+    "memory_binary_sha256": "8b495b9dc5e5602f54921d45c31f9763466bb161bc5d49d642a64dec638fe197",
+    "input_binary_sha256": "394b8a09a49c37f3815d4f90947dc2fb8e0e690afda4bf679735577e21ce9bae",
+    "memory_source_sha256": "31bd158b22dd24957c79e309e4689a6fdf1a9aa03eaed97dacf2e4b2bc60391d",
+    "input_source_sha256": "1b788d193c22d877e1529ada7f5f82c3bc85a082d1b6911a5cfd8849f36d32ec"
+  },
+  "real_CA_or_private_key_or_original_backup_accessed": false,
+  "application_system_certificate_store_open_calls": 0,
+  "installed_roots_changed": false,
+  "Windows_internal_chain_metadata_access": "not instrumented; trust anchors exclusive to process memory",
+  "Owner_prompt_or_real_secret": false,
+  "Docker_started": false,
+  "stale_controller_used": false,
+  "protected_branches_merged": false,
+  "actual_power_loss_reboot_or_physical_custody_verified": false,
+  "standard_Schannel_Framework_F196_positive_executed": false,
+  "positive_Windows_certificate_validation": "native exclusive-memory chain + required revocation + SSL name/EKU policy; cache-only signed CRL objects",
+  "remaining_gates": [
+    "independent exact-source review",
+    "actual Owner vault records and two physical copies",
+    "actual Owner secret interface availability/acceptance",
+    "separately approved disposable VM/profile standard-client trust test",
+    "all genuine real creation/trust/selection/retirement authority",
+    "power-loss/reboot/startup/alert acceptance",
+    "final supported-runtime/advisory refresh",
+    "separate disk/backups/controller/backend adoption and physical Windows acceptance"
+  ],
+  "CI": "exact final-head identities/outcomes in PR handover"
+}

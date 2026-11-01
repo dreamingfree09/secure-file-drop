@@ -38,6 +38,44 @@
       }
     },
     "fixture_probe_target": ".NET Framework 4.8",
-    "fixture_probe_source_SHA256": "c55c1e2adc5c792354340ec8644518556eeb4f53032815e2557b8dd41c0a0daf"
-  }
+    "fixture_probe_source_SHA256": "c55c1e2adc5c792354340ec8644518556eeb4f53032815e2557b8dd41c0a0daf",
+    "completion_OS_candidate": {
+      "registry_product_label": "Windows 10 Pro",
+      "display_version": "26H2",
+      "build": "26300.9818",
+      "framework_release": 534296,
+      "support_reference": "https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information",
+      "support_interpretation": "Build/display version maps to Windows11 26H2; registry product label alone is not an OS support verdict",
+      "all_CVEs_cleared": false
+    }
+  },
+  "calibrated_KDF_candidate": {
+    "scope": "public/random synthetic-input derivation benchmark, not a password hash",
+    "algorithm": "PBKDF2-HMAC-SHA256",
+    "samples_ms": [
+      156.901,
+      163.084,
+      179.837
+    ],
+    "median_ms": 163.084,
+    "target_ms": 250,
+    "minimum_iterations": 600000,
+    "iterations": 1000000,
+    "max_iterations": 3000000,
+    "exact_PKCS8_provider_latency_qualified": false
+  },
+  "qualification_limits": "Vendor-supported Ubuntu fixture package; no whole-OS zero-CVE clearance or actual Owner custody. Future live baseline refresh remains mandatory.",
+  "completion_native_probes": {
+    "memory_binary_sha256": "8b495b9dc5e5602f54921d45c31f9763466bb161bc5d49d642a64dec638fe197",
+    "input_binary_sha256": "394b8a09a49c37f3815d4f90947dc2fb8e0e690afda4bf679735577e21ce9bae",
+    "memory_source_sha256": "31bd158b22dd24957c79e309e4689a6fdf1a9aa03eaed97dacf2e4b2bc60391d",
+    "input_source_sha256": "1b788d193c22d877e1529ada7f5f82c3bc85a082d1b6911a5cfd8849f36d32ec"
+  },
+  "vendor_support_references": [
+    "https://ubuntu.com/about/release-cycle",
+    "https://packages.ubuntu.com/noble/amd64/openssl",
+    "https://ubuntu.com/security/notices/USN-8847-1",
+    "https://ubuntu.com/security/CVE-2026-84782"
+  ],
+  "OpenSSL_providers_fixture_configuration": "Providers:\n  default\n    name: OpenSSL Default Provider\n    version: 3.0.13\n    status: active"
 }

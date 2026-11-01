@@ -240,7 +240,7 @@ class PKITests(unittest.TestCase):
         params=seq(alg[1][2]);kdf=seq(params[0][2]);cipher=seq(params[1][2])
         self.assertEqual(oid(kdf[0]),"2a864886f70d01050c")
         values=seq(kdf[1][2])
-        self.assertEqual(integer(values[1]),600000)
+        self.assertEqual(integer(values[1]),json.loads((HERE/"toolchain.json").read_text())["calibrated_KDF_candidate"]["iterations"])
         self.assertEqual(oid(seq(values[-1][2])[0]),"2a864886f70d0209")
         self.assertEqual(oid(cipher[0]),"60864801650304012a")
         self.assertEqual(len(cipher[1][1]),16)
