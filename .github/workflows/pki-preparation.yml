@@ -67,13 +67,13 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $csc=Join-Path $env:WINDIR 'Microsoft.NET\Framework64/v4.0.30319/csc.exe'
-          $src='tools/pki-transition-implementation'
-          & $csc /nologo /target:exe /r:System.Web.Extensions.dll /out:MemoryChainFixture.exe "$src/MemoryChainFixture.cs"
+          $src=(Resolve-Path -LiteralPath 'tools\pki-transition-implementation').Path
+          & $csc /nologo /target:exe /r:System.Web.Extensions.dll /out:MemoryChainFixture.exe (Join-Path $src "MemoryChainFixture.cs")
           if($LASTEXITCODE-ne0){throw 'Memory probe build failed'}
-          & $csc /nologo /target:exe /r:System.Web.Extensions.dll /r:System.Windows.Forms.dll /r:System.Drawing.dll /out:SecretEntryFixture.exe "$src/SecretEntryFixture.cs"
+          & $csc /nologo /target:exe /r:System.Web.Extensions.dll /r:System.Windows.Forms.dll /r:System.Drawing.dll /out:SecretEntryFixture.exe (Join-Path $src "SecretEntryFixture.cs")
           if($LASTEXITCODE-ne0){throw 'Input probe build failed'}
-          Copy-Item "$src/FixtureWindows.exe.config" MemoryChainFixture.exe.config
-          Copy-Item "$src/FixtureWindows.exe.config" SecretEntryFixture.exe.config
+          Copy-Item -LiteralPath (Join-Path $src "FixtureWindows.exe.config") -Destination MemoryChainFixture.exe.config
+          Copy-Item -LiteralPath (Join-Path $src "FixtureWindows.exe.config") -Destination SecretEntryFixture.exe.config
       - name: Memory-exclusive trust, revocation and synthetic local-input tests
         shell: pwsh
         run: |
