@@ -1,0 +1,158 @@
+{
+  "work_id": "SFD-CA-TRUST-IMPLEMENTATION-PREP-20261101",
+  "UTC": "2026-11-01T02:08:41.583747+00:00",
+  "base": "b14cc7b88989dc62edcf3c17139d8b315a788f0b",
+  "authority": {
+    "authority_id": 6543555392,
+    "authority_body_sha256": "fa78aaa43878f31e0b177ceb065c618b08277e68c57a314d0c9f8743ade4a3a8",
+    "authority_author": "dreamingfree09",
+    "authority_created": "2026-10-31T12:47:59Z"
+  },
+  "executed_source_SHA256": {
+    "FixtureWindows.cs": "c55c1e2adc5c792354340ec8644518556eeb4f53032815e2557b8dd41c0a0daf",
+    "FixtureWindows.exe.config": "601e8aa2f94cb6f551b2a78b971130e48aa27c6616554467cd51bf20f97c94aa",
+    "approvals.py": "e5aaa73bb10e3a05149773931cfc0975241c5b0500f8f870105b9574fad12cde",
+    "context.py": "a85dd7df278304f511f226f572478444437bfca05dea2fb2861ae1b000ec6336",
+    "crypto.py": "667d8cf0950dd08f6a97f4f120df98391834edd9b7ec28f4b1e251d8c170e191",
+    "der.py": "b8a69faed5b25a584740dc14482474c10912f66c2c3cb9611eee242c4b8553bc",
+    "export_windows_fixture.py": "eff25e5635dabbae63e5d36c0d047981b8d6d468007ddab614ae6eba90979aec",
+    "fence.py": "075d81ad37880f53a56184f3a6f6134e70bdda22b322762d9d59e6592a002aa4",
+    "issuer_fixture.py": "f911a3f8390efaf2e31416094cf2fbed53fa58e616803917e6325ec174d84f44",
+    "lifecycle.py": "7e375a31c18abcdd6a81ff17fc7b2b7736608edc83ac7882aa3deffb5357f4d6",
+    "publisher_fixture.py": "3007d2306b4d3e1975059465daf7e538eafca12ee92b96142a760d7c569a7008",
+    "test_linux.py": "c1c1df55b7c365cc153de2ae0adf7365b248b6c6ff594fc835b77f52fa278b81",
+    "test_windows.py": "7294db9e0c3c8d836383e89f1e373d798a41870f9dd9a60d807d6866f06d1220",
+    "toolchain.json": "998687fd411ed51f2f1e925486e21bd686aec0da09b84e8308dd43ed29bcba87"
+  },
+  "source_context_SHA256": "16f3015721ab717f0ccb2074c3cecc978ae046e75ff7489e7034c445ebae8fe4",
+  "source_context_real_flags": {
+    "real_issuer_authority": false,
+    "trust_authority": false,
+    "implementation_accepted": false
+  },
+  "linux_final": {
+    "tests": 40,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "Windows_final": {
+    "tests": 17,
+    "failures": 0,
+    "errors": 0,
+    "skips": 0
+  },
+  "earlier_failures": [
+    {
+      "cause": "Initial setup: CDP needed URI: prefix",
+      "tests_run": 0,
+      "failures": 0,
+      "errors": 1,
+      "skips": 0,
+      "private_receipt_sha256": "a97b1f639530e99b60465358b2d11d082f08c608bdc6698036ecf295aeb7bc46",
+      "preserved": true
+    },
+    {
+      "cause": "Fresh diagnostic setup repeated same CDP failure",
+      "tests_run": 0,
+      "failures": 0,
+      "errors": 1,
+      "skips": 0,
+      "private_receipt_sha256": "fcc4cee7c61677d1df8e7587a25ab97dd2df3598e81b1d1d1774299b498dd80d",
+      "preserved": true
+    },
+    {
+      "cause": "Fresh synthetic CRL ahead of Windows clock; strict stop",
+      "tests_run": 0,
+      "failures": 0,
+      "errors": 1,
+      "skips": 0,
+      "private_receipt_sha256": "6bf08c5d6416ba213ffbd4a1f0c9af43f12100a05d1525430712b4a033535a2a",
+      "preserved": true
+    },
+    {
+      "cause": "Backdated CRL preceded recorded synthetic revocation; strict parser rejected",
+      "tests_run": 40,
+      "failures": 0,
+      "errors": 10,
+      "skips": 0,
+      "private_receipt_sha256": "b8469b15638d9ab0fe15407a9d8cde25bd6c7a244846176040d4f84bc354d033",
+      "preserved": true
+    },
+    {
+      "cause": "Same inconsistent backdated fixture; strict setup stop",
+      "tests_run": 0,
+      "failures": 0,
+      "errors": 1,
+      "skips": 0,
+      "private_receipt_sha256": "af9cf7418450275f232ca6cdb80bec89dc0352b28943840ad22f2c1241aced95",
+      "preserved": true
+    },
+    {
+      "cause": "Initial native C# compile CS0165; definite assignment corrected",
+      "tests_executed": false,
+      "build_failure": true
+    }
+  ],
+  "old_public_pins_before": {
+    "config": "f58ea8f95b678b190dd175027ba210c2f948431d6aa5427643aa9a6f0915ca43",
+    "index": "2274b08a36f7ffa6015c02168ebffff5850f5d6637abf8d2e6581d44dac2469f",
+    "index_attr": "8a5810d71338d736b81a3ee0e91aca117a2480085bc7073dc986bb8b0ca6593f",
+    "serial": "7a18b2c8a21338c5846ad6fe1aa9cf65c41ab4acdad64214dee4056791d22d4f",
+    "counter": "8d2510d85c94c519a91dbab464e232a824442bc7f6ef8901d8b5534825373878",
+    "counter_old": "d6a1a767319c3bf2a337b16e3a14916f63e432872e0f8df1cb73b32a8b338ae4",
+    "root": "8e9e9782bc4c2705ee9b7adc60e5e6b3095b6e21dbbcf0d02a31b198bcaf30fd",
+    "leaf": "7861c72df55e0ea1a08a0fab93c33ec604412738ddaa65e320634e1438c87fd7",
+    "published": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e"
+  },
+  "old_public_pins_after": {
+    "config": "f58ea8f95b678b190dd175027ba210c2f948431d6aa5427643aa9a6f0915ca43",
+    "index": "2274b08a36f7ffa6015c02168ebffff5850f5d6637abf8d2e6581d44dac2469f",
+    "index_attr": "8a5810d71338d736b81a3ee0e91aca117a2480085bc7073dc986bb8b0ca6593f",
+    "serial": "7a18b2c8a21338c5846ad6fe1aa9cf65c41ab4acdad64214dee4056791d22d4f",
+    "counter": "8d2510d85c94c519a91dbab464e232a824442bc7f6ef8901d8b5534825373878",
+    "counter_old": "d6a1a767319c3bf2a337b16e3a14916f63e432872e0f8df1cb73b32a8b338ae4",
+    "root": "8e9e9782bc4c2705ee9b7adc60e5e6b3095b6e21dbbcf0d02a31b198bcaf30fd",
+    "leaf": "7861c72df55e0ea1a08a0fab93c33ec604412738ddaa65e320634e1438c87fd7",
+    "published": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e"
+  },
+  "old_consumed_attempt_outputs_and_helper_unchanged": true,
+  "old_private_key_bytes_read_checked_hashed_or_copied": false,
+  "old_counter": "1002",
+  "old_ledger_V": 2,
+  "old_ledger_R": 0,
+  "Windows_store_sets_unchanged": true,
+  "real_trust_writes": 0,
+  "real_CA_or_CRL_generation": 0,
+  "synthetic_CA_and_CRL_generation": true,
+  "real_CRL_publication": false,
+  "owned_ephemeral_fixture_publication": true,
+  "Owner_prompt_or_credentials": false,
+  "Docker_operations": 0,
+  "Docker_service_after": "Stopped",
+  "backups_or_VHDX_access": false,
+  "original_checkout": {
+    "HEAD": "853b865e30872964a556c225335eb2191928972b",
+    "status_records": 8,
+    "status_SHA256": "cfd90c22d5da74d22009f003ac3906402f957be535b37cf7217a111689e3a41f"
+  },
+  "producer_and_WSL_preserved": true,
+  "full_fixture_archive_backup_implemented": false,
+  "real_physical_custody_or_escrow_verified": false,
+  "positive_trusted_Windows_TLS_executed": false,
+  "local_go_browser_container_application_tests": "not run; application source unchanged; no local Docker authority",
+  "CI": "new exact-head identities/outcomes belong in PR handover",
+  "remaining_gates": [
+    "Aether exact-source implementation acceptance",
+    "full issuer/server-key archive recovery implementation",
+    "genuine Owner real creation/trust/selection/retirement authority",
+    "actual recoverable vault and separate physical custody",
+    "approved local secret interface",
+    "supported-runtime/vendor-advisory/provider/OS review",
+    "fresh clock agreement",
+    "real positive Windows revocation-enabled TLS/F196 and current CDP bytes",
+    "publisher power-loss/reboot/startup/monitor acceptance",
+    "new independently reviewed controller/bundle",
+    "independent Docker/disk/backups/adoption/schema/auth/file/physical Windows gates"
+  ]
+}

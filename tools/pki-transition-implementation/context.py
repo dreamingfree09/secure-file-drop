@@ -1,0 +1,51 @@
+"""Source-bound, one-use synthetic lease. Cannot represent real creation/trust authority."""
+import datetime
+import json
+import pathlib
+import uuid
+from fence import Stop,child,digest,owned,read_small,write_new
+AUTHORITY_ID=6543555392
+AUTHORITY_SHA256="fa78aaa43878f31e0b177ceb065c618b08277e68c57a314d0c9f8743ade4a3a8"
+BASE="b14cc7b88989dc62edcf3c17139d8b315a788f0b"
+SOURCE_FILES=("fence.py","der.py","crypto.py","issuer_fixture.py","publisher_fixture.py",
+              "approvals.py","context.py","lifecycle.py","test_linux.py","test_windows.py",
+              "export_windows_fixture.py","FixtureWindows.cs","FixtureWindows.exe.config","toolchain.json")
+
+def pins():
+    folder=pathlib.Path(__file__).resolve().parent
+    return {name:digest((folder/name).read_bytes()) for name in SOURCE_FILES}
+
+def prepare(root,now=None):
+    root=owned(root)
+    now=now or datetime.datetime.now(datetime.timezone.utc)
+    return {"schema":"SFD_SYNTHETIC_PKI_LEASE_V1","operation":"disposable_fixture_only",
+            "lease":str(uuid.uuid4()),"fixture":root.name,
+            "created":now.isoformat(),"expires":(now+datetime.timedelta(minutes=60)).isoformat(),
+            "authority_id":AUTHORITY_ID,"authority_SHA256":AUTHORITY_SHA256,
+            "accepted_design":BASE,"source_SHA256":pins(),
+            "real_issuer_authority":False,"trust_authority":False,"implementation_accepted":False}
+
+def verify(ctx,root,now=None):
+    root=owned(root);now=now or datetime.datetime.now(datetime.timezone.utc)
+    expected={"schema","operation","lease","fixture","created","expires","authority_id",
+              "authority_SHA256","accepted_design","source_SHA256","real_issuer_authority",
+              "trust_authority","implementation_accepted"}
+    if set(ctx)!=expected or ctx["schema"]!="SFD_SYNTHETIC_PKI_LEASE_V1" or ctx["operation"]!="disposable_fixture_only":
+        raise Stop("synthetic-context-scope")
+    if ctx["fixture"]!=root.name or ctx["accepted_design"]!=BASE or ctx["authority_id"]!=AUTHORITY_ID or ctx["authority_SHA256"]!=AUTHORITY_SHA256:
+        raise Stop("synthetic-context-authority")
+    if any(ctx[k] is not False for k in ("real_issuer_authority","trust_authority","implementation_accepted")):
+        raise Stop("synthetic-context-no-real-authority")
+    uuid.UUID(ctx["lease"])
+    created=datetime.datetime.fromisoformat(ctx["created"]);expires=datetime.datetime.fromisoformat(ctx["expires"])
+    if created.tzinfo is None or expires.tzinfo is None or not created<=now<expires or (expires-created).total_seconds()>3600:
+        raise Stop("synthetic-context-expired")
+    if ctx["source_SHA256"]!=pins():
+        raise Stop("synthetic-context-source")
+    return True
+
+def bind_once(root):
+    ctx=prepare(root);verify(ctx,root)
+    write_new(child(root,"source-context.json"),json.dumps(ctx,sort_keys=True).encode())
+    write_new(child(root,"source-context.used"),ctx["lease"].encode())
+    return ctx
