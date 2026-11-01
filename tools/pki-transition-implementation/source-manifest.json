@@ -1,0 +1,130 @@
+{
+  "schema": "SFD_PKI_IMPLEMENTATION_SOURCE_MANIFEST_V1",
+  "base": "b14cc7b88989dc62edcf3c17139d8b315a788f0b",
+  "workflow_commit": "9bf730e1490120613be59157f4e4a6e8f28e91e3",
+  "authority_comment_id": 6543555392,
+  "authority_body_sha256": "fa78aaa43878f31e0b177ceb065c618b08277e68c57a314d0c9f8743ade4a3a8",
+  "self_exclusion": "Manifest excludes itself; final normal commit binds it.",
+  "files": [
+    {
+      "path": ".github/workflows/pki-preparation.yml",
+      "bytes": 1155,
+      "sha256": "30da25bdf46f724c17b2973c061c30a57e40924e78f8098937276a6e42f1c110"
+    },
+    {
+      "path": "docs/LOCAL_PKI_IMPLEMENTATION_PREP.md",
+      "bytes": 14543,
+      "sha256": "0434ba796c7bcb88ea0740b8cf0322c92df13713e953f5fcef6a7625a029b2e1"
+    },
+    {
+      "path": "docs/CONTINUITY.md",
+      "bytes": 77710,
+      "sha256": "19abd0212b442b5abebb094130772a85ae47b1193cecd6f955a60666c559d29f"
+    },
+    {
+      "path": "docs/TRACKER.md",
+      "bytes": 41492,
+      "sha256": "7ce1b5204a9c0c53b76df61539d047d153e3f4a3809e819055b1955bcba29258"
+    },
+    {
+      "path": "journal/DEVLOG.md",
+      "bytes": 63391,
+      "sha256": "7be1854b07c3428abfaa896b806db7dce7c7f0b1ce64a90c5aed88a2e45c5746"
+    },
+    {
+      "path": "tools/pki-transition-implementation/FixtureWindows.cs",
+      "bytes": 10271,
+      "sha256": "c55c1e2adc5c792354340ec8644518556eeb4f53032815e2557b8dd41c0a0daf"
+    },
+    {
+      "path": "tools/pki-transition-implementation/FixtureWindows.exe.config",
+      "bytes": 199,
+      "sha256": "601e8aa2f94cb6f551b2a78b971130e48aa27c6616554467cd51bf20f97c94aa"
+    },
+    {
+      "path": "tools/pki-transition-implementation/README.md",
+      "bytes": 3380,
+      "sha256": "9a05843b7da7f25226b612b8d00885942c58a21b634f5b9953357af03c0cc8e6"
+    },
+    {
+      "path": "tools/pki-transition-implementation/approvals.py",
+      "bytes": 4407,
+      "sha256": "e5aaa73bb10e3a05149773931cfc0975241c5b0500f8f870105b9574fad12cde"
+    },
+    {
+      "path": "tools/pki-transition-implementation/authority.json",
+      "bytes": 1706,
+      "sha256": "181751ebf255b6c4ed861d4f4fa42d91efd122b4be0a0a781f27f483a5972f80"
+    },
+    {
+      "path": "tools/pki-transition-implementation/context.py",
+      "bytes": 2929,
+      "sha256": "a85dd7df278304f511f226f572478444437bfca05dea2fb2861ae1b000ec6336"
+    },
+    {
+      "path": "tools/pki-transition-implementation/crypto.py",
+      "bytes": 4636,
+      "sha256": "667d8cf0950dd08f6a97f4f120df98391834edd9b7ec28f4b1e251d8c170e191"
+    },
+    {
+      "path": "tools/pki-transition-implementation/der.py",
+      "bytes": 7491,
+      "sha256": "b8a69faed5b25a584740dc14482474c10912f66c2c3cb9611eee242c4b8553bc"
+    },
+    {
+      "path": "tools/pki-transition-implementation/export_windows_fixture.py",
+      "bytes": 2971,
+      "sha256": "eff25e5635dabbae63e5d36c0d047981b8d6d468007ddab614ae6eba90979aec"
+    },
+    {
+      "path": "tools/pki-transition-implementation/fence.py",
+      "bytes": 3416,
+      "sha256": "075d81ad37880f53a56184f3a6f6134e70bdda22b322762d9d59e6592a002aa4"
+    },
+    {
+      "path": "tools/pki-transition-implementation/issuer_fixture.py",
+      "bytes": 12078,
+      "sha256": "f911a3f8390efaf2e31416094cf2fbed53fa58e616803917e6325ec174d84f44"
+    },
+    {
+      "path": "tools/pki-transition-implementation/lifecycle.py",
+      "bytes": 937,
+      "sha256": "7e375a31c18abcdd6a81ff17fc7b2b7736608edc83ac7882aa3deffb5357f4d6"
+    },
+    {
+      "path": "tools/pki-transition-implementation/linux-results.json",
+      "bytes": 4417,
+      "sha256": "8e203337d46ad6e234d00597bce43138fe233a8b2325cfdbc109bc8cf61692b4"
+    },
+    {
+      "path": "tools/pki-transition-implementation/publisher_fixture.py",
+      "bytes": 6388,
+      "sha256": "3007d2306b4d3e1975059465daf7e538eafca12ee92b96142a760d7c569a7008"
+    },
+    {
+      "path": "tools/pki-transition-implementation/test_linux.py",
+      "bytes": 15810,
+      "sha256": "c1c1df55b7c365cc153de2ae0adf7365b248b6c6ff594fc835b77f52fa278b81"
+    },
+    {
+      "path": "tools/pki-transition-implementation/test_windows.py",
+      "bytes": 11179,
+      "sha256": "7294db9e0c3c8d836383e89f1e373d798a41870f9dd9a60d807d6866f06d1220"
+    },
+    {
+      "path": "tools/pki-transition-implementation/toolchain.json",
+      "bytes": 1991,
+      "sha256": "998687fd411ed51f2f1e925486e21bd686aec0da09b84e8308dd43ed29bcba87"
+    },
+    {
+      "path": "tools/pki-transition-implementation/verification.json",
+      "bytes": 7133,
+      "sha256": "8be22c72a1b734d5b31b7e7ff031bde8e290710c1ce636e85e4e0a67d2f6f106"
+    },
+    {
+      "path": "tools/pki-transition-implementation/windows-results.json",
+      "bytes": 5888,
+      "sha256": "461d9d02f4df9c308ea460f7a1137940539fde4040b15bdc3cc8ae5466bc0c6d"
+    }
+  ]
+}

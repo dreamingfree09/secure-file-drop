@@ -1,0 +1,41 @@
+{
+  "work_id": "SFD-CA-TRUST-IMPLEMENTATION-PREP-20261101",
+  "UTC": "2026-11-01T01:35:07.388727+00:00",
+  "base": "b14cc7b88989dc62edcf3c17139d8b315a788f0b",
+  "authority_id": 6543555392,
+  "authority_body_sha256": "fa78aaa43878f31e0b177ceb065c618b08277e68c57a314d0c9f8743ade4a3a8",
+  "authority_author": "dreamingfree09",
+  "authority_created": "2026-10-31T12:47:59Z",
+  "protected_PR_heads": {
+    "38": {
+      "head": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "merged": false
+    },
+    "39": {
+      "head": "0254b7bf02fdee55dfbcc624d68653e9c6294539",
+      "merged": false
+    },
+    "40": {
+      "head": "6625a4f5ae44e019eb4c9680e0570f1da9f4fc41",
+      "merged": false
+    },
+    "41": {
+      "head": "b14cc7b88989dc62edcf3c17139d8b315a788f0b",
+      "merged": false
+    }
+  },
+  "master": "61195434bee5f9221a6f55469c719cb360504ea9",
+  "old_public_pins": {
+    "config": "f58ea8f95b678b190dd175027ba210c2f948431d6aa5427643aa9a6f0915ca43",
+    "index": "2274b08a36f7ffa6015c02168ebffff5850f5d6637abf8d2e6581d44dac2469f",
+    "index_attr": "8a5810d71338d736b81a3ee0e91aca117a2480085bc7073dc986bb8b0ca6593f",
+    "serial": "7a18b2c8a21338c5846ad6fe1aa9cf65c41ab4acdad64214dee4056791d22d4f",
+    "counter": "8d2510d85c94c519a91dbab464e232a824442bc7f6ef8901d8b5534825373878",
+    "counter_old": "d6a1a767319c3bf2a337b16e3a14916f63e432872e0f8df1cb73b32a8b338ae4",
+    "root": "8e9e9782bc4c2705ee9b7adc60e5e6b3095b6e21dbbcf0d02a31b198bcaf30fd",
+    "leaf": "7861c72df55e0ea1a08a0fab93c33ec604412738ddaa65e320634e1438c87fd7",
+    "published": "69bbe78994b7e6abe9849e65fd8a56fe59dbe0803e6db498f3e8c82ad70f6f1e"
+  },
+  "real_issuer_action_authorized": false,
+  "synthetic_identities_only": true
+}

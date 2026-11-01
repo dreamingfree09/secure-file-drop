@@ -1,0 +1,43 @@
+{
+  "openssl": "OpenSSL 3.0.13 30 Jan 2024 (Library: OpenSSL 3.0.13 30 Jan 2024)",
+  "openssl_sha256": "b4f547c0f16272d1cc7f870330a6f2c243710c335e7a99c734ff7a0c6fdb2503",
+  "openssl_vendor_package": "openssl 3.0.13-0ubuntu3.16 install ok installed",
+  "linux_python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "linux_python_sha256": "e50d468e8b0adfb05733f5b87b3cff34829c4a8c1aea50c865aa8bdfe4bb150f",
+  "stdlib_only": true,
+  "use": "synthetic preparation, not real-issuer tool approval",
+  "support_and_advisory_review_for_real_creation": "fresh vendor support/advisory/provider evaluation remains mandatory",
+  "openssl_library_SHA256": {
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "6866ed711dab8927e1bf82bf1cd30e828bdfc34f3cc1e83b1c9eb01ce6c37d9a",
+    "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a40e7b67489bbd257e432c700ff8f6a1ad796425b5eccecdc2930127fdd86624"
+  },
+  "libssl_vendor_package": "libssl3t64 3.0.13-0ubuntu3.16",
+  "Windows": {
+    "python_version": "3.13.1 (tags/v3.13.1:0671451, Dec  3 2024, 19:06:28) [MSC v.1942 64 bit (AMD64)]",
+    "python_ssl_version": "OpenSSL 3.0.15 3 Sep 2024",
+    "files": {
+      "python": {
+        "sha256": "03573716a7fcbd8b7fed8fe0163bbfbd3a852546920d6a666123f307c8dac7d9",
+        "bytes": 105840
+      },
+      "csc": {
+        "sha256": "eca02e6b15cde93009a59a3d129d5a77fb5008f2e1cf62cf573b6737c747ecc3",
+        "bytes": 2569576
+      },
+      "crypt32": {
+        "sha256": "bca7a7a91c758b78c7fb9b6fcc6b72dcb2c660aae809b402a2ade9999ac5df6b",
+        "bytes": 1583032
+      },
+      "curl": {
+        "sha256": "a6092ef37a7f41cc7cf1a8ff1192aa294e82c73fda0fd2143d813c46b81e55a2",
+        "bytes": 830280
+      },
+      "fixture_probe": {
+        "sha256": "4363b1d4747b16e3932bacb55c203462ac47f88aff98053db76945bc67b65883",
+        "bytes": 23552
+      }
+    },
+    "fixture_probe_target": ".NET Framework 4.8",
+    "fixture_probe_source_SHA256": "c55c1e2adc5c792354340ec8644518556eeb4f53032815e2557b8dd41c0a0daf"
+  }
+}
