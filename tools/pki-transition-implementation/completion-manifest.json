@@ -2,8 +2,7 @@
   "schema": "SFD_PKI_COMPLETION_MANIFEST_V1",
   "base": "36685fc23e401a6ef3f549541b602df5f9e608a0",
   "workflow_commit": "f6a74f532bdc24f5310beceec38aafd49584ab90",
-  "prior_completion_revision": "1003a625e7680342fe245e1dd5246c69bef3542b",
-  "prior_workflow_commit": "dcbf4f3db770a04912d359867144c5f1d5de18b5",
+  "prior_completion_revision": "4108cb0115d709518f463664b27bfb83ebe86981",
   "authority_comment": 6556054845,
   "authority_body_SHA256": "83c4d3a6ccbd559b214fe61b5e2acae97ad3d4d269016d92794fe759c54560dd",
   "self_exclusion": "This file is excluded; the final normal Git commit binds it.",
@@ -20,8 +19,8 @@
     },
     {
       "path": "docs/PKI_COMPLETION_PREP.md",
-      "bytes": 17428,
-      "sha256": "4b96ef32284112b89b013beabc0e7c245666ba0adaf8916f33d39891cb188d2f"
+      "bytes": 17859,
+      "sha256": "c6eee855b8b8a828f831b4c2cc766b23054dc25eb3a2c04d23cebb84259ee28f"
     },
     {
       "path": "docs/TRACKER.md",
@@ -30,8 +29,13 @@
     },
     {
       "path": "journal/DEVLOG.md",
-      "bytes": 65657,
-      "sha256": "bcd88e4a42b3b61d73b0641621313f66b2412fc9ea74b99831fefc7b53f9225e"
+      "bytes": 66251,
+      "sha256": "3dd79a398a149feb7174f30d6fa52073104b8fc6e1cd46ae69a809df2ab14626"
+    },
+    {
+      "path": "tools/pki-transition-implementation/.gitattributes",
+      "bytes": 85,
+      "sha256": "55866aa617e3795c523b0eccaa52dacd382916dca46bc43a27e3464e27787c7d"
     },
     {
       "path": "tools/pki-transition-implementation/MemoryChainFixture.cs",
@@ -70,8 +74,8 @@
     },
     {
       "path": "tools/pki-transition-implementation/completion-verification.json",
-      "bytes": 4594,
-      "sha256": "ec1cd600cc4c4a5330873e45a67174a3ee1e29c688df84a0a730c250b77f129a"
+      "bytes": 5028,
+      "sha256": "ac60c35a62fc4996c7757fc25834929fb4ceae5b6340885ec02668c7b0434f22"
     },
     {
       "path": "tools/pki-transition-implementation/context.py",

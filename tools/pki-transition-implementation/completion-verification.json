@@ -83,6 +83,14 @@
     {
       "cause": "Portable preflight started before its public packet producer completed;0 tests/1 setup error; corrected dependency wait; final12 cases pass",
       "private_receipt_SHA256": "1d49c7ee96782f60e66b243e0cd2fcc92c78dbf56b74af8e0feaf41f1c89cba5"
+    },
+    {
+      "cause": "Post-publication audit found all28 Windows source receipts used checkout CRLF, while Linux used Git LF. Both hosted PKI runs passed86 cases; every mismatch was proven CRLF-only. Scoped fixture .gitattributes pins LF for final exact-byte execution; no test suppression.",
+      "runs": [
+        41299072488,
+        41299067612
+      ],
+      "superseded_head": "4108cb0115d709518f463664b27bfb83ebe86981"
     }
   ],
   "native_pins": {

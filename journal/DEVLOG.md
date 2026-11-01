@@ -538,3 +538,8 @@ Followed Aether6556054845/body83c4d3a6 from accepted PR42/36685fc in a separate 
 ## 2026-11-01 - PKI follow-up CI and secret minimisation
 
 Initial PR43 head1003a625 passed hosted Linux63 cases but both Windows PKI jobs failed before tests: an incorrect relative source path reached csc (runs41298105990/41298109628). Resolved absolute Windows source paths fix the build without suppressing tests. Source review also limited secret entry to creation; the other three phases use consent only with disabled/hidden password fields and verified zero-length private-pipe payloads. Final source-bound local86 cases pass (Linux63/Windows23), zero failures/errors/skips; prior85-case results remain historical. Exact follow-up hosted identities/outcomes are recorded in the PR handover. No real CA/store/data access, actual Owner input, installed trust change, Docker, controller or protected merge.
+
+
+## 2026-11-01 - PKI exact checkout-byte reconciliation
+
+Both hosted PKI runs at4108cb0 passed86 synthetic cases, but readback found28 Windows source hashes differed from Git/Linux bytes. Every difference was verified CRLF-only. Added fixture-directory-scoped LF attributes, without global Git/application settings, so final hosted source receipts can match the manifest byte for byte. The28 local executable/toolchain sources are unchanged from the86-case run; final CI reruns all cases. Prior results and audit failure remain historical; no validation bypass, real CA/store access or merge.
