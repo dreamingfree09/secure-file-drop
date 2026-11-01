@@ -46,7 +46,7 @@
     "test_wrong_hostname_rejected_by_OpenSSL",
     "test_wrong_public_root_rejected"
   ],
-  "synthetic_fixture_root": "/tmp/sfd-pki-fixtures-d5c00825-ba67-4014-95bf-7c27e7414647",
+  "synthetic_fixture_root": "/tmp/sfd-pki-fixtures-c3c3ae1c-750d-4334-af94-ba26a3a33921",
   "real_trust_changes": 0,
   "real_issuer_operations": 0,
   "Docker_operations": 0,
@@ -54,11 +54,11 @@
     "accepted_design": "36685fc23e401a6ef3f549541b602df5f9e608a0",
     "authority_SHA256": "83c4d3a6ccbd559b214fe61b5e2acae97ad3d4d269016d92794fe759c54560dd",
     "authority_id": 6556054845,
-    "created": "2026-11-01T10:18:22.744895+00:00",
-    "expires": "2026-11-01T11:18:22.744895+00:00",
-    "fixture": "sfd-pki-fixtures-d5c00825-ba67-4014-95bf-7c27e7414647",
+    "created": "2026-11-01T10:45:47.486517+00:00",
+    "expires": "2026-11-01T11:45:47.486517+00:00",
+    "fixture": "sfd-pki-fixtures-c3c3ae1c-750d-4334-af94-ba26a3a33921",
     "implementation_accepted": false,
-    "lease": "7f54cf14-5c72-443e-b6d1-d4677e38380a",
+    "lease": "1cf21ea3-6b63-4267-b2e5-bd4dd403ba2a",
     "operation": "disposable_fixture_only",
     "real_issuer_authority": false,
     "schema": "SFD_SYNTHETIC_PKI_LEASE_V1",
@@ -66,7 +66,7 @@
       "FixtureWindows.cs": "c55c1e2adc5c792354340ec8644518556eeb4f53032815e2557b8dd41c0a0daf",
       "FixtureWindows.exe.config": "601e8aa2f94cb6f551b2a78b971130e48aa27c6616554467cd51bf20f97c94aa",
       "MemoryChainFixture.cs": "31bd158b22dd24957c79e309e4689a6fdf1a9aa03eaed97dacf2e4b2bc60391d",
-      "SecretEntryFixture.cs": "1b788d193c22d877e1529ada7f5f82c3bc85a082d1b6911a5cfd8849f36d32ec",
+      "SecretEntryFixture.cs": "07ecf610c809667fbcb91e533759874c7ec233636b40ae49588ae365c23762e4",
       "approvals.py": "2d0976814679e57db5215240ff472063582374fae614e90fde833f8f5fcf959e",
       "archive_recovery.py": "9ffd1fd4acde71d31a149cb998205090023eeb29c039ae93d088a352d57698af",
       "context.py": "16369f96c258377521cde7f4a7050948d95a5e4184ae771a04207aa862b145bf",
@@ -88,11 +88,11 @@
       "test_memory_chain.py": "038e57ed29d1658746f760820577c00f732582b574244a021b9b1f6ceb6fc123",
       "test_publisher_recovery.py": "c94d0307011005cb39cd0679fe79b01eafbe89fd394f30d016f9beddc4ab3951",
       "test_readiness.py": "35a550176a46e923778b0e0fbdc282d3a415605f8df46270b2161cee1b639406",
-      "test_secret_entry.py": "b0367770bfffb104f52dea48dca589f2b558dcf0c2c62fefa7a9928ff5900500",
+      "test_secret_entry.py": "8fa13ceb91b77cf1fe9b3a0c3ace5f52c99ec86b81610d4c9400710d268890f3",
       "test_windows.py": "7294db9e0c3c8d836383e89f1e373d798a41870f9dd9a60d807d6866f06d1220",
-      "toolchain.json": "f761dad3ee17d73cb1b909c828de05f04a297a21c1a4ecaf476abf5f5134fcc3"
+      "toolchain.json": "a10435432f5ebbca71b90669143ee35f9e5e08fec5f2e721a184f4f54bcb69f3"
     },
     "trust_authority": false
   },
-  "executed_context_sha256": "efd13ffc706cdcaf0577a29773cd79b130fbe9bfa3e4f8f39aefd6b74071f93b"
+  "executed_context_sha256": "0b84f1d76173b67491c6d3fc0871df3b11f2bfb872b2af6e29f10ae5d663706e"
 }

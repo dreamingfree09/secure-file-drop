@@ -77,16 +77,19 @@ namespace SfdSyntheticInput {
    internal readonly CheckBox Consent=new CheckBox{Text="I confirm only this displayed SYNTHETIC phase; no real action is authorised.",Dock=DockStyle.Top,Height=45};
    internal readonly Button Send=new Button{Text="Send fixture secret through private local pipe",Dock=DockStyle.Bottom,Enabled=false};
    internal bool Accepted;
+   internal readonly bool RequiresSecret;
    readonly Timer clock=new Timer{Interval=200};
    public InputForm(string scope,string review,DateTime expires){
+    RequiresSecret=scope=="create_issuer";First.Enabled=RequiresSecret;Confirm.Enabled=RequiresSecret;First.Visible=RequiresSecret;Confirm.Visible=RequiresSecret;
+    Send.Text=RequiresSecret?"Send fixture secret through private local pipe":"Confirm only this fixture consent — no secret";
     Text="SFD SYNTHETIC INPUT — DO NOT ENTER REAL SECRETS";Width=820;Height=580;FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
     var info=new TextBox{ReadOnly=true,Multiline=true,ScrollBars=ScrollBars.Vertical,Dock=DockStyle.Fill,
       Text="PREPARATION ONLY. No CA, trust, publisher, endpoint or retirement action can run.\r\nPhase: "+scope+"\r\n"+review};
     var cancel=new Button{Text="Cancel",Dock=DockStyle.Bottom,DialogResult=DialogResult.Cancel};
     Controls.Add(info);Controls.Add(Confirm);Controls.Add(First);Controls.Add(Consent);Controls.Add(Send);Controls.Add(cancel);
     CancelButton=cancel;
-    EventHandler changed=(s,e)=>Send.Enabled=Consent.Checked && First.Text.Length>=32 &&
-       First.Text.Length<=128 && First.Text==Confirm.Text && DateTime.UtcNow<expires;
+    EventHandler changed=(s,e)=>Send.Enabled=Consent.Checked && DateTime.UtcNow<expires && (!RequiresSecret || (First.Text.Length>=32 &&
+       First.Text.Length<=128 && First.Text==Confirm.Text));
     First.TextChanged+=changed;Confirm.TextChanged+=changed;Consent.CheckedChanged+=changed;
     Send.Click+=(s,e)=>{if(Send.Enabled){Accepted=true;DialogResult=DialogResult.OK;Close();}};
     clock.Tick+=(s,e)=>{if(DateTime.UtcNow>=expires){Accepted=false;First.Clear();Confirm.Clear();Close();}};
@@ -97,11 +100,15 @@ namespace SfdSyntheticInput {
   static object ControlsTest(){
    foreach(string scope in Scopes)using(var f=new InputForm(scope,"SYNTHETIC "+scope+" No real action",DateTime.UtcNow.AddMinutes(1))){
     Need(!f.Send.Enabled && !f.Consent.Checked && f.First.UseSystemPasswordChar && f.Confirm.UseSystemPasswordChar && !f.First.ShortcutsEnabled);
-    f.First.Text=new string('x',32);f.Confirm.Text=new string('y',32);f.Consent.Checked=true;Need(!f.Send.Enabled);
-    f.Confirm.Text=f.First.Text;Need(f.Send.Enabled);
+    if(f.RequiresSecret){
+     f.First.Text=new string('x',32);f.Confirm.Text=new string('y',32);f.Consent.Checked=true;Need(!f.Send.Enabled);
+     f.Confirm.Text=f.First.Text;Need(f.Send.Enabled);
+    }else{
+     Need(!f.First.Enabled&&!f.Confirm.Enabled);f.Consent.Checked=true;Need(f.Send.Enabled);
+    }
     f.Consent.Checked=false;Need(!f.Send.Enabled);
    }
-   return new{four_scopes=true,masked=true,confirm_required=true,consent_not_preselected=true,clipboard_shortcuts_disabled=true,real_actions_enabled=false};
+   return new{four_scopes=true,masked=true,confirm_required=true,consent_not_preselected=true,clipboard_shortcuts_disabled=true,real_actions_enabled=false,no_secret_on_other_scopes=true};
   }
   static int Transfer(string mode,string inputHandle,string outputHandle){
    using(var source=new AnonymousPipeClientStream(PipeDirection.In,inputHandle))
@@ -113,18 +120,19 @@ namespace SfdSyntheticInput {
     if(mode=="--cancel-selftest")return 2;
     byte[] secret=null;
     try{
-     if(mode=="--pipe-selftest")secret=Encoding.UTF8.GetBytes("SYNTHETIC-ONLY-"+Guid.NewGuid().ToString("N"));
+     bool needsSecret=(string)c["scope"]=="create_issuer";
+     if(mode=="--pipe-selftest")secret=needsSecret?Encoding.UTF8.GetBytes("SYNTHETIC-ONLY-"+Guid.NewGuid().ToString("N")):new byte[0];
      else{
       Need(mode=="--interactive-fixture" && Environment.UserInteractive);
       DateTime expires=DateTime.Parse((string)c["expires"]).ToUniversalTime();
       using(var form=new InputForm((string)c["scope"],(string)c["public_review_text"],expires)){
        if(form.ShowDialog()!=DialogResult.OK || !form.Accepted)return 2;
-       secret=Encoding.UTF8.GetBytes(form.First.Text);
+       secret=needsSecret?Encoding.UTF8.GetBytes(form.First.Text):new byte[0];
       }
      }
      Validate(c);
      var writer=new BinaryWriter(dest,Encoding.UTF8);writer.Write(secret.Length);writer.Write(secret);writer.Flush();
-     Console.WriteLine("{\"private_pipe_transfer\":true,\"real_action\":false}");
+     Console.WriteLine(new JavaScriptSerializer().Serialize(new{private_pipe_transfer=true,real_action=false,secret_required=needsSecret}));
      return 0;
     }finally{if(secret!=null)Array.Clear(secret,0,secret.Length);}
    }

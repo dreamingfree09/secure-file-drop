@@ -66,10 +66,10 @@
   },
   "qualification_limits": "Vendor-supported Ubuntu fixture package; no whole-OS zero-CVE clearance or actual Owner custody. Future live baseline refresh remains mandatory.",
   "completion_native_probes": {
-    "memory_binary_sha256": "8b495b9dc5e5602f54921d45c31f9763466bb161bc5d49d642a64dec638fe197",
-    "input_binary_sha256": "394b8a09a49c37f3815d4f90947dc2fb8e0e690afda4bf679735577e21ce9bae",
+    "memory_binary_sha256": "0bc8574a0ee84713a28baca7b23f32788b0cf5ac85dd6dfb25bd6506a72c1d43",
+    "input_binary_sha256": "377e1bcce58999897b6ac23c4cc5752c308e4027113029e77d027765082184fc",
     "memory_source_sha256": "31bd158b22dd24957c79e309e4689a6fdf1a9aa03eaed97dacf2e4b2bc60391d",
-    "input_source_sha256": "1b788d193c22d877e1529ada7f5f82c3bc85a082d1b6911a5cfd8849f36d32ec"
+    "input_source_sha256": "07ecf610c809667fbcb91e533759874c7ec233636b40ae49588ae365c23762e4"
   },
   "vendor_support_references": [
     "https://ubuntu.com/about/release-cycle",

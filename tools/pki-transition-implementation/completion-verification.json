@@ -1,6 +1,6 @@
 {
   "work_id": "SFD-PKI-IMPLEMENTATION-COMPLETION-PREP-20261101",
-  "UTC": "2026-11-01T10:29:37.367004+00:00",
+  "UTC": "2026-11-01T10:47:09.965285+00:00",
   "base": "36685fc23e401a6ef3f549541b602df5f9e608a0",
   "authority": {
     "comment": 6556054845,
@@ -12,45 +12,45 @@
       "failures": 0,
       "errors": 0,
       "skips": 0,
-      "receipt_sha256": "b3a70219f900ec118d643216c613bc81a3812888064eec7343d20562b5d6e84b"
+      "receipt_sha256": "7117aa37fb17b1dcfdfdda2f9a489e9a7210e43886d1c8c893d8c056a4de1d59"
     },
     "archive": {
       "tests": 13,
       "failures": 0,
       "errors": 0,
       "skips": 0,
-      "receipt_sha256": "fb028c690b5b7ac363a02baa99a3e85e775c3201a11ec39b2479a80847bf9ecf"
+      "receipt_sha256": "abccc6b2fdc7a17144b9d54790be1a976ec269cfbdca55f2f5d40e7b1e563b8a"
     },
     "publisher-recovery": {
       "tests": 6,
       "failures": 0,
       "errors": 0,
       "skips": 0,
-      "receipt_sha256": "bdff8ecfb399e8a10a3213aa3f27c3d742b7f6898fcae6afc970a54d1e226614"
+      "receipt_sha256": "3cec37882d998983ea506564a1f84ea2bfe06d692fa1bbc36455f6ff2ba970d5"
     },
     "readiness": {
       "tests": 4,
       "failures": 0,
       "errors": 0,
       "skips": 0,
-      "receipt_sha256": "5a7e227ad453533aa884615850479bb567f9f66ee2ed05fe549bb02a4335eab9"
+      "receipt_sha256": "e40356dbb5bf6cfb1609d6283edfb8aa30ce89a66716a394b83f05b1785f68e6"
     },
     "secret": {
-      "tests": 10,
+      "tests": 11,
       "failures": 0,
       "errors": 0,
       "skips": 0,
-      "receipt_sha256": "2c52e80eb90689bfce7e55f9d9c069f53738f924f16f7f18deefcf9f891cd082"
+      "receipt_sha256": "e684b1cc53089bcce8bf2faff948fd9982ee556861d32310b79d29ac5312cd65"
     },
     "memory-chain": {
       "tests": 12,
       "failures": 0,
       "errors": 0,
       "skips": 0,
-      "receipt_sha256": "3a0aeb0e20122e502a5cc0e4240a80ab7d7daf96e3ac8a464e0d71f5a261e7e9"
+      "receipt_sha256": "13db05810fe66eb0df9286b4c7b0f9741ce138c41f1ce2bbc1dff0a8fb52d08a"
     }
   },
-  "total_logical_local_cases": 85,
+  "total_logical_local_cases": 86,
   "current_source_files_bound": 28,
   "earlier_failures": [
     {
@@ -69,6 +69,14 @@
       "retained": true
     },
     {
+      "cause": "Hosted Windows compiler received an incorrect relative source path; two initial CI jobs failed before tests. Corrected with Resolve-Path/Join-Path; no test suppression.",
+      "runs": [
+        41298105990,
+        41298109628
+      ],
+      "private_logs_retained": true
+    },
+    {
       "cause": "Isolated Python receipt import path missing; corrected before final native suites",
       "tests_executed_by_failed_invocation": 0
     },
@@ -78,10 +86,10 @@
     }
   ],
   "native_pins": {
-    "memory_binary_sha256": "8b495b9dc5e5602f54921d45c31f9763466bb161bc5d49d642a64dec638fe197",
-    "input_binary_sha256": "394b8a09a49c37f3815d4f90947dc2fb8e0e690afda4bf679735577e21ce9bae",
+    "memory_binary_sha256": "0bc8574a0ee84713a28baca7b23f32788b0cf5ac85dd6dfb25bd6506a72c1d43",
+    "input_binary_sha256": "377e1bcce58999897b6ac23c4cc5752c308e4027113029e77d027765082184fc",
     "memory_source_sha256": "31bd158b22dd24957c79e309e4689a6fdf1a9aa03eaed97dacf2e4b2bc60391d",
-    "input_source_sha256": "1b788d193c22d877e1529ada7f5f82c3bc85a082d1b6911a5cfd8849f36d32ec"
+    "input_source_sha256": "07ecf610c809667fbcb91e533759874c7ec233636b40ae49588ae365c23762e4"
   },
   "real_CA_or_private_key_or_original_backup_accessed": false,
   "application_system_certificate_store_open_calls": 0,

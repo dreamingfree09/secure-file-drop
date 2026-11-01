@@ -68,6 +68,15 @@ class SecretTests(unittest.TestCase):
         self.assertEqual(code,2);self.assertEqual(body,b"")
         code,_,_,body=execute(c);self.assertNotEqual(code,0);self.assertEqual(body,b"")
 
+
+    def test_other_phases_are_consent_only_without_secret_transfer(self):
+        for scope in ("install_current_user_root","select_endpoint","retire_old_root"):
+            c=self.context();c["scope"]=scope;c["public_review_text"]="SYNTHETIC "+scope+" No real action"
+            code,out,_,body=execute(c);self.assertEqual(code,0)
+            self.assertEqual(struct.unpack("<I",body[:4])[0],0)
+            self.assertEqual(body[4:],b"")
+            self.assertFalse(json.loads(out)["secret_required"])
+
 if __name__=="__main__":
     from context import pins
     execution_source=pins()
