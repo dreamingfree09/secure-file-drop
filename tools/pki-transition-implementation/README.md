@@ -1,5 +1,7 @@
 # Fixture-only CA/trust implementation preparation
 
+Current correction: [repeated recovery](../../docs/PKI_REPEATED_RECOVERY.md), V3 fixture-only authenticated history and fresh target authority. Prior completion claims are historical pending this exact revision's independent review.
+
 Current continuation: [PKI completion preparation](../../docs/PKI_COMPLETION_PREP.md). Use the archive/recovery, private input and memory-only Windows suites for this phase. The legacy default-client/store-snapshot test below is historical and is not authorised against the Owner stores by the current continuation. Real actions remain disabled.
 
 Read [scope, architecture, executed results and future authority](../../docs/LOCAL_PKI_IMPLEMENTATION_PREP.md). This is not a deployable replacement issuer or trust installer. Source entry points accept only newly marked UUID Temp fixtures; real transition and approval functions always refuse.

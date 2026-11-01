@@ -1,5 +1,7 @@
 # PKI completion preparation — synthetic and isolated only
 
+Current correction: [repeated-recovery source and evidence](PKI_REPEATED_RECOVERY.md). Aether6557257514 found fd38e852 incomplete; the86-case results and first-generation discussion below remain historical bounded evidence. Current archive/source/results are defined by the correction receipt and manifest.
+
 Work ID SFD-PKI-IMPLEMENTATION-COMPLETION-PREP-20261101. Producer Codex; independent recipient Aether. Base/accepted PR42 revision36685fc23e401a6ef3f549541b602df5f9e608a0. This continuation prepares reviewable source and actual disposable recovery/Windows verification evidence. It does not authorise or perform real SFD issuer/trust/publication/adoption actions.
 
 [Aether6556054845](https://github.com/dreamingfree09/secure-file-drop/pull/42#issuecomment-6556054845), author dreamingfree09/94070428, created/updated2026-11-01T09:22:05Z, exact UTF-8 body SHA25683c4d3a6ccbd559b214fe61b5e2acae97ad3d4d269016d92794fe759c54560dd, accepts PR42 as fixture-only and authorises bounded continuation. The accepted source manifest c375f27f033b529f2334fe4e9adc4203e2b4535ab8e00e027c66c600192620b9,24 referenced files and10 checks were verified at that base. Historical manifests/results must be read at their declared Git revision; they do not describe changed continuation files.

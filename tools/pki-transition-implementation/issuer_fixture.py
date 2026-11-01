@@ -33,11 +33,23 @@ class IssuerFixture:
         if digest(pathlib.Path(self.exe).read_bytes())!=pins["openssl_sha256"]:
             raise Stop("fixture-tool-pin")
 
+    def verify_signing_authority(self):
+        if (self.root/"restore.started").exists():
+            from archive_recovery import verify_active_recovery
+            return verify_active_recovery(self.root)
+        try:
+            lease=json.loads(read_small(self.root/"source-context.json"))
+            verify(lease,self.root)
+            if read_small(self.root/"source-context.used")!=lease["lease"].encode():
+                raise Stop("fixture-source-authority-binding")
+        except FileNotFoundError as error:
+            raise Stop("fixture-signing-authority-missing") from error
+        return True
+
     def command(self, args, secret=None, data=None):
         owned(self.root)
         if args[0]=="ca":
-            chosen=self.root/("recovery-context.json" if (self.root/"recovery-context.json").exists() else "source-context.json")
-            verify(json.loads(read_small(chosen)),self.root)
+            self.verify_signing_authority()
         if args[0] not in ("ca","req","genpkey","pkey","x509","crl","verify","dgst","pkcs8"):
             raise Stop("fixture-command-role")
         if any(x.startswith(("pass:","env:","file:")) for x in args):
@@ -189,8 +201,7 @@ authorityKeyIdentifier=keyid:always
     def new_crl(self, name, expired=False):
         if name not in ("current","expired","successor","wrong_aki","recovered"):
             raise Stop("fixture-crl-role")
-        chosen=self.root/("recovery-context.json" if (self.root/"recovery-context.json").exists() else "source-context.json")
-        verify(json.loads(read_small(chosen)),self.root)
+        self.verify_signing_authority()
         write_new(child(self.root,name+".started"),b"one-use fixture signing lock\n")
         args=["ca","-config","issuer.cnf","-gencrl","-passin","fd:SECRET_FD","-out",name+".crl.pem"]
         if name=="wrong_aki":

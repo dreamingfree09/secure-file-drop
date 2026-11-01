@@ -1,11 +1,13 @@
 {
-  "work_id": "SFD-PKI-IMPLEMENTATION-COMPLETION-PREP-20261101",
-  "utc": "2026-11-01T09:31:05.269363+00:00",
+  "work_id": "SFD-PKI-REPEATED-RECOVERY-CORRECTION-20261101",
+  "started": "2026-11-01T12:17:26.800973+00:00",
+  "received": "fd38e852bc579f0083bf2241b791b7ff634e5bbf",
   "base": "36685fc23e401a6ef3f549541b602df5f9e608a0",
-  "authority_id": 6556054845,
+  "authority_id": 6557257514,
+  "authority_body_SHA256": "3be2056c1ee1eaf23f5a163247826be68a43bb7641bf6a42dedaab767d89d061",
   "authority_author": "dreamingfree09",
-  "authority_body_SHA256": "83c4d3a6ccbd559b214fe61b5e2acae97ad3d4d269016d92794fe759c54560dd",
-  "authority_created": "2026-11-01T09:22:05Z",
+  "authority_created": "2026-11-01T11:21:50Z",
+  "authority_updated": "2026-11-01T11:21:50Z",
   "protected_master": "61195434bee5f9221a6f55469c719cb360504ea9",
   "preserved_PR_heads": {
     "38": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
@@ -14,7 +16,7 @@
     "41": "b14cc7b88989dc62edcf3c17139d8b315a788f0b",
     "42": "36685fc23e401a6ef3f549541b602df5f9e608a0"
   },
-  "base_checks_success": 10,
-  "real_CA_or_store_or_data_access_authorized": false,
-  "synthetic_only": true
+  "branch": "codex/sfd-pki-completion-preparation-20261101",
+  "synthetic_only": true,
+  "real_CA_or_store_or_data_access_authorized": false
 }

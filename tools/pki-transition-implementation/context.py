@@ -4,8 +4,8 @@ import json
 import pathlib
 import uuid
 from fence import Stop,child,digest,owned,read_small,write_new
-AUTHORITY_ID=6556054845
-AUTHORITY_SHA256="83c4d3a6ccbd559b214fe61b5e2acae97ad3d4d269016d92794fe759c54560dd"
+AUTHORITY_ID=6557257514
+AUTHORITY_SHA256="3be2056c1ee1eaf23f5a163247826be68a43bb7641bf6a42dedaab767d89d061"
 BASE="36685fc23e401a6ef3f549541b602df5f9e608a0"
 SOURCE_FILES=tuple(sorted(p.name for p in pathlib.Path(__file__).resolve().parent.iterdir()
                          if p.is_file() and (p.suffix in (".py",".cs",".config") or p.name=="toolchain.json")))

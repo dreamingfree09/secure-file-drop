@@ -14,14 +14,15 @@ from der import certificate, crl, seq
 from crypto import pem
 from publisher_fixture import publication_lock
 from context import verify
+from recovery_history import PREFIX, event, split_name, snapshot_history, validate as validate_history, write_history, inventory_digest, check_current
 
-SCHEMA="SFD_SYNTHETIC_ARCHIVE_V2"
+SCHEMA="SFD_SYNTHETIC_ARCHIVE_V3"
 CORE={"ca.enc.pem","root.pem","issuer.cnf","index.txt","index.txt.attr","serial","crlnumber"}
 ROLE_KEYS={"valid","expired","revoked","client"}
 MAX_OBJECTS=256
 MAX_TOTAL=8*1024*1024
 ITERATIONS=json.loads((pathlib.Path(__file__).parent/"toolchain.json").read_text())["calibrated_KDF_candidate"]["iterations"]
-DOMAIN=b"SFD-SYNTHETIC-ARCHIVE-AUTH-V2\0"
+DOMAIN=b"SFD-SYNTHETIC-ARCHIVE-AUTH-V3\0"
 
 def canonical(obj):
     return json.dumps(obj,sort_keys=True,separators=(",",":")).encode()
@@ -76,16 +77,17 @@ def snapshot(issuer,destination,backup_secret):
         rootder=pem_der(read_small(src/"root.pem"))
         rootinfo=certificate(rootder)
         if b"SyntheticSFDFixture-" not in rootinfo["subject"]:raise Stop("archive-synthetic-only")
+        serial_next=int(read_small(src/"serial").strip(),16)
+        crl_next=int(read_small(src/"crlnumber").strip(),16)
+        if serial_next<=max(rows,default=0):raise Stop("archive-serial-reconciliation")
+        generation,history=snapshot_history(src,digest(rootder),digest(rootinfo["spki"]),serial_next,crl_next)
         names=set(CORE)
-        names|={p.name for p in src.iterdir() if p.is_file() and
-            (p.name.endswith((".started",".crl.der",".crl.pem",".csr")) or
-             p.name in ("creation.started","source-context.json","source-context.used",
-                        "index.txt.old","index.txt.attr.old","serial.old","crlnumber.old",
-                        "restore.verified.json","recovery-context.json","recovery-context.used"))}
+        names|={p.name for p in src.iterdir() if p.is_file() and p.name.endswith(".csr")}
         for role in ROLE_KEYS:
             for ext in (".pem",".der"):
                 if (src/(role+ext)).exists():names.add(role+ext)
         files={name:read_small(child(src,name)) for name in sorted(names)}
+        files.update(history)
         for name in issued.values():files["newcerts/"+name]=read_small(src/"newcerts"/name)
         key_names={p.stem for p in src.glob("*.key")}
         if not key_names<=ROLE_KEYS or "valid" not in key_names:raise Stop("archive-server-key-inventory")
@@ -105,7 +107,7 @@ def snapshot(issuer,destination,backup_secret):
             entries[name]={"sha256":sha,"bytes":len(data)}
         m={"schema":SCHEMA,"fixture_only":True,"source_fixture":src.name,
            "root_der_sha256":digest(rootder),"root_spki_sha256":digest(rootinfo["spki"]),
-           "ledger_serials":sorted(rows),"ledger_next_crl":int(read_small(src/"crlnumber").strip(),16),
+           "generation":generation,"ledger_serials":sorted(rows),"ledger_next_crl":crl_next,"ledger_next_serial":serial_next,
            "files":entries}
         manifest=canonical(m)
         salt=secrets.token_bytes(16)
@@ -140,8 +142,11 @@ def open_snapshot(root,backup_secret,expected_manifest):
     if not isinstance(m.get("files"),dict) or not 0<len(m["files"])<=MAX_OBJECTS:raise Stop("archive-inventory")
     total=0;contents={}
     for name,item in m["files"].items():
-        if not re.fullmatch(r"(?:newcerts/|encrypted-server-keys/)?[A-Za-z0-9_.-]{1,128}",name) or name.endswith(("/..","/.")) or name in (".",".."):
-            raise Stop("archive-path")
+        if name.startswith(PREFIX):
+            split_name(name)
+        elif (not re.fullmatch(r"(?:newcerts/|encrypted-server-keys/)?[A-Za-z0-9_.-]{1,128}",name)
+              or name.endswith(("/..","/.")) or name in (".","..") or event(name)):
+            raise Stop("archive-path-or-active-history")
         if set(item)!={"sha256","bytes"} or not re.fullmatch("[a-f0-9]{64}",item["sha256"]) or type(item["bytes"]) is not int:
             raise Stop("archive-object-profile")
         data=read_small(child(root,"object-"+item["sha256"]))
@@ -151,6 +156,12 @@ def open_snapshot(root,backup_secret,expected_manifest):
         contents[name]=data
     if not CORE<=contents.keys() or "encrypted-server-keys/valid.pem" not in contents:
         raise Stop("archive-required-object")
+    if (type(m.get("ledger_next_serial")) is not int or type(m.get("ledger_next_crl")) is not int
+        or m["ledger_next_serial"]<=0 or m["ledger_next_crl"]<=0):
+        raise Stop("archive-counter-profile")
+    history={n:v for n,v in contents.items() if n.startswith(PREFIX)}
+    validate_history(history,m["root_der_sha256"],m["root_spki_sha256"],m["generation"],
+                     m["source_fixture"],m["ledger_next_serial"],m["ledger_next_crl"])
     return m,contents
 
 def copy_snapshot(source,target):
@@ -167,10 +178,17 @@ def restore(issuer,archive,target,ca_secret,backup_secret,expected_manifest,inte
     target=owned(target)
     if sorted(p.name for p in target.iterdir())!=["fixture.json"]:raise Stop("archive-restore-target-not-empty")
     m,data=open_snapshot(archive,backup_secret,expected_manifest)
-    write_new(child(target,"restore.started"),canonical({"source_manifest":expected_manifest,"fixture_only":True}))
+    import uuid
+    operation=str(uuid.uuid4())
+    write_new(child(target,"restore.started"),canonical({"source_manifest_sha256":expected_manifest,
+        "source_fixture":m["source_fixture"],"target_fixture":target.name,
+        "generation":m["generation"]+1,"operation":operation,"fixture_only":True}))
+    history={n:v for n,v in data.items() if n.startswith(PREFIX)}
+    write_history(target,history)
     encrypted={}
     count=0
     for name,content in sorted(data.items()):
+        if name.startswith(PREFIX):continue
         if name.startswith("encrypted-server-keys/"):
             encrypted[pathlib.PurePosixPath(name).stem]=content
             continue
@@ -198,24 +216,65 @@ def restore(issuer,archive,target,ca_secret,backup_secret,expected_manifest,inte
         cert=certificate(pem_der(read_small(target/(role+".pem"))))
         if cert["spki"]!=pub:raise Stop("archive-restored-server-identity")
     rows,issued=ledger(target,issuer)
-    if sorted(rows)!=m["ledger_serials"] or int(read_small(target/"crlnumber").strip(),16)!=m["ledger_next_crl"]:
+    if (sorted(rows)!=m["ledger_serials"] or int(read_small(target/"crlnumber").strip(),16)!=m["ledger_next_crl"]
+        or int(read_small(target/"serial").strip(),16)!=m["ledger_next_serial"]):
         raise Stop("archive-restored-ledger")
-    for name in data:
+    # Public-only RSA/SHA256 signature checks on every retained CRL, including diagnostic profiles.
+    scratch=create_workspace()
+    public=child(scratch,"root-public.pem")
+    write_new(public,pem(b"PUBLIC KEY",rootinfo["spki"]))
+    for name,blob in history.items():
         if name.endswith(".crl.der"):
-            obj=crl(data[name])
+            obj=crl(blob);parts=seq(blob)
+            tbs=child(scratch,"tbs-"+digest(blob));sig=child(scratch,"sig-"+digest(blob))
+            if not tbs.exists():
+                write_new(tbs,parts[0][2]);write_new(sig,parts[2][1][1:])
+            issuer.command(["dgst","-sha256","-verify",str(public),"-signature",str(sig),str(tbs)])
             if obj["number"]>=m["ledger_next_crl"]:raise Stop("archive-counter-reconciliation")
+            pair=name[:-4]+".pem"
+            lines=history.get(pair,b"").splitlines()
+            if (not lines or lines[0]!=b"-----BEGIN X509 CRL-----" or lines[-1]!=b"-----END X509 CRL-----" or
+                base64.b64decode(b"".join(lines[1:-1]),validate=True)!=blob):
+                raise Stop("archive-CRL-envelope-pair")
     result={"schema":SCHEMA,"restored_objects":len(data),"issued_certificates":len(issued),
             "server_keys_restored":len(encrypted),"root_der_sha256":digest(rootder),
-            "next_crl_counter":m["ledger_next_crl"],"CA_and_server_public_identity_verified":True,
+            "next_crl_counter":m["ledger_next_crl"],"next_serial":m["ledger_next_serial"],
+            "root_spki_sha256":digest(rootinfo["spki"]),"source_manifest_sha256":expected_manifest,
+            "source_fixture":m["source_fixture"],"target_fixture":target.name,"generation":m["generation"]+1,
+            "operation":operation,"history_sha256":inventory_digest(history),
+            "prior_receipt_sha256":digest(history[PREFIX+m["source_fixture"]+"/restore.verified.json"])
+                if PREFIX+m["source_fixture"]+"/restore.verified.json" in history else None,
+            "CA_and_server_public_identity_verified":True,
             "real_vault_or_distinct_physical_media_verified":False}
     write_new(child(target,"restore.verified.json"),canonical(result))
     return result
 
 def activate_fixture_recovery(root,lease):
     root=owned(root);verify(lease,root)
-    receipt=json.loads(read_small(child(root,"restore.verified.json")))
-    if receipt.get("CA_and_server_public_identity_verified") is not True or int(read_small(root/"crlnumber").strip(),16)!=receipt["next_crl_counter"]:
+    receipt=check_current(root)
+    if (int(read_small(root/"crlnumber").strip(),16)!=receipt["next_crl_counter"] or
+        int(read_small(root/"serial").strip(),16)!=receipt["next_serial"] or
+        digest(pem_der(read_small(root/"root.pem")))!=receipt["root_der_sha256"]):
         raise Stop("archive-recovery-authority-state")
+    if any((root/n).exists() for n in ("recovery-context.json","recovery-context.used")):
+        raise FileExistsError("archive-recovery-context-already-consumed")
     write_new(child(root,"recovery-context.json"),canonical(lease))
-    write_new(child(root,"recovery-context.used"),lease["lease"].encode())
+    write_new(child(root,"recovery-context.used"),canonical({"schema":"SFD_RECOVERY_AUTHORITY_V1",
+        "lease":lease["lease"],"target_fixture":root.name,"operation":receipt["operation"],
+        "restore_receipt_sha256":digest(read_small(root/"restore.verified.json"))}))
+    return True
+
+def verify_active_recovery(root):
+    root=owned(root)
+    try:
+        receipt=check_current(root)
+        lease=json.loads(read_small(root/"recovery-context.json"))
+        marker=json.loads(read_small(root/"recovery-context.used"))
+    except (FileNotFoundError,KeyError,json.JSONDecodeError) as error:
+        raise Stop("archive-recovery-authority-missing") from error
+    verify(lease,root)
+    expected={"schema":"SFD_RECOVERY_AUTHORITY_V1","lease":lease["lease"],"target_fixture":root.name,
+        "operation":receipt["operation"],"restore_receipt_sha256":digest(read_small(root/"restore.verified.json"))}
+    if marker!=expected or digest(pem_der(read_small(root/"root.pem")))!=receipt["root_der_sha256"]:
+        raise Stop("archive-recovery-authority-binding")
     return True
