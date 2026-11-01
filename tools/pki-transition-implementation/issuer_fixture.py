@@ -13,7 +13,7 @@ import uuid
 from fence import Stop, child, create_workspace, digest, owned, read_small, write_new, assert_openssl_toolchain
 from publisher_fixture import publication_lock
 from der import certificate
-from context import bind_once
+from context import bind_once, verify
 
 class MemoryFixtureVault:
     """Not a real escrow: disposable secret held separately in test-process memory."""
@@ -33,14 +33,29 @@ class IssuerFixture:
         if digest(pathlib.Path(self.exe).read_bytes())!=pins["openssl_sha256"]:
             raise Stop("fixture-tool-pin")
 
+    def verify_signing_authority(self):
+        if (self.root/"restore.started").exists():
+            from archive_recovery import verify_active_recovery
+            return verify_active_recovery(self.root)
+        try:
+            lease=json.loads(read_small(self.root/"source-context.json"))
+            verify(lease,self.root)
+            if read_small(self.root/"source-context.used")!=lease["lease"].encode():
+                raise Stop("fixture-source-authority-binding")
+        except FileNotFoundError as error:
+            raise Stop("fixture-signing-authority-missing") from error
+        return True
+
     def command(self, args, secret=None, data=None):
         owned(self.root)
-        if args[0] not in ("ca","req","genpkey","pkey","x509","crl","verify"):
+        if args[0]=="ca":
+            self.verify_signing_authority()
+        if args[0] not in ("ca","req","genpkey","pkey","x509","crl","verify","dgst","pkcs8"):
             raise Stop("fixture-command-role")
         if any(x.startswith(("pass:","env:","file:")) for x in args):
             raise Stop("fixture-secret-transport")
         for i,x in enumerate(args[:-1]):
-            if x in ("-in","-key","-out","-config","-revoke","-trusted","-CRLfile","-CAfile"):
+            if x in ("-in","-key","-out","-config","-revoke","-trusted","-CRLfile","-CAfile","-verify","-signature"):
                 value=pathlib.Path(args[i+1])
                 value=child(owned(value.parent),value.name) if value.is_absolute() else child(self.root,str(value))
                 if x=="-out" and value.exists():raise Stop("fixture-output-exists")
@@ -137,7 +152,7 @@ authorityKeyIdentifier=keyid:always
             gen=subprocess.Popen([self.exe,"genpkey","-algorithm","RSA","-pkeyopt","rsa_keygen_bits:3072"],
                                  stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,env={"PATH":"/usr/bin:/bin","OPENSSL_CONF":"/dev/null"})
             enc=subprocess.run([self.exe,"pkcs8","-topk8","-v2","aes-256-cbc","-v2prf","hmacWithSHA256",
-                "-iter","600000","-passout","fd:"+str(rd)],stdin=gen.stdout,stdout=fd,
+                "-iter",str(json.loads((pathlib.Path(__file__).parent/"toolchain.json").read_text())["calibrated_KDF_candidate"]["iterations"]),"-passout","fd:"+str(rd)],stdin=gen.stdout,stdout=fd,
                 stderr=subprocess.PIPE,pass_fds=(rd,),timeout=60,env={"PATH":"/usr/bin:/bin","OPENSSL_CONF":"/dev/null"})
             gen.stdout.close()
             if gen.wait(timeout=60)!=0 or enc.returncode!=0:raise Stop("fixture-key-encryption")
@@ -184,8 +199,9 @@ authorityKeyIdentifier=keyid:always
         write_new(child(self.root,kind+".der"),self.command(["x509","-in",cert,"-outform","DER"]))
 
     def new_crl(self, name, expired=False):
-        if name not in ("current","expired","successor","wrong_aki"):
+        if name not in ("current","expired","successor","wrong_aki","recovered"):
             raise Stop("fixture-crl-role")
+        self.verify_signing_authority()
         write_new(child(self.root,name+".started"),b"one-use fixture signing lock\n")
         args=["ca","-config","issuer.cnf","-gencrl","-passin","fd:SECRET_FD","-out",name+".crl.pem"]
         if name=="wrong_aki":

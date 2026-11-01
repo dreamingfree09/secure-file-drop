@@ -1,0 +1,114 @@
+{
+  "scope": "complete disposable issuer/operation archive and encrypted server-key recovery",
+  "tests_run": 25,
+  "failures": 0,
+  "errors": 0,
+  "skips": 0,
+  "names": [
+    "test_activation_does_not_overwrite_receipt_or_consumed_marker",
+    "test_authenticated_corrupt_historical_CRL_signature_rejected",
+    "test_authenticated_wrong_history_identity_generation_or_counter_rejected",
+    "test_authentication_tag_or_KDF_tamper_fails",
+    "test_ciphertext_object_tamper_stops_before_target_writes",
+    "test_complete_snapshot_contains_archives_receipts_and_encrypted_server_keys",
+    "test_current_receipt_tamper_rejected_before_forward_signing",
+    "test_full_restore_reconciles_all_public_private_identities",
+    "test_interrupted_second_restore_preserves_history_and_cannot_retry",
+    "test_manifest_change_cannot_be_authorised_by_untrusted_hash",
+    "test_missing_issued_certificate_fails_restore",
+    "test_new_ledger_counter_not_downgraded",
+    "test_no_active_receipt_or_context_can_be_overwritten",
+    "test_original_source_context_is_not_recovery_authority",
+    "test_previous_generation_recovery_context_rejected",
+    "test_resealed_archive_counter_downgrade_rejected",
+    "test_restore_interruption_consumed_and_retained",
+    "test_restore_snapshot_restore_retains_separate_versioned_history",
+    "test_restored_issuer_signs_forward_from_retained_counter",
+    "test_snapshot_output_cannot_overwrite_an_existing_archive",
+    "test_tampered_historical_object_rejected_before_second_target_writes",
+    "test_two_disjoint_copy_locations_restore_same_issuer",
+    "test_two_recovery_generations_activate_and_sign_forward",
+    "test_wrong_CA_credential_stops_with_partial_state_preserved",
+    "test_wrong_archive_credential_fails_before_restore_writes"
+  ],
+  "real_CA_or_backups_accessed": false,
+  "physical_custody_verified": false,
+  "snapshot": {
+    "manifest_sha256": "ab7e2bbae18099a50caa4b8b5f7b9ba438c26a847b6deedef05745dbc35fd9a9",
+    "objects": 48,
+    "root_der_sha256": "ecafc3a621e682f78698055c4bced8362113ac20f2fb269cf08dacb6600dde47",
+    "server_keys": 4,
+    "real_custody_verified": false
+  },
+  "generation_regressions": [
+    {
+      "case": "restore-snapshot-restore",
+      "generations": [
+        1,
+        2
+      ],
+      "root_der_sha256": "ecafc3a621e682f78698055c4bced8362113ac20f2fb269cf08dacb6600dde47",
+      "history_objects": 25,
+      "active_operations_distinct": true,
+      "all_prior_history_bytes_preserved": true
+    },
+    {
+      "case": "restore-activate-sign-snapshot-restore-activate-sign",
+      "generations": [
+        1,
+        2
+      ],
+      "signed_CRL_numbers": [
+        8196,
+        8197
+      ],
+      "final_next_CRL": 8198,
+      "serial_preserved": true,
+      "issued_ledger_preserved": true,
+      "all_history_bytes_preserved": true,
+      "root_der_sha256": "ecafc3a621e682f78698055c4bced8362113ac20f2fb269cf08dacb6600dde47",
+      "server_public_key_SHA256": {
+        "valid": "c960cfc407c4f4ceb937d9dbb38aafd3d4c2709d74c94c82c2ab84a507803efc",
+        "expired": "268a0d3954cbad755749f6ba7f2d66cbadf544e125c07e11620e84cb4d3e99f6",
+        "revoked": "0bc166c7e982381d89571f7ae8fafe312d010082750e48c17adad2e27540bfe2",
+        "client": "9e62b9b73f12088e3a8e3c052ef61afd6cb90157c43b329e66354f5b0164e9ab"
+      },
+      "all_CRL_and_issued_certificate_signatures_verified": true,
+      "history_objects": 31,
+      "prior_receipt_sha256": "3caa5d9a4d32370ed0b7b6fbce4be5bd0e9453e742770ef89b7cb65ac994f9dc",
+      "fresh_target_bound_leases": true
+    }
+  ],
+  "executed_source_SHA256": {
+    "FixtureWindows.cs": "c55c1e2adc5c792354340ec8644518556eeb4f53032815e2557b8dd41c0a0daf",
+    "FixtureWindows.exe.config": "601e8aa2f94cb6f551b2a78b971130e48aa27c6616554467cd51bf20f97c94aa",
+    "MemoryChainFixture.cs": "31bd158b22dd24957c79e309e4689a6fdf1a9aa03eaed97dacf2e4b2bc60391d",
+    "SecretEntryFixture.cs": "07ecf610c809667fbcb91e533759874c7ec233636b40ae49588ae365c23762e4",
+    "approvals.py": "2d0976814679e57db5215240ff472063582374fae614e90fde833f8f5fcf959e",
+    "archive_recovery.py": "4460081d68378e32a17c42ac0370421d718e9fa4de81b6261ff15a863ae25dc6",
+    "context.py": "817552cae5391718cb5eda0adaad5d631c6a6e0c699a643d08fe069caa5e25a8",
+    "crypto.py": "667d8cf0950dd08f6a97f4f120df98391834edd9b7ec28f4b1e251d8c170e191",
+    "der.py": "b8a69faed5b25a584740dc14482474c10912f66c2c3cb9611eee242c4b8553bc",
+    "export_memory_fixture.py": "6453f6947f5f7b37efb4d70af84a3eb5e9fac129fa5aa8d3bfa993b300714ff9",
+    "export_windows_fixture.py": "eff25e5635dabbae63e5d36c0d047981b8d6d468007ddab614ae6eba90979aec",
+    "fence.py": "075d81ad37880f53a56184f3a6f6134e70bdda22b322762d9d59e6592a002aa4",
+    "issuer_fixture.py": "69ce5e3b749cf271dbaf0c39079b63c62698dc19cacea34dc596a826115905dc",
+    "kdf_profile.py": "a07c6109c214121032a035a254a5ebc05664e6df0cc91674a5e05f26b24f6031",
+    "lifecycle.py": "7e375a31c18abcdd6a81ff17fc7b2b7736608edc83ac7882aa3deffb5357f4d6",
+    "make_public_packet.py": "25553bbafa952bb1dd88863300ea99dbbd0a9920a63ef204e9a4da07a4f90ce6",
+    "publisher_crash_worker.py": "8708a93b4a2aac0af1496050a386145c70660345f9f08be54e0b9f3e04722d5c",
+    "publisher_fixture.py": "df71b97cc11ec631cffaaa05a4dcea311331c48b40dc83b98d0ec03de4178c95",
+    "publisher_recovery.py": "6069dc60fba06d20e03813a6869f21208b20026f08a8bf2230804d75e701e0e8",
+    "readiness.py": "dff48f290120471c3d5cd93124449bc00b657bd89707eb928e887e44c7b4174b",
+    "recovery_history.py": "38f5397a53100a26373e28278079e62a654e3ff37bff94975232725803fbe373",
+    "test_archive_recovery.py": "eda2666bcbfbe33867245108b6d5c33292beaaf2c4f7a42bf08c5b63c73198b6",
+    "test_linux.py": "c704f452d16c9ebca355d7fdebb2cf899127c8fd8ef116ab08cc023d131cf073",
+    "test_memory_chain.py": "038e57ed29d1658746f760820577c00f732582b574244a021b9b1f6ceb6fc123",
+    "test_publisher_recovery.py": "c94d0307011005cb39cd0679fe79b01eafbe89fd394f30d016f9beddc4ab3951",
+    "test_readiness.py": "35a550176a46e923778b0e0fbdc282d3a415605f8df46270b2161cee1b639406",
+    "test_secret_entry.py": "8fa13ceb91b77cf1fe9b3a0c3ace5f52c99ec86b81610d4c9400710d268890f3",
+    "test_windows.py": "7294db9e0c3c8d836383e89f1e373d798a41870f9dd9a60d807d6866f06d1220",
+    "toolchain.json": "a10435432f5ebbca71b90669143ee35f9e5e08fec5f2e721a184f4f54bcb69f3"
+  },
+  "execution_source_unchanged": true
+}

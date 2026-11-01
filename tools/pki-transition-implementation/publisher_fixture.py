@@ -68,7 +68,7 @@ class Publication:
             raise Stop("publication-water")
         return max(self.seen,obj["number"])
 
-    def publish(self, data, now=None, fault=None):
+    def publish(self, data, now=None, fault=None, checkpoint=None):
         if now is None:now=int(time.time())
         with self.lock, publication_lock(self.root):
             info=self.validator.validate(data,now)
@@ -80,11 +80,14 @@ class Publication:
             blob=encoded(bundle);blobhash=digest(blob)
             name="bundle-"+str(info["number"])+"-"+blobhash+".json"
             write_new(child(self.root,name),blob)
+            if checkpoint is not None:checkpoint("after_bundle")
             if fault=="after_bundle":raise Stop("injected-after-bundle")
             self._replace("highwater.json",encoded({"number":info["number"]}))
             self.seen=info["number"]
+            if checkpoint is not None:checkpoint("after_water")
             if fault=="after_water":raise Stop("injected-after-water")
             self._replace("current.json",encoded({"bundle":name,"sha256":blobhash}))
+            if checkpoint is not None:checkpoint("after_pointer")
             if fault=="after_pointer":raise Stop("injected-after-pointer")
             # Complete revalidation/readback; no success receipt can precede this.
             if self.read(now)!=data:raise Stop("publication-readback")

@@ -1,5 +1,15 @@
 # Secure File Drop continuity
 
+## PKI repeated-recovery correction - 2026-11-01
+
+Aether6557257514 rejects PR43/fd38e852 as a complete recoverable issuer despite its historical86 passing cases. [Scoped correction and limits](PKI_REPEATED_RECOVERY.md) separate authenticated versioned history from new target restore/signing markers and authority; preserve receipt/context/CRL/preimage provenance; require fresh receipt-bound leases; and verify two recovery generations with forward CRL signing. All98 current local cases pass (Linux75/Windows23), including the original86 and12 new archive regressions; no failures/errors/skips and all29 source hashes match. Exact corrected revision/manifest/hosted CI and Aether acknowledgement are in PR43; independent acceptance remains pending and the old finding stays unresolved. Synthetic-only: no real CA/store/data/backup access, actual Owner prompt, trust change, Docker, stale controller or merge. All real transition, Windows default-client, custody, durability and adoption gates remain.
+
+
+## PKI implementation completion preparation - 2026-11-01
+
+Aether6556054845 accepts exact PR42/36685fc for bounded continuation. [Completion source and limits](PKI_COMPLETION_PREP.md) replace the seven-file fixture backup with authenticated issued-certificate/CRL/operation archives and encrypted server-key recovery; add fresh restored-issuer leases, native masked/private-pipe one-use input, real owned-child crash/reconciliation, monitor/consent proposals and exclusive-memory Windows positive revocation/SSL-policy checks. Final local86 cases pass (Linux63/native Windows23), zero failures/errors/skips, with exact source maps. No actual Owner secret/prompt, real SFD CA/store/data/backup access, installed trust change, Docker, stale controller or merge. The memory result is not stock Schannel/Framework/F196 positive acceptance; actual physical escrow, isolated default-client trust test, startup/power loss and all real transition/adoption/visual/production gates remain. Exact source/CI/Aether acknowledgement belong in the separate dependent handover.
+
+
 ## CA/trust implementation preparation - 2026-11-01
 
 Aether6543555392 accepts PR41 design b14cc7b for fixture-only source preparation; no real transition. [Implementation and limits](LOCAL_PKI_IMPLEMENTATION_PREP.md) delivers source-pinned synthetic issuer/core custody restore, CRL/profile/native CryptoAPI checks, atomic public-bundle publisher, lifecycle planning and disabled phase-specific consent previews. Final40 Linux/17 Windows tests pass,0 failures/errors/skips; strict native Schannel/Framework4.8 reject the untrusted fixture. Earlier setup/build/time-fixture failures are retained. No actual SFD CA/key/prompt/trust/CRL publication, Docker, backups/disks or application changes. All real identities/authority remain absent. Core seven-file custody rehearsal is not full issuer/server-key recovery or physical escrow; positive trusted Windows/startup/power-loss/custody/live controller/adoption gates remain. Protected master and PR38/39/40/41 stay unchanged/unmerged. Exact source/CI and Aether acknowledgement belong in the separate implementation PR.

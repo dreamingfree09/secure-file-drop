@@ -4,12 +4,11 @@ import json
 import pathlib
 import uuid
 from fence import Stop,child,digest,owned,read_small,write_new
-AUTHORITY_ID=6543555392
-AUTHORITY_SHA256="fa78aaa43878f31e0b177ceb065c618b08277e68c57a314d0c9f8743ade4a3a8"
-BASE="b14cc7b88989dc62edcf3c17139d8b315a788f0b"
-SOURCE_FILES=("fence.py","der.py","crypto.py","issuer_fixture.py","publisher_fixture.py",
-              "approvals.py","context.py","lifecycle.py","test_linux.py","test_windows.py",
-              "export_windows_fixture.py","FixtureWindows.cs","FixtureWindows.exe.config","toolchain.json")
+AUTHORITY_ID=6557257514
+AUTHORITY_SHA256="3be2056c1ee1eaf23f5a163247826be68a43bb7641bf6a42dedaab767d89d061"
+BASE="36685fc23e401a6ef3f549541b602df5f9e608a0"
+SOURCE_FILES=tuple(sorted(p.name for p in pathlib.Path(__file__).resolve().parent.iterdir()
+                         if p.is_file() and (p.suffix in (".py",".cs",".config") or p.name=="toolchain.json")))
 
 def pins():
     folder=pathlib.Path(__file__).resolve().parent

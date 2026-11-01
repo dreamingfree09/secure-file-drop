@@ -1,0 +1,124 @@
+{
+  "work_id": "SFD-PKI-IMPLEMENTATION-COMPLETION-PREP-20261101",
+  "UTC": "2026-11-01T10:47:09.965285+00:00",
+  "base": "36685fc23e401a6ef3f549541b602df5f9e608a0",
+  "authority": {
+    "comment": 6556054845,
+    "body_SHA256": "83c4d3a6ccbd559b214fe61b5e2acae97ad3d4d269016d92794fe759c54560dd"
+  },
+  "final_results": {
+    "linux": {
+      "tests": 40,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "7117aa37fb17b1dcfdfdda2f9a489e9a7210e43886d1c8c893d8c056a4de1d59"
+    },
+    "archive": {
+      "tests": 13,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "abccc6b2fdc7a17144b9d54790be1a976ec269cfbdca55f2f5d40e7b1e563b8a"
+    },
+    "publisher-recovery": {
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "3cec37882d998983ea506564a1f84ea2bfe06d692fa1bbc36455f6ff2ba970d5"
+    },
+    "readiness": {
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "e40356dbb5bf6cfb1609d6283edfb8aa30ce89a66716a394b83f05b1785f68e6"
+    },
+    "secret": {
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "e684b1cc53089bcce8bf2faff948fd9982ee556861d32310b79d29ac5312cd65"
+    },
+    "memory-chain": {
+      "tests": 12,
+      "failures": 0,
+      "errors": 0,
+      "skips": 0,
+      "receipt_sha256": "13db05810fe66eb0df9286b4c7b0f9741ce138c41f1ce2bbc1dff0a8fb52d08a"
+    }
+  },
+  "total_logical_local_cases": 86,
+  "current_source_files_bound": 28,
+  "earlier_failures": [
+    {
+      "cause": "Missing guarded PKCS8 role:0 tests/1 setup error",
+      "receipt_SHA256": "3d204086a58d6e356399c12f25d83023a5f96bda87fbec70e94ba18ca9be33e9",
+      "retained": true
+    },
+    {
+      "cause": "Used-destination exception mismatch:13 tests/1 error",
+      "receipt_SHA256": "8e95ec3f8a332eb767d949befe3d0479a535a8724c48b6184451baddda4e47d4",
+      "retained": true
+    },
+    {
+      "cause": "Unsupported restricted private-chain configuration:12 failures",
+      "receipt_SHA256": "98a3cec7953d4f8143aa6faa01d3823f1bdfcd787017b424fd197ea9c8da9795",
+      "retained": true
+    },
+    {
+      "cause": "Hosted Windows compiler received an incorrect relative source path; two initial CI jobs failed before tests. Corrected with Resolve-Path/Join-Path; no test suppression.",
+      "runs": [
+        41298105990,
+        41298109628
+      ],
+      "private_logs_retained": true
+    },
+    {
+      "cause": "Isolated Python receipt import path missing; corrected before final native suites",
+      "tests_executed_by_failed_invocation": 0
+    },
+    {
+      "cause": "Portable preflight started before its public packet producer completed;0 tests/1 setup error; corrected dependency wait; final12 cases pass",
+      "private_receipt_SHA256": "1d49c7ee96782f60e66b243e0cd2fcc92c78dbf56b74af8e0feaf41f1c89cba5"
+    },
+    {
+      "cause": "Post-publication audit found all28 Windows source receipts used checkout CRLF, while Linux used Git LF. Both hosted PKI runs passed86 cases; every mismatch was proven CRLF-only. Scoped fixture .gitattributes pins LF for final exact-byte execution; no test suppression.",
+      "runs": [
+        41299072488,
+        41299067612
+      ],
+      "superseded_head": "4108cb0115d709518f463664b27bfb83ebe86981"
+    }
+  ],
+  "native_pins": {
+    "memory_binary_sha256": "0bc8574a0ee84713a28baca7b23f32788b0cf5ac85dd6dfb25bd6506a72c1d43",
+    "input_binary_sha256": "377e1bcce58999897b6ac23c4cc5752c308e4027113029e77d027765082184fc",
+    "memory_source_sha256": "31bd158b22dd24957c79e309e4689a6fdf1a9aa03eaed97dacf2e4b2bc60391d",
+    "input_source_sha256": "07ecf610c809667fbcb91e533759874c7ec233636b40ae49588ae365c23762e4"
+  },
+  "real_CA_or_private_key_or_original_backup_accessed": false,
+  "application_system_certificate_store_open_calls": 0,
+  "installed_roots_changed": false,
+  "Windows_internal_chain_metadata_access": "not instrumented; trust anchors exclusive to process memory",
+  "Owner_prompt_or_real_secret": false,
+  "Docker_started": false,
+  "stale_controller_used": false,
+  "protected_branches_merged": false,
+  "actual_power_loss_reboot_or_physical_custody_verified": false,
+  "standard_Schannel_Framework_F196_positive_executed": false,
+  "positive_Windows_certificate_validation": "native exclusive-memory chain + required revocation + SSL name/EKU policy; cache-only signed CRL objects",
+  "remaining_gates": [
+    "independent exact-source review",
+    "actual Owner vault records and two physical copies",
+    "actual Owner secret interface availability/acceptance",
+    "separately approved disposable VM/profile standard-client trust test",
+    "all genuine real creation/trust/selection/retirement authority",
+    "power-loss/reboot/startup/alert acceptance",
+    "final supported-runtime/advisory refresh",
+    "separate disk/backups/controller/backend adoption and physical Windows acceptance"
+  ],
+  "CI": "exact final-head identities/outcomes in PR handover"
+}
