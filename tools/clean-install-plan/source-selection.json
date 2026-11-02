@@ -1,0 +1,789 @@
+{
+  "base": "61195434bee5f9221a6f55469c719cb360504ea9",
+  "equal_application_source_at_accepted_PKI_head": "1805a108855817d7b36220a6253684bd6a018fb3",
+  "files": [
+    {
+      "path": "Dockerfile.backend",
+      "bytes": 1018,
+      "SHA256": "f0f5b1e1b50416d59d39aa8181ac76d5f020956e99f013eb610b9986d69bf2f4",
+      "Git_blob": "d805c168d87f4f8f8216c05abbacdd8410bbe3fa"
+    },
+    {
+      "path": "Dockerfile.storage",
+      "bytes": 1437,
+      "SHA256": "aff5cca469796c7a02d9343c3f479624fbf2963569c17ce6a05e0c9d6747b76e",
+      "Git_blob": "fe9f3075934b1e16b4597c04460a4c0dc163d4cc"
+    },
+    {
+      "path": "cmd/backend/main.go",
+      "bytes": 6416,
+      "SHA256": "b6fa862a60de07ad76feb5d4c8d74fd40956704b0b41f924fbf02ccccbb4bcba",
+      "Git_blob": "735986353521488a21055c43d517626ccc5f44be"
+    },
+    {
+      "path": "cmd/backend/main_test.go",
+      "bytes": 864,
+      "SHA256": "c0edae10d8e21eaa39447dfbc343742d030f5f389f1d8c32b554a6b8368235c3",
+      "Git_blob": "3620be4a586170691a718db29f81bb6a4c82d172"
+    },
+    {
+      "path": "cmd/migrate/main.go",
+      "bytes": 522,
+      "SHA256": "34a14ae3bd89446e5bf1fd613278ae940577ef53669e49d11276541d67124dcb",
+      "Git_blob": "307cc9e0437ad831ed43fe6651769005afec9e7d"
+    },
+    {
+      "path": "desktop/windows/.gitignore",
+      "bytes": 19,
+      "SHA256": "014ae69387c0c753a0e07376bd3103a4c221cb914d016f8e69271ad8a656f257",
+      "Git_blob": "d082e62e711bb57e9d30924704740fa4604fa979"
+    },
+    {
+      "path": "desktop/windows/App.cs",
+      "bytes": 22222,
+      "SHA256": "2c0241805fa94875cb2abc5d87b00cc5ba99c0cb42c20fa54b47b3d593701b13",
+      "Git_blob": "ba1e5d8239380df0e68570adae7d1ea1fae44062"
+    },
+    {
+      "path": "desktop/windows/Client.cs",
+      "bytes": 22147,
+      "SHA256": "1abb2e212fe0b0de4c811550929880a2787b9e9eadef20d8644fac0ecb8e63a0",
+      "Git_blob": "8978616de376687532b50e3f93cb54e1acd5785e"
+    },
+    {
+      "path": "desktop/windows/FrameworkTarget.cs",
+      "bytes": 296,
+      "SHA256": "098679fa3a7ca8ceaa855b544fa06ae4ae1c56e821618e3ad3595ac3bf4662f7",
+      "Git_blob": "c0750959e7640ee608a70e667cd2e8bfb9691aa2"
+    },
+    {
+      "path": "desktop/windows/SecureFileDrop.exe.config",
+      "bytes": 302,
+      "SHA256": "485ce3a5a98c7aec404071763579116372120d64bcc934d0822c677412a793d8",
+      "Git_blob": "a6a246014513cecb03a7983b32668674babcfd59"
+    },
+    {
+      "path": "desktop/windows/WindowsIntegration.cs",
+      "bytes": 10607,
+      "SHA256": "ceb2ff2404e7bed54bbe5d62029ddfe0a3c8c845e47706deb9358956a8b763b6",
+      "Git_blob": "2f74ecb978567ef7494e3ee4bb4c206a687890b2"
+    },
+    {
+      "path": "desktop/windows/app.manifest",
+      "bytes": 760,
+      "SHA256": "9b042aa39123d6530a1a2471aeadbca38954fae7d4fa39ff8ea39d2f4b2e1bbf",
+      "Git_blob": "fb46c2a6fa9e7dd53bd792f94142a7f604e68e01"
+    },
+    {
+      "path": "desktop/windows/build.ps1",
+      "bytes": 1201,
+      "SHA256": "6a69e9d7c20401f71c064f56a6f4e8375d767657f8275e9f09c47e36afc593c9",
+      "Git_blob": "17da686bcb0fee69aa4dec09178956864b52c36c"
+    },
+    {
+      "path": "desktop/windows/tests/.gitignore",
+      "bytes": 12,
+      "SHA256": "bed6308a89cccf01b2576cade9bc0e84c47e1b496ad8fc21750722966ce27692",
+      "Git_blob": "4ded7c4c7a8068942c0289ea8e7913d1815a183c"
+    },
+    {
+      "path": "desktop/windows/tests/Client.Contract.csproj",
+      "bytes": 482,
+      "SHA256": "3bab2ecd0d6f8ce80bed4b1ede531635c1697a533fc6bbae444c44d522cfbb2a",
+      "Git_blob": "9e0960beaceb78d4c4f94beee102e60e92a5aaa0"
+    },
+    {
+      "path": "desktop/windows/tests/ContractRunner.cs",
+      "bytes": 8515,
+      "SHA256": "03eefb6c0b4ec1aa3fbe9b19d74060b06eb2903bf4bf0c53ea623a9d234705de",
+      "Git_blob": "a78daf6022f40abb33daf5602cb5fcbdd29b0299"
+    },
+    {
+      "path": "desktop/windows/tests/LiveProbe.cs",
+      "bytes": 2926,
+      "SHA256": "75923cfb5377f42962de06d4a08aa58b44c8e6e222dc1bba5235552916f3aa1c",
+      "Git_blob": "4a5e797b26d370627ac47239910f50be5b2942fd"
+    },
+    {
+      "path": "desktop/windows/tests/ProductPolicyTests.cs",
+      "bytes": 3533,
+      "SHA256": "ff14d2fd8b5532fa7245ca56ebce016c7b7b36bef6728313e3da288face7ee2f",
+      "Git_blob": "4436f990c197004d22119de8c542629ce4a397f7"
+    },
+    {
+      "path": "desktop/windows/tests/ProtocolTests.cs",
+      "bytes": 15151,
+      "SHA256": "e5a201cf28a221af1a5f64d5a0f82b2401359834792340bfbdf645ddac0b8715",
+      "Git_blob": "2110a587d309eb1032474c45bf2bcfcc3792ed7d"
+    },
+    {
+      "path": "desktop/windows/tests/WindowsTests.cs",
+      "bytes": 14975,
+      "SHA256": "f249ba91b6bdf40d2f99a6352f8180c5d99ce81b47d471b81a70e4f4b17e792a",
+      "Git_blob": "6dbfed41e5b0d706854d7de3f489a7df02fc420f"
+    },
+    {
+      "path": "desktop/windows/tests/live.ps1",
+      "bytes": 884,
+      "SHA256": "46cbe1a044bd308020cc0b1b9242e2e5c73ea503c33aa2af380ab0ef435569ce",
+      "Git_blob": "a64be33aa1a6d144e1113d9ceb17885b4512535b"
+    },
+    {
+      "path": "desktop/windows/tests/test.ps1",
+      "bytes": 1726,
+      "SHA256": "4c7008f3fcf985e6b114299399eaebde9874e0afbb5e7c1fab6179def5729bdf",
+      "Git_blob": "2c2e9dabae2590fdc8b2810e863b1ba6c37079e2"
+    },
+    {
+      "path": "go.mod",
+      "bytes": 1204,
+      "SHA256": "22ef4a4cf1e6feb53f305ed9269aa99beb438126740b05216731f9cbd1bff937",
+      "Git_blob": "425e449669d52784b2861e93ed7024e05f87b0eb"
+    },
+    {
+      "path": "go.sum",
+      "bytes": 10580,
+      "SHA256": "486602e4ef2fa3d5ec3e1d8c8931c2d8589f82e8ab80be840918c5017d7b6c18",
+      "Git_blob": "b4b4c1ea22a92e4ceb3df35dc77c352a7d38749e"
+    },
+    {
+      "path": "internal/db/alter_001.sql",
+      "bytes": 446,
+      "SHA256": "193c649548603469cac8ed7d80ee6b32a6078a7eb5ca2ccd8c085f1757996eee",
+      "Git_blob": "5eeb3eae582fa6fdec69596b686aef1b7ac358d6"
+    },
+    {
+      "path": "internal/db/alter_002.sql",
+      "bytes": 2651,
+      "SHA256": "10adb2b965aa2322021240e3d554dbfb7c1ea6f2d8fc74d41e5dde770f1f4a54",
+      "Git_blob": "7365e59ecb9c2901160504d57dc72d9c705595d3"
+    },
+    {
+      "path": "internal/db/alter_002_resumable_uploads.sql",
+      "bytes": 1750,
+      "SHA256": "1538c32714526efb26fd37230f499d533bd767fe92c9565b0eb159f39c0c57b8",
+      "Git_blob": "a1ec041619560f1e60e921e67909fdf9ebf95a95"
+    },
+    {
+      "path": "internal/db/alter_010.sql",
+      "bytes": 397,
+      "SHA256": "1bc4178bb79c4bbf71a281f56643c5ceae7b60eeb5dcb292fc9a530cf3a1f329",
+      "Git_blob": "1ffcd143f16da9244a61b74bd814d126c25a7b59"
+    },
+    {
+      "path": "internal/db/alter_011.sql",
+      "bytes": 264,
+      "SHA256": "1a68e831248818c208bc4e2bb6b398a98c35114d0ff7619c07ec1116d970742b",
+      "Git_blob": "3fe676c1b86cdf817b3dd82b82f643d69f8a998a"
+    },
+    {
+      "path": "internal/db/alter_012.sql",
+      "bytes": 527,
+      "SHA256": "d6a3a93c4e59d8cf0dfe1b31522173ac6c213d02d7c28fc353f96b026ea13337",
+      "Git_blob": "a40e83e29ef8d752791f52aacc1f145962fdcaac"
+    },
+    {
+      "path": "internal/db/doc.go",
+      "bytes": 69,
+      "SHA256": "ee77be07aee47246d4afbcc99592fd6918b2c466eb55998fc6de3cd84e354b80",
+      "Git_blob": "f0d322f515db2e7beb7696af5061aa939f0e8eed"
+    },
+    {
+      "path": "internal/db/lineage.go",
+      "bytes": 4828,
+      "SHA256": "b156859e63579022b3c9083a3159520dc2c20287cd83dd3d906d2e7d303ca65c",
+      "Git_blob": "cca312ae7c551b4fc26e07f84ca8eda3902ed6eb"
+    },
+    {
+      "path": "internal/db/migrate.go",
+      "bytes": 1568,
+      "SHA256": "accc2dcd220db3964c5d6c774d4b376a23470da53e7e0e66018f22f9baa24298",
+      "Git_blob": "3a7e4dcb701dffb0f4c2f4bc06997e5ea7e1fd47"
+    },
+    {
+      "path": "internal/db/migrate_lineage_test.go",
+      "bytes": 10638,
+      "SHA256": "cf8e1eab08ef3fbf06e088adce1e3047f44a252d5d217bbed69039446f6c0300",
+      "Git_blob": "f8ca5828a857719b7a51888415c810315da56d0f"
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.down.sql",
+      "bytes": 154,
+      "SHA256": "7a35c252e2aa55fe6534df2c44909521b6bf16f0a2431ded3e53249ef0f75fb6",
+      "Git_blob": "7fd46ac3f579b2ff2918f55eb4c2d55efd6756ef"
+    },
+    {
+      "path": "internal/db/migrations/000001_initial_schema.up.sql",
+      "bytes": 1552,
+      "SHA256": "cc1a3571b30245583735b3037615a90723ccdd13558e78fa72e7e4aa37bfd795",
+      "Git_blob": "084f3540d53a5e135907a4f573dc65cdfb5c82a7"
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.down.sql",
+      "bytes": 91,
+      "SHA256": "55dcd2e4d63612598ce1f140be42d4859cc3626fa1a2e51fecf8c3d7ba74f5cb",
+      "Git_blob": "68c37777af020f629b91e0fe34974baae92555ab"
+    },
+    {
+      "path": "internal/db/migrations/000002_add_lifecycle_fields.up.sql",
+      "bytes": 239,
+      "SHA256": "7a47bbc0ceeff39b96c337d42bbb0b40387b8ee8deb0e28e5329622d3aea4ef7",
+      "Git_blob": "a62c269bf7e9b4953b2e852da62e5ebd7e8b5c2d"
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.down.sql",
+      "bytes": 221,
+      "SHA256": "bc243b5f1da4968e32378977baeef1cd4b1b789e4083b140f485fe57c34b8b6a",
+      "Git_blob": "fb53927365811ab7e6cf91a6790e33bc490c37b9"
+    },
+    {
+      "path": "internal/db/migrations/000003_add_users_table.up.sql",
+      "bytes": 798,
+      "SHA256": "43c52fb707e68854b556fa9ffc5c540245fd82a2ba8e27a2f01f2809be965ad8",
+      "Git_blob": "088c7f7240edf55a556287c12353167af355c16a"
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.down.sql",
+      "bytes": 176,
+      "SHA256": "24dd1ee8279a7cd40a8fc50b6125bafdd8ee7addd8334b605714e31f5fa124ac",
+      "Git_blob": "9d9c6bcae477797682c1ba51c2178379ce35d73c"
+    },
+    {
+      "path": "internal/db/migrations/000004_add_file_expiration.up.sql",
+      "bytes": 492,
+      "SHA256": "5098859ab24e56588a218826d2c9dbc1181aef717ce8e3d57f552285265d980c",
+      "Git_blob": "4d1520289d474590e15bfd87b07d93d9665b0c2c"
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.down.sql",
+      "bytes": 89,
+      "SHA256": "828c8aae3d8cc0b88d743312fa2bdbb917de49e39bf1fdbb78fd206fe11613fe",
+      "Git_blob": "043c93d96c3bf6d973f0028a2a624f9bba2e80a7"
+    },
+    {
+      "path": "internal/db/migrations/000005_add_link_password.up.sql",
+      "bytes": 104,
+      "SHA256": "f0919d4abf535f61c30dec20a52ba06a74263b7900443b561d44a4badca40084",
+      "Git_blob": "1a22e8b011c265435b76e7aeede683989a35a255"
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.down.sql",
+      "bytes": 260,
+      "SHA256": "f03e966c659047e13104b86ca271e80c1be5021e6b26f3ea94ecec2b42f69d5a",
+      "Git_blob": "8b3203a28b7b0c65add989e62f3a9ad78d3ccedc"
+    },
+    {
+      "path": "internal/db/migrations/000006_add_email_verification.up.sql",
+      "bytes": 307,
+      "SHA256": "8adac1de3a765f82d2baf9f782cd918fd591d91e794f4cd27d757e5819fe63fb",
+      "Git_blob": "545938530f826d509516028117ff48d3af8c21da"
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.down.sql",
+      "bytes": 185,
+      "SHA256": "8cff6bcade43f30c47c48fa4f6a4dfc622b65e49bd20e5fd9567f819553f4165",
+      "Git_blob": "bda41aec1c2e516e1543200c62c6eeb3561fda0d"
+    },
+    {
+      "path": "internal/db/migrations/000007_add_password_reset.up.sql",
+      "bytes": 205,
+      "SHA256": "2694e676a6e303d249ab48cbee4e8c5a7e3b5a6d560934808e3444553a447d7b",
+      "Git_blob": "779c5a06874568e5e3ac619df28ce0678e259ab4"
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.down.sql",
+      "bytes": 199,
+      "SHA256": "f7ba279ad86327b260db583f7766241ef44bc49584bd37c54ca6a6e8955407c5",
+      "Git_blob": "df14570470f4c65894d518e2f7c78a0cfed2aad0"
+    },
+    {
+      "path": "internal/db/migrations/000008_add_download_stats.up.sql",
+      "bytes": 292,
+      "SHA256": "b84ab8c12a773108035d4ce805e8559ba230271c8df540ccdb19cd59ebbad378",
+      "Git_blob": "315c744aca7ea6aff1bc32d838a7f8f55e8c8363"
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.down.sql",
+      "bytes": 92,
+      "SHA256": "ddaa40b4570f35a67951c5f27900350d2cf310a89f0346050d8481299df2ff74",
+      "Git_blob": "0346d62f49fb99424d8fd57623bbfba17dfc8718"
+    },
+    {
+      "path": "internal/db/migrations/000009_add_user_quotas.up.sql",
+      "bytes": 284,
+      "SHA256": "264b5f2c150c045cf3806c05357bad96ae864704245366ea4fa89e5c1f07aa37",
+      "Git_blob": "6d5ebf62024594d51e8ff52c224ae2ad46978857"
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.down.sql",
+      "bytes": 74,
+      "SHA256": "71b1c8c17158b88f445abbf06b2a68cd2603195eac4b3273340faa1fb10c7037",
+      "Git_blob": "165f146571ed97f93eaddb55e120809baec39846"
+    },
+    {
+      "path": "internal/db/migrations/000010_add_resumable_uploads.up.sql",
+      "bytes": 882,
+      "SHA256": "ac0aa47d8be8db9a67f06426c34f4fa80396914c5564a8f8d1d51eab8c19967d",
+      "Git_blob": "b292067130128584ce644e2ca4d4f9df1552126f"
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.down.sql",
+      "bytes": 60,
+      "SHA256": "dcab30de54e16b2d7dab44cbee68c74b849ff7c7c6980837d27da56391a0527d",
+      "Git_blob": "140c983af7d109727af2761f196289cfa9063ee7"
+    },
+    {
+      "path": "internal/db/migrations/000011_add_audit_logs.up.sql",
+      "bytes": 1494,
+      "SHA256": "e3c7df8bede4b11b59824022b7547d9dbcfb1319c8418b21bd1fe51aa9d80285",
+      "Git_blob": "5e8d836ddc9b5a17919d52c9468abc065776450d"
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.down.sql",
+      "bytes": 102,
+      "SHA256": "3c11ae0648300a83d40084ad149659fde1aafe92830546e45d258d2c98a055bb",
+      "Git_blob": "e09f26ad69d4bfc28d988e9cb9e6a9b2861e0a83"
+    },
+    {
+      "path": "internal/db/migrations/000012_authenticated_sessions.up.sql",
+      "bytes": 426,
+      "SHA256": "f7f2449d1ee196db7607a8068f5124e48a4866eb71b01d39e9b3d6aa25f9bc75",
+      "Git_blob": "bbe1557611306558ceb6d4f8f1440d8c63e38bf7"
+    },
+    {
+      "path": "internal/db/schema.sql",
+      "bytes": 1638,
+      "SHA256": "970fda2f15cc35e2e4974e1aafb77f3fcd7299c988bf01a7449ee574dddef2f2",
+      "Git_blob": "2ca9b0707d9406edabd927080ee1b77976e93203"
+    },
+    {
+      "path": "internal/server/admin.go",
+      "bytes": 7708,
+      "SHA256": "f7d90f1f22919a6f38689b352ccc23cb74efb49bc97115708f641a31636380d8",
+      "Git_blob": "f39a8f05d78cd72b4853d36f272ba4dd8af11c1a"
+    },
+    {
+      "path": "internal/server/admin_test.go",
+      "bytes": 2468,
+      "SHA256": "c9c0c6b9b02e4cd3c4d5cfda11cb458dd9be329f04f09ed348a9315ceda2b273",
+      "Git_blob": "d370e859a324e44858868ea8b9111d9c60bc2f5b"
+    },
+    {
+      "path": "internal/server/assessment_test.go",
+      "bytes": 3452,
+      "SHA256": "5a08bfb35cc38eb8c34d01e4a4cf4169ff694fd402437b3ba0100b305515aeb8",
+      "Git_blob": "0d408a4d29b7aa6d2cb642d3c8ff80d035a70cb4"
+    },
+    {
+      "path": "internal/server/audit.go",
+      "bytes": 4423,
+      "SHA256": "e734e3c95dfc85df2e5dbe6463d0d261072476f63371e55d9502bd2fcc8cd047",
+      "Git_blob": "b765862a422ac98640fb277fdde60f20c4ca0e7e"
+    },
+    {
+      "path": "internal/server/auth.go",
+      "bytes": 12495,
+      "SHA256": "ded8e9c71c3836d594d4c060df676ab89a46cb05afc69810af449cd955df71cd",
+      "Git_blob": "84b9b3241bc935b80f6897ee9e1f4fb8ef556ab6"
+    },
+    {
+      "path": "internal/server/auth_integration_test.go",
+      "bytes": 14415,
+      "SHA256": "3a8ed7fa98879fd8fe046bbc61a1c633c2cfed842795c6fcb1e3959fc132c656",
+      "Git_blob": "dd9cbde62f19b8e7ec7beea5e7b8be925a29a05e"
+    },
+    {
+      "path": "internal/server/auth_test.go",
+      "bytes": 1029,
+      "SHA256": "e61014f900dd2c56ef57fc56a05a103f2221f37ebf9aef08d521e83a325069db",
+      "Git_blob": "5b10c766b28f2e8f23b894443128426abfa410c2"
+    },
+    {
+      "path": "internal/server/authorization_test.go",
+      "bytes": 5411,
+      "SHA256": "1f6a9d3037bf124d11efe76fa41c541260ad37060c81db3538dffc8b1dde989a",
+      "Git_blob": "fa8d17b20882f594fcdaf5c6cb29bac33da4b4ec"
+    },
+    {
+      "path": "internal/server/backup.go",
+      "bytes": 12737,
+      "SHA256": "07ec070fa00f044dffac6346c547e3c605390561f01a18a02368c6c11531bcec",
+      "Git_blob": "5816f0337a6d7047e6528dd13c5a16cf2c932d79"
+    },
+    {
+      "path": "internal/server/backup_configuration_test.go",
+      "bytes": 3427,
+      "SHA256": "a7ed7799f1e834ff6e0af0a03aafb7f84e32185ed58e20ae0ce4f510b7ae1b66",
+      "Git_blob": "74dffd456cc3c6fefecda185054c3758b20f1187"
+    },
+    {
+      "path": "internal/server/canonical_contract_test.go",
+      "bytes": 2264,
+      "SHA256": "907c284a8b404d5dac5d7bd51997bcc11e3c354be29ff2f0c6946115938f64a0",
+      "Git_blob": "6b4fafc583305b9cf1cec157e32b55243b2b8bb3"
+    },
+    {
+      "path": "internal/server/circuitbreaker.go",
+      "bytes": 6713,
+      "SHA256": "0afe6c8de952943cbe476bb7cfe4f40654091e29871943f2905d1d41738d8621",
+      "Git_blob": "c255fcb2e2dc5b3ab7dc23204ace170bda677a77"
+    },
+    {
+      "path": "internal/server/cleanup.go",
+      "bytes": 3091,
+      "SHA256": "955179990a737462624c21a90299ff7224341e01a96867fb620b9640dfe6f52c",
+      "Git_blob": "3859beb09b7f977fd7c43c0b5582f27870de4714"
+    },
+    {
+      "path": "internal/server/commit_fault_integration_test.go",
+      "bytes": 6806,
+      "SHA256": "4929e58b88eef0d366c0afd332c8c57f268887342f1e55c3edb37a4cda3ea90c",
+      "Git_blob": "fb5bffd130fae96071188603188c79cd0395a05e"
+    },
+    {
+      "path": "internal/server/compression.go",
+      "bytes": 2399,
+      "SHA256": "ca6144494de50d17538d022b7c16a1ddb5b3bf6147ff6f6254aee8bbadeec934",
+      "Git_blob": "b8fb324647cfc359c64d9ff1522325ea2d2921ea"
+    },
+    {
+      "path": "internal/server/config_validation.go",
+      "bytes": 8334,
+      "SHA256": "cefa1704f476558d6edae411823e1cef97fa4021840cb045a8071ba86dd0c7f5",
+      "Git_blob": "974380e93cbf5c9181974ec1e36af05b4968110b"
+    },
+    {
+      "path": "internal/server/corrections_test.go",
+      "bytes": 3336,
+      "SHA256": "8ca507f91520c1912966777e6c6ce534cd987edac91b3d8a8e1a440523a10d79",
+      "Git_blob": "1800e07a0c49515df270d29b822a08c6645a34d7"
+    },
+    {
+      "path": "internal/server/db.go",
+      "bytes": 1075,
+      "SHA256": "e02887d0ddb42509c086e9abd40d9b63e079a6427f8e8d4d63c5d517c4a9896b",
+      "Git_blob": "8c45355a437e48554b16a5a906b7b431d8ef910e"
+    },
+    {
+      "path": "internal/server/db_test.go",
+      "bytes": 421,
+      "SHA256": "1fc1ba2c9444e2e78fce750d79386902899c87dcd077516c6acfbd108b947c1b",
+      "Git_blob": "5b1f1c56a3746f90b486783aa10917efa713e712"
+    },
+    {
+      "path": "internal/server/doc.go",
+      "bytes": 255,
+      "SHA256": "c077081cbd010845f39d130f022cf437e1b3297ad483e300040016bebeab2b2c",
+      "Git_blob": "05ff249ea7f639f8d2785c03e090dc982b26ee3d"
+    },
+    {
+      "path": "internal/server/download.go",
+      "bytes": 5965,
+      "SHA256": "9a5e628fdb5ec74958affe44c1b0b26964e05e1514b41950fcab454d4c5d8928",
+      "Git_blob": "eed0ab9afb2adaa4728f735c8e2a1db655755126"
+    },
+    {
+      "path": "internal/server/download_test.go",
+      "bytes": 6112,
+      "SHA256": "ec946990f63bf992a5523f1238ae677cfcd36764f7ff8bc8fd5e0ec12b071133",
+      "Git_blob": "e347beb1d1556b87a13c20bf6a005db79be9a847"
+    },
+    {
+      "path": "internal/server/download_tokens.go",
+      "bytes": 2414,
+      "SHA256": "4d05005ea2c115527045d597032a2d39e8e7305cf039b2180caa6f047c26fa5e",
+      "Git_blob": "e7e7ecf0e3419df1b2da86a599e2cbc96319ed06"
+    },
+    {
+      "path": "internal/server/download_tokens_test.go",
+      "bytes": 3552,
+      "SHA256": "a2a69e774d25ca41caaa72e2f9cedebe236975a1b7d7a33c8782d8197b769cbd",
+      "Git_blob": "c05e299ffa0d46853d7c328e9984e3a7e6e0922e"
+    },
+    {
+      "path": "internal/server/email.go",
+      "bytes": 11769,
+      "SHA256": "623ead2a5534ae53af83c68fc59621098a0e2e07a0e664b9f8a760cec3b90a3a",
+      "Git_blob": "29ed32f74b134c7f7c1fdfaddfd8999fe52860c5"
+    },
+    {
+      "path": "internal/server/endpoint_ratelimit.go",
+      "bytes": 6372,
+      "SHA256": "ff3f8c77f961842e3bf5d1b60564af9a72faafa8b8c61778a732fc128a578674",
+      "Git_blob": "dd2e8782c8e94018edb08d60c92ce8f6e69725af"
+    },
+    {
+      "path": "internal/server/files.go",
+      "bytes": 5839,
+      "SHA256": "fbf0c627af8fdb94e3f7c3a025262e6477bfb089644a4abad6e11ab898d74eda",
+      "Git_blob": "95a50c0406223a37aaece5f560a8942419be5650"
+    },
+    {
+      "path": "internal/server/files_test.go",
+      "bytes": 3209,
+      "SHA256": "d8452099d3dbd14c6a7b6adad52187eb66073433d101a5098c32dde7812a3fab",
+      "Git_blob": "81fddc368fe17bd48713cb118636e2b0f643db01"
+    },
+    {
+      "path": "internal/server/final_corrections_integration_test.go",
+      "bytes": 13303,
+      "SHA256": "c4fa8948d2f814cf85082a5a61a5dd36e4d693bee859bd11d67904eb062f5860",
+      "Git_blob": "f165f547c7971ef8ea004649c8c64e32698e87ff"
+    },
+    {
+      "path": "internal/server/hash.go",
+      "bytes": 5905,
+      "SHA256": "9ac1655bf1a15048821c512d16b9213112dd3e55f8209cd783604e7333180c00",
+      "Git_blob": "5f107a081b6e1e4b19a81063711e3ed8cf97d8ee"
+    },
+    {
+      "path": "internal/server/health.go",
+      "bytes": 8141,
+      "SHA256": "d9811add796b2568571ecdb24a4b69ce76135ab4d8e724ce37b317743dff7eb5",
+      "Git_blob": "cc9b4a1c8d1fdb2c45eb54cdfb4ad69a4f374539"
+    },
+    {
+      "path": "internal/server/jsonlog.go",
+      "bytes": 4592,
+      "SHA256": "b527d2401a74df0a8e1bb335782eafe4d4958748538ba610e53e88b81906c7a0",
+      "Git_blob": "46d9f36b186b8276ea0be68d3d0288517a35d933"
+    },
+    {
+      "path": "internal/server/lifecycle_ordering_integration_test.go",
+      "bytes": 9246,
+      "SHA256": "ff918866942b19d8e17672b9ecf519547525ca1cea4da10c7c576fdcd911b2bc",
+      "Git_blob": "13a0ebb5346c223e13291aeb927caeafd99f7e9c"
+    },
+    {
+      "path": "internal/server/lifecycle_regression_test.go",
+      "bytes": 2826,
+      "SHA256": "ea78a092b749617b958a27b310e8bb0fb9f86ce33741aa3da6939c4634f5a1b4",
+      "Git_blob": "ef36830e4b01d3e17115f0264c2dbe15598d13b3"
+    },
+    {
+      "path": "internal/server/links.go",
+      "bytes": 4052,
+      "SHA256": "49b375b9f61d96d68e07ec7f3d93f0ce6703bb37d11f1d73857fc7ef1fd29abf",
+      "Git_blob": "ca532fb7961be9c89c5d9ac5b4155b98851ded2c"
+    },
+    {
+      "path": "internal/server/links_test.go",
+      "bytes": 960,
+      "SHA256": "f75f60fae9eeb3ffc088d131dd0a849e9ff8271d1ad12479f94f1f621950dd48",
+      "Git_blob": "94f4680b035b4a152cdb73f580b482ac07f34af4"
+    },
+    {
+      "path": "internal/server/lockout.go",
+      "bytes": 3856,
+      "SHA256": "14bdbb74f0ca89b8ed8c947a69226d8da2be82c90b957290ce08eeb95f9cc5eb",
+      "Git_blob": "5047140790803471d485bf9405cc2fdaada82a16"
+    },
+    {
+      "path": "internal/server/logging.go",
+      "bytes": 2206,
+      "SHA256": "f526cb24696b0eca32a791bec9fa80ebe052f530a9f2499277364d59762850c0",
+      "Git_blob": "68ac8439c1d10b90a02607634fab69631eec1397"
+    },
+    {
+      "path": "internal/server/metrics.go",
+      "bytes": 5739,
+      "SHA256": "440e166a40f5656ca2e675380d3a21e9ef037b9e5907e32e42b76719f9b74831",
+      "Git_blob": "39459a101c9ef4a41a3da5196d9074c7182d9c47"
+    },
+    {
+      "path": "internal/server/minio.go",
+      "bytes": 4028,
+      "SHA256": "6e3e3ca62456b2af05459f418bd38e1329f9e12bf65e1d15fb7680b5524bca45",
+      "Git_blob": "401d11c21ae94899098affc8a2f6fc44f007ea69"
+    },
+    {
+      "path": "internal/server/minio_test.go",
+      "bytes": 1825,
+      "SHA256": "968236e7f54de9f695256cf9b18d6da63b4e7129dae0ba7e1f6f58d62f30c48b",
+      "Git_blob": "b1c3b6f6dd20c236d8bfca35b66f1120409df469"
+    },
+    {
+      "path": "internal/server/notifications.go",
+      "bytes": 7991,
+      "SHA256": "caf55b0941231170f454b3d5f68590e98aba03d3c282430dd56e5f7781a49a58",
+      "Git_blob": "c0f4d2eefa2bef2e41a8439bbbe1e58b13814ccc"
+    },
+    {
+      "path": "internal/server/origin.go",
+      "bytes": 1949,
+      "SHA256": "8e30d0de29720bf467031388f114c8731a4d34523741a41195ba6bf8bf0d53ca",
+      "Git_blob": "de10f974c51405debe54548e54a47334daf28b23"
+    },
+    {
+      "path": "internal/server/prometheus.go",
+      "bytes": 6049,
+      "SHA256": "ca8435e13236dcfcdc61cdf6b71206bc4aaf7856f1cd8a505008e093963aa659",
+      "Git_blob": "6546ae69e2fa58d87a5a953a290de5050762f4fc"
+    },
+    {
+      "path": "internal/server/quality_integration_test.go",
+      "bytes": 2603,
+      "SHA256": "2524621ae8d8072935daa7aa5cdd913e00d1bcb950ed3f9e9b57c41aba13af0d",
+      "Git_blob": "9bebd36317c9715efe72085f5b3bdaeeb87be63c"
+    },
+    {
+      "path": "internal/server/quality_regression_test.go",
+      "bytes": 9517,
+      "SHA256": "4b3b0e8e3c3ce7bd2e4e8aeecf7ad3eadc7161efa32d5a674d19e8a1f4e31560",
+      "Git_blob": "cd0db1b23c7ce17286e96435488bb94f255e9654"
+    },
+    {
+      "path": "internal/server/quota.go",
+      "bytes": 1866,
+      "SHA256": "e1d937641082352254b243d5532703952bb6c6187ba8750597dacc2f0dd7ed34",
+      "Git_blob": "c0851509f2ed07cd28a25f72842429dc754d6386"
+    },
+    {
+      "path": "internal/server/ratelimit.go",
+      "bytes": 3315,
+      "SHA256": "1718628593b0518a52a7a940b319777e4941d5d371fed2f1bf7d6d5176286654",
+      "Git_blob": "d71b19df33c4e14478b6a1d54a69b83fb365ec08"
+    },
+    {
+      "path": "internal/server/ratelimit_test.go",
+      "bytes": 3280,
+      "SHA256": "c877a85322f375b5a337d9fd6f9d10692d00dab1544d5bfbecef6746bfd9b4a5",
+      "Git_blob": "b078578a9903d30bf3dd229411dd61b1e2a856db"
+    },
+    {
+      "path": "internal/server/register.go",
+      "bytes": 17201,
+      "SHA256": "475b5897a0611b97e65a736b699c1d4941299164cad8575579c05f503500ca8b",
+      "Git_blob": "8185c02969942d31ea41eddaa4c5b49d272d4f99"
+    },
+    {
+      "path": "internal/server/request.go",
+      "bytes": 1042,
+      "SHA256": "f23953867e5dd4ffb064add606a7644802609590a1e20b7fadebacb10e6dcb2c",
+      "Git_blob": "9b43b8883def964fbdfcb8e42043d92a23fee6bc"
+    },
+    {
+      "path": "internal/server/resumable.go",
+      "bytes": 11184,
+      "SHA256": "01eb4fe0a064f4ee45750fb3b649aab171fbbca4cb5f866334359393665c0f76",
+      "Git_blob": "93c2fa017956c75797492ab4a0b4ed1acf1bdbd7"
+    },
+    {
+      "path": "internal/server/review_boundaries_test.go",
+      "bytes": 3736,
+      "SHA256": "50374932aa66327fa97dd0d1ef2c0a835a4f19f2a3e50dac1fc5acec4c4a7c0f",
+      "Git_blob": "8d3c85dab442ffd19242e099b12e100a5277f42a"
+    },
+    {
+      "path": "internal/server/rows.go",
+      "bytes": 157,
+      "SHA256": "69329d0a3b9d64d69ad495b41c0f28a1f92c38d8f8eae08c63352827c2de7efc",
+      "Git_blob": "b06a9ff882c2cb7c3eabeb7075dc3de80cca7892"
+    },
+    {
+      "path": "internal/server/security.go",
+      "bytes": 4818,
+      "SHA256": "8cf32a848289e2e506577e66494ba20040db0b110eb406da26cda1fb4059422d",
+      "Git_blob": "2ed986f516c8964091b6f16609c064edaf266221"
+    },
+    {
+      "path": "internal/server/security_regression_test.go",
+      "bytes": 3114,
+      "SHA256": "a7c5b2d0ab25063f1393614140d90ed3d0ca822851f8a18a8ccec56ab8af347a",
+      "Git_blob": "e24ab3c7435e525325a06e48d46c8cec12071d7c"
+    },
+    {
+      "path": "internal/server/server.go",
+      "bytes": 16367,
+      "SHA256": "69c6574cacae7870d609025ff7695b43267346cd4463f941a99926d37b6d2e4b",
+      "Git_blob": "0356647a1b2f6a39692c68a34086be619963120e"
+    },
+    {
+      "path": "internal/server/tracing.go",
+      "bytes": 4747,
+      "SHA256": "cba48ad027e8519262a6bb208f8346c546582de8c2042ef2ff8e6308fd09578a",
+      "Git_blob": "f26fb7230703769d122568bc87db3f0f012d998b"
+    },
+    {
+      "path": "internal/server/upload.go",
+      "bytes": 11087,
+      "SHA256": "a6848464ef91239db1193a6642585a27fefce666257acf938207da9fd186f558",
+      "Git_blob": "e9fa6c8a335ba4eb793037b0a80c6e159eb92518"
+    },
+    {
+      "path": "internal/server/upload_test.go",
+      "bytes": 7426,
+      "SHA256": "957cbea6a7fcec42f961f8c2c316c587708635f44822eba9cca05998dc34f7a8",
+      "Git_blob": "27ba30cd74e4e2a63d9344a250f2e5dfd0d0dca4"
+    },
+    {
+      "path": "internal/server/validation.go",
+      "bytes": 5648,
+      "SHA256": "05c30d1256a1be4c58df5a1093ab1d46ad632f68f554232b68e09f07463840a7",
+      "Git_blob": "69f9012e570bd909416a28566638a4eee12005ea"
+    },
+    {
+      "path": "internal/server/webhooks.go",
+      "bytes": 5255,
+      "SHA256": "f8b0235de324ce1b2f60aa8d0f4896a9a7fa47a5d2b53551cf8f529d648ee619",
+      "Git_blob": "bfcae9205d6f7dc2aac44c4287065f175e6ce8d2"
+    },
+    {
+      "path": "native/Makefile",
+      "bytes": 368,
+      "SHA256": "114d1202da96901f7717c1b007f9ed0c940d08e61aca770eabf40999dfc856cf",
+      "Git_blob": "b6914bafe3bb14f1bb576e3599b0b87906510b03"
+    },
+    {
+      "path": "native/README.md",
+      "bytes": 1357,
+      "SHA256": "a347ad6c6b3ba86971aa03c875e15bd06a28f247921a6ecd8a8b2128b36e6a5b",
+      "Git_blob": "37f9fdd4b1e494b0f7a492e28e30a3e1873a201e"
+    },
+    {
+      "path": "native/sfd_hash.c",
+      "bytes": 1864,
+      "SHA256": "0dd3a66cb9072b2b0a975538a8809b53a896bdebdc35b35f619a48b947f6cb62",
+      "Git_blob": "ce8c9f69662da714dc1eb7b66d481ab3400759d8"
+    },
+    {
+      "path": "native/sfd_hash.h",
+      "bytes": 582,
+      "SHA256": "e2003a5aeaa0a4765576dc26ea5c57a442cb521405f62c18ec9aa7715e20bb40",
+      "Git_blob": "b2fa703f6f882196516ba3ac505d898f32bd0f39"
+    },
+    {
+      "path": "native/sfd_hash_cli.c",
+      "bytes": 992,
+      "SHA256": "8a91dc89dc2e3cbe0d13cd68b209283b22bf00ef9f517418a24c106e58da0ea4",
+      "Git_blob": "eaf7b812fdd16edfb55ac7c245368372caa0f6a6"
+    },
+    {
+      "path": "native/test_hash.py",
+      "bytes": 1477,
+      "SHA256": "08539523196f5822baa78db569e080c1f278f05c784e06e8719f7e651905d842",
+      "Git_blob": "8c6df5fe18fd2c83fd0cf0b70efc31a97c429e4c"
+    },
+    {
+      "path": "web/static/index.html",
+      "bytes": 75057,
+      "SHA256": "dcaa3a0f21a507409259ec54e1e9f9c43a5549d29db6edcc18e04314e2e1391a",
+      "Git_blob": "ee1fce02c3d9b93f5591fea5d58fe4757b733696"
+    },
+    {
+      "path": "web/static/manifest.json",
+      "bytes": 1861,
+      "SHA256": "84e0f61ca3cd8454a0ea911548e355a3add7725011630d732899496d6a79a459",
+      "Git_blob": "25e3fad0d407016678c45d77d89ba722146fd4d4"
+    },
+    {
+      "path": "web/static/sw.js",
+      "bytes": 2538,
+      "SHA256": "dfa2e63874e565d8352d17afc50054403b86f5156f0aba087fd365a102398178",
+      "Git_blob": "8c29791884b4fa1f11cf20ab41379c686f87413a"
+    }
+  ],
+  "client_tree": "998e690a5239fc2de9bf4e4b5d259c8022e3611a",
+  "reviewed_client_revision": "c320861536914623ea22f28c1d4ea156d4c2132a",
+  "all_client_blobs_equal": true
+}

@@ -1,0 +1,42 @@
+{
+  "schema": "SFD_LOCAL_LAB_FEASIBILITY_MANIFEST_V1",
+  "work_id": "SFD-LOCAL-ISOLATED-LAB-FEASIBILITY-20261102",
+  "base": "2bb7d6c2382c00a089774ad9fc20d8ccdb513bc6",
+  "authority_body_SHA256": "85e348ef65af67c495ef614933893c2538aa25a5f274264053d55b52fa1140a1",
+  "recommendation": "NO-GO",
+  "execution_authorised": false,
+  "self_exclusion": "Git binds this file. Historical plan/qualification manifests apply only at their accepted497ac571/2bb7d6c revisions; this manifest binds the updated documents and proposal parameter.",
+  "byte_convention": "Exact Git LF-normalized blobs; all new writes are binary UTF8 LF.",
+  "files": [
+    {
+      "path": "docs/LOCAL_ISOLATED_LAB_FEASIBILITY.md",
+      "bytes": 23299,
+      "SHA256": "ab527995220e7e14c769d8cca5a4eba39ad393073d635350b6fbc2978bff2d85"
+    },
+    {
+      "path": "docs/CONTINUITY.md",
+      "bytes": 76102,
+      "SHA256": "d73860e258e453e4baf11df1a57cf1f79ad19b9319df59d924c972244e9d3507"
+    },
+    {
+      "path": "docs/TRACKER.md",
+      "bytes": 38189,
+      "SHA256": "48ab2aba68f8b50c190aee07eb14ba2da193bd5b5bf993efcda547645fbd0dbd"
+    },
+    {
+      "path": "journal/DEVLOG.md",
+      "bytes": 63322,
+      "SHA256": "6efa4b9db8c94af5f29d11a9e9b198da51f33665dd420ad8ced17e1621c29d3d"
+    },
+    {
+      "path": "tools/clean-install-plan/local-lab-feasibility.json",
+      "bytes": 19541,
+      "SHA256": "59bff00f12c2845e8fd8d45e39338971c0ddb9c4a339de8e4b56b75ae3c27d18"
+    },
+    {
+      "path": "tools/clean-install-plan/qualification.json",
+      "bytes": 30177,
+      "SHA256": "6e5ed68b3bc89885d51a1bdb7e9e331ef2b1f1583e7b34641871b928fa7231b6"
+    }
+  ]
+}

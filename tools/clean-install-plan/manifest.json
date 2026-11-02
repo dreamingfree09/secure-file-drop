@@ -1,0 +1,41 @@
+{
+  "schema": "SFD_CLEAN_INSTALL_PLAN_MANIFEST_V1",
+  "work_id": "SFD-CLEAN-INSTALL-ACCEPTANCE-PLAN-20261102",
+  "base": "61195434bee5f9221a6f55469c719cb360504ea9",
+  "authority_comment": 6566129478,
+  "authority_body_SHA256": "31b4221cb4847eefe478d3e63aad1c38bef26bd2c797e28eac35e4753982fa16",
+  "execution_authorised": false,
+  "self_exclusion": "This file is self-excluded; the sole-parent normal Git commit binds it.",
+  "files": [
+    {
+      "path": "docs/CLEAN_INSTALL_ACCEPTANCE_PLAN.md",
+      "bytes": 24519,
+      "SHA256": "485bba4b2e42527cb45cdfeb563c93a4134a1b0718e274c5662297eb5526178b"
+    },
+    {
+      "path": "docs/CONTINUITY.md",
+      "bytes": 73295,
+      "SHA256": "6846eae4914e100993e0cfc8dc017e8ebe04c0942cac4aac35739d74da6675bf"
+    },
+    {
+      "path": "docs/TRACKER.md",
+      "bytes": 37077,
+      "SHA256": "252cab6f4338066a0ca53e0f0dde2490128a04515ddb814ff53b47863b0b128f"
+    },
+    {
+      "path": "journal/DEVLOG.md",
+      "bytes": 59637,
+      "SHA256": "f78b613e971a903a08618a4f80b5a3dcacada9f7abccec555e51cb870bdb6c50"
+    },
+    {
+      "path": "tools/clean-install-plan/evidence.json",
+      "bytes": 27173,
+      "SHA256": "a63a1cd9290b43d07760bedc88f40b6c52d351cf88094b8b6b0080095e9e6129"
+    },
+    {
+      "path": "tools/clean-install-plan/source-selection.json",
+      "bytes": 30299,
+      "SHA256": "c68e87314b00f6e9a1e871e172d9850d86d271e670a4a1d6000ad1430fc2587c"
+    }
+  ]
+}

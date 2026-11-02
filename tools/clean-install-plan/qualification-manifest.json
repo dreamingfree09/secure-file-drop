@@ -1,0 +1,32 @@
+{
+  "schema": "SFD_CLEAN_LAB_QUALIFICATION_MANIFEST_V1",
+  "work_id": "SFD-CLEAN-LAB-TARGET-QUALIFICATION-20261102",
+  "base": "497ac571bf9944583279482e1bb1432fee9e85b7",
+  "authority_body_SHA256": "ab8061b1cff289ebd7e3a4e3f9a0dfb85e985e5da88837afd5ed652248cef74b",
+  "outcome": "A0 NO-HOST",
+  "execution_authorised": false,
+  "self_exclusion": "Git binds this self-excluded manifest. Historical plan manifest remains valid at497ac571, not as a claim about updated continuity/tracker/DEVLOG bytes.",
+  "files": [
+    {
+      "path": "docs/CONTINUITY.md",
+      "bytes": 74588,
+      "SHA256": "63d38cb33fb34c6d3f02e9b5cad7958a2821ab4ac2029b7915e2fb9a8a8ea4bb"
+    },
+    {
+      "path": "docs/TRACKER.md",
+      "bytes": 37656,
+      "SHA256": "c2dff3d3c23299abe71b3646d1db35033d49f35b96103444ab8d01cf75d29bdf"
+    },
+    {
+      "path": "journal/DEVLOG.md",
+      "bytes": 61825,
+      "SHA256": "c52bb55f9242ca2badbe35103b6bac53ecd56f1a2fd183dcadc2fe5df3709db6"
+    },
+    {
+      "path": "tools/clean-install-plan/qualification.json",
+      "bytes": 29733,
+      "SHA256": "a29911f206b3ad24f12e744910a251bae968d56b02caf6d17ad8e48b65f4e283"
+    }
+  ],
+  "byte_convention": "Exact Git blob bytes, LF; no platform-dependent text translation."
+}

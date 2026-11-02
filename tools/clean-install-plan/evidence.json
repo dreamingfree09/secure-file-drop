@@ -1,0 +1,668 @@
+{
+  "schema": "SFD_CLEAN_INSTALL_PLAN_EVIDENCE_V1",
+  "work_id": "SFD-CLEAN-INSTALL-ACCEPTANCE-PLAN-20261102",
+  "prepared_UTC": "2026-11-02T02:23:23.551822+00:00",
+  "authority": {
+    "id": 6566129478,
+    "author": "dreamingfree09",
+    "created": "2026-11-02T00:24:04Z",
+    "updated": "2026-11-02T00:24:04Z",
+    "body_SHA256": "31b4221cb4847eefe478d3e63aad1c38bef26bd2c797e28eac35e4753982fa16",
+    "URL": "https://github.com/dreamingfree09/secure-file-drop/pull/43#issuecomment-6566129478",
+    "scope": "plan and non-destructive fixture preparation only"
+  },
+  "source": {
+    "application": "61195434bee5f9221a6f55469c719cb360504ea9",
+    "accepted_PKI": "1805a108855817d7b36220a6253684bd6a018fb3",
+    "PKI_manifest_SHA256": "19e4e5f5af3e782bf78dfca40930801c60d0e711690db6b230089325110c3eb9",
+    "source_file_count": 130,
+    "client_source": "c320861536914623ea22f28c1d4ea156d4c2132a",
+    "client_tree": "998e690a5239fc2de9bf4e4b5d259c8022e3611a",
+    "app_code_equal_at_PKI_revision": true
+  },
+  "desktop_package": {
+    "run": 40403397291,
+    "source": "61195434bee5f9221a6f55469c719cb360504ea9",
+    "artifact": 12690070973,
+    "ZIP_SHA256": "f38b9f82dda5c0320c17a3d0a04de924c958750f8975be28d3914d0ec8b90c9e",
+    "expires_at": "2026-11-09T21:20:09Z",
+    "members": [
+      {
+        "path": "SecureFileDrop.exe",
+        "bytes": 73728,
+        "SHA256": "8f98bd9dca095c827e8ccf38000ae28fecf45df60ec10c9b484ed479748bb28b"
+      },
+      {
+        "path": "README.txt",
+        "bytes": 652,
+        "SHA256": "e6946a2ff9a4a3f8e4b586d5a88a91694b4ff07f648815484becfc65a7be3d6e"
+      },
+      {
+        "path": "LICENSE.txt",
+        "bytes": 1092,
+        "SHA256": "cd8ba281a1e5988222e691b599e6120d855c0ce82a529a19c0e48c098546bca1"
+      },
+      {
+        "path": "SecureFileDrop.exe.config",
+        "bytes": 307,
+        "SHA256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b"
+      },
+      {
+        "path": "SHA256SUMS.txt",
+        "bytes": 179,
+        "SHA256": "179f485e50fd0fe0da717883c481a6673daba56ba0e353fed10769916ea74413"
+      },
+      {
+        "path": "windows-identity.json",
+        "bytes": 587,
+        "SHA256": "5ba9db0edf39228050123b5dc779ed9926b348d013ff015ea1f9c1cb1047f3a4"
+      },
+      {
+        "path": "windows-results.txt",
+        "bytes": 3581,
+        "SHA256": "d4340e7069e3157a78b170dd38e0d7e6adc50e9b280eb1ab737ba064e14cbb24"
+      }
+    ],
+    "executable_SHA256": "8f98bd9dca095c827e8ccf38000ae28fecf45df60ec10c9b484ed479748bb28b",
+    "config_SHA256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b",
+    "sealed_locally": true,
+    "extracted": false,
+    "installed_or_executed": false
+  },
+  "desktop_package_proof": {
+    "seven_files": true,
+    "ZIP_registry_digest_matches_download": true,
+    "published_executable_and_config_sums_match": true,
+    "identity_revision": "61195434bee5f9221a6f55469c719cb360504ea9",
+    "client_compiled_source_bytes_match_CRLF_Git_input": true,
+    "Framework_target": ".NET Framework 4.8",
+    "release_policy_checks": 6,
+    "unsigned_preview": true,
+    "extracted_or_executed": false
+  },
+  "host_observation": {
+    "UTC": "2026-11-02T02:03:57.7272595Z",
+    "OS": {
+      "caption": "Microsoft Windows 11 Pro",
+      "build": "26300",
+      "version": "10.0.26300"
+    },
+    "memory_GiB": 63.9,
+    "logical_processors": 16,
+    "hypervisor_present": true,
+    "HyperV_management_module_available": false,
+    "Sandbox_executable_present": true,
+    "Framework_release": 534296,
+    "features": [
+      {
+        "Name": "VirtualMachinePlatform",
+        "InstallState": 1
+      },
+      {
+        "Name": "Microsoft-Windows-Subsystem-Linux",
+        "InstallState": 1
+      },
+      {
+        "Name": "Microsoft-Hyper-V-All",
+        "InstallState": 2
+      },
+      {
+        "Name": "Microsoft-Hyper-V-Management-PowerShell",
+        "InstallState": 2
+      },
+      {
+        "Name": "Containers-DisposableClientVM",
+        "InstallState": 1
+      }
+    ],
+    "disks": [
+      {
+        "drive": "C",
+        "free_bytes": 8367669248,
+        "free_GiB": 7.8
+      },
+      {
+        "drive": "E",
+        "free_bytes": 33652092928,
+        "free_GiB": 31.3
+      }
+    ],
+    "service": [
+      {
+        "Name": "com.docker.service",
+        "State": "Stopped",
+        "StartMode": "Manual"
+      },
+      {
+        "Name": "vmcompute",
+        "State": "Running",
+        "StartMode": "Manual"
+      }
+    ],
+    "original_engine_processes": [],
+    "original_engine_contacted": false,
+    "VM_or_WSL_launched": false,
+    "Owner_certificate_store_inventory_or_mutation": false,
+    "ordinary_tool_TLS_trust_metadata": "normal verification enabled; OS/library internal trust reads not instrumented"
+  },
+  "package_inventory": {
+    "UTC": "2026-11-02T01:53:42.9274471Z",
+    "packages": [
+      {
+        "path": "OWNER_PROFILE\\SecureFileDrop-Acceptance-20261020-1c7a6d2e",
+        "top_level_file_count": 4,
+        "top_level_bytes": 2298.0,
+        "public_binaries": [],
+        "private_or_other_contents_read": false,
+        "classification": "preserve; superseded-candidate status does not authorise deletion",
+        "cleanup_authorised": false,
+        "metadata_file_count": 4,
+        "metadata_total_bytes": 2298,
+        "nested_public_binaries": [],
+        "reparse_entries_skipped": 0,
+        "depth_bound_reached": false
+      },
+      {
+        "path": "OWNER_PROFILE\\SecureFileDrop-Operator-Test-20261017-2c886aa6",
+        "top_level_file_count": 4,
+        "top_level_bytes": 7475.0,
+        "public_binaries": [],
+        "private_or_other_contents_read": false,
+        "classification": "preserve; superseded-candidate status does not authorise deletion",
+        "cleanup_authorised": false,
+        "metadata_file_count": 15,
+        "metadata_total_bytes": 122530,
+        "nested_public_binaries": [
+          {
+            "relative_path": "preview\\SecureFileDrop.exe",
+            "bytes": 71680,
+            "SHA256": "97fc2dafbc469627f9ee90896903162c8804c01a167402f414d150857a0ed394"
+          },
+          {
+            "relative_path": "preview\\SecureFileDrop.exe.config",
+            "bytes": 307,
+            "SHA256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b"
+          }
+        ],
+        "reparse_entries_skipped": 0,
+        "depth_bound_reached": false
+      },
+      {
+        "path": "OWNER_PROFILE\\SecureFileDrop-Owner-Acceptance-20261024-6ea5f817",
+        "top_level_file_count": 3,
+        "top_level_bytes": 9943.0,
+        "public_binaries": [],
+        "private_or_other_contents_read": false,
+        "classification": "preserve; superseded-candidate status does not authorise deletion",
+        "cleanup_authorised": false,
+        "metadata_file_count": 20,
+        "metadata_total_bytes": 279611,
+        "nested_public_binaries": [
+          {
+            "relative_path": "tools\\BridgeCheck-20261026-2f65d831.exe",
+            "bytes": 6144,
+            "SHA256": "bf31379d60cf172468a836cdd39ac4a3cc40c098009f137e9cc5ee58b2590939"
+          },
+          {
+            "relative_path": "tools\\OwnerLiveAcceptanceV2.exe",
+            "bytes": 15360,
+            "SHA256": "6fc1bf1e95ebe929440f038ee6a8538adcdb44ea0d6a02c174ccb751ea9f2456"
+          },
+          {
+            "relative_path": "tools\\OwnerMaskedInput-20261025-3e89a4d1.exe",
+            "bytes": 13824,
+            "SHA256": "6a3f9de6f2cf654c9ea8ca0ca95f1c66129af9db529a2ffb576433bf51c92bed"
+          },
+          {
+            "relative_path": "tools\\OwnerMaskedInputV2-20261025-3e89a4d1.exe",
+            "bytes": 13824,
+            "SHA256": "c1539d81602868257026bb6fcad6f99d60ef893e098d2e0a2a40d400493783ee"
+          },
+          {
+            "relative_path": "tools\\SecureFileDrop.exe",
+            "bytes": 73728,
+            "SHA256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca"
+          },
+          {
+            "relative_path": "app\\SecureFileDrop.exe",
+            "bytes": 73728,
+            "SHA256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca"
+          },
+          {
+            "relative_path": "app\\SecureFileDrop.exe.config",
+            "bytes": 307,
+            "SHA256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b"
+          }
+        ],
+        "reparse_entries_skipped": 0,
+        "depth_bound_reached": false
+      },
+      {
+        "path": "OWNER_PROFILE\\SecureFileDrop-Staged-Acceptance-20261026-593cd1a8",
+        "top_level_file_count": 6,
+        "top_level_bytes": 102047.0,
+        "public_binaries": [
+          {
+            "name": "OwnerStagedInput.exe",
+            "bytes": 15360,
+            "SHA256": "91bec8d81a9b3918c0b0cfda09d0182cc0b7b9329541a680c09c5b609c79300d"
+          },
+          {
+            "name": "SecureFileDrop.exe",
+            "bytes": 73728,
+            "SHA256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca"
+          },
+          {
+            "name": "StrictTransport.exe",
+            "bytes": 11776,
+            "SHA256": "11a12387243855c29064e7cda9d029161c495cc73e05d435b4dbfa1df829726a"
+          }
+        ],
+        "private_or_other_contents_read": false,
+        "classification": "preserve; superseded-candidate status does not authorise deletion",
+        "cleanup_authorised": false,
+        "metadata_file_count": 11,
+        "metadata_total_bytes": 118307,
+        "nested_public_binaries": [
+          {
+            "relative_path": "OwnerStagedInput.exe",
+            "bytes": 15360,
+            "SHA256": "91bec8d81a9b3918c0b0cfda09d0182cc0b7b9329541a680c09c5b609c79300d"
+          },
+          {
+            "relative_path": "SecureFileDrop.exe",
+            "bytes": 73728,
+            "SHA256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca"
+          },
+          {
+            "relative_path": "StrictTransport.exe",
+            "bytes": 11776,
+            "SHA256": "11a12387243855c29064e7cda9d029161c495cc73e05d435b4dbfa1df829726a"
+          }
+        ],
+        "reparse_entries_skipped": 0,
+        "depth_bound_reached": false
+      },
+      {
+        "path": "OWNER_PROFILE\\SecureFileDrop-Tray-Fix-20261018-c74e5a92",
+        "top_level_file_count": 1,
+        "top_level_bytes": 35337.0,
+        "public_binaries": [],
+        "private_or_other_contents_read": false,
+        "classification": "preserve; superseded-candidate status does not authorise deletion",
+        "cleanup_authorised": false,
+        "metadata_file_count": 8,
+        "metadata_total_bytes": 115463,
+        "nested_public_binaries": [
+          {
+            "relative_path": "preview\\SecureFileDrop.exe",
+            "bytes": 73728,
+            "SHA256": "f196bab87a426d6a5d287f16c199259edb7993e15c4e35d2886d4a196a6fa0ca"
+          },
+          {
+            "relative_path": "preview\\SecureFileDrop.exe.config",
+            "bytes": 307,
+            "SHA256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b"
+          }
+        ],
+        "reparse_entries_skipped": 0,
+        "depth_bound_reached": false
+      }
+    ],
+    "private_appdata": {
+      "contents_read": false,
+      "exists": true,
+      "path": "OWNER_PROFILE/AppData/Local/SecureFileDrop",
+      "classification": "protected settings/session data"
+    },
+    "Explorer_key_present": false,
+    "client_processes": [],
+    "installed_virtualisation": [
+      {
+        "DisplayName": "Docker Desktop",
+        "DisplayVersion": "4.55.0"
+      }
+    ]
+  },
+  "runtime_candidates": {
+    "UTC": "2026-11-02T01:56:48.433073+00:00",
+    "engine_contacted_or_started": false,
+    "image_layers_downloaded": false,
+    "OCI_candidates": [
+      {
+        "repository": "library/golang",
+        "requested": "1.26.10-alpine3.24",
+        "role": "source-required builder candidate",
+        "index_or_manifest_digest": "sha256:a2012b4a1d1f9f7e9f44e0d39b805a901e856b1dd80b4e6ee4338db547050308",
+        "linux_amd64_manifest_digest": "sha256:d1f3216ef30257c850cc136ba42a359ccd9d3e75f19b2c276e520c0b4ef327ce",
+        "config_digest": "sha256:51ff61e0d9a205d4435c3a1725d76c639a3a555274bd31a98e9e9bde5ebe278a",
+        "created": "2026-10-21T22:58:13.645427587Z",
+        "public_labels": {},
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "library/alpine",
+        "requested": "3.24",
+        "role": "source-required backend runtime candidate",
+        "index_or_manifest_digest": "sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a",
+        "linux_amd64_manifest_digest": "sha256:c26612752c78b18faacd63c7d50f4592c2e7b0f25e0e20e82bd74e465c57ab0d",
+        "config_digest": "sha256:b92841763c5c2140a20eeb2a44e94ebb0e80fd51d9d6b5895ea72fa999525d68",
+        "created": "2026-10-21T22:37:22.870489069Z",
+        "public_labels": {},
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "library/postgres",
+        "requested": "16-alpine",
+        "role": "database candidate",
+        "index_or_manifest_digest": "sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+        "linux_amd64_manifest_digest": "sha256:cbf42f0edc946c0bc1b8eeed62403734e1f25dc67a3491455d07a92fdb558b28",
+        "config_digest": "sha256:6a2e324ebe59af6031c4c1cd96c1d5072c2ebc36563d2196365e43b8297c062d",
+        "created": "2026-10-21T22:57:10.664514874Z",
+        "public_labels": {},
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "library/traefik",
+        "requested": "v3.7",
+        "role": "supported proxy candidate",
+        "index_or_manifest_digest": "sha256:e9338a01a43389362bdef90afd4ff4a30dd6c0a2e1b0ce00c5e0f52659aa2d9c",
+        "linux_amd64_manifest_digest": "sha256:c999a937a1bb51ba36c79adf2c9db1d1bb196896b66d524d30ef4945606d565f",
+        "config_digest": "sha256:a72cb2f4a2109f1ae52261c86d56b7d33a27dc5c4e211ce3c7835b772338b94f",
+        "created": "2026-10-30T20:17:26.761959825Z",
+        "public_labels": {
+          "org.opencontainers.image.description": "A modern reverse-proxy",
+          "org.opencontainers.image.documentation": "https://docs.traefik.io",
+          "org.opencontainers.image.source": "https://github.com/traefik/traefik",
+          "org.opencontainers.image.title": "Traefik",
+          "org.opencontainers.image.url": "https://traefik.io",
+          "org.opencontainers.image.vendor": "Traefik Labs",
+          "org.opencontainers.image.version": "v3.7.17"
+        },
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "rustfs/rustfs",
+        "requested": "1.0.4",
+        "role": "current storage candidate",
+        "index_or_manifest_digest": "sha256:ed9210d6411d77ffceb70d94b964a3cb7d225983368bc25bebe01e995293dcc2",
+        "linux_amd64_manifest_digest": "sha256:e287e99762a4a3e7b706526e01f2ff755f67db165e9be9f6b907adc6fb6d6ee1",
+        "config_digest": "sha256:2755bcf766f77f221f39e056864948fb4d1862381831ed0b347226e4bc1a43a9",
+        "created": "2026-10-25T16:28:08.936122522Z",
+        "public_labels": {
+          "org.opencontainers.image.title": "RustFS,org.opencontainers.image.description=RustFS distributed object storage system,org.opencontainers.image.version=1.0.4,org.opencontainers.image.revision=46337942d55f3a8e6a97b147ca98d9ea8115555d,org.opencontainers.image.source=https://github.com/rustfs/rustfs,org.opencontainers.image.created=2026-10-25T16:27:49Z,org.opencontainers.image.build-type=release"
+        },
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "rustfs/rustfs",
+        "requested": "sha256:c917317a76af3df35b596612a32e297b6a31a5c815e023fdf62ca78c2cf84201",
+        "role": "historical pin; not automatically acceptable",
+        "index_or_manifest_digest": "sha256:c917317a76af3df35b596612a32e297b6a31a5c815e023fdf62ca78c2cf84201",
+        "linux_amd64_manifest_digest": "sha256:c917317a76af3df35b596612a32e297b6a31a5c815e023fdf62ca78c2cf84201",
+        "config_digest": "sha256:ad22dd67c8159a66010affbfd000b78a94b74c84524246a8124e1cd250483187",
+        "created": "2026-10-16T14:56:42.527546378Z",
+        "public_labels": {
+          "org.opencontainers.image.title": "RustFS,org.opencontainers.image.description=RustFS distributed object storage system,org.opencontainers.image.version=1.0.2,org.opencontainers.image.revision=2b243d8659497778c2406cc844a490565ec13287,org.opencontainers.image.source=https://github.com/rustfs/rustfs,org.opencontainers.image.created=2026-10-16T14:55:45Z,org.opencontainers.image.build-type=release"
+        },
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      }
+    ],
+    "official_latest_releases": [
+      {
+        "repository": "rustfs/rustfs",
+        "tag": "1.0.4",
+        "published_at": "2026-10-25T16:26:17Z",
+        "URL": "https://github.com/rustfs/rustfs/releases/tag/1.0.4",
+        "source_commit": "46337942d55f3a8e6a97b147ca98d9ea8115555d",
+        "prerelease": false
+      },
+      {
+        "repository": "traefik/traefik",
+        "tag": "v3.7.17",
+        "published_at": "2026-10-30T08:32:41Z",
+        "URL": "https://github.com/traefik/traefik/releases/tag/v3.7.17",
+        "source_commit": "04e8ccf84ada1dcb450cec06554fe27812903134",
+        "prerelease": false
+      }
+    ]
+  },
+  "accepted_existing_CI": [
+    {
+      "id": 40403397291,
+      "name": "Windows companion",
+      "head_sha": "61195434bee5f9221a6f55469c719cb360504ea9",
+      "event": "workflow_dispatch",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/40403397291"
+    },
+    {
+      "id": 40403320822,
+      "name": "Operator acceptance proposal checks",
+      "head_sha": "61195434bee5f9221a6f55469c719cb360504ea9",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/40403320822"
+    },
+    {
+      "id": 40403320828,
+      "name": "CI",
+      "head_sha": "61195434bee5f9221a6f55469c719cb360504ea9",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/40403320828"
+    },
+    {
+      "id": 41307035632,
+      "name": "CI",
+      "head_sha": "1805a108855817d7b36220a6253684bd6a018fb3",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/41307035632"
+    },
+    {
+      "id": 41307035520,
+      "name": "Synthetic PKI preparation",
+      "head_sha": "1805a108855817d7b36220a6253684bd6a018fb3",
+      "event": "pull_request",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/41307035520"
+    },
+    {
+      "id": 41307032088,
+      "name": "CI",
+      "head_sha": "1805a108855817d7b36220a6253684bd6a018fb3",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/41307032088"
+    },
+    {
+      "id": 41307032112,
+      "name": "Synthetic PKI preparation",
+      "head_sha": "1805a108855817d7b36220a6253684bd6a018fb3",
+      "event": "push",
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/dreamingfree09/secure-file-drop/actions/runs/41307032112"
+    }
+  ],
+  "accepted_review_finding": {
+    "finding": 4435269497,
+    "resolved": true,
+    "outdated": true,
+    "changed_by_Codex": false
+  },
+  "preservation": {
+    "head": "853b865e30872964a556c225335eb2191928972b",
+    "work_records": 8,
+    "status_SHA256": "cfd90c22d5da74d22009f003ac3906402f957be535b37cf7217a111689e3a41f",
+    "remote_count": 0,
+    "file_contents_read": false,
+    "WSL_launched": false,
+    "WSL_feature": "preserved by nonaccess; last known 2b8e56de4b79e2508125ca02c18455ae88dee7f6, not re-enumerated this stage"
+  },
+  "preserved_PR_heads": {
+    "38": {
+      "head": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+      "merged": false
+    },
+    "39": {
+      "head": "0254b7bf02fdee55dfbcc624d68653e9c6294539",
+      "merged": false
+    },
+    "40": {
+      "head": "6625a4f5ae44e019eb4c9680e0570f1da9f4fc41",
+      "merged": false
+    },
+    "41": {
+      "head": "b14cc7b88989dc62edcf3c17139d8b315a788f0b",
+      "merged": false
+    },
+    "42": {
+      "head": "36685fc23e401a6ef3f549541b602df5f9e608a0",
+      "merged": false
+    },
+    "43": {
+      "head": "1805a108855817d7b36220a6253684bd6a018fb3",
+      "merged": false
+    }
+  },
+  "execution_plan": {
+    "execution_authorised": false,
+    "target_selected": false,
+    "topology": "new Linux engine VM + clean Windows client VM on independently approved host/private switch",
+    "original_engine_allowed": false,
+    "original_disks_allowed": false,
+    "host_trust_write_allowed": false,
+    "old_root_retirement_allowed": false,
+    "run_ID_proposal": "sfd-clean-20261102-98a1f6c4",
+    "lab_free_GiB_required": 160,
+    "host_OS_free_GiB_required": 20,
+    "guest_RAM_GiB": {
+      "linux": 8,
+      "windows": 8
+    },
+    "supervised_window_hours": 6,
+    "origin_inside_Windows_guest": "https://localhost:8443",
+    "CDP_inside_Windows_guest": "http://127.0.0.1:18082/<unique-fixture>.crl",
+    "restart_policy": "no",
+    "file_limit_bytes": 10485760,
+    "request_envelope_bytes": 11534336,
+    "backup_retention_days": 30,
+    "backup_interval": "24h",
+    "file_cleanup_enabled": false,
+    "new_backend_image_digest": null,
+    "new_backend_export_SHA256": null,
+    "new_backend_binary_SHA256": null,
+    "new_native_binary_SHA256": null,
+    "new_guest_OS_ISO_SHA256": null,
+    "new_engine_package_version": null,
+    "new_guest_SID": null,
+    "new_guest_root_DER_SHA256": null
+  },
+  "gates": [
+    {
+      "id": "A0",
+      "status": "unresolved",
+      "required": "independent approved host/VM/media/licence identity,160 GiB lab and20 GiB OS headroom; current PC fails capacity/full-Hyper-V readiness; no original-host feature/reboot/service changes"
+    },
+    {
+      "id": "R0",
+      "status": "pending",
+      "required": "exact supported OS/Engine/media locks, actual backend build/export/binary identities, advisory/SBOM and fresh proxy3.7/storage1.0.4 compatibility; no security downgrade to stale PKI pins"
+    },
+    {
+      "id": "A1",
+      "status": "not_authorised",
+      "required": "specific six-hour disposable issuer/canary/publication scope with generated fixture secrets; no real replacement CA or durable custody claim"
+    },
+    {
+      "id": "A2",
+      "status": "not_authorised",
+      "required": "enumerated public certificate identities and named Windows VM/test SID CurrentUser trust, cold-profile Schannel/Framework/F196 revocation tests"
+    },
+    {
+      "id": "A3",
+      "status": "not_authorised",
+      "required": "guest-only endpoint/client/Explorer/clipboard installation and Owner visual acceptance"
+    },
+    {
+      "id": "A4",
+      "status": "not_authorised",
+      "required": "stop/quarantine new lab; exact optional new-resource/root retirement; old packages/data/CA/disks remain excluded"
+    }
+  ],
+  "validation_this_stage": {
+    "accepted_98_tests_rerun": false,
+    "application_executed": false,
+    "VM_or_WSL_launched": false,
+    "Docker_API_contacted": false,
+    "image_layers_downloaded": false,
+    "new_credentials_requested_or_generated": false,
+    "package_extracted_or_installed": false,
+    "source_comparisons": 130,
+    "seven_package_members_verified": 7,
+    "readonly_registry_candidates_verified": 6,
+    "package_roots_bounded_metadata": 5,
+    "original_status_digest_matches": true,
+    "preparation_notes": [
+      "Initial read-only PowerShell metadata command failed parsing before inspection/mutation; corrected bounded inventory succeeded.",
+      "One long plan-write command failed Windows process creation before execution; bounded draft writes succeeded. No runtime or safety gate bypass.",
+      "Windows worktree used CRLF; strict raw-prefix assertion stopped before journal mutation. Git-normalised comparison and canonical LF append preserve the exact committed DEVLOG prefix.",
+      "Native Windows documentation checker initially used CP1252 and failed decoding existing Unicode. Re-execute unchanged checker with explicit Python UTF-8 mode; no link rule or source test disabled.",
+      "Fresh authority check stopped publication because the first Windows subprocess decoded UTF-8 JSON as CP1252. Raw-byte JSON parsing proves unchanged author/timestamps/body by exact encoding roundtrip; corrected UTF-8 SHA256 recorded and original measurement retained."
+    ],
+    "SFD_certificate_generated": false,
+    "Owner_trust_inventory_or_mutation": false
+  },
+  "primary_references": [
+    "https://doc.traefik.io/traefik/v2.11/deprecation/releases/",
+    "https://docs.docker.com/engine/daemon/",
+    "https://github.com/dreamingfree09/secure-file-drop/actions/runs/40403397291",
+    "https://github.com/dreamingfree09/secure-file-drop/pull/43#issuecomment-6566129478",
+    "https://github.com/rustfs/rustfs/releases/tag/1.0.4",
+    "https://github.com/rustfs/rustfs/security/advisories",
+    "https://github.com/traefik/traefik/releases/tag/v3.7.17",
+    "https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-configure-using-wsb-file",
+    "https://learn.microsoft.com/en-us/windows/whats-new/windows-11-requirements",
+    "https://learn.microsoft.com/windows-server/virtualization/hyper-v/features-terminology",
+    "https://localhost:8443",
+    "https://man.openbsd.org/ssh_config.5",
+    "https://ubuntu.com/about/release-cycle",
+    "https://www.postgresql.org/support/versioning/"
+  ],
+  "installation_and_user_acceptance": "NOT RUN; separate execution gates pending",
+  "independent_plan_acceptance": "pending",
+  "protected_merge_authority": false,
+  "authority_encoding_audit": {
+    "id": 6566129478,
+    "author": "dreamingfree09",
+    "created": "2026-11-02T00:24:04Z",
+    "updated": "2026-11-02T00:24:04Z",
+    "recorded_created": "2026-11-02T00:24:04Z",
+    "recorded_updated": "2026-11-02T00:24:04Z",
+    "recorded_SHA256": "dea150134854971921c18e696e69a96a651fd7ac976deaa6ddd8320ec5b01308",
+    "correct_UTF8_SHA256": "31b4221cb4847eefe478d3e63aad1c38bef26bd2c797e28eac35e4753982fa16",
+    "recorded_body_hash_consistent": true,
+    "recorded_body_differs_only_by_CP1252_UTF8_roundtrip": true,
+    "raw_response_SHA256": "e75f5e7368df2402fa26a0ef2b6e81d8f1773bed8b3f2a799a333e76537bc841"
+  }
+}
