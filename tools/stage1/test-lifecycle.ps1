@@ -2,8 +2,10 @@
 $ErrorActionPreference='Stop';Set-StrictMode -Version Latest
 . "$PSScriptRoot\memory.ps1"
 . "$PSScriptRoot\save-lab.ps1"
+$script:StageRoot=$PSScriptRoot
 $policy=Get-Content -LiteralPath "$PSScriptRoot\policy.json" -Raw|ConvertFrom-Json
-$script:checks=0
+$script:checks=0;$script:lifecyclePhase='memory'
+trap{[Console]::Error.WriteLine('LIFECYCLE PHASE: '+$script:lifecyclePhase+'; TYPE: '+$_.Exception.GetType().Name);throw $_}
 function Check($Value,[string]$Label){if(-not$Value){throw ('Regression: '+$Label)};$script:checks++}
 function Rows([string]$A,[string]$B){
  $rows=@();$i=0;foreach($role in @('linux','windows')){$state=@($A,$B)[$i];$i++;$rows+=@([pscustomobject]@{role=$role;state=$state;startup_bytes=[long](8GB);assigned_bytes=[long]$(if($state-in@('Running','Paused')){8GB}else{0});dynamic=$false})};return $rows
@@ -26,13 +28,21 @@ $rows=Rows Running Off;$rows[0].assigned_bytes=[long](4GB);$failed=$false;try{[v
 $rows=Rows Off Off;$rows[1].role='linux';$failed=$false;try{[void](Get-LabMemoryRequirement $policy $rows)}catch{$failed=$true};Check $failed 'duplicate memory identity rejected'
 $rows=Rows Off Off;$rows[0].dynamic=$true;$failed=$false;try{[void](Get-LabMemoryRequirement $policy $rows)}catch{$failed=$true};Check $failed 'unexpected dynamic memory rejected'
 # Exercise the actual PS5.1 native-pipe BOM path, retaining strict JSON.
+$script:lifecyclePhase='UTF8 profile'
 $priorEncoding=$OutputEncoding
 try{
  $OutputEncoding=[Text.UTF8Encoding]::new($true)
  $parsed=Read-ContainmentJSON '{"fixture":true}';Check ($parsed.fixture-eq$true) 'UTF8 transport BOM accepted'
  $rejected=$false;try{[void](Read-ContainmentJSON '{"fixture":true,"fixture":false}')}catch{$rejected=$true};Check $rejected 'duplicate keys still rejected'
- $rejected=$false;try{[void](Read-ContainmentJSON ([char]0xfeff+'{}'))}catch{$rejected=$true};Check $rejected 'second BOM remains malformed JSON'
+ if([Console]::InputEncoding.GetPreamble().Length-eq0){
+  $parsed=Read-ContainmentJSON ([char]0xfeff+'{"fixture":true}');Check ($parsed.fixture-eq$true) 'one total preamble accepted'
+ }else{
+  $rejected=$false;try{[void](Read-ContainmentJSON ([char]0xfeff+'{"fixture":true}'))}catch{$rejected=$true};Check $rejected 'extra data BOM after Framework preamble rejected'
+ }
+ $parsed=Read-Strict '{"fixture":true}';Check ($parsed.fixture-eq$true) 'approval bridge uses the same controlled UTF8 transport'
+ $rejected=$false;try{[void](Read-ContainmentJSON ([char]0xfeff+[char]0xfeff+'{}'))}catch{$rejected=$true};Check $rejected 'second BOM remains malformed JSON'
 }finally{$OutputEncoding=$priorEncoding}
+$script:lifecyclePhase='private fixture and committed capsule'
 # New private fixture directories only; no VHD/VHDX is created or attached.
 if(-not('Sfd.Stage1.HostNative'-as[type])){Add-Type -Path "$PSScriptRoot\HostNative.cs"}
 $fixture=Join-Path ([IO.Path]::GetTempPath()) ('sfd-stage1-lifecycle-'+[guid]::NewGuid().ToString('N'))
@@ -55,6 +65,7 @@ $files=@();foreach($file in @('policy.json','containment.ps1')){$bytes=[IO.File]
 [IO.File]::WriteAllText($fixtureManifest,(@{schema='SFD_STAGE1_SOURCE_MANIFEST_V1';files=$files}|ConvertTo-Json -Depth 8),[Text.UTF8Encoding]::new($false))
 [void](FixtureGit @('add','.'));[void](FixtureGit @('commit','-qm','Synthetic approved containment fixture'))
 $approved=(FixtureGit @('rev-parse','HEAD')|Out-String).Trim();$manifestHash=Get-ContainmentByteHash ([IO.File]::ReadAllBytes($fixtureManifest))
+$script:lifecyclePhase='initial committed capsule'
 $source=Read-ReviewedContainmentSource $repo $approved $manifestHash
 Check ($source.policy.root-eq$lab) 'committed source capsule identity'
 . ([scriptblock]::Create($source.code))
@@ -78,6 +89,7 @@ Check $denied 'actual startup validator still rejects dirty source'
 
 & $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $approved|Out-Null
 Check ($script:saved.Count-eq2) 'cached finally saves both despite dirty tracked/untracked files'
+$script:lifecyclePhase='dirty committed reload'
 $restored=Read-ReviewedContainmentSource $repo $approved $manifestHash
 Check ($restored.policy.root-eq$lab-and$restored.code-notmatch'MUTATED SOURCE') 'standalone committed loader ignores dirty policy/code'
 [void](FixtureGit @('add','.'));[void](FixtureGit @('commit','-qm','Synthetic later source must not replace approved capsule'))

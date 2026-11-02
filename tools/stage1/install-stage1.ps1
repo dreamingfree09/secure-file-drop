@@ -4,7 +4,6 @@ param(
 )
 . "$PSScriptRoot\collect-host.ps1"
 . "$PSScriptRoot\make-guest-media.ps1"
-. "$PSScriptRoot\save-lab.ps1"
 function Assert-LiveGuard($Facts,[string]$Mode){
  $Facts.age_seconds=([DateTime]::UtcNow-[DateTime]::Parse($Facts.collected_utc).ToUniversalTime()).TotalSeconds
  $temp=Join-Path ([IO.Path]::GetTempPath()) ('sfd-stage1-facts-'+[guid]::NewGuid().ToString('N')+'.json')

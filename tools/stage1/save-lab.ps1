@@ -1,13 +1,36 @@
 param([switch]$Execute)
 Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
+function Invoke-StagePythonJSON([string]$Arguments,[string]$Text){
+ # Explicit UTF8 payload bytes, independent of PowerShell's native text-pipe
+ # OutputEncoding. Framework48 can prepend its single UTF8 stdin preamble.
+ $bytes=[Text.UTF8Encoding]::new($false).GetBytes($Text)
+ if($bytes.Length-gt131072){throw 'STOP:json-input-bound'}
+ $p=[Diagnostics.Process]::new();$p.StartInfo.FileName=(Get-Command python.exe -ErrorAction Stop).Source;$p.StartInfo.Arguments=$Arguments;$p.StartInfo.UseShellExecute=$false;$p.StartInfo.CreateNoWindow=$true;$p.StartInfo.RedirectStandardInput=$true;$p.StartInfo.RedirectStandardOutput=$true;$p.StartInfo.RedirectStandardError=$true
+ $started=$false
+ try{
+  if(-not$p.Start()){throw 'STOP:json-process'};$started=$true
+  $writer=$p.StandardInput;$preamble=$writer.Encoding.GetPreamble()
+  if($preamble.Length-ne0-and[BitConverter]::ToString($preamble)-ne'EF-BB-BF'){throw 'STOP:json-unsupported-process-encoding'}
+  $stdout=$p.StandardOutput.ReadToEndAsync();$stderr=$p.StandardError.ReadToEndAsync()
+  # Flush an optional Framework preamble BEFORE raw UTF8 bytes, never after.
+  $writer.Flush();$writer.BaseStream.Write($bytes,0,$bytes.Length);$writer.Close()
+  if(-not[Threading.Tasks.Task]::WaitAll([Threading.Tasks.Task[]]@($stdout,$stderr),15000)-or-not$p.WaitForExit(15000)){throw 'STOP:json-process-timeout'}
+  if($p.ExitCode-ne0){throw 'STOP:strict-json-process'}
+  return $stdout.Result
+ }finally{
+  # Only the exact child created here can be terminated on a stalled parse.
+  if($started-and-not$p.HasExited){$p.Kill();[void]$p.WaitForExit(3000)}
+  $p.Dispose()
+ }
+}
 function Read-ContainmentJSON([string]$Text){
  # Constant parser, not a working-tree import. Records contain identities only.
  # Windows PowerShell may emit one UTF-8 transport BOM. Byte hashes were
  # already checked before this parse; JSON values and duplicate checks stay exact.
  $code=@("import json,sys","def unique(p):"," if len(dict(p))!=len(p): raise ValueError()"," return dict(p)","try:"," v=json.loads(sys.stdin.buffer.read().decode('utf-8-sig'),object_pairs_hook=unique,parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))"," print(json.dumps(v))","except Exception:"," sys.stderr.write('STOP:containment-json\n');sys.exit(2)") -join "`n"
- $out=$Text|& (Get-Command python.exe -ErrorAction Stop).Source -X utf8 -I -B -c $code
- if($LASTEXITCODE-ne0){throw 'STOP:containment-json'};return ($out|ConvertFrom-Json)
+ $out=Invoke-StagePythonJSON ('-X utf8 -I -B -c "'+$code+'"') $Text
+ return ($out|ConvertFrom-Json)
 }
 function Get-ContainmentByteHash([byte[]]$Bytes){$h=[Security.Cryptography.SHA256]::Create();try{return ([BitConverter]::ToString($h.ComputeHash($Bytes))).Replace('-','').ToLowerInvariant()}finally{$h.Dispose()}}
 function Read-ContainmentGitBlob([string]$Repository,[string]$SHA,[string]$Path){

@@ -291,7 +291,8 @@ attempts the other already-verified guest, then reports failure. A transitional
 guest also reports failure while permitting containment of its verified running
 peer; it never triggers a forced shutdown or boot. It cannot start,
 force-power-off, delete or re-enable anything and needs no unexpired startup
-lease. Windows PowerShell UTF-8 pipe BOMs are handled only at the transport boundary;
+lease. The legacy PowerShell native text pipe is avoided: controlled UTF-8 byte I/O
+allows at most the Framework stdin preamble. Values and source bytes are unchanged;
 duplicate keys, malformed/second-BOM and oversized bridge packets remain denied.
 Missing approved objects, mismatched manifests or invalid ownership remain
 failures, not a fallback to unreviewed working code. A modified standalone loader

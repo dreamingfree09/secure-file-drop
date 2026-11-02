@@ -41,6 +41,6 @@ functional compatibility is insufficient to open the runtime execution gate.
 The memory model uses remaining guest allocations plus4GiB host reserve. The
 controller caches committed containment code/context before boot; neither its
 finally path nor the standalone committed-source loader depends on a clean
-checkout. `test-lifecycle.ps1` exercises56 synthetic lifecycle cases with mocked
+checkout. `test-lifecycle.ps1` exercises58 synthetic lifecycle cases with mocked
 VM commands, new private Temp directories and an offline synthetic Git repository.
 It creates no VHD/VM and changes no existing path ACL or host setting.

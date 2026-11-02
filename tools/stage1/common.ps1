@@ -2,6 +2,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 $script:StageRoot=$PSScriptRoot
 $script:Policy=Get-Content -LiteralPath "$PSScriptRoot\policy.json" -Raw|ConvertFrom-Json
+. "$PSScriptRoot\save-lab.ps1"
 function Get-Hash([string]$Path){(Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()}
 function Get-TextHash([string]$Text){$h=[Security.Cryptography.SHA256]::Create();try{([BitConverter]::ToString($h.ComputeHash([Text.Encoding]::UTF8.GetBytes($Text)))).Replace('-','').ToLowerInvariant()}finally{$h.Dispose()}}
 function New-File([string]$Path,[string]$Text){$f=[IO.File]::Open($Path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None);try{$b=[Text.Encoding]::UTF8.GetBytes($Text);$f.Write($b,0,$b.Length);$f.Flush($true)}finally{$f.Dispose()}}
@@ -24,8 +25,8 @@ function Get-SourceIdentity {
 }
 function Read-Strict([string]$Body){
  $q=@{mode='json';body=$Body}|ConvertTo-Json -Depth 12 -Compress
- $result=$q|& (Get-Command python.exe -ErrorAction Stop).Source -X utf8 -I -B "$script:StageRoot\packet.py"
- if($LASTEXITCODE-ne0){throw 'STOP:strict-json'};return ($result|ConvertFrom-Json)
+ $result=Invoke-StagePythonJSON ('-X utf8 -I -B "'+$script:StageRoot+'\packet.py"') $q
+ return ($result|ConvertFrom-Json)
 }
 function Get-VerifiedApprovals([long]$ReviewId,[long]$OwnerId,[string]$BundlePath,[string]$HostIdentity) {
  if($ReviewId-le0 -or $OwnerId-le0 -or $ReviewId-eq$OwnerId){throw 'STOP:two-external-approvals-required'}
@@ -35,8 +36,8 @@ function Get-VerifiedApprovals([long]$ReviewId,[long]$OwnerId,[string]$BundlePat
   if($c.id-ne$spec.id -or $c.user.id-ne$script:Policy.author_id -or $c.issue_url-notmatch'^https://api.github.com/repos/dreamingfree09/secure-file-drop/issues/([0-9]+)$'){throw 'STOP:approval-identity'}
   $n=[int]$Matches[1];if($null-ne$issue-and$issue-ne$n){throw 'STOP:approval-thread'};$issue=$n
   $request=@{mode='approval';comment=@{author_id=$c.user.id;issue=$issue;body=$c.body};role=$spec.role;sha=$source.sha;issue=$issue}|ConvertTo-Json -Depth 12 -Compress
-  $reply=$request|& (Get-Command python.exe -ErrorAction Stop).Source -X utf8 -I -B "$script:StageRoot\packet.py"
-  if($LASTEXITCODE-ne0){throw 'STOP:approval-strict-validation'};$p=$reply|ConvertFrom-Json
+  $reply=Invoke-StagePythonJSON ('-X utf8 -I -B "'+$script:StageRoot+'\packet.py"') $request
+  $p=$reply|ConvertFrom-Json
   if($p.schema-ne'SFD_STAGE1_ACCEPTANCE_V1' -or $p.role-ne$spec.role -or $p.decision-ne'GO' -or $p.work_id-ne$script:Policy.work_id -or $p.source_sha-ne$source.sha -or $p.manifest_sha256-ne$source.manifest_sha256 -or $p.issue-ne$issue -or $p.bundle_sha256-ne$bundleHash -or $p.host_identity_sha256-ne$HostIdentity -or $p.media_terms-isnot[bool] -or -not$p.media_terms){throw 'STOP:approval-scope'}
   if(($p.effects|ConvertTo-Json -Compress)-cne($script:Policy.effects|ConvertTo-Json -Compress)){throw 'STOP:approval-effects'}
   $now=[DateTimeOffset]::UtcNow;$start=[DateTimeOffset]::Parse($p.issued_utc);$end=[DateTimeOffset]::Parse($p.expires_utc)

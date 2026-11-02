@@ -33,8 +33,8 @@
     },
     {
       "path": "ci-runtime.py",
-      "bytes": 5156,
-      "SHA256": "496d332d0912d3d3c0d60125a0e1fe73d2b025dbc1caa9b430cbdd2a9072e9b6"
+      "bytes": 5846,
+      "SHA256": "d1a1d32ce12b7f558eb17987c9fbcb4c7090859a28e6a13ce76d20eba8fea714"
     },
     {
       "path": "client-members.json",
@@ -48,8 +48,8 @@
     },
     {
       "path": "common.ps1",
-      "bytes": 7714,
-      "SHA256": "3ccf375f4ce0876c6069d3f05a95c1e2b636c151915be9f8a4f0d4e011de16e3"
+      "bytes": 7592,
+      "SHA256": "84760e031ff13fa4d6e9a557bb4ae57b5798421e521e8c4771f654ba10a06fd1"
     },
     {
       "path": "compose.yml",
@@ -100,6 +100,11 @@
       "path": "evidence/local-synthetic.json",
       "bytes": 156,
       "SHA256": "8dbd8cee8eda00ef6cf64d90bb135ac824aff2376d7fa484dc8dd2cec5e5595c"
+    },
+    {
+      "path": "evidence/review-controlled-UTF8-profile.json",
+      "bytes": 951,
+      "SHA256": "c23077edb423280b011dfe7fde744c3504ed5707aa4d9bb0815ea89056bd031f"
     },
     {
       "path": "evidence/review-corrections-final-Windows51.json",
@@ -158,8 +163,8 @@
     },
     {
       "path": "install-stage1.ps1",
-      "bytes": 20504,
-      "SHA256": "222a29cf82f28f32ec23a2187458075e5bda1b4c574a66574cfc1c5ef76139cb"
+      "bytes": 20473,
+      "SHA256": "cd7db37c30b93287c7e33cd34658d9087a896a89d98d1228650df47623227c85"
     },
     {
       "path": "make-guest-media.ps1",
@@ -199,7 +204,7 @@
     {
       "path": "README.md",
       "bytes": 2989,
-      "SHA256": "edbd4bfd90371b9b2a323b264fe7dd2db141edbc2a5c804d8db83269f225b1c4"
+      "SHA256": "9141c92780cc19734c603ea5124cba60cb5679d825d39ba920b447107d79f30c"
     },
     {
       "path": "run-tests.py",
@@ -218,8 +223,8 @@
     },
     {
       "path": "save-lab.ps1",
-      "bytes": 5067,
-      "SHA256": "cd3a1698ff8f4b13211613b1c05c0c3170ef6d4de92cbd25f51d143fc1208d94"
+      "bytes": 6606,
+      "SHA256": "ec3017e14691de490d0ee4a6d08a2a38982218041bbc11ee003f71d45beffb3a"
     },
     {
       "path": "stage.py",
@@ -233,8 +238,8 @@
     },
     {
       "path": "test-lifecycle.ps1",
-      "bytes": 10814,
-      "SHA256": "581b8447e210575826c02c9d1ef0006289fe5ba1cde340aff2358aa517d4a13c"
+      "bytes": 11716,
+      "SHA256": "5c3585994c83bfece31c6a5ab4382862522f5cfeaf553380c3f9e6ec8592dd37"
     },
     {
       "path": "test-native.ps1",
