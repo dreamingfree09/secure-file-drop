@@ -1,5 +1,10 @@
 # Secure File Drop continuity
 
+## Clean installation and acceptance plan - 2026-11-02
+
+[Aether6566129478](https://github.com/dreamingfree09/secure-file-drop/pull/43#issuecomment-6566129478) accepts PR43/1805a108 for synthetic use and the old repeated-recovery finding is resolved. [One new preservation-first plan](CLEAN_INSTALL_ACCEPTANCE_PLAN.md) selects an independent Linux engine VM plus clean Windows guest, frozen master61195434, accepted PKI source and sealed latest611 desktop package8f98bd9d (seven files). All130 selected app/client/build files match accepted PKI-head application bytes; accepted tests are not rerun here. Current disk capacity fails the proposed lab budget and full Hyper-V management is disabled; historical packages total only0.61 MiB and are preserved. New proxy/storage candidates require exact-image/security/compatibility gates; guest creation, fixture trust, endpoint/client/Explorer and visual steps remain unexecuted/unapproved. Original engine/CA/trust/disks/backups/settings and old controllers remain untouched. Exact plan source/manifest/CI and Aether acknowledgement belong in the separate GHP-01 PR; this is not installation or production acceptance.
+
+
 ## Temporary acceptance account preparation — 2026-10-26
 
 SFD-OWNER-TEST-ACCOUNT-20261026 follows the Owner's explicit one-account authority and Aether's conditional three-archive scope decision. The [separate staged operator workflow](OWNER_TEST_ACCOUNT_ACCEPTANCE.md) is prepared for exact-revision independent review. SMTP/controlled-mailbox access, fresh preservation/private restore, strict Windows TLS and accepted image checks passed. Live restoration/adoption, genuine credentials and account creation remain unexecuted. Normal registration requires an independently reviewed quota-only operation to bound only the newly verified acceptance account; no existing ordinary password is requested or reset. The original helper/F196 and all existing services, records, archives and checkouts remain preserved. No public readiness claim; exact handover revisions belong in GitHub.

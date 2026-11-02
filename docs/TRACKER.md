@@ -1,5 +1,10 @@
 ## Final desktop review — 2026-10-17
 
+## Clean installation and acceptance plan - 2026-11-02
+
+[Aether6566129478](https://github.com/dreamingfree09/secure-file-drop/pull/43#issuecomment-6566129478) accepts PR43/1805a108 for synthetic use and the old repeated-recovery finding is resolved. [One new preservation-first plan](CLEAN_INSTALL_ACCEPTANCE_PLAN.md) selects an independent Linux engine VM plus clean Windows guest, frozen master61195434, accepted PKI source and sealed latest611 desktop package8f98bd9d (seven files). All130 selected app/client/build files match accepted PKI-head application bytes; accepted tests are not rerun here. Current disk capacity fails the proposed lab budget and full Hyper-V management is disabled; historical packages total only0.61 MiB and are preserved. New proxy/storage candidates require exact-image/security/compatibility gates; guest creation, fixture trust, endpoint/client/Explorer and visual steps remain unexecuted/unapproved. Original engine/CA/trust/disks/backups/settings and old controllers remain untouched. Exact plan source/manifest/CI and Aether acknowledgement belong in the separate GHP-01 PR; this is not installation or production acceptance.
+
+
 SFD-DESKTOP-FINAL-REVIEW-20261017. All received PR #25/#26 paths and actual assertions reviewed; retained exact-revision CI/artifacts independently re-read by the producer. No new confirmed application defect; this update adds documentation only. [Continuity](CONTINUITY.md#final-desktop-review-and-integration-preparation--2026-10-17) and the complete [PR #26 handover](https://github.com/dreamingfree09/secure-file-drop/pull/26) record exact proposals, test evidence and merge preparation. The [fifteen-step operator checklist](WINDOWS_COMPANION.md#operator-acceptance-checklist--final-review-2026-10-17) is prepared and wholly unexecuted. Aether's independent exact-revision acceptance and GHP-01 gate remain required; no merge was performed. Existing production/advisory/storage/reconciliation/recovery gates persist.
 
 ## Windows companion — 2026-10-17
