@@ -83,8 +83,8 @@
     },
     {
       "path": "evidence/corrective-authority.json",
-      "bytes": 750,
-      "SHA256": "73d0c17572f7a9422f2183723f1b7ffbca413f5bdfbfe9d2dcb5ff0bf07a0139"
+      "bytes": 729,
+      "SHA256": "d0a2f6b47feda200cda9dd86a2f2507614d7361ccb43547b4a9da9834daf533a"
     },
     {
       "path": "evidence/corrective-red-green.json",
