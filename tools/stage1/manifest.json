@@ -33,8 +33,8 @@
     },
     {
       "path": "ci-runtime.py",
-      "bytes": 4581,
-      "SHA256": "a6ebb43323171fe9029e8aa74c71dfe2cf57cc00355bfd252a2a8aa7c08d389b"
+      "bytes": 5156,
+      "SHA256": "496d332d0912d3d3c0d60125a0e1fe73d2b025dbc1caa9b430cbdd2a9072e9b6"
     },
     {
       "path": "client-members.json",
@@ -208,8 +208,8 @@
     },
     {
       "path": "test-compose.py",
-      "bytes": 1415,
-      "SHA256": "a9b9e6f0e85b6083bcca1e75f9966bd8bf97575a0c9f9bb8de91ce746c7e0d71"
+      "bytes": 1425,
+      "SHA256": "fe33b6e39d4f91b35c6a3a5870e10f72c154af9082f4433d7cff456b969e56e8"
     },
     {
       "path": "test-native.ps1",

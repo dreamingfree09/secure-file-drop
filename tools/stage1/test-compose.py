@@ -10,7 +10,7 @@ raw=subprocess.check_output(['docker','compose','-f','tools/stage1/compose.yml',
 c=json.loads(raw);assert len(c['services'])==4
 for v in c['services'].values():
     assert v['restart']=='no' and v['pull_policy']=='never' and v['image']=='sha256:'+('a'*64)
-    assert 'ALL' in v['cap_drop'] and v['pids_limit']>0 and v['mem_limit']>0
+    assert 'ALL' in v['cap_drop'] and int(v['pids_limit'])>0 and int(v['mem_limit'])>0
     assert not any('/var/run/docker' in str(x) or 'original' in str(x) for x in v.get('volumes',[]))
 b=c['services']['backend']['environment'];assert b['SFD_CLEANUP_ENABLED']=='false' and b['SFD_BACKUP_INTERVAL']=='24h' and b['SFD_BACKUP_RETENTION_DAYS']=='30'
 assert c['networks']['private']['internal'] is True

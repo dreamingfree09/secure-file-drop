@@ -29,7 +29,7 @@ selected route. Microsoft documents that a Private switch has no host networking
 | --- | --- |
 | C headroom | Read-only14:53UTC snapshot9.4766GiB; proposed minimum14GiB before staging and10GiB running. No cleanup or deletion performed/authorised. Safely add capacity or separately approve unrelated space management before GO. |
 | H budget |275.67GiB observed,256GiB initial threshold. Root `H:\SFD-Isolated-Lab-20261102-8df9c4a1` absent. No reservation/write performed. Recheck exact volume and available space at execution. |
-| Administrative evidence | Current automation token not UAC-elevated; HCS enumeration incomplete, HRESULT0x8037011B. Fresh elevated read-only attachment/compute qualification required. Never start vmcompute merely to make this check pass. Unknown is NO-GO. |
+| Administrative evidence | Current automation token not UAC-elevated; HCS enumeration incomplete, HRESULT0x8037011B (HCS_E_ACCESS_DENIED in installed Microsoft SDK26100 winerror.h). Fresh elevated read-only attachment/compute qualification required. Never start vmcompute merely to make this check pass. Unknown is NO-GO. |
 | Original prevention | Native exclusive-handle canary passed; no real Docker/WSL lock or service change performed. Exact preventive implementation needs Aether review, then explicit informed Owner GO. |
 | OS media / rights | Neither ISO is staged or checksum/signature-qualified. Host Pro is not a guest licence. Microsoft evaluation registration, eligibility, activation/account requirements and offline provisioning compatibility remain unresolved. Do not bypass OOBE/activation or attach Internet temporarily. |
 | Runtime security | Official RustFS1.0.4 upstream SBOM has23 package/advisory matches,22 distinct IDs,1151 components. Image-to-SBOM correlation, affected source paths and remediation/VEX are unresolved. `runtime_acceptance_verified` stays false. No exploit attempted. |
@@ -180,6 +180,8 @@ The exact candidate image digests and five official Noble package identities are
 in [runtime-lock.json](../tools/stage1/runtime-lock.json). Go1.26.10/Alpine3.24,
 PostgreSQL16, Traefik3.7.17, RustFS1.0.4, Engine29.8.2/containerd2.4.2 are selected
 candidates. No superseded historical successor/recovery image is reused.
+Hosted browser/runtime compatibility uses Ubuntu22.04, the accepted canonical browser-runner platform, with Chromium sandbox still enabled. Source/Compose safeguards separately use Ubuntu24.04. A first Ubuntu24.04 runtime run reached84 checks per layout but browser launch failed at fixture guard; no TLS error was reported. This is retained as a platform limitation, not a passed Ubuntu24 browser check. Actual Ubuntu24 guest qualification is still mandatory.
+
 CI builds frozen application611 and a recovery artifact from the same source;
 binary/image results belong to that actual CI run. A source pin is not a signed
 package or vulnerability acceptance. Exact offline dependency closure, Ubuntu

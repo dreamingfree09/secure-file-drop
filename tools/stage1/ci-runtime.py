@@ -3,8 +3,9 @@ import argparse,hashlib,json,os,pathlib,subprocess,sys,time
 ROOT=pathlib.Path(__file__).resolve().parents[2]
 LOCK=json.loads((ROOT/'tools/stage1/runtime-lock.json').read_text())
 
-def run(args,cwd=None,env=None):
+def run(args,cwd=None,env=None,evidence=None):
     p=subprocess.run(args,cwd=cwd or ROOT,env=env,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    if evidence is not None:evidence.write_bytes(p.stdout)
     if p.returncode:raise RuntimeError('owned-runtime-command-failed:'+pathlib.Path(args[0]).name)
     return p.stdout
 
@@ -27,7 +28,7 @@ def main():
     run(['docker','build','-t','sfd-stage1-rustfs-fixture','-f','tools/stage1/Dockerfile.rustfs-fixture','.'])
     env=dict(os.environ);env.update(SFD_E2E='1',SFD_BROWSER='1',SFD_E2E_BACKEND_IMAGE='sfd-stage1-backend',SFD_E2E_ROLLBACK_IMAGE='sfd-stage1-recovery',SFD_E2E_POSTGRES_IMAGE=LOCK['images']['postgres'],SFD_E2E_STORAGE_IMAGE='sfd-stage1-rustfs-fixture',SFD_E2E_PROXY_IMAGE=LOCK['images']['traefik'],SFD_E2E_OUTPUT_ROOT=str(target),SFD_E2E_BROWSER_MODULE=str(ROOT/'frozen-app/tests/browser/node_modules/playwright-core'))
     run(['make','-C','native','test'])
-    output=run(['go','test','-v','./tests/e2e','-run','^TestUploadHashDownloadFlow$','-count=1','-timeout','30m'],env=env)
+    output=run(['go','test','-v','./tests/e2e','-run','^TestUploadHashDownloadFlow$','-count=1','-timeout','30m'],env=env,evidence=target/'go-results.txt')
     (target/'go-results.txt').write_bytes(output)
     suites=[]
     for name in ['sfd-auth-fixture','sfd-auth-fixture-bytea']:
@@ -39,7 +40,12 @@ def main():
     ids={}
     for name in ['sfd-stage1-backend','sfd-stage1-recovery',*[LOCK['images'][k] for k in ['postgres','traefik','rustfs']]]:
         ids[name]=json.loads(run(['docker','image','inspect',name]))[0]['Id']
-    receipt={'schema':'SFD_STAGE1_RUNTIME_RECEIPT_V1','application':head,'Stage1_source':run(['git','rev-parse','HEAD']).decode().strip(),'candidate_locks':LOCK,'suites':suites,'exported_image_ids':ids,'functional_compatibility_passed':True,'full_security_acceptance':False,'limitations':['No host VM/network test','No stock Windows trusted-root/revocation/GUI test','Official OS-media signature/licence and RustFS full SBOM/advisory approval still required']}
+    binaries={}
+    for name in ['sfd-stage1-backend','sfd-stage1-recovery']:
+        raw=run(['docker','run','--rm','--network','none','--label','sfd.stage1=64e8b793','--entrypoint','sha256sum',name,'/app/backend','/app/sfd-hash']).decode().splitlines()
+        binaries[name]={line.split()[1]:line.split()[0] for line in raw}
+    assert binaries['sfd-stage1-backend']==binaries['sfd-stage1-recovery']
+    receipt={'binary_SHA256':binaries,'runtime_host':os.environ.get('ImageOS'),'schema':'SFD_STAGE1_RUNTIME_RECEIPT_V1','application':head,'Stage1_source':run(['git','rev-parse','HEAD']).decode().strip(),'candidate_locks':LOCK,'suites':suites,'exported_image_ids':ids,'functional_compatibility_passed':True,'full_security_acceptance':False,'limitations':['No host VM/network test','No stock Windows trusted-root/revocation/GUI test','Official OS-media signature/licence and RustFS full SBOM/advisory approval still required']}
     (target/'runtime-receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
     # Export official runtime bytes plus the exact new backend/recovery, not the
     # test-only adapter. Public images only; no containers/env/credentials.
