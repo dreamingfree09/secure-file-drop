@@ -534,7 +534,8 @@
     "Original status default5 versus expanded8 reconciled by --untracked-files=all. Initial digest guard omitted terminal LF and stopped before writing evidence; corrected exact LF-terminated raw status matches accepted digest.",
     "No VM/Sandbox/WSL/Docker launch, engine API, disk-image mount, storage/backup/real CA/certificate/trust access or data operation. Local storage metadata and source/public artifacts only.",
     "No new Go/native/browser/full-stack/security tests rerun for documentation-only qualification. Prior accepted checks are dated evidence, not new topology acceptance.",
-    "No production readiness or clean Owner-profile installation claimed."
+    "No production readiness or clean Owner-profile installation claimed.",
+    "Prepublication Git-blob guard detected Windows write_text CRLF in new JSON versus Git-normalized LF manifest identities. Push was stopped. A normal child correction normalizes new JSON and binds canonical Git bytes; no history rewritten or application/infrastructure executed."
   ],
   "primary_references": [
     "https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/",

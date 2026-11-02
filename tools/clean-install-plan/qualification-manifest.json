@@ -24,8 +24,9 @@
     },
     {
       "path": "tools/clean-install-plan/qualification.json",
-      "bytes": 30068,
-      "SHA256": "b510f5aefc603019aa4cf6495bc5fbb8ad3608a3fdb7b60b449fb7344e23141c"
+      "bytes": 29733,
+      "SHA256": "a29911f206b3ad24f12e744910a251bae968d56b02caf6d17ad8e48b65f4e283"
     }
-  ]
+  ],
+  "byte_convention": "Exact Git blob bytes, LF; no platform-dependent text translation."
 }
