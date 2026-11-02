@@ -1,0 +1,25 @@
+{
+  "lifecycle_regressions": {
+    "schema": "SFD_STAGE1_LIFECYCLE_REGRESSIONS_V1",
+    "checks": 58,
+    "memory_transitions": true,
+    "dirty_checkout_containment": true,
+    "committed_manifest_identity": true,
+    "unknown_targets_rejected": true,
+    "save_failure_containment_attempts": true,
+    "real_VM_cmdlets_invoked": false,
+    "real_VHD_created": false,
+    "existing_path_ACL_changed": false,
+    "fixture_retained": true
+  },
+  "schema": "SFD_STAGE1_POWERSHELL_TEST_V1",
+  "all_scripts_parse": true,
+  "Windows_aliases_rejected": true,
+  "Plan_no_mutation": true,
+  "no_approval_stops_before_collection": true,
+  "Framework48_probe_compiles": true,
+  "TLS_probe_executed": false,
+  "host_setting_changed": false,
+  "profile": "isolated native Windows51 with UTF8 console input/output and OutputEncoding, restored in finally",
+  "scope": "mock VM cmdlets; new private synthetic fixtures; no existing path ACL or host setting change"
+}

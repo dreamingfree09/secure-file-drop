@@ -1,0 +1,140 @@
+{
+  "schema": "SFD_STAGE1_RUSTFS_ADVISORY_V1",
+  "UTC": "2026-11-02T14:20:01.171791+00:00",
+  "upstream_SBOM_SHA256": "b328a37f6535773117332208f6e9c0b89c4cbb34d61452de062c039a9574213e",
+  "queried_components": 1151,
+  "response_SHA256": [
+    "944db654f4a1bde30f0266bfad6de1f77f99d4db288b2d45764262cb91b25686",
+    "944db654f4a1bde30f0266bfad6de1f77f99d4db288b2d45764262cb91b25686",
+    "76b407e8cd2ad0a194662007208d3010907865d27f7367a3452303a4fe868e92",
+    "944db654f4a1bde30f0266bfad6de1f77f99d4db288b2d45764262cb91b25686",
+    "944db654f4a1bde30f0266bfad6de1f77f99d4db288b2d45764262cb91b25686",
+    "f6344036e535896c7f9e11e8cde16e01367827eb7e188c757e7c0ee22c60027f",
+    "6ebfc1fc86f73d51c32ab37c8e81239bf49e428f568f4b72da9226271abb2888",
+    "152b27f4771db2c4f6d1f0095e0978a3855cd95c5ca6aac790449d02a7272580",
+    "944db654f4a1bde30f0266bfad6de1f77f99d4db288b2d45764262cb91b25686",
+    "944db654f4a1bde30f0266bfad6de1f77f99d4db288b2d45764262cb91b25686",
+    "944db654f4a1bde30f0266bfad6de1f77f99d4db288b2d45764262cb91b25686",
+    "2f6d3220dd9c7a38bc3826c4adf96ac8c8880b860f62d6d7d51416f28cf5c43d"
+  ],
+  "matches": [
+    {
+      "purl": "pkg:cargo/crypto-bigint@0.5.5",
+      "id": "RUSTSEC-2026-0387",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0387"
+    },
+    {
+      "purl": "pkg:cargo/lru@0.16.4",
+      "id": "RUSTSEC-2026-0253",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0253"
+    },
+    {
+      "purl": "pkg:cargo/pageant@0.2.4",
+      "id": "GHSA-662x-8wvj-2276",
+      "URL": "https://osv.dev/vulnerability/GHSA-662x-8wvj-2276"
+    },
+    {
+      "purl": "pkg:cargo/pulldown-cmark@0.13.5",
+      "id": "RUSTSEC-2026-0433",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0433"
+    },
+    {
+      "purl": "pkg:cargo/rsa@0.10.0-rc.18",
+      "id": "RUSTSEC-2023-0071",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2023-0071"
+    },
+    {
+      "purl": "pkg:cargo/rsa@0.9.10",
+      "id": "RUSTSEC-2023-0071",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2023-0071"
+    },
+    {
+      "purl": "pkg:cargo/russh@0.64.1",
+      "id": "GHSA-4p9f-7p9m-5vfg",
+      "URL": "https://osv.dev/vulnerability/GHSA-4p9f-7p9m-5vfg"
+    },
+    {
+      "purl": "pkg:cargo/russh@0.64.1",
+      "id": "GHSA-9wfm-jcj8-jfv9",
+      "URL": "https://osv.dev/vulnerability/GHSA-9wfm-jcj8-jfv9"
+    },
+    {
+      "purl": "pkg:cargo/russh@0.64.1",
+      "id": "GHSA-fw5c-8223-6h42",
+      "URL": "https://osv.dev/vulnerability/GHSA-fw5c-8223-6h42"
+    },
+    {
+      "purl": "pkg:cargo/russh@0.64.1",
+      "id": "GHSA-vp5q-ff62-jwqv",
+      "URL": "https://osv.dev/vulnerability/GHSA-vp5q-ff62-jwqv"
+    },
+    {
+      "purl": "pkg:cargo/zstd@0.13.3",
+      "id": "RUSTSEC-2026-0391",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0391"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0395",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0395"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0396",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0396"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0397",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0397"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0398",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0398"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0399",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0399"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0400",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0400"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0401",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0401"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0402",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0402"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0403",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0403"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0404",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0404"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0405",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0405"
+    },
+    {
+      "purl": "pkg:cargo/zstd-safe@7.3.0",
+      "id": "RUSTSEC-2026-0406",
+      "URL": "https://osv.dev/vulnerability/RUSTSEC-2026-0406"
+    }
+  ],
+  "runtime_exploit_tested": false,
+  "image_binary_SBOM_identity_proved": false,
+  "independent_acceptance": false
+}

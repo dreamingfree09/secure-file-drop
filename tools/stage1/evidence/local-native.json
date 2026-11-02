@@ -1,0 +1,11 @@
+{
+  "schema": "SFD_STAGE1_NATIVE_TEST_V1",
+  "canary_baseline": true,
+  "kernel_lock_blocks_execution": true,
+  "read_sharing_denied": true,
+  "release_restores_canary": true,
+  "identity_failure_releases": true,
+  "protected_target_rejected": true,
+  "original_binary_opened": false,
+  "host_setting_changed": false
+}

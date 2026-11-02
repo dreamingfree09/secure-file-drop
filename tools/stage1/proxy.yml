@@ -1,0 +1,23 @@
+tls:
+  certificates:
+    - certFile: /fixture/localhost.crt
+      keyFile: /fixture/localhost.key
+  options:
+    default:
+      minVersion: VersionTLS12
+http:
+  routers:
+    sfd:
+      rule: Host(`localhost`)
+      entryPoints: [websecure]
+      tls: {}
+      service: sfd
+      middlewares: [bounded]
+  services:
+    sfd:
+      loadBalancer:
+        servers: [{url: http://backend:8080}]
+  middlewares:
+    bounded:
+      buffering:
+        maxRequestBodyBytes: 2097152

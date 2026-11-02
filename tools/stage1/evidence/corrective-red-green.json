@@ -1,0 +1,47 @@
+{
+  "schema": "SFD_STAGE1_CORRECTIVE_RED_GREEN_V1",
+  "baseline_sha": "ff7fcb853981c39b3171c54ea802fa792880e3cc",
+  "baseline_guard_sha256": "57f0c20ef2fc6cd320dc9537f2199bd681de107b6ab38db7945a7fcf7c889dbf",
+  "F3": {
+    "baseline_same_account_two_roles_accepted": [
+      true,
+      true
+    ],
+    "corrected_legacy_same_account_roles_rejected": [
+      true,
+      true
+    ]
+  },
+  "host_mutation": false,
+  "synthetic_only": true,
+  "F2": [
+    {
+      "second_target_attempted": false,
+      "unsafe_regression_reproduced": true,
+      "save_attempts": 1,
+      "fault": "off"
+    },
+    {
+      "second_target_attempted": false,
+      "unsafe_regression_reproduced": true,
+      "save_attempts": 1,
+      "fault": "first-failure"
+    }
+  ],
+  "F1": {
+    "baseline_condition": "in-process finally cannot run after controller termination",
+    "correction": "nonexecuting independent-tick fault model and task proposal; all host mutation remains fenced",
+    "real_process_kill_or_watchdog_executed": false
+  },
+  "green_evidence": {
+    "Python_methods": 30,
+    "Python_subtests": 367,
+    "failures": 0,
+    "skips": 0,
+    "note": "Actual local default and controlled UTF8 profile results; exact-head hosted readback follows in PR. No real VM acceptance.",
+    "PowerShell_lifecycle_checks": 82
+  },
+  "retained_non_test_diagnostics": [
+    "First documentation edit/default-cp1252 link scan raised UnicodeDecodeError; explicit UTF8 rerun passed. No application or host change."
+  ]
+}

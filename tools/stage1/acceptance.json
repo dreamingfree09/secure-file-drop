@@ -1,0 +1,104 @@
+{
+  "schema": "SFD_STAGE1_ACCEPTANCE_LEDGER_V1",
+  "all_initial_statuses": "NOT RUN",
+  "never_count_skip_as_pass": true,
+  "requires_separate_guest_root_approval": true,
+  "checks": [
+    {
+      "id": "native-activation-canary",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "original-service-inhibit-and-guardian",
+      "kind": "live-host",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "private-switch-no-host-NIC-no-external-route",
+      "kind": "live-host",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "fresh-disk-no-passthrough-no-parent-and-physical-reservation",
+      "kind": "live-host",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "guest-UUID-NIC-no-default-gateway-DNS",
+      "kind": "live-guest",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "supported-runtime-signature-SBOM-advisories",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "schema12-fresh-and-BYTEA-BIGINT-idempotency",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "new-issuer-18082-signature-AKI-cold-CRL",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "cold-Schannel-Framework-positive",
+      "kind": "live-Windows",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "revoked-expired-unknown-root-wrong-name-invalid-CRL-CDP-negative",
+      "kind": "live-Windows",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "real-registration-delivered-verification-admin-two-users",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "sessions-invalid-expired-tampered-logout-isolation",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "upload-download-matching-SHA256-and-failure-preservation",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "signed-five-minute-link-expiry410",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "new-lab-backup-restore-and-retention",
+      "kind": "automated",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "tray-picker-progress-cancel",
+      "kind": "Owner-visual",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "Explorer-QuickSend",
+      "kind": "Owner-visual",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "guest-clipboard-link-and-two-minute-clear",
+      "kind": "Owner-visual",
+      "status": "NOT RUN"
+    },
+    {
+      "id": "file-integrity-and-clean-exit",
+      "kind": "Owner-visual",
+      "status": "NOT RUN"
+    }
+  ],
+  "publication": "sanitised results only; no passwords/cookies/verification tokens/signed URLs"
+}

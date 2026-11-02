@@ -1,0 +1,8 @@
+FROM docker.io/library/golang@sha256:d1f3216ef30257c850cc136ba42a359ccd9d3e75f19b2c276e520c0b4ef327ce AS fixture-client
+WORKDIR /src
+COPY tools/stage1/fixture-client/ ./
+RUN CGO_ENABLED=0 GOOS=linux go build -o /out/mc .
+FROM docker.io/rustfs/rustfs@sha256:e287e99762a4a3e7b706526e01f2ff755f67db165e9be9f6b907adc6fb6d6ee1
+COPY --from=fixture-client /out/mc /usr/local/bin/mc
+COPY tools/stage1/rustfs-fixture.sh /sfd-stage1-fixture.sh
+ENTRYPOINT ["/bin/sh", "/sfd-stage1-fixture.sh"]
