@@ -1,5 +1,6 @@
 param()
 . "$PSScriptRoot\common.ps1"
+. "$PSScriptRoot\memory.ps1"
 if(-not('Sfd.Stage1.HostNative'-as[type])){Add-Type -Path "$PSScriptRoot\HostNative.cs"}
 function Get-LiveFacts($Approval=$null,$Ownership=$null,$Guardian=$null){
  $f=[ordered]@{schema='SFD_STAGE1_LIVE_FACTS_V1';collector='collect-host.ps1';no_protected_byte_access=$true;age_seconds=0;collected_utc=[DateTime]::UtcNow.ToString('o')}
@@ -8,7 +9,20 @@ function Get-LiveFacts($Approval=$null,$Ownership=$null,$Guardian=$null){
  $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
  $os=Get-CimInstance Win32_OperatingSystem;$cpu=@(Get-CimInstance Win32_Processor);$cs=Get-CimInstance Win32_ComputerSystem
  $f.HyperV_capable=($os.OSArchitecture-eq'64-bit'-and$os.Caption-match'Windows (10|11) (Pro|Enterprise|Education)'-and($cs.HypervisorPresent-or@($cpu|Where-Object{-not$_.VirtualizationFirmwareEnabled-or-not$_.SecondLevelAddressTranslationExtensions-or-not$_.VMMonitorModeExtensions}).Count-eq0))
- $f.host_RAM_available=($os.FreePhysicalMemory*1KB-ge20GB);$f.host_commit_margin=($os.FreeVirtualMemory*1KB-ge20GB)
+ try{
+  $observed=$null
+  if($null-ne$Ownership-and@($Ownership.guests).Count-gt0){
+   $observed=@();foreach($g in $Ownership.guests){
+    $v=Get-VM -Id $g.id -ErrorAction Stop
+    if($g.role-notin@('linux','windows')-or$v.Name-ne$script:Policy.guests.($g.role).name){throw 'STOP:memory-VM-identity'}
+    $observed+=@([pscustomobject]@{role=$g.role;state=$v.State.ToString();startup_bytes=[long]$v.MemoryStartup;assigned_bytes=[long]$v.MemoryAssigned;dynamic=[bool]$v.DynamicMemoryEnabled})
+   }
+  }
+  $memory=Get-LabMemoryAdmission -Policy $script:Policy -ObservedGuests $observed -FreeRAMBytes ([long]($os.FreePhysicalMemory*1KB)) -FreeCommitBytes ([long]($os.FreeVirtualMemory*1KB))
+  $f.memory_required_GiB=$memory.required_bytes/1GB
+  $f.host_RAM_available=$memory.RAM_available;$f.host_commit_margin=$memory.commit_margin
+ }catch{$f.memory_required_GiB=$null}
+
  $f.host_admin=([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
  try{$src=Get-SourceIdentity;if($null-ne$Approval-and($src.sha-ne$Approval.source.sha-or$src.manifest_sha256-ne$Approval.source.manifest_sha256)){throw 'source-drift'};$f.source_clean=$true;$f.source_manifest_verified=$true}catch{}
  $c=Get-Volume -DriveLetter C;$h=Get-Volume -DriveLetter H;$f.C_free_GiB=$c.SizeRemaining/1GB;$f.H_free_GiB=$h.SizeRemaining/1GB;$f.RAM_GiB=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB

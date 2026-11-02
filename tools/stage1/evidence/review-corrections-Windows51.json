@@ -1,0 +1,28 @@
+{
+  "lifecycle_regressions": {
+    "schema": "SFD_STAGE1_LIFECYCLE_REGRESSIONS_V1",
+    "checks": 52,
+    "memory_transitions": true,
+    "dirty_checkout_containment": true,
+    "committed_manifest_identity": true,
+    "unknown_targets_rejected": true,
+    "save_failure_containment_attempts": true,
+    "real_VM_cmdlets_invoked": false,
+    "real_VHD_created": false,
+    "existing_path_ACL_changed": false,
+    "fixture_retained": true
+  },
+  "schema": "SFD_STAGE1_POWERSHELL_TEST_V1",
+  "all_scripts_parse": true,
+  "Windows_aliases_rejected": true,
+  "Plan_no_mutation": true,
+  "no_approval_stops_before_collection": true,
+  "Framework48_probe_compiles": true,
+  "TLS_probe_executed": false,
+  "host_setting_changed": false,
+  "review_findings": [
+    "4443866189",
+    "4443866201"
+  ],
+  "scope": "synthetic producer worktree before commit; exact published-head CI recorded in PR45"
+}

@@ -43,8 +43,8 @@
     },
     {
       "path": "collect-host.ps1",
-      "bytes": 6855,
-      "SHA256": "be42c2d9ea348167e33a9f3bb1fc77e1f87b3ee5e1d8e95e3521be3391e2f718"
+      "bytes": 7635,
+      "SHA256": "5e2e0d8f3b206e65d5db3538281036797f047336eba504f8672c6cfad5ad0e06"
     },
     {
       "path": "common.ps1",
@@ -55,6 +55,11 @@
       "path": "compose.yml",
       "bytes": 2621,
       "SHA256": "d3146b4f08f73314d71280ba1e62ba241a2ca4ace1b622af006202d6e2e49033"
+    },
+    {
+      "path": "containment.ps1",
+      "bytes": 2862,
+      "SHA256": "93312b64f5dfcf07246faddfb952f3dc9624bdd74b3b18161c05ce734e1c3d2a"
     },
     {
       "path": "Dockerfile.backend",
@@ -95,6 +100,11 @@
       "path": "evidence/local-synthetic.json",
       "bytes": 156,
       "SHA256": "8dbd8cee8eda00ef6cf64d90bb135ac824aff2376d7fa484dc8dd2cec5e5595c"
+    },
+    {
+      "path": "evidence/review-corrections-Windows51.json",
+      "bytes": 892,
+      "SHA256": "2bfe74023223af9f4b04795f22f2ffcf3d9d52a35e3484102749ca15d713f46f"
     },
     {
       "path": "evidence/rustfs-advisory-records.json",
@@ -143,8 +153,8 @@
     },
     {
       "path": "install-stage1.ps1",
-      "bytes": 19912,
-      "SHA256": "c1dc55c7fa2d6aff2f96406540b2b0d58059933d5c7fb69809f38ea3c94adf18"
+      "bytes": 20504,
+      "SHA256": "222a29cf82f28f32ec23a2187458075e5bda1b4c574a66574cfc1c5ef76139cb"
     },
     {
       "path": "make-guest-media.ps1",
@@ -157,14 +167,19 @@
       "SHA256": "19044afb4237ec3646af699503621a5368e305da84abe3a205e786f0d793c10b"
     },
     {
+      "path": "memory.ps1",
+      "bytes": 1550,
+      "SHA256": "59e8bb5be09abf0e360c4b9b17d0957f29d1847b531642933bf23a36d9fb7887"
+    },
+    {
       "path": "packet.py",
       "bytes": 624,
       "SHA256": "26b8b19e4ac2b6f40aef07cd928389b5b1baa3b511065a3a0e54be7aaa1eb320"
     },
     {
       "path": "policy.json",
-      "bytes": 3642,
-      "SHA256": "84eec52e08af4a5e368676563c6862b7524af2969476cf75667b940053e404be"
+      "bytes": 3671,
+      "SHA256": "5c1ca6e0abc5760510f5d963a6bf0a9274b98833f018e60d9907c57a822548c3"
     },
     {
       "path": "prepare-client.ps1",
@@ -178,8 +193,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 2493,
-      "SHA256": "593eaec68b9f0bd04727f0754ea7881d71189af172649f173607d8c724bc3aed"
+      "bytes": 2989,
+      "SHA256": "87212c7e02f8bdc0ff775a2da8641f63164256d1e8896b9f6fcd6c0e3f19cc95"
     },
     {
       "path": "run-tests.py",
@@ -198,8 +213,8 @@
     },
     {
       "path": "save-lab.ps1",
-      "bytes": 1488,
-      "SHA256": "6f84302e1d6faaf55f0d09f71fe08802b3501d96273cd02f39d3d81e453ac7f4"
+      "bytes": 4774,
+      "SHA256": "a95dc1e2eae6e84954c7fb764d0e28e2f2ab3b1777e19deb1982bb5051b62a65"
     },
     {
       "path": "stage.py",
@@ -212,19 +227,24 @@
       "SHA256": "fe33b6e39d4f91b35c6a3a5870e10f72c154af9082f4433d7cff456b969e56e8"
     },
     {
+      "path": "test-lifecycle.ps1",
+      "bytes": 9806,
+      "SHA256": "6c77f1799738a2edf294bc9c9a1b683d40158e771df0ea47a9a206c5b6aae919"
+    },
+    {
       "path": "test-native.ps1",
       "bytes": 2576,
       "SHA256": "9442021baf39e03755058e5c0c5c2327ab59ef23a9c93e16ed0fc01e2daff1db"
     },
     {
       "path": "test-powershell.ps1",
-      "bytes": 1886,
-      "SHA256": "e13bf1d91000e7cec749af3f17aace944306bf6faacffd3b8c6927deaf264926"
+      "bytes": 1997,
+      "SHA256": "315d623497de12d56656854c45e004316b61f1e7c32be103d056208ee9ec46bf"
     },
     {
       "path": "test_configs.py",
-      "bytes": 2898,
-      "SHA256": "c0bad0efc30d7dc3d7a3a658e4ed24a3edc387430e0bf2321dec5a2c8fcba669"
+      "bytes": 2540,
+      "SHA256": "d726af3978016fc2f261d6974045516281683c9600c85a7b047fdb5cf5a2df10"
     },
     {
       "path": "test_guard.py",

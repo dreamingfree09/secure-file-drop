@@ -19,4 +19,5 @@ $temp=Join-Path ([IO.Path]::GetTempPath()) ('sfd-stage1-probe-'+[guid]::NewGuid(
 & $csc /nologo /r:System.Net.Http.dll "/out:$temp\TlsProbe.exe" "$PSScriptRoot\TlsProbe.cs"
 if($LASTEXITCODE-ne0){throw 'Framework48 probe compilation'}
 # Do not run TLS without separately approved guest root scope.
-[ordered]@{schema='SFD_STAGE1_POWERSHELL_TEST_V1';all_scripts_parse=$true;Windows_aliases_rejected=$true;Plan_no_mutation=$true;no_approval_stops_before_collection=$true;Framework48_probe_compiles=$true;TLS_probe_executed=$false;host_setting_changed=$false}|ConvertTo-Json
+$lifecycle=(& "$PSScriptRoot\test-lifecycle.ps1"|Out-String)|ConvertFrom-Json
+[ordered]@{lifecycle_regressions=$lifecycle;schema='SFD_STAGE1_POWERSHELL_TEST_V1';all_scripts_parse=$true;Windows_aliases_rejected=$true;Plan_no_mutation=$true;no_approval_stops_before_collection=$true;Framework48_probe_compiles=$true;TLS_probe_executed=$false;host_setting_changed=$false}|ConvertTo-Json

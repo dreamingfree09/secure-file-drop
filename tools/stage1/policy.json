@@ -99,5 +99,6 @@
   },
   "min_C_run_free_GiB": 10,
   "preparation_input_root": "E:\\PROGRAMMING PROJECTS\\secure-file-drop-quality-closeout-20261015-codex\\.git\\sfd-stage1-installation-20261102-64e8b793\\inputs",
-  "recovery_scope": "8GiB capacity-only quarantine for small new-lab logical exports; not a whole-VM backup or automatic copy/release authority"
+  "recovery_scope": "8GiB capacity-only quarantine for small new-lab logical exports; not a whole-VM backup or automatic copy/release authority",
+  "host_RAM_reserve_GiB": 4
 }

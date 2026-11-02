@@ -4,6 +4,7 @@ param(
 )
 . "$PSScriptRoot\collect-host.ps1"
 . "$PSScriptRoot\make-guest-media.ps1"
+. "$PSScriptRoot\save-lab.ps1"
 function Assert-LiveGuard($Facts,[string]$Mode){
  $Facts.age_seconds=([DateTime]::UtcNow-[DateTime]::Parse($Facts.collected_utc).ToUniversalTime()).TotalSeconds
  $temp=Join-Path ([IO.Path]::GetTempPath()) ('sfd-stage1-facts-'+[guid]::NewGuid().ToString('N')+'.json')
@@ -157,6 +158,13 @@ $ownership=Read-Strict ([IO.File]::ReadAllText((Join-Path $r 'guests.json')))
 if($Phase-eq'BootGuests'){
  if(Test-Path -LiteralPath (Join-Path $r 'guest-boot-started.json')){throw 'STOP:one-use-boot-already-consumed'}
  $facts=Get-AdmitFacts $ownership $guardian;Assert-LiveGuard $facts 'admit'
+ # Cache the exact committed containment code and context BEFORE one-use boot.
+ # Finally never re-reads working files or requires git status to be clean.
+ $capsule=Read-ReviewedContainmentSource $script:Approval.source.repo $script:Approval.source.sha $script:Approval.source.manifest_sha256
+ . ([scriptblock]::Create($capsule.code))
+ $saveAction=${function:Save-OwnedLab};$savePolicy=$capsule.policy
+ $saveOwnership=Read-ContainmentJSON ($ownership|ConvertTo-Json -Depth 10)
+ $saveSource=$capsule.source_sha
  New-File (Join-Path $r 'guest-boot-started.json') '{"one_use":true}'
  try{
  foreach($vm in (Get-OwnedVMs $ownership)){Assert-Guardian $guardian;$again=Get-AdmitFacts $ownership $guardian;Assert-LiveGuard $again 'admit';Start-VM -VM $vm -ErrorAction Stop|Out-Null}
@@ -170,7 +178,7 @@ if($Phase-eq'BootGuests'){
    if(-not$live.source_clean-or-not$live.source_manifest_verified-or-not$live.host_RAM_available-or-not$live.host_commit_margin-or-not$live.preventive_services_disabled_stopped-or-not$live.no_Docker_processes-or-not$live.no_WSL_workloads-or-not$live.no_original_image_attachments-or$live.C_free_GiB-lt$script:Policy.min_C_run_free_GiB-or$live.H_free_GiB-lt$script:Policy.min_H_run_free_GiB){throw 'STOP:running-preservation-drift'}
    Start-Sleep -Seconds 5
   }
- }finally{& "$PSScriptRoot\save-lab.ps1" -Execute}
+ }finally{& $saveAction -Policy $savePolicy -Ownership $saveOwnership -ExpectedSourceSHA $saveSource}
  Write-Output 'BOUNDED LAB WINDOW ENDED; NEW GUESTS SAVED. No trust or application acceptance implied.';return
 }
 if($Phase-eq'StopGuests'){

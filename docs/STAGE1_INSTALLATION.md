@@ -60,6 +60,13 @@ All seven member hashes/lengths are in [client-members.json](../tools/stage1/cli
 and Windows8GiB/2vCPU/64GiB fixed disk. Host minimum24GiB RAM; recheck available
 RAM, supported CPU, virtualization/SLAT and Windows feature availability before
 installation. Current source does not claim these metadata checks are a boot test.
+Memory admission is phase-aware:4GiB host reserve plus the fixed RAM of each
+remaining Off/Saved guest. It requires20GiB before either starts,12GiB after one
+8GiB guest is allocated, and4GiB while both run. The same rule applies to free
+physical and commit capacity. Actual VM IDs/names, fixed startup/assigned memory,
+duplicate roles and transition states are validated; unknown/incomplete metadata
+fails closed. The24GiB minimum physical host requirement is unchanged.
+
 The H budget is32+64GiB disks,8GiB capacity-only new-lab logical recovery reserve,24GiB inputs,
 4GiB bounded logs,16GiB saved guest RAM and20GiB reserve =168GiB. Initial fixed
 allocations and recovery reservation must physically allocate; sparse/compressed
@@ -269,8 +276,23 @@ It is a collector, **not an implementation of every scenario**.
 ## Rollback and one proposed Owner decision
 
 Before any VM boot, failure retains evidence/new partial objects and starts
-nothing. After boot, `save-lab.ps1 -Execute` validates source/ownership/VM IDs and
-exact new disk paths, then Save-VM only; it needs no unexpired startup lease.
+nothing. Startup still requires a clean checkout and the full manifest. Before
+one-use boot, the controller loads containment code/policy from the approved
+committed blobs, checks their SHA256/length against the approved manifest and
+caches that code plus owned-VM context. Its finally block never re-reads working
+source or requires git status/HEAD to remain unchanged. Ordinary tracked or
+untracked edits therefore trigger containment instead of disabling it.
+
+Standalone `save-lab.ps1 -Execute` checks the fixed private-root custody, reads
+the recorded approval source/manifest identity and loads those committed blobs
+without a clean-checkout requirement, even if HEAD advanced. It validates both
+exact new VM IDs/names/disk paths before any Save-VM; one save failure still
+attempts the other already-verified guest, then reports failure. It cannot start,
+force-power-off, delete or re-enable anything and needs no unexpired startup
+lease. Missing approved objects, mismatched manifests or invalid ownership remain
+failures, not a fallback to unreviewed working code. A modified standalone loader
+itself is not trusted; use its reviewed source. The running controller's cached
+finally path remains independent of that file.
 No force power-off, file deletion, old-engine start or automatic SCM restoration.
 New feature/switch/VM definitions remain for review; no auto-uninstall. If save
 cannot complete, report the exact failure and preserve all files rather than

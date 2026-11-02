@@ -14,7 +14,7 @@ this package. `policy.json` contains the exact proposed effects and reserved act
 | `guard.py --facts PATH --phase protect` | Pure evaluation, always `authorises_mutation:false` |
 | `stage.py` | Creates a new Temp review copy and an explicitly incomplete bundle |
 | `install-stage1.ps1` other phases | Reserved future mutator; two fresh external approvals and all live gates required |
-| `save-lab.ps1` | Plan by default; `-Execute` can save only source-bound new guests, including after lease expiry |
+| `save-lab.ps1` / `containment.ps1` | Plan by default; committed manifest-bound save-only containment tolerates checkout edits and lease expiry |
 | `guest-linux.sh`, `guest-windows.ps1` | New-guest UUID/MAC-bound offline configuration; not Owner host installers |
 | `prepare-client.ps1` | New Windows guest only; verifies all seven files before exclusive extraction; no launch/registration |
 | `ci-runtime.py` | GitHub-hosted Linux runner only; isolated real-stack compatibility and image export |
@@ -37,3 +37,10 @@ substitutes for live authority or observed safety.
 All candidate runtime and CI artifacts remain subject to independent security
 review. In particular, the RustFS SBOM matches in `evidence/` are unresolved;
 functional compatibility is insufficient to open the runtime execution gate.
+
+The memory model uses remaining guest allocations plus4GiB host reserve. The
+controller caches committed containment code/context before boot; neither its
+finally path nor the standalone committed-source loader depends on a clean
+checkout. `test-lifecycle.ps1` exercises52 synthetic lifecycle cases with mocked
+VM commands, new private Temp directories and an offline synthetic Git repository.
+It creates no VHD/VM and changes no existing path ACL or host setting.

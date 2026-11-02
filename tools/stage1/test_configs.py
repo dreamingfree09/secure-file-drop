@@ -22,10 +22,8 @@ class Contracts(unittest.TestCase):
  def test_source_keeps_trust_and_host_changes_separate(self):
   src=(HERE/'guest-windows.ps1').read_text();self.assertNotIn('Import-Certificate',src);self.assertNotIn('ServerCertificateCustomValidationCallback',src)
   probe=(HERE/'TlsProbe.cs').read_text();self.assertIn('.NETFramework,Version=v4.8',probe);self.assertIn('CheckCertificateRevocationList=true',probe)
- def test_offline_image_and_rollback_contract(self):
+ def test_offline_image_contract(self):
   c=(HERE/'compose.yml').read_text();self.assertEqual(c.count('pull_policy: never'),4)
-  save=(HERE/'save-lab.ps1').read_text();self.assertIn('[switch]$Execute',save);self.assertIn('Save-VM',save);self.assertNotIn('Stop-VM',save);self.assertNotIn('Set-Service',save)
-  boot=(HERE/'install-stage1.ps1').read_text();self.assertIn('guest-boot-started.json',boot);self.assertIn('finally{& "$PSScriptRoot\\save-lab.ps1" -Execute}',boot)
  def test_no_media_or_security_acceptance_fabricated(self):
   b=json.loads((HERE/'bundle-example.json').read_text());self.assertFalse(b['complete']);self.assertFalse(b['runtime_acceptance_verified'])
   c=(HERE/'ci-runtime.py').read_text();self.assertIn("'full_security_acceptance':False",c)
