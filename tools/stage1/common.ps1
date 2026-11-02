@@ -29,25 +29,30 @@ function Read-Strict([string]$Body){
  return ($result|ConvertFrom-Json)
 }
 function Get-VerifiedApprovals([long]$ReviewId,[long]$OwnerId,[string]$BundlePath,[string]$HostIdentity) {
- if($ReviewId-le0 -or $OwnerId-le0 -or $ReviewId-eq$OwnerId){throw 'STOP:two-external-approvals-required'}
- $source=Get-SourceIdentity;$bundleHash=Get-Hash $BundlePath;$packets=@();$issue=$null
- foreach($spec in @(@{id=$ReviewId;role='Aether'},@{id=$OwnerId;role='Owner'})){
-  $c=Invoke-RestMethod -Uri "https://api.github.com/repos/dreamingfree09/secure-file-drop/issues/comments/$($spec.id)" -Headers @{'User-Agent'='SFD-Stage1-readonly-authority';'Accept'='application/vnd.github+json'} -TimeoutSec 15
-  if($c.id-ne$spec.id -or $c.user.id-ne$script:Policy.author_id -or $c.issue_url-notmatch'^https://api.github.com/repos/dreamingfree09/secure-file-drop/issues/([0-9]+)$'){throw 'STOP:approval-identity'}
-  $n=[int]$Matches[1];if($null-ne$issue-and$issue-ne$n){throw 'STOP:approval-thread'};$issue=$n
-  $request=@{mode='approval';comment=@{author_id=$c.user.id;issue=$issue;body=$c.body};role=$spec.role;sha=$source.sha;issue=$issue}|ConvertTo-Json -Depth 12 -Compress
-  $reply=Invoke-StagePythonJSON ('-X utf8 -I -B "'+$script:StageRoot+'\packet.py"') $request
-  $p=$reply|ConvertFrom-Json
-  if($p.schema-ne'SFD_STAGE1_ACCEPTANCE_V1' -or $p.role-ne$spec.role -or $p.decision-ne'GO' -or $p.work_id-ne$script:Policy.work_id -or $p.source_sha-ne$source.sha -or $p.manifest_sha256-ne$source.manifest_sha256 -or $p.issue-ne$issue -or $p.bundle_sha256-ne$bundleHash -or $p.host_identity_sha256-ne$HostIdentity -or $p.media_terms-isnot[bool] -or -not$p.media_terms){throw 'STOP:approval-scope'}
-  if(($p.effects|ConvertTo-Json -Compress)-cne($script:Policy.effects|ConvertTo-Json -Compress)){throw 'STOP:approval-effects'}
-  $now=[DateTimeOffset]::UtcNow;$start=[DateTimeOffset]::Parse($p.issued_utc);$end=[DateTimeOffset]::Parse($p.expires_utc)
-  if($start.Offset-ne[TimeSpan]::Zero -or $end.Offset-ne[TimeSpan]::Zero -or $start-gt$now -or $end-le$now -or ($end-$start).TotalHours-gt8 -or $end-le$start){throw 'STOP:approval-window'}
-  $packets+=[pscustomobject]@{id=$c.id;body_sha256=Get-TextHash $c.body;body=$p}
+ if($ReviewId-le0-or$OwnerId-le0-or$ReviewId-eq$OwnerId){throw 'STOP:two-external-approvals-required'}
+ $a=$script:Policy.approval_authority
+ if(-not$a.enrollment_accepted-or$null-eq$a.reviewer.id-or$a.reviewer.id-eq$a.owner.id-or$a.reviewer.id-eq$a.producer_id){throw 'STOP:independent-reviewer-unenrolled'}
+ $source=Get-SourceIdentity;$bundleHash=Get-Hash $BundlePath
+ $uri='https://api.github.com/repos/dreamingfree09/secure-file-drop'
+ $headers=@{'User-Agent'='SFD-independent-approval-readonly';'Accept'='application/vnd.github+json'}
+ $pr=Invoke-RestMethod -Uri "$uri/pulls/$($a.pull_request_number)" -Headers $headers -TimeoutSec 15
+ if($pr.id-ne$a.pull_request_id-or$pr.base.repo.id-ne$a.repository_id-or$pr.head.repo.id-ne$a.repository_id-or$pr.head.sha-ne$source.sha-or$pr.merged-or$pr.state-ne'open'){throw 'STOP:approval-pr-drift'}
+ $records=@();$raw=@()
+ foreach($id in @($ReviewId,$OwnerId)){
+  $c=Invoke-RestMethod -Uri "$uri/issues/comments/$id" -Headers $headers -TimeoutSec 15
+  if($c.id-ne$id-or$c.issue_url-ne"$uri/issues/$($a.pull_request_number)"){throw 'STOP:approval-comment-scope'}
+  $records+=@(@{id=$c.id;author_id=$c.user.id;login=$c.user.login;user_type=$c.user.type;association=$c.author_association;via_app=($null-ne$c.performed_via_github_app);repository_id=$pr.base.repo.id;pull_request_id=$pr.id;pull_request_number=$pr.number;created_utc=$c.created_at;updated_utc=$c.updated_at;body=$c.body});$raw+=@($c)
  }
- $pr=Invoke-RestMethod -Uri "https://api.github.com/repos/dreamingfree09/secure-file-drop/pulls/$issue" -Headers @{'User-Agent'='SFD-Stage1-readonly-authority'} -TimeoutSec 15
- if($pr.head.sha-ne$source.sha -or $pr.merged -or $pr.state-ne'open'){throw 'STOP:approval-ref-drift'}
- [pscustomobject]@{source=$source;packets=$packets;bundle=$BundlePath;bundle_hash=$bundleHash;host_identity=$HostIdentity;expires_utc=($packets|ForEach-Object{$_.body.expires_utc}|Sort-Object|Select-Object -First 1)}
+ $context=@{source_sha=$source.sha;manifest_sha256=$source.manifest_sha256;bundle_sha256=$bundleHash;host_identity_sha256=$HostIdentity}
+ $q=@{mode='approval_pair';review=$records[0];owner=$records[1];context=$context}|ConvertTo-Json -Depth 14 -Compress
+ $pair=(Invoke-StagePythonJSON ('-X utf8 -I -B "'+$script:StageRoot+'\packet.py"') $q)|ConvertFrom-Json
+ # Re-read immutable comments and ref after validation; edits/deletion/drift deny.
+ for($i=0;$i-lt2;$i++){$c=Invoke-RestMethod -Uri "$uri/issues/comments/$($raw[$i].id)" -Headers $headers -TimeoutSec 15;if($c.body-cne$raw[$i].body-or$c.updated_at-ne$raw[$i].updated_at-or$c.user.id-ne$raw[$i].user.id){throw 'STOP:approval-comment-race'}}
+ $again=Invoke-RestMethod -Uri "$uri/pulls/$($a.pull_request_number)" -Headers $headers -TimeoutSec 15
+ if($again.head.sha-ne$source.sha-or$again.merged-or$again.state-ne'open'){throw 'STOP:approval-ref-race'}
+ [pscustomobject]@{source=$source;verified_pair=$pair;packets=$records;bundle=$BundlePath;bundle_hash=$bundleHash;host_identity=$HostIdentity;expires_utc=$pair.expires_utc}
 }
+
 function Assert-Bundle([string]$Path){
  $b=Read-Strict ([IO.File]::ReadAllText($Path))
  if(@($b.files).Count-gt64){throw 'STOP:input-count'}

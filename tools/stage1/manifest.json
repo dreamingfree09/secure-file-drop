@@ -22,6 +22,11 @@
       "SHA256": "9ebd412bebdd45a3fe92fec9906bdcd1e1eb77953f5f80e961920eab65e569e2"
     },
     {
+      "path": "approval.py",
+      "bytes": 4340,
+      "SHA256": "371b0e5517cb4217db625f225d3484498d921f17d0240f1c4091b31a4c94e3a6"
+    },
+    {
       "path": "audit-rustfs.py",
       "bytes": 2658,
       "SHA256": "b3c5b3e167c86cd4b47e7ecbaa04320c49a86d22975bbdc4c2e8d44eabcda14e"
@@ -43,13 +48,13 @@
     },
     {
       "path": "collect-host.ps1",
-      "bytes": 7649,
-      "SHA256": "24d2464ac4c4b4f5d32a640302ed6b0716682569a4a50b4515fbf978dbba3ece"
+      "bytes": 7683,
+      "SHA256": "8308dd7f0f1678e4011332ad0ad7bbd82f5099a73d2df8b1fb08d23830e70412"
     },
     {
       "path": "common.ps1",
-      "bytes": 7627,
-      "SHA256": "36c2987967783b5593754786aa684a12ea6d7cb0d6b187a5de7d9c73e291b4bd"
+      "bytes": 7639,
+      "SHA256": "3970b08e95279c8d8d314bde45c12b9a00a1918fbc389c35593eaee18dead995"
     },
     {
       "path": "compose.yml",
@@ -58,8 +63,8 @@
     },
     {
       "path": "containment.ps1",
-      "bytes": 2838,
-      "SHA256": "8be5f8f33b8b89f64e22e95b2253feb2eb1d79a0880c7c3eb8303a2a4c5a416b"
+      "bytes": 4312,
+      "SHA256": "c248a2ac9ed06ebcb84b0f59c299b0f0059904b0e04349b066fd7bd453b99e6a"
     },
     {
       "path": "Dockerfile.backend",
@@ -75,6 +80,16 @@
       "path": "evidence/authority.json",
       "bytes": 368,
       "SHA256": "5ba8813991620090ecce88a42b2835247999be0e2f2a2c13a591729d1cf1990a"
+    },
+    {
+      "path": "evidence/corrective-authority.json",
+      "bytes": 750,
+      "SHA256": "73d0c17572f7a9422f2183723f1b7ffbca413f5bdfbfe9d2dcb5ff0bf07a0139"
+    },
+    {
+      "path": "evidence/corrective-red-green.json",
+      "bytes": 1498,
+      "SHA256": "deb6b7e7fe2859ef8fda4c7497dc4b61d67967d2d5ec5ad4e805e966c888a35f"
     },
     {
       "path": "evidence/live-readonly-snapshot.json",
@@ -143,8 +158,8 @@
     },
     {
       "path": "guard.py",
-      "bytes": 8843,
-      "SHA256": "57f0c20ef2fc6cd320dc9537f2199bd681de107b6ab38db7945a7fcf7c889dbf"
+      "bytes": 7493,
+      "SHA256": "6d1d142fdcfafccb47e976bef6b16467b953735df303ab655c9da83607f25887"
     },
     {
       "path": "guest-linux.sh",
@@ -163,8 +178,8 @@
     },
     {
       "path": "install-stage1.ps1",
-      "bytes": 20501,
-      "SHA256": "3c98627a201814c91ffb0676192971af36175c451a97d003cea91f1ea8a3d42a"
+      "bytes": 20643,
+      "SHA256": "d15e3944a1f2f57f9e3447733f34a77fd52c6cc393166423e9e2b1fa8191457f"
     },
     {
       "path": "make-guest-media.ps1",
@@ -183,13 +198,13 @@
     },
     {
       "path": "packet.py",
-      "bytes": 778,
-      "SHA256": "64a25bd0557eade8e0c54deb180a9541c7e491be31ca6c225677c1f9d0593973"
+      "bytes": 920,
+      "SHA256": "954f9046d09a2ad5a0b1a9423b03d3d0b66e78879fbcb593afbf7b35affda136"
     },
     {
       "path": "policy.json",
-      "bytes": 3671,
-      "SHA256": "5c1ca6e0abc5760510f5d963a6bf0a9274b98833f018e60d9907c57a822548c3"
+      "bytes": 4589,
+      "SHA256": "9dfd557f1ec84fcc10eaa378e1d5f73838015762454cd034fd6175da920a89ae"
     },
     {
       "path": "prepare-client.ps1",
@@ -203,8 +218,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 2989,
-      "SHA256": "91fdb03ac4e8ef9a44f1c4eac78ad85b9b37008b17edbcf80aeb53522e38f679"
+      "bytes": 3362,
+      "SHA256": "c3032c219929b648c08bfb5ba9781b1affdbbbf561bdf5ecaf1d097633c527b1"
     },
     {
       "path": "run-tests.py",
@@ -223,13 +238,23 @@
     },
     {
       "path": "save-lab.ps1",
-      "bytes": 6613,
-      "SHA256": "a78b9cbedff8db7efb50779d8a979fa974fcf53d2672b6501f05c71f05411bff"
+      "bytes": 6420,
+      "SHA256": "7f45205d1d95ab32a7c6ec4f7d04cb14778b1cd9ba122adf680b416a6f155f7f"
     },
     {
       "path": "stage.py",
       "bytes": 2488,
       "SHA256": "3db8ea16c0c25a6a505301dab354d2f3cc13115b07416e471b5a46ecf1b337d6"
+    },
+    {
+      "path": "supervisor-task-proposal.xml",
+      "bytes": 1325,
+      "SHA256": "f7c3d86c7024cd545ccced892818740d588398524715235cca141b8f6d25675e"
+    },
+    {
+      "path": "supervisor.ps1",
+      "bytes": 2803,
+      "SHA256": "9d57f2280359b67b66d5a44d5f5e09ad3756c34336e3d1738d89806f22f5f52e"
     },
     {
       "path": "test-compose.py",
@@ -238,8 +263,8 @@
     },
     {
       "path": "test-lifecycle.ps1",
-      "bytes": 12051,
-      "SHA256": "c127325cc37e2a7ee2ecf257861149fce4f9cdcab89ed314dbad4198a5e38f0d"
+      "bytes": 18350,
+      "SHA256": "6ba38a323176921f9686fa45bb70387ebcf66280ce0c69c39d1f7f1457e528ad"
     },
     {
       "path": "test-native.ps1",
@@ -252,14 +277,19 @@
       "SHA256": "315d623497de12d56656854c45e004316b61f1e7c32be103d056208ee9ec46bf"
     },
     {
+      "path": "test_approval.py",
+      "bytes": 3814,
+      "SHA256": "7b9920d64dd1081f402e325c7e0dd11792d0f1026409ad07541aaf9b6c655370"
+    },
+    {
       "path": "test_configs.py",
       "bytes": 2540,
       "SHA256": "d726af3978016fc2f261d6974045516281683c9600c85a7b047fdb5cf5a2df10"
     },
     {
       "path": "test_guard.py",
-      "bytes": 6668,
-      "SHA256": "6ae4054ad599b13ef177ba1dd3242f3775d6f8ba7cd740f94cf6af40677d6633"
+      "bytes": 6725,
+      "SHA256": "17cdfbeb0950684ff387909336172693ec7bebf03c8b1f8a80924b9024728721"
     },
     {
       "path": "test_transport.py",

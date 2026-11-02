@@ -10,7 +10,6 @@
   "client_source": "c320861536914623ea22f28c1d4ea156d4c2132a",
   "client_zip_SHA256": "f38b9f82dda5c0320c17a3d0a04de924c958750f8975be28d3914d0ec8b90c9e",
   "client_exe_SHA256": "8f98bd9dca095c827e8ccf38000ae28fecf45df60ec10c9b484ed479748bb28b",
-  "author_id": 94070428,
   "max_lease_hours": 8,
   "min_C_free_GiB": 14,
   "min_H_free_GiB": 168,
@@ -73,7 +72,9 @@
     "delete",
     "merge",
     "unattended-host-reboot",
-    "barrier-release"
+    "barrier-release",
+    "independent-save-only-scheduled-task",
+    "independent-reviewer-enrollment"
   ],
   "windows_media": {
     "edition": "Windows11 Enterprise LTSC2024 evaluation x64",
@@ -100,5 +101,30 @@
   "min_C_run_free_GiB": 10,
   "preparation_input_root": "E:\\PROGRAMMING PROJECTS\\secure-file-drop-quality-closeout-20261015-codex\\.git\\sfd-stage1-installation-20261102-64e8b793\\inputs",
   "recovery_scope": "8GiB capacity-only quarantine for small new-lab logical exports; not a whole-VM backup or automatic copy/release authority",
-  "host_RAM_reserve_GiB": 4
+  "host_RAM_reserve_GiB": 4,
+  "approval_authority": {
+    "schema": "SFD_INDEPENDENT_AUTHORITY_V2",
+    "enrollment_accepted": false,
+    "owner": {
+      "id": 94070428,
+      "login": "dreamingfree09"
+    },
+    "reviewer": {
+      "id": null,
+      "login": null
+    },
+    "producer_id": 94070428,
+    "repository_id": 1123523317,
+    "pull_request_number": 45,
+    "pull_request_id": 5122311666,
+    "require_direct_user_comments": true,
+    "note": "No independently authenticated reviewer identity is enrolled. Same-account or GitHub-App-posted comments cannot authorise execution."
+  },
+  "supervision": {
+    "execution_authorised": false,
+    "deployed_verified": false,
+    "mode": "proposal-only",
+    "proposed_effect": "one independently scheduled source-pinned save-only task; separate Owner consent and implementation review required",
+    "maximum_poll_seconds": 60
+  }
 }

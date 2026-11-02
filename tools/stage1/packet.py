@@ -7,7 +7,9 @@ try:
     if raw.startswith(bytes.fromhex('efbbbf')):raw=raw[3:]
     if len(raw)>131072:raise guard.Stop('packet-too-large')
     q=guard.strict_json(raw.decode('utf-8'))
-    if q['mode']=='approval':
+    if q['mode']=='approval_pair':
+        p=guard.validate_approvals(q['review'],q['owner'],q['context'],dt.datetime.now(dt.timezone.utc))
+    elif q['mode']=='approval':
         p=guard.validate_packet(q['comment'],q['role'],q['sha'],q['issue'],dt.datetime.now(dt.timezone.utc))
     elif q['mode']=='json':p=guard.strict_json(q['body'])
     else:raise guard.Stop('bridge-mode')

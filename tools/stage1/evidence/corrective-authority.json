@@ -1,0 +1,21 @@
+{
+  "schema": "SFD_STAGE1_CORRECTIVE_AUTHORITY_V1",
+  "baseline_sha": "ff7fcb853981c39b3171c54ea802fa792880e3cc",
+  "execution_approved": false,
+  "records": [
+    {
+      "kind": "review",
+      "id": 5742686756,
+      "url": "https://github.com/dreamingfree09/secure-file-drop/pull/45#pullrequestreview-5742686756",
+      "author_id": 94070428,
+      "body_SHA256": "0f9f1a780b83287df848bed178ba4df6467b97e5cdb8c7775bee845e565f5c9a"
+    },
+    {
+      "kind": "instruction",
+      "id": 6590992637,
+      "url": "https://github.com/dreamingfree09/secure-file-drop/pull/45#issuecomment-6590992637",
+      "author_id": 94070428,
+      "body_SHA256": "791aab2424b7d98ed75fe1665a89c0eb04bdffc3e328b08314c95468ddf4ce5f"
+    }
+  ]
+}

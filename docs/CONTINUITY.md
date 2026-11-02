@@ -327,3 +327,7 @@ No six-service change, live cleanup enablement, real database/object/credential 
 ## 2026-11-02 — managed Stage 1 laboratory preparation
 
 Owner decision6576173510 authorises executable preparation only. [Stage 1 proposal](STAGE1_INSTALLATION.md) selects new H-backed Linux/Windows VMs on a Private switch, source611/PKI1805/seven-file preview, CRL18082 only. Actual installation NO-GO: C headroom, elevated HCS/attachment evidence, signed media/licence/offline setup, runtime advisory acceptance, reviewed original-engine prevention and later guest-only PKI remain gated. No H creation, runtime start, original data/CA/trust mutation or merge. Complete exact-revision GHP-01 evidence and Aether acknowledgement are in the new producer PR; PR44 accepted feasibility remains preserved.
+
+## 2026-11-02 — PR45 corrective review handover
+
+[Stage1 F1-F3 correction and consent delta](STAGE1_CORRECTIONS.md) supersedes same-account authority and unconditional six-hour containment claims. Shared committed-source StopGuests recovery is corrected; independent supervision is proposal-only and fenced; independent reviewer identity is unenrolled. PR45 carries exact revision/manifest, red/green tests, full inventory, CI and readback. Existing resource/HCS/media/RustFS/guest-PKI gates remain NO-GO. No installation, host task, engine, original data/trust operation or merge authorised or performed.

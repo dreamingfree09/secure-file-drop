@@ -53,11 +53,7 @@ function Read-ReviewedContainmentSource([string]$Repository,[string]$SourceSHA,[
  }
  return [pscustomobject]@{policy=Read-ContainmentJSON $data['policy.json'];code=$data['containment.ps1'];source_sha=$SourceSHA}
 }
-if($MyInvocation.InvocationName-eq'.'){return}
-if(-not$Execute){Write-Output 'PLAN: save only exact approved new lab VMs; dirty checkout and expired startup lease do not block containment.';return}
-# Fixed locator, never a mutable policy import. Validate private custody before
-# reading the source pointer, then verify committed policy/module against the
-# approval receipt's exact manifest. No git status/HEAD/working-file dependency.
+function Invoke-RecordedContainment {
 $root='H:\SFD-Isolated-Lab-20261102-8df9c4a1'
 for($p=$root;$p;$p=[IO.Path]::GetDirectoryName($p)){if((Get-Item -Force -LiteralPath $p -ErrorAction Stop).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:containment-root-reparse'}}
 $acl=Get-Acl -LiteralPath $root;$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
@@ -71,3 +67,8 @@ $capsule=Read-ReviewedContainmentSource $repo $receipt.source.sha $receipt.sourc
 if($capsule.policy.root-cne$root-or$capsule.policy.work_id-ne'SFD-STAGE1-INSTALLATION-20261102'){throw 'STOP:containment-policy'}
 . ([scriptblock]::Create($capsule.code))
 Save-OwnedLab -Policy $capsule.policy -Ownership $own -ExpectedSourceSHA $capsule.source_sha
+
+}
+if($MyInvocation.InvocationName-eq'.'){return}
+if(-not$Execute){Write-Output 'PLAN: manifest-bound save-only recovery; no startup approval or clean checkout required.';return}
+Invoke-RecordedContainment

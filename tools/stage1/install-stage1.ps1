@@ -2,6 +2,8 @@ param(
  [ValidateSet('Plan','ProtectHost','EnableHyperV','CreateGuests','BootGuests','StopGuests')][string]$Phase='Plan',
  [long]$ReviewComment=0,[long]$OwnerGoComment=0,[string]$BundlePath=''
 )
+. "$PSScriptRoot\save-lab.ps1"
+if($Phase-eq'StopGuests'){Invoke-RecordedContainment;return}
 . "$PSScriptRoot\collect-host.ps1"
 . "$PSScriptRoot\make-guest-media.ps1"
 function Assert-LiveGuard($Facts,[string]$Mode){
@@ -96,6 +98,11 @@ if($Phase-eq'Plan'){
 if($ReviewComment-le0-or$OwnerGoComment-le0-or$ReviewComment-eq$OwnerGoComment){throw 'STOP:two-external-approvals-required'}
 $initial=Get-LiveFacts;$script:Approval=Get-VerifiedApprovals $ReviewComment $OwnerGoComment $BundlePath $initial.host_identity_sha256
 $bundle=Assert-Bundle $BundlePath;$r=$script:Policy.root
+throw 'STOP:independent-supervision-host-effects-unapproved'
+# All startup host mutations below stay unreachable until a separately reviewed
+# supervisor implementation/consent removes this explicit fence. Recovery above
+# remains available for a genuinely pre-existing approved context.
+
 if($Phase-eq'ProtectHost'){
  if(Test-Path -LiteralPath $r){throw 'STOP:preserve-existing-root'}
  $f=Get-LiveFacts $script:Approval;$f.service_snapshot_immutable=$true;$f.rollback_snapshot_ready=$true;Assert-LiveGuard $f 'protect'
@@ -179,8 +186,4 @@ if($Phase-eq'BootGuests'){
   }
  }finally{& $saveAction -Policy $savePolicy -Ownership $saveOwnership -ExpectedSourceSHA $saveSource}
  Write-Output 'BOUNDED LAB WINDOW ENDED; NEW GUESTS SAVED. No trust or application acceptance implied.';return
-}
-if($Phase-eq'StopGuests'){
- foreach($vm in (Get-OwnedVMs $ownership)){Save-VM -VM $vm -ErrorAction Stop}
- Write-Output 'NEW GUEST STOP REQUESTED. No files deleted; original services remain inhibited pending separately reviewed release.'
 }

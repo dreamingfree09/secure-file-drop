@@ -7,6 +7,14 @@ and application master61195434bee5f9221a6f55469c719cb360504ea9 remain preserved.
 The complete revision-specific GHP-01 handover, CI identities and acknowledgement
 belong in the producer PR. No self-acceptance or production-readiness claim.
 
+## Corrective status
+
+[The F1-F3 corrective design](STAGE1_CORRECTIONS.md) supersedes the previous
+controller-survival and same-account approval assumptions. Installation is
+unconditionally fenced pending independent supervision authorisation and
+reviewer identity enrolment, as well as every existing gate. A six-hour deadline
+is conditional on a living controller; no deployed independent supervisor exists.
+
 ## Decision and actual blockers
 
 Select a managed Ubuntu24.04 LTS amd64 VM plus a clean Windows11 Enterprise LTSC2024
@@ -37,7 +45,7 @@ selected route. Microsoft documents that a Private switch has no host networking
 
 No one should interpret the title “installation ready” as those gates passing.
 If these cannot be resolved within this topology, retain NO-GO rather than booting
-a partly isolated lab. The script itself requires two fresh external approvals,
+a partly isolated lab. The script itself remains fenced and requires two independently authenticated approvals,
 verified install bundle and live facts before its first mutation.
 
 ## Frozen components and storage
@@ -156,7 +164,9 @@ AppLocker is not used; no AppIDSvc or application-control policy changes occur.
    VMConnect only; no enhanced-session drive/printer/clipboard/redirection. No
    host setting is changed to enable enhanced access. Controller watches five-
    second preservation/headroom checks for at most six hours, ending30minutes
-   before lease expiry, then saves only new guests in finally. Partial provision
+   before lease expiry, then, if the controller survives, saves only new guests in finally. Independent
+   supervision is a separately authorised, unimplemented host effect; the current
+   installer cannot proceed. Partial provision
    is retained; no automatic delete/reset/retry. A controller crash does not
    restore original services. Offline OS setup is Codex-operated graphical
    work; unattended OS installation is **not implemented or claimed**. If legal
@@ -179,8 +189,9 @@ AppLocker is not used; no AppIDSvc or application-control policy changes occur.
    below only when its prerequisite gates are accepted.
 
 These are future Codex actions; no Owner terminal commands are requested.
-Use `install-stage1.ps1 -Phase Plan` for the effect inventory. Every mutating
-phase requires ReviewComment/OwnerGoComment/BundlePath; zero/missing IDs reject
+Use `install-stage1.ps1 -Phase Plan` for the effect inventory. Every startup-mutating
+phase requires ReviewComment/OwnerGoComment/BundlePath; StopGuests uses the
+recorded emergency capsule without fresh startup approvals. For startup, zero/missing IDs reject
 before collection. There is currently no valid execution packet or complete
 bundle. The proof-bound booleans in a reviewed bundle represent external media,
 network-payload and security review, **not independent live guest observations**.
@@ -310,7 +321,8 @@ ask ONE specific Owner GO/NO-GO:** permit creation only of the named H root and
 two new fixed disks; temporary durable Docker/WSL service inhibition plus native
 binary locks (original services stay inhibited until separately reviewed release);
 Hyper-V feature staging without automatic reboot; one Private switch, local
-new-VM vTPM protector, two new guest boots for at most six hours, offline OS and
+new-VM vTPM protector, two new guest boots with a separately reviewed/authorised independent save-only
+supervisor for a conditional six-hour window, offline OS and
 runtime installation under the exact bundle/media rights. Disclose any required
 host reboot as a separate indispensable scheduling boundary; no unattended reboot.
 **Exclude** Owner host trust, guest root installation/CA creation, old-root

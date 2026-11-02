@@ -13,7 +13,8 @@ this package. `policy.json` contains the exact proposed effects and reserved act
 | `collect-host.ps1` | Read-only process/service/volume/HCS metadata; unknown evidence fails |
 | `guard.py --facts PATH --phase protect` | Pure evaluation, always `authorises_mutation:false` |
 | `stage.py` | Creates a new Temp review copy and an explicitly incomplete bundle |
-| `install-stage1.ps1` other phases | Reserved future mutator; two fresh external approvals and all live gates required |
+| `install-stage1.ps1` startup phases | Unconditionally fenced; independent supervision/enrolment plus all live gates required |
+| `supervisor.ps1`, `supervisor-task-proposal.xml` | Nonexecuting tick model/template only; no scheduler/observer/runner deployed |
 | `save-lab.ps1` / `containment.ps1` | Plan by default; committed manifest-bound save-only containment tolerates checkout edits and lease expiry |
 | `guest-linux.sh`, `guest-windows.ps1` | New-guest UUID/MAC-bound offline configuration; not Owner host installers |
 | `prepare-client.ps1` | New Windows guest only; verifies all seven files before exclusive extraction; no launch/registration |
@@ -41,6 +42,10 @@ functional compatibility is insufficient to open the runtime execution gate.
 The memory model uses remaining guest allocations plus4GiB host reserve. The
 controller caches committed containment code/context before boot; neither its
 finally path nor the standalone committed-source loader depends on a clean
-checkout. `test-lifecycle.ps1` exercises59 synthetic lifecycle cases with mocked
+checkout. `test-lifecycle.ps1` exercises82 synthetic lifecycle cases with mocked
 VM commands, new private Temp directories and an offline synthetic Git repository.
 It creates no VHD/VM and changes no existing path ACL or host setting.
+
+[F1-F3 corrections and exact consent delta](../../docs/STAGE1_CORRECTIONS.md).
+V1 same-account packets are retired. V2 requires a separately enrolled reviewer
+and Owner; no reviewer is enrolled. No existing comment grants execution.

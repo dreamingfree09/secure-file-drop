@@ -117,4 +117,64 @@ $script:saved=@();$first=$own.guests[0].id
 function Save-VM {param($VM) $script:saved+=@($VM.Id.ToString());if($VM.Id.ToString()-eq$first){throw 'Synthetic first-save failure'}}
 $failed=$false;try{& $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $approved|Out-Null}catch{$failed=$true}
 Check ($failed-and$script:saved.Count-eq2) 'one save failure still attempts other verified guest'
+# F2 uses the actual early StopGuests AST dispatch with the same authority.
+function Save-VM {param($VM) $script:saved+=@($VM.Id.ToString())}
+$script:saved=@();$script:fakeVMs[$own.guests[0].id].State='Off';$script:fakeVMs[$own.guests[1].id].State='Saved'
+& $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $approved|Out-Null
+& $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $approved|Out-Null
+Check ($script:saved.Count-eq0) 'Off/Saved containment is idempotent'
+$script:fakeVMs[$own.guests[0].id].State='Running';$script:fakeVMs[$own.guests[1].id].State='Running'
+$dispatchAST=[Management.Automation.Language.Parser]::ParseFile("$PSScriptRoot\install-stage1.ps1",[ref]$astTokens,[ref]$astErrors)
+$dispatch=$dispatchAST.Find({param($n) $n-is[Management.Automation.Language.IfStatementAst]-and$n.Extent.Text.StartsWith("if(`$Phase-eq'StopGuests')")},$true)
+function Invoke-RecordedContainment {& $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $approved|Out-Null}
+$Phase='StopGuests';$script:saved=@();& ([scriptblock]::Create($dispatch.Extent.Text))
+Check ($script:saved.Count-eq2) 'real StopGuests dispatch reaches authoritative containment before startup gates'
+$receipts=@(Get-ChildItem -Force -LiteralPath $lab -Filter 'containment-receipt-*.json' -File)
+Check ($receipts.Count-gt0) 'durable containment receipts exist'
+$states=@($receipts|ForEach-Object{(Get-Content -LiteralPath $_.FullName -Raw|ConvertFrom-Json).state})
+Check ('validation-failure'-in$states-and'operation-failure'-in$states-and'completed'-in$states) 'validation failure, partial failure and success are durable'
+# A per-target receipt fault must still attempt the other verified target.
+$receiptWriter=${function:Write-ContainmentReceipt};$script:receiptCalls=0
+function Write-ContainmentReceipt {param($Policy,$Source,$State,$Outcomes) $script:receiptCalls++;if($State-eq'per-target-result'){throw 'Synthetic receipt IO failure'};return (& $receiptWriter $Policy $Source $State $Outcomes)}
+$script:saved=@();$failed=$false;try{& $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $approved|Out-Null}catch{$failed=$true}
+Check ($failed-and$script:saved.Count-eq2) 'receipt IO failure preserves second save attempt and reports failure'
+${function:Write-ContainmentReceipt}=$receiptWriter
+# F1 pure tick model: no live watchdog/process observer/task/VM is launched.
+. "$PSScriptRoot\supervisor.ps1"
+$ctx=[pscustomobject]@{schema='SFD_SUPERVISOR_CONTEXT_V1';source_sha=$approved;manifest_sha256=$manifestHash;controller_pid=123;controller_exe_sha256='a'*64;started_utc='2026-11-02T12:00:00Z';deadline_utc='2026-11-02T18:00:00Z';lease_expires_utc='2026-11-02T19:00:00Z'}
+$script:supervisorRecords=@()
+$record={param($status,$reason) $script:supervisorRecords+=@($status);[void](Write-ContainmentReceipt $frozenPolicy $approved ('supervisor-'+$status) @(@{reason=$reason}))}
+$contain={param($c) & $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $c.source_sha|Out-Null}
+foreach($fault in @('alive','controller-kill','controller-crash','PID-reuse','guardian-expiry','window-expiry','stale-lease')){
+ $obs=[pscustomobject]@{now_utc='2026-11-02T13:00:00Z';controller_identity_matches=$true;guardian_healthy=$true;owned_guests_quiescent=$false};$state=[pscustomobject]@{attempts=0;complete=$false};$script:saved=@()
+ if($fault-in@('controller-kill','controller-crash','PID-reuse')){$obs.controller_identity_matches=$false}
+ if($fault-eq'guardian-expiry'){$obs.guardian_healthy=$false}
+ if($fault-in@('window-expiry','stale-lease')){$obs.now_utc='2026-11-02T20:00:00Z'}
+ $v=Invoke-SupervisorTick $ctx $obs $state $contain $record
+ Check ($(if($fault-eq'alive'){$script:saved.Count-eq0-and$v.state-eq'monitor'}else{$script:saved.Count-eq2-and$v.state-eq'contained'})) 'independent tick fault decision'
+}
+$obs=[pscustomobject]@{now_utc='2026-11-02T20:00:00Z';controller_identity_matches=$false;guardian_healthy=$false;owned_guests_quiescent=$false};$state=[pscustomobject]@{attempts=0;complete=$false}
+$script:saved=@() # No tick can execute during supervisor death or host power loss.
+Check ($script:saved.Count-eq0) 'supervisor termination/power loss has no false containment guarantee'
+$v=Invoke-SupervisorTick $ctx $obs $state $contain $record
+Check ($v.state-eq'contained') 'separate scheduler restart can retry after supervisor loss, conditional model only'
+$badCtx=Read-ContainmentJSON ($ctx|ConvertTo-Json);$badCtx.source_sha='0'*40;$state=[pscustomobject]@{attempts=0;complete=$false};$script:saved=@()
+$v=Invoke-SupervisorTick $badCtx $obs $state $contain $record
+Check ($v.state-eq'retry-next-independent-tick'-and$script:saved.Count-eq0) 'wrong approved source never saves targets'
+function Save-VM {param($VM) $script:saved+=@($VM.Id.ToString());if($VM.Id.ToString()-eq$own.guests[0].id){throw 'Synthetic save fault'}}
+$state=[pscustomobject]@{attempts=0;complete=$false};$script:saved=@();$v=Invoke-SupervisorTick $ctx $obs $state $contain $record
+Check ($script:saved.Count-eq2-and-not$state.complete) 'supervisor records partial failure and attempts second verified guest'
+$state.attempts=3;$script:saved=@();$v=Invoke-SupervisorTick $ctx $obs $state $contain $record
+Check ($v.state-eq'terminal-failure'-and$script:saved.Count-eq0) 'retry budget preserves durable terminal failure'
+foreach($fault in @('non-UTC','clock-before-start','noninteger-retry','nonboolean-complete','deadline-after-lease')){
+ $c=Read-ContainmentJSON ($ctx|ConvertTo-Json);$o=Read-ContainmentJSON ($obs|ConvertTo-Json);$s=[pscustomobject]@{attempts=0;complete=$false};$script:saved=@()
+ if($fault-eq'non-UTC'){$o.now_utc='2026-11-02T20:00:00+01:00'}
+ if($fault-eq'clock-before-start'){$o.now_utc='2026-11-02T11:59:59Z'}
+ if($fault-eq'noninteger-retry'){$s.attempts='0'}
+ if($fault-eq'nonboolean-complete'){$s.complete='false'}
+ if($fault-eq'deadline-after-lease'){$c.lease_expires_utc='2026-11-02T17:00:00Z'}
+ $denied=$false;try{Invoke-SupervisorTick $c $o $s $contain $record|Out-Null}catch{$denied=$true}
+ Check ($denied-and$script:saved.Count-eq0) 'invalid supervision context/state cannot save any target'
+}
+$rejected=$false;try{& "$PSScriptRoot\supervisor.ps1" -Execute|Out-Null}catch{$rejected=$true};Check $rejected 'actual supervisor execution is fenced'
 [ordered]@{schema='SFD_STAGE1_LIFECYCLE_REGRESSIONS_V1';checks=$script:checks;memory_transitions=$true;dirty_checkout_containment=$true;committed_manifest_identity=$true;unknown_targets_rejected=$true;save_failure_containment_attempts=$true;real_VM_cmdlets_invoked=$false;real_VHD_created=$false;existing_path_ACL_changed=$false;fixture_retained=$true}|ConvertTo-Json

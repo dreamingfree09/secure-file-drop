@@ -1,0 +1,10 @@
+<!-- PROPOSAL ONLY. Placeholders are deliberately not executable identities.
+Registration, privilege qualification, capsule staging and live adapter remain
+unapproved. No registration/import command is supplied or executed. -->
+<Task version="1.4" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+ <RegistrationInfo><Description>SFD exact-owned-VM save-only proposal; no startup/service authority</Description></RegistrationInfo>
+ <Triggers><TimeTrigger><Repetition><Interval>PT1M</Interval><Duration>PT8H</Duration><StopAtDurationEnd>false</StopAtDurationEnd></Repetition><StartBoundary>UNSET_APPROVED_UTC</StartBoundary></TimeTrigger><BootTrigger><Enabled>true</Enabled></BootTrigger></Triggers>
+ <Principals><Principal id="Owner"><UserId>UNSET_ENROLLED_OWNER_SID</UserId><LogonType>S4U</LogonType><RunLevel>HighestAvailable</RunLevel></Principal></Principals>
+ <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><StartWhenAvailable>true</StartWhenAvailable><WakeToRun>false</WakeToRun><ExecutionTimeLimit>PT0S</ExecutionTimeLimit><RestartOnFailure><Interval>PT1M</Interval><Count>3</Count></RestartOnFailure></Settings>
+ <Actions Context="Owner"><Exec><Command>UNSET_VERIFIED_NATIVE_POWERSHELL51</Command><Arguments>UNSET_SOURCE_PINNED_PRIVATE_CAPSULE</Arguments></Exec></Actions>
+</Task>

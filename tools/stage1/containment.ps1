@@ -7,9 +7,19 @@ function Assert-ContainmentRoot([string]$Root){
  if(-not$acl.AreAccessRulesProtected-or$acl.GetOwner([Security.Principal.SecurityIdentifier]).Value-ne$sid){throw 'STOP:containment-root-custody'}
  foreach($rule in $acl.Access){if($rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value-notin@($sid,'S-1-5-18')){throw 'STOP:containment-ACL'}}
 }
+function Write-ContainmentReceipt($Policy,[string]$Source,[string]$State,$Outcomes){
+ Assert-ContainmentRoot $Policy.root
+ $r=[ordered]@{schema='SFD_CONTAINMENT_RECEIPT_V2';source_sha=$Source;utc=[DateTime]::UtcNow.ToString('o');state=$State;outcomes=@($Outcomes)}
+ $path=Join-Path $Policy.root ('containment-receipt-'+[guid]::NewGuid().ToString('N')+'.json')
+ $f=[IO.File]::Open($path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+ try{$b=[Text.UTF8Encoding]::new($false).GetBytes(($r|ConvertTo-Json -Depth 8));$f.Write($b,0,$b.Length);$f.Flush($true)}finally{$f.Dispose()}
+ return $path
+}
 function Save-OwnedLab($Policy,$Ownership,[string]$ExpectedSourceSHA){
  if($ExpectedSourceSHA-notmatch'^[a-f0-9]{40}$'-or$Ownership.schema-ne'SFD_STAGE1_OWNERSHIP_V1'-or$Ownership.work_id-ne$Policy.work_id-or$Ownership.source_sha-ne$ExpectedSourceSHA){throw 'STOP:containment-source'}
  Assert-ContainmentRoot $Policy.root
+ $outcomes=@();$began=$false
+ try{
  $rows=@($Ownership.guests);if($rows.Count-ne2){throw 'STOP:containment-guest-count'}
  $ids=@();$roles=@();$targets=@()
  # Validate ALL identities before the first Save-VM; a scope mismatch saves none.
@@ -23,8 +33,22 @@ function Save-OwnedLab($Policy,$Ownership,[string]$ExpectedSourceSHA){
   if($v.Id.ToString()-ne$g.id-or$v.Name-ne$spec.name-or$disks.Count-ne1-or$disks[0].Path-ne$expected-or$null-ne$disks[0].DiskNumber){throw 'STOP:containment-VM-scope'}
   $targets+=@($v)
  }
- $failed=$false
- foreach($v in $targets){if($v.State.ToString()-in@('Running','Paused')){try{Save-VM -VM $v -ErrorAction Stop}catch{$failed=$true}}elseif($v.State.ToString()-notin@('Saved','Off')){$failed=$true}}
+ [void](Write-ContainmentReceipt $Policy $ExpectedSourceSHA 'validated-before-save' @())
+ $began=$true;$failed=$false
+ foreach($v in $targets){
+  $state=$v.State.ToString();$outcome='already-off-or-saved'
+  if($state-in@('Running','Paused')){try{Save-VM -VM $v -ErrorAction Stop;$outcome='save-command-completed'}catch{$failed=$true;$outcome='save-failed'}}
+  elseif($state-notin@('Saved','Off')){$failed=$true;$outcome='transitional-state-not-forced'}
+  $outcomes+=@(@{id=$v.Id.ToString();state=$state;outcome=$outcome})
+  # A receipt failure after saving begins must not prevent the second save.
+  try{[void](Write-ContainmentReceipt $Policy $ExpectedSourceSHA 'per-target-result' $outcomes)}catch{$failed=$true}
+ }
+ [void](Write-ContainmentReceipt $Policy $ExpectedSourceSHA $(if($failed){'failed'}else{'completed'}) $outcomes)
  if($failed){throw 'STOP:containment-save-failed; preserve all state; no forced shutdown'}
- Write-Output 'NEW LAB VMS SAVED OR ALREADY OFF/SAVED. No deletion; original services remain inhibited pending separate review.'
+ Write-Output 'VERIFIED CONTAINMENT COMPLETED; inspect receipts. Original services remain inhibited.'
+ }catch{
+  # Trusted private root only. Never print exception data or touch other paths.
+  [void](Write-ContainmentReceipt $Policy $ExpectedSourceSHA $(if($began){'operation-failure'}else{'validation-failure'}) $outcomes)
+  throw
+ }
 }

@@ -54,35 +54,14 @@ def inside(candidate):
         return False
     return ntpath.normcase(candidate).startswith(ntpath.normcase(root + '\\'))
 
-def validate_packet(comment, kind, sha, issue, now):
-    if type(comment) is not dict or comment.get('author_id') != POLICY['author_id']:
-        raise Stop('approval-author')
-    if comment.get('issue') != issue or type(issue) is not int or issue <= 0:
-        raise Stop('approval-issue')
-    body = comment.get('body')
-    if not isinstance(body, str):
-        raise Stop('approval-body')
-    match = re.fullmatch(r'SFD-STAGE1-ACCEPTANCE\n(\{.*\})\n?', body, re.S)
-    if not match:
-        raise Stop('approval-marker')
-    p = strict_json(match[1])
-    expected = {'schema','role','decision','work_id','source_sha','manifest_sha256',
-                'issue','issued_utc','expires_utc','effects','media_terms','bundle_sha256','host_identity_sha256'}
-    if set(p) != expected or p['schema'] != 'SFD_STAGE1_ACCEPTANCE_V1':
-        raise Stop('approval-fields')
-    if (p['role'], p['decision'], p['work_id'], p['source_sha'], p['issue']) != (
-            kind, 'GO', POLICY['work_id'], sha, issue):
-        raise Stop('approval-scope')
-    if not re.fullmatch('[0-9a-f]{40}', sha) or any(not re.fullmatch('[0-9a-f]{64}', p[k]) for k in ['manifest_sha256','bundle_sha256','host_identity_sha256']):
-        raise Stop('approval-hash')
-    issued, expires = iso(p['issued_utc']), iso(p['expires_utc'])
-    if not issued <= now < expires or not dt.timedelta(0) < expires-issued <= dt.timedelta(hours=POLICY['max_lease_hours']):
-        raise Stop('approval-window')
-    if type(p['effects']) is not list or p['effects'] != POLICY['effects']:
-        raise Stop('approval-effects')
-    if p['media_terms'] is not True:
-        raise Stop('approval-media-rights')
-    return p
+def validate_packet(*args,**kwargs):
+    # V1 used one account for both roles and is permanently retired.
+    raise Stop('legacy-approval-retired')
+
+def validate_approvals(review,owner,context,now):
+    from approval import validate_pair
+    return validate_pair(review,owner,context,now)
+
 
 def evaluate(facts, phase='admit'):
     """Every absent/unknown/wrongly typed fact is a rejection, never a default pass."""
@@ -125,7 +104,7 @@ def evaluate(facts, phase='admit'):
                       'two_guest_ids_bound','all_disks_new_owned','no_extra_guest_NICs',
                       'no_host_shares','no_default_gateway_DNS','no_external_route',
                       'guest_payload_verified','vm_autostart_nothing','checkpoint_off',
-                      'secure_boot_vTPM_verified','H_recovery_reservation_verified']:
+                      'secure_boot_vTPM_verified','H_recovery_reservation_verified','independent_supervisor_verified']:
             require(field, flag(field))
     return {'schema':'SFD_STAGE1_GUARD_RESULT_V1', 'phase':phase,
             'decision':'PASS_EVIDENCE' if not failures else 'NO-GO',
