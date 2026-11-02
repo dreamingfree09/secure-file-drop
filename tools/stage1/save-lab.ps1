@@ -3,7 +3,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference='Stop'
 function Read-ContainmentJSON([string]$Text){
  # Constant parser, not a working-tree import. Records contain identities only.
- $code='import json,sys; pairs=lambda p: dict(p) if len(dict(p))==len(p) else (_ for _ in ()).throw(ValueError()); print(json.dumps(json.load(sys.stdin,object_pairs_hook=pairs,parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))))'
+ # Windows PowerShell may emit one UTF-8 transport BOM. Byte hashes were
+ # already checked before this parse; JSON values and duplicate checks stay exact.
+ $code=@("import json,sys","def unique(p):"," if len(dict(p))!=len(p): raise ValueError()"," return dict(p)","try:"," v=json.loads(sys.stdin.buffer.read().decode('utf-8-sig'),object_pairs_hook=unique,parse_constant=lambda _: (_ for _ in ()).throw(ValueError()))"," print(json.dumps(v))","except Exception:"," sys.stderr.write('STOP:containment-json\n');sys.exit(2)") -join "`n"
  $out=$Text|& (Get-Command python.exe -ErrorAction Stop).Source -X utf8 -I -B -c $code
  if($LASTEXITCODE-ne0){throw 'STOP:containment-json'};return ($out|ConvertFrom-Json)
 }

@@ -25,6 +25,14 @@ foreach($bad in @('Starting','Stopping','Unknown')){$failed=$false;try{[void](Ge
 $rows=Rows Running Off;$rows[0].assigned_bytes=[long](4GB);$failed=$false;try{[void](Get-LabMemoryRequirement $policy $rows)}catch{$failed=$true};Check $failed 'incomplete allocation rejected'
 $rows=Rows Off Off;$rows[1].role='linux';$failed=$false;try{[void](Get-LabMemoryRequirement $policy $rows)}catch{$failed=$true};Check $failed 'duplicate memory identity rejected'
 $rows=Rows Off Off;$rows[0].dynamic=$true;$failed=$false;try{[void](Get-LabMemoryRequirement $policy $rows)}catch{$failed=$true};Check $failed 'unexpected dynamic memory rejected'
+# Exercise the actual PS5.1 native-pipe BOM path, retaining strict JSON.
+$priorEncoding=$OutputEncoding
+try{
+ $OutputEncoding=[Text.UTF8Encoding]::new($true)
+ $parsed=Read-ContainmentJSON '{"fixture":true}';Check ($parsed.fixture-eq$true) 'UTF8 transport BOM accepted'
+ $rejected=$false;try{[void](Read-ContainmentJSON '{"fixture":true,"fixture":false}')}catch{$rejected=$true};Check $rejected 'duplicate keys still rejected'
+ $rejected=$false;try{[void](Read-ContainmentJSON ([char]0xfeff+'{}'))}catch{$rejected=$true};Check $rejected 'second BOM remains malformed JSON'
+}finally{$OutputEncoding=$priorEncoding}
 # New private fixture directories only; no VHD/VHDX is created or attached.
 if(-not('Sfd.Stage1.HostNative'-as[type])){Add-Type -Path "$PSScriptRoot\HostNative.cs"}
 $fixture=Join-Path ([IO.Path]::GetTempPath()) ('sfd-stage1-lifecycle-'+[guid]::NewGuid().ToString('N'))
@@ -86,6 +94,10 @@ foreach($kind in @('duplicate','wrong-name','wrong-disk','extra-disk')){
  $failed=$false;try{& $action -Policy $frozenPolicy -Ownership $badOwn -ExpectedSourceSHA $approved|Out-Null}catch{$failed=$true};Check ($failed-and$script:saved.Count-eq0) 'scope failure validated before any save'
 }
 function Get-VMHardDiskDrive {param($VM) return [pscustomobject]@{Path=$VM.disk;DiskNumber=$null}}
+$script:saved=@();$transition=$script:fakeVMs[$own.guests[1].id];$transition.State='Stopping'
+$failed=$false;try{& $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $approved|Out-Null}catch{$failed=$true}
+Check ($failed-and$script:saved.Count-eq1-and$script:saved[0]-eq$own.guests[0].id) 'transitional peer does not block other verified running guest'
+$transition.State='Running'
 $script:saved=@();$first=$own.guests[0].id
 function Save-VM {param($VM) $script:saved+=@($VM.Id.ToString());if($VM.Id.ToString()-eq$first){throw 'Synthetic first-save failure'}}
 $failed=$false;try{& $action -Policy $frozenPolicy -Ownership $own -ExpectedSourceSHA $approved|Out-Null}catch{$failed=$true}

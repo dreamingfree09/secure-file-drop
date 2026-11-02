@@ -21,11 +21,10 @@ function Save-OwnedLab($Policy,$Ownership,[string]$ExpectedSourceSHA){
   for($p=$expected;$p-and$p-ne$Policy.root;$p=[IO.Path]::GetDirectoryName($p)){if((Test-Path -LiteralPath $p)-and((Get-Item -LiteralPath $p -ErrorAction Stop).Attributes-band[IO.FileAttributes]::ReparsePoint)){throw 'STOP:containment-disk-reparse'}}
   $v=Get-VM -Id $g.id -ErrorAction Stop;$disks=@(Get-VMHardDiskDrive -VM $v -ErrorAction Stop)
   if($v.Id.ToString()-ne$g.id-or$v.Name-ne$spec.name-or$disks.Count-ne1-or$disks[0].Path-ne$expected-or$null-ne$disks[0].DiskNumber){throw 'STOP:containment-VM-scope'}
-  if($v.State.ToString()-notin@('Running','Paused','Saved','Off')){throw 'STOP:containment-VM-state'}
   $targets+=@($v)
  }
  $failed=$false
- foreach($v in $targets){if($v.State.ToString()-in@('Running','Paused')){try{Save-VM -VM $v -ErrorAction Stop}catch{$failed=$true}}}
+ foreach($v in $targets){if($v.State.ToString()-in@('Running','Paused')){try{Save-VM -VM $v -ErrorAction Stop}catch{$failed=$true}}elseif($v.State.ToString()-notin@('Saved','Off')){$failed=$true}}
  if($failed){throw 'STOP:containment-save-failed; preserve all state; no forced shutdown'}
  Write-Output 'NEW LAB VMS SAVED OR ALREADY OFF/SAVED. No deletion; original services remain inhibited pending separate review.'
 }

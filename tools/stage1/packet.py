@@ -3,7 +3,10 @@ import datetime as dt,json,pathlib,sys
 sys.path.insert(0,str(pathlib.Path(__file__).resolve().parent))
 import guard
 try:
-    q=guard.strict_json(sys.stdin.read(131073))
+    raw=sys.stdin.buffer.read(131076)
+    if raw.startswith(bytes.fromhex('efbbbf')):raw=raw[3:]
+    if len(raw)>131072:raise guard.Stop('packet-too-large')
+    q=guard.strict_json(raw.decode('utf-8'))
     if q['mode']=='approval':
         p=guard.validate_packet(q['comment'],q['role'],q['sha'],q['issue'],dt.datetime.now(dt.timezone.utc))
     elif q['mode']=='json':p=guard.strict_json(q['body'])

@@ -287,9 +287,13 @@ Standalone `save-lab.ps1 -Execute` checks the fixed private-root custody, reads
 the recorded approval source/manifest identity and loads those committed blobs
 without a clean-checkout requirement, even if HEAD advanced. It validates both
 exact new VM IDs/names/disk paths before any Save-VM; one save failure still
-attempts the other already-verified guest, then reports failure. It cannot start,
+attempts the other already-verified guest, then reports failure. A transitional
+guest also reports failure while permitting containment of its verified running
+peer; it never triggers a forced shutdown or boot. It cannot start,
 force-power-off, delete or re-enable anything and needs no unexpired startup
-lease. Missing approved objects, mismatched manifests or invalid ownership remain
+lease. Windows PowerShell UTF-8 pipe BOMs are handled only at the transport boundary;
+duplicate keys, malformed/second-BOM and oversized bridge packets remain denied.
+Missing approved objects, mismatched manifests or invalid ownership remain
 failures, not a fallback to unreviewed working code. A modified standalone loader
 itself is not trusted; use its reviewed source. The running controller's cached
 finally path remains independent of that file.

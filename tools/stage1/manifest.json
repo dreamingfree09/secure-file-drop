@@ -58,8 +58,8 @@
     },
     {
       "path": "containment.ps1",
-      "bytes": 2862,
-      "SHA256": "93312b64f5dfcf07246faddfb952f3dc9624bdd74b3b18161c05ce734e1c3d2a"
+      "bytes": 2824,
+      "SHA256": "84f4273ac0d6ca371e7adc1d4c841f2187e19a87eab7baf7ad07441c0c70fb89"
     },
     {
       "path": "Dockerfile.backend",
@@ -100,6 +100,11 @@
       "path": "evidence/local-synthetic.json",
       "bytes": 156,
       "SHA256": "8dbd8cee8eda00ef6cf64d90bb135ac824aff2376d7fa484dc8dd2cec5e5595c"
+    },
+    {
+      "path": "evidence/review-corrections-final-Windows51.json",
+      "bytes": 878,
+      "SHA256": "25ee9706b9b1be7a4f14b33478dda608d3096b44ed5af2c30627e3d02124431a"
     },
     {
       "path": "evidence/review-corrections-Windows51.json",
@@ -173,8 +178,8 @@
     },
     {
       "path": "packet.py",
-      "bytes": 624,
-      "SHA256": "26b8b19e4ac2b6f40aef07cd928389b5b1baa3b511065a3a0e54be7aaa1eb320"
+      "bytes": 778,
+      "SHA256": "64a25bd0557eade8e0c54deb180a9541c7e491be31ca6c225677c1f9d0593973"
     },
     {
       "path": "policy.json",
@@ -194,7 +199,7 @@
     {
       "path": "README.md",
       "bytes": 2989,
-      "SHA256": "87212c7e02f8bdc0ff775a2da8641f63164256d1e8896b9f6fcd6c0e3f19cc95"
+      "SHA256": "edbd4bfd90371b9b2a323b264fe7dd2db141edbc2a5c804d8db83269f225b1c4"
     },
     {
       "path": "run-tests.py",
@@ -213,8 +218,8 @@
     },
     {
       "path": "save-lab.ps1",
-      "bytes": 4774,
-      "SHA256": "a95dc1e2eae6e84954c7fb764d0e28e2f2ab3b1777e19deb1982bb5051b62a65"
+      "bytes": 5067,
+      "SHA256": "cd3a1698ff8f4b13211613b1c05c0c3170ef6d4de92cbd25f51d143fc1208d94"
     },
     {
       "path": "stage.py",
@@ -228,8 +233,8 @@
     },
     {
       "path": "test-lifecycle.ps1",
-      "bytes": 9806,
-      "SHA256": "6c77f1799738a2edf294bc9c9a1b683d40158e771df0ea47a9a206c5b6aae919"
+      "bytes": 10814,
+      "SHA256": "581b8447e210575826c02c9d1ef0006289fe5ba1cde340aff2358aa517d4a13c"
     },
     {
       "path": "test-native.ps1",
@@ -250,6 +255,11 @@
       "path": "test_guard.py",
       "bytes": 6668,
       "SHA256": "6ae4054ad599b13ef177ba1dd3242f3775d6f8ba7cd740f94cf6af40677d6633"
+    },
+    {
+      "path": "test_transport.py",
+      "bytes": 1041,
+      "SHA256": "371cc7ce779a58b81bfa7bfcb64d59b2b3189b226ffda8ff02e44b11f94c20b9"
     },
     {
       "path": "TlsProbe.cs",
