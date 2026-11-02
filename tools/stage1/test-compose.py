@@ -1,7 +1,8 @@
 """Config-only check on a disposable hosted runner. Never starts a service."""
 import json,os,pathlib,subprocess
 assert os.environ.get('GITHUB_ACTIONS')=='true' and os.environ.get('RUNNER_ENVIRONMENT')=='github-hosted' and os.name!='nt'
-root=pathlib.Path('/srv/sfd-lab/private');assert not root.exists();root.mkdir(parents=True)
+root=pathlib.Path('/srv/sfd-lab/private');assert not root.parent.exists()
+subprocess.run(['sudo','install','-d','-m','700','-o',str(os.getuid()),'-g',str(os.getgid()),str(root)],check=True)
 for name in ['postgres.env','storage.env','backend.env']:(root/name).write_text('')
 env=dict(os.environ)
 for role in ['POSTGRES','STORAGE','BACKEND','PROXY']:env['SFD_LAB_'+role+'_IMAGE']='sha256:'+('a'*64)

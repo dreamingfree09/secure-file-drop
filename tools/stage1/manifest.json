@@ -72,6 +72,11 @@
       "SHA256": "5ba8813991620090ecce88a42b2835247999be0e2f2a2c13a591729d1cf1990a"
     },
     {
+      "path": "evidence/live-readonly-snapshot.json",
+      "bytes": 2346,
+      "SHA256": "4cd48864fdb8c56bdfb4e90322aeed62224823b088bcd7e8a76d8075d6b01981"
+    },
+    {
       "path": "evidence/local-native.json",
       "bytes": 319,
       "SHA256": "4884c8d96b53bf34abb6a0d4a7ec3bb4ed3736e0ad41247d9492a051dffcc1b0"
@@ -113,8 +118,8 @@
     },
     {
       "path": "fixture-client/main.go",
-      "bytes": 1726,
-      "SHA256": "4a155629237e0027c436f5a559fbb0af731996a60480ceeffd107c9fe6dfc1fc"
+      "bytes": 1990,
+      "SHA256": "5ff710bc40d415cbd0e653e6cec98ee044603f89b602e287b476849573988941"
     },
     {
       "path": "guard.py",
@@ -203,8 +208,8 @@
     },
     {
       "path": "test-compose.py",
-      "bytes": 1317,
-      "SHA256": "ab146537e8b326c285a6274c1ded220a32e34ee73631836845f482f831ae090f"
+      "bytes": 1415,
+      "SHA256": "a9b9e6f0e85b6083bcca1e75f9966bd8bf97575a0c9f9bb8de91ce746c7e0d71"
     },
     {
       "path": "test-native.ps1",

@@ -27,9 +27,9 @@ selected route. Microsoft documents that a Private switch has no host networking
 
 | Gate | Actual evidence / required resolution |
 | --- | --- |
-| C headroom | Read-only14:22UTC snapshot9.7375GiB; proposed minimum14GiB before staging and10GiB running. No cleanup or deletion performed/authorised. Safely add capacity or separately approve unrelated space management before GO. |
+| C headroom | Read-only14:53UTC snapshot9.4766GiB; proposed minimum14GiB before staging and10GiB running. No cleanup or deletion performed/authorised. Safely add capacity or separately approve unrelated space management before GO. |
 | H budget |275.67GiB observed,256GiB initial threshold. Root `H:\SFD-Isolated-Lab-20261102-8df9c4a1` absent. No reservation/write performed. Recheck exact volume and available space at execution. |
-| Administrative evidence | Current automation token not UAC-elevated; HCS enumeration incomplete. Fresh elevated read-only attachment/compute qualification required. Never start vmcompute merely to make this check pass. Unknown is NO-GO. |
+| Administrative evidence | Current automation token not UAC-elevated; HCS enumeration incomplete, HRESULT0x8037011B. Fresh elevated read-only attachment/compute qualification required. Never start vmcompute merely to make this check pass. Unknown is NO-GO. |
 | Original prevention | Native exclusive-handle canary passed; no real Docker/WSL lock or service change performed. Exact preventive implementation needs Aether review, then explicit informed Owner GO. |
 | OS media / rights | Neither ISO is staged or checksum/signature-qualified. Host Pro is not a guest licence. Microsoft evaluation registration, eligibility, activation/account requirements and offline provisioning compatibility remain unresolved. Do not bypass OOBE/activation or attach Internet temporarily. |
 | Runtime security | Official RustFS1.0.4 upstream SBOM has23 package/advisory matches,22 distinct IDs,1151 components. Image-to-SBOM correlation, affected source paths and remediation/VEX are unresolved. `runtime_acceptance_verified` stays false. No exploit attempted. |
