@@ -43,13 +43,13 @@
     },
     {
       "path": "collect-host.ps1",
-      "bytes": 6716,
-      "SHA256": "19da07ff8b2794e5c7323895a8dfb8cdaa2cc2de83e713ffa8acdc2dd68c5aed"
+      "bytes": 6855,
+      "SHA256": "be42c2d9ea348167e33a9f3bb1fc77e1f87b3ee5e1d8e95e3521be3391e2f718"
     },
     {
       "path": "common.ps1",
-      "bytes": 7424,
-      "SHA256": "d0a97db5ab21b20b741ee6cac0a5d641fa3f43b63d5bb199d1b6e211265d11f3"
+      "bytes": 7714,
+      "SHA256": "3ccf375f4ce0876c6069d3f05a95c1e2b636c151915be9f8a4f0d4e011de16e3"
     },
     {
       "path": "compose.yml",
@@ -143,8 +143,8 @@
     },
     {
       "path": "install-stage1.ps1",
-      "bytes": 19791,
-      "SHA256": "25254ddbc0da90731d799696feea15c8899468707c3e051f330a41f2751d00ca"
+      "bytes": 19915,
+      "SHA256": "85f069f4e3f89663e93a7d04508ecbbbce76962aea1674a01663ebc2603fd366"
     },
     {
       "path": "make-guest-media.ps1",
@@ -218,8 +218,8 @@
     },
     {
       "path": "test-powershell.ps1",
-      "bytes": 1449,
-      "SHA256": "a3b673c733f0576d9633d65a8f4907b3a7d30c06413166785b3d6b4096b76399"
+      "bytes": 1886,
+      "SHA256": "e13bf1d91000e7cec749af3f17aace944306bf6faacffd3b8c6927deaf264926"
     },
     {
       "path": "test_configs.py",

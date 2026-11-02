@@ -6,6 +6,7 @@ function Get-Hash([string]$Path){(Get-FileHash -LiteralPath $Path -Algorithm SHA
 function Get-TextHash([string]$Text){$h=[Security.Cryptography.SHA256]::Create();try{([BitConverter]::ToString($h.ComputeHash([Text.Encoding]::UTF8.GetBytes($Text)))).Replace('-','').ToLowerInvariant()}finally{$h.Dispose()}}
 function New-File([string]$Path,[string]$Text){$f=[IO.File]::Open($Path,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None);try{$b=[Text.Encoding]::UTF8.GetBytes($Text);$f.Write($b,0,$b.Length);$f.Flush($true)}finally{$f.Dispose()}}
 function Assert-NewPath([string]$Path){
+ if($Path-match'(^|\\)(\.{1,2}|[^\\]*[ .])(\\|$)'-or$Path.Contains('/')){throw 'STOP:path-alias'}
  $full=[IO.Path]::GetFullPath($Path);$prefix=$script:Policy.root+'\'
  if($full-ne$Path -or -not $full.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase) -or $Path.Substring(2).Contains(':')){throw 'STOP:path-scope'}
  $p=$full
@@ -55,7 +56,8 @@ function Assert-Bundle([string]$Path){
  foreach($x in $b.files){
   $full=[IO.Path]::GetFullPath($x.path);if($full-ne$x.path-or-not$full.StartsWith($script:Policy.preparation_input_root+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'STOP:preparation-input-root'}
   if($x.path-match'(?i)\.(vhdx?|env|key|pfx|p12)$' -or $x.path-match'(?i)(\\\.codex\\|\\Secure File Drop\\|\\Docker\\wsl\\)' -or $x.sha256-notmatch'^[a-f0-9]{64}$'){throw 'STOP:input-scope'}
-  if((Get-Item -LiteralPath $x.path).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:input-reparse'}
+  if($x.path.Substring(2).Contains(':')-or$x.path-match'(^|\\)(\.{1,2}|[^\\]*[ .])(\\|$)'){throw 'STOP:input-alias'}
+  for($parent=$x.path;$parent;$parent=[IO.Path]::GetDirectoryName($parent)){if((Get-Item -LiteralPath $parent).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:input-reparse'}}
   if((Get-Hash $x.path)-ne$x.sha256 -or (Get-Item -LiteralPath $x.path).Length-ne$x.bytes){throw 'STOP:input-identity'}
  }
  foreach($role in @('linux_iso','windows_iso','runtime_export','public_payload_iso')){if(@($b.files|Where-Object{$_.role-eq$role}).Count-ne1){throw 'STOP:input-role'}}

@@ -167,7 +167,7 @@ if($Phase-eq'BootGuests'){
   while([DateTimeOffset]::UtcNow-lt$until){
    Assert-Guardian $guardian
    $live=Get-LiveFacts $script:Approval $ownership $guardian
-   if(-not$live.preventive_services_disabled_stopped-or-not$live.no_Docker_processes-or-not$live.no_WSL_workloads-or-not$live.no_original_image_attachments-or$live.C_free_GiB-lt$script:Policy.min_C_run_free_GiB-or$live.H_free_GiB-lt$script:Policy.min_H_run_free_GiB){throw 'STOP:running-preservation-drift'}
+   if(-not$live.source_clean-or-not$live.source_manifest_verified-or-not$live.host_RAM_available-or-not$live.host_commit_margin-or-not$live.preventive_services_disabled_stopped-or-not$live.no_Docker_processes-or-not$live.no_WSL_workloads-or-not$live.no_original_image_attachments-or$live.C_free_GiB-lt$script:Policy.min_C_run_free_GiB-or$live.H_free_GiB-lt$script:Policy.min_H_run_free_GiB){throw 'STOP:running-preservation-drift'}
    Start-Sleep -Seconds 5
   }
  }finally{& "$PSScriptRoot\save-lab.ps1" -Execute}

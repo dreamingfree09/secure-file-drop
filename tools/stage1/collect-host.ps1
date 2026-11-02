@@ -10,7 +10,7 @@ function Get-LiveFacts($Approval=$null,$Ownership=$null,$Guardian=$null){
  $f.HyperV_capable=($os.OSArchitecture-eq'64-bit'-and$os.Caption-match'Windows (10|11) (Pro|Enterprise|Education)'-and($cs.HypervisorPresent-or@($cpu|Where-Object{-not$_.VirtualizationFirmwareEnabled-or-not$_.SecondLevelAddressTranslationExtensions-or-not$_.VMMonitorModeExtensions}).Count-eq0))
  $f.host_RAM_available=($os.FreePhysicalMemory*1KB-ge20GB);$f.host_commit_margin=($os.FreeVirtualMemory*1KB-ge20GB)
  $f.host_admin=([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
- try{$src=Get-SourceIdentity;$f.source_clean=$true;$f.source_manifest_verified=$true}catch{}
+ try{$src=Get-SourceIdentity;if($null-ne$Approval-and($src.sha-ne$Approval.source.sha-or$src.manifest_sha256-ne$Approval.source.manifest_sha256)){throw 'source-drift'};$f.source_clean=$true;$f.source_manifest_verified=$true}catch{}
  $c=Get-Volume -DriveLetter C;$h=Get-Volume -DriveLetter H;$f.C_free_GiB=$c.SizeRemaining/1GB;$f.H_free_GiB=$h.SizeRemaining/1GB;$f.RAM_GiB=(Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB
  $identity=Get-TextHash (([ordered]@{schema='SFD_STAGE1_HOST_V1';SID=$sid;C_volume=$c.UniqueId;H_volume=$h.UniqueId;machine_UUID=(Get-CimInstance Win32_ComputerSystemProduct).UUID}|ConvertTo-Json -Compress))
  $f.host_identity_sha256=$identity;$f.H_ntfs=$h.FileSystemType-eq'NTFS'
