@@ -1,0 +1,619 @@
+{
+  "schema": "SFD_CLEAN_LAB_QUALIFICATION_V1",
+  "work_id": "SFD-CLEAN-LAB-TARGET-QUALIFICATION-20261102",
+  "producer": "Codex",
+  "recipient": "Aether",
+  "base": "497ac571bf9944583279482e1bb1432fee9e85b7",
+  "prepared_UTC": "2026-11-02T09:14:50.578077+00:00",
+  "outcome": "A0 NO-HOST",
+  "execution_authorised": false,
+  "authority": {
+    "id": 6571671732,
+    "author": "dreamingfree09",
+    "author_id": 94070428,
+    "created_at": "2026-11-02T07:35:06Z",
+    "updated_at": "2026-11-02T07:35:06Z",
+    "URL": "https://github.com/dreamingfree09/secure-file-drop/pull/44#issuecomment-6571671732",
+    "body_utf8_sha256": "ab8061b1cff289ebd7e3a4e3f9a0dfb85e985e5da88837afd5ed652248cef74b",
+    "accepted_revision": "497ac571bf9944583279482e1bb1432fee9e85b7"
+  },
+  "Owner_target_answer": "None is available or I am unsure",
+  "host_observation": {
+    "UTC": "2026-11-02T08:56:05.5034878Z",
+    "candidate_id": "PRIMARY-OWNER-PC",
+    "OS": {
+      "version": "10.0.26300",
+      "build": "26300",
+      "caption": "Microsoft Windows 11 Pro"
+    },
+    "memory_GiB": 63.92,
+    "logical_processors": 16,
+    "hypervisor_present": true,
+    "SLAT_reported": false,
+    "SLAT_interpretation": "may be masked with an active hypervisor; not proof of unsupported hardware",
+    "framework_release": 534296,
+    "non_protected_local_volumes": [
+      {
+        "drive": "C:",
+        "type": 3,
+        "filesystem": "NTFS",
+        "size_bytes": 499082326016,
+        "free_bytes": 20382613504,
+        "free_GiB": 18.98,
+        "use_authorised": false
+      },
+      {
+        "drive": "D:",
+        "type": 3,
+        "filesystem": "NTFS",
+        "size_bytes": 52424704,
+        "free_bytes": 18968576,
+        "free_GiB": 0.02,
+        "use_authorised": false
+      },
+      {
+        "drive": "E:",
+        "type": 3,
+        "filesystem": "NTFS",
+        "size_bytes": 1000202039296,
+        "free_bytes": 33592328192,
+        "free_GiB": 31.29,
+        "use_authorised": false
+      },
+      {
+        "drive": "G:",
+        "type": 3,
+        "filesystem": "NTFS",
+        "size_bytes": 98374250496,
+        "free_bytes": 91336556544,
+        "free_GiB": 85.06,
+        "use_authorised": false
+      },
+      {
+        "drive": "H:",
+        "type": 3,
+        "filesystem": "NTFS",
+        "size_bytes": 901773258752,
+        "free_bytes": 309485256704,
+        "free_GiB": 288.23,
+        "use_authorised": false
+      }
+    ],
+    "protected_media_excluded": [
+      "X:",
+      "Z:",
+      "all original/sealed/working/recovery VHDX and backup paths"
+    ],
+    "Windows_host_licence_metadata": [
+      {
+        "Name": "Windows(R), Professional edition",
+        "Description": "Windows(R) Operating System, RETAIL channel",
+        "LicenseStatus": 1
+      }
+    ],
+    "Windows_guest_entitlement": "not established by host activation",
+    "optional_features": [
+      {
+        "Name": "VirtualMachinePlatform",
+        "InstallState": 1
+      },
+      {
+        "Name": "HypervisorPlatform",
+        "InstallState": 2
+      },
+      {
+        "Name": "Microsoft-Windows-Subsystem-Linux",
+        "InstallState": 1
+      },
+      {
+        "Name": "Microsoft-Hyper-V-All",
+        "InstallState": 2
+      },
+      {
+        "Name": "Microsoft-Hyper-V",
+        "InstallState": 2
+      },
+      {
+        "Name": "Microsoft-Hyper-V-Tools-All",
+        "InstallState": 2
+      },
+      {
+        "Name": "Microsoft-Hyper-V-Management-PowerShell",
+        "InstallState": 2
+      },
+      {
+        "Name": "Microsoft-Hyper-V-Hypervisor",
+        "InstallState": 2
+      },
+      {
+        "Name": "Microsoft-Hyper-V-Services",
+        "InstallState": 2
+      },
+      {
+        "Name": "Microsoft-Hyper-V-Management-Clients",
+        "InstallState": 2
+      },
+      {
+        "Name": "Containers-DisposableClientVM",
+        "InstallState": 1
+      }
+    ],
+    "HyperV_module_available": false,
+    "virtualisation_products": [
+      {
+        "DisplayName": "Docker Desktop",
+        "DisplayVersion": "4.55.0"
+      }
+    ],
+    "tool_presence": [
+      {
+        "path": "C:\\Program Files\\Oracle\\VirtualBox\\VBoxManage.exe",
+        "present": false
+      },
+      {
+        "path": "C:\\Program Files\\VMware\\VMware Workstation\\vmware.exe",
+        "present": false
+      },
+      {
+        "path": "C:\\Program Files\\qemu\\qemu-system-x86_64.exe",
+        "present": false
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\vmconnect.exe",
+        "present": false
+      },
+      {
+        "path": "C:\\WINDOWS\\System32\\WindowsSandbox.exe",
+        "present": true
+      }
+    ],
+    "service_state": [
+      {
+        "Name": "com.docker.service",
+        "status": "Stopped",
+        "start": "Manual"
+      },
+      {
+        "Name": "vmcompute",
+        "status": "Running",
+        "start": "Manual"
+      }
+    ],
+    "relevant_processes": [],
+    "VM_or_engine_started": false,
+    "original_engine_contacted": false,
+    "certificate_store_inventory_or_write": false
+  },
+  "storage_device_metadata": [
+    {
+      "drive": "G",
+      "disk_number": 2,
+      "disk_friendly_name": "WDC WD1002FBYS-18W8B1",
+      "bus_type": "SATA",
+      "is_boot": false,
+      "is_system": false,
+      "disk_size": 1000204886016,
+      "partition_type": "IFS",
+      "volume_label": "HDD Partition",
+      "health": "Healthy",
+      "data_contents_accessed": false,
+      "use_authorised": false
+    },
+    {
+      "drive": "H",
+      "disk_number": 2,
+      "disk_friendly_name": "WDC WD1002FBYS-18W8B1",
+      "bus_type": "SATA",
+      "is_boot": false,
+      "is_system": false,
+      "disk_size": 1000204886016,
+      "partition_type": "IFS",
+      "volume_label": "HDD Storage",
+      "health": "Healthy",
+      "data_contents_accessed": false,
+      "use_authorised": false
+    }
+  ],
+  "graphical_access": {
+    "local_interactive_session": true,
+    "explorer_in_same_session": true,
+    "remote_graphical_guest_access_verified": false,
+    "browser_surface_inventory": "not obtained; tool initialization failed before accessing a surface"
+  },
+  "discovery": {
+    "saved_private_RDP_targets": 4,
+    "private_RDP_checks": "three saved LAN IPs unreachable on TCP3389; one saved hostname unresolved; no authentication attempted",
+    "unverified_public_RDP_entry": "one; not probed",
+    "SSH_config_present": false,
+    "remote_engine_contexts": 0,
+    "only_Docker_context": "desktop-linux, original pipe, not contacted",
+    "conventional_VM_inventory_found": false,
+    "registered_non_Desktop_hypervisor_found": false,
+    "bounded_legal_guest_media_found": false,
+    "guest_entitlement": "Full Windows guest not established. Host Pro activation is not a separate guest licence. Included Sandbox entitlement is a possible smaller route, not a boot test."
+  },
+  "preservation": {
+    "UTC": "2026-11-02T09:10:13.550466+00:00",
+    "master": "61195434bee5f9221a6f55469c719cb360504ea9",
+    "PR44_head": "497ac571bf9944583279482e1bb1432fee9e85b7",
+    "original_HEAD": "853b865e30872964a556c225335eb2191928972b",
+    "original_status_records": 8,
+    "original_status_lf_joined_sha256": "ac3797018273140eab5ea2dd2c6ff1a9519778685ff19a7a5b6ef3a81c0309e8",
+    "producer_HEAD": "6d076944a0874a39124f7e8d7ee921c32ef77411",
+    "producer_status_clean": true,
+    "worker_clean": true,
+    "WSL_and_original_disks": "not accessed or started",
+    "protected_PRs": [
+      {
+        "number": 38,
+        "head": "ff2f9a74bcbf2a347eed61516508910acadadfb2",
+        "merged": false,
+        "state": "open"
+      },
+      {
+        "number": 39,
+        "head": "0254b7bf02fdee55dfbcc624d68653e9c6294539",
+        "merged": false,
+        "state": "open"
+      },
+      {
+        "number": 40,
+        "head": "6625a4f5ae44e019eb4c9680e0570f1da9f4fc41",
+        "merged": false,
+        "state": "open"
+      },
+      {
+        "number": 41,
+        "head": "b14cc7b88989dc62edcf3c17139d8b315a788f0b",
+        "merged": false,
+        "state": "open"
+      },
+      {
+        "number": 42,
+        "head": "36685fc23e401a6ef3f549541b602df5f9e608a0",
+        "merged": false,
+        "state": "open"
+      },
+      {
+        "number": 43,
+        "head": "1805a108855817d7b36220a6253684bd6a018fb3",
+        "merged": false,
+        "state": "open"
+      }
+    ],
+    "original_status_lf_terminated_sha256": "cfd90c22d5da74d22009f003ac3906402f957be535b37cf7217a111689e3a41f",
+    "status_count_reconciliation": "Default untracked directory collapse yielded five; --untracked-files=all yields original eight and exact earlier digest. No change."
+  },
+  "runtime_metadata": {
+    "UTC": "2026-11-02T09:09:20.443608+00:00",
+    "engine_contacted_or_started": false,
+    "image_layers_downloaded": false,
+    "OCI_candidates": [
+      {
+        "repository": "library/golang",
+        "requested": "1.26.10-alpine3.24",
+        "role": "source-required builder candidate",
+        "index_or_manifest_digest": "sha256:a2012b4a1d1f9f7e9f44e0d39b805a901e856b1dd80b4e6ee4338db547050308",
+        "linux_amd64_manifest_digest": "sha256:d1f3216ef30257c850cc136ba42a359ccd9d3e75f19b2c276e520c0b4ef327ce",
+        "config_digest": "sha256:51ff61e0d9a205d4435c3a1725d76c639a3a555274bd31a98e9e9bde5ebe278a",
+        "created": "2026-10-21T22:58:13.645427587Z",
+        "public_labels": {},
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "library/alpine",
+        "requested": "3.24",
+        "role": "source-required backend runtime candidate",
+        "index_or_manifest_digest": "sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a",
+        "linux_amd64_manifest_digest": "sha256:c26612752c78b18faacd63c7d50f4592c2e7b0f25e0e20e82bd74e465c57ab0d",
+        "config_digest": "sha256:b92841763c5c2140a20eeb2a44e94ebb0e80fd51d9d6b5895ea72fa999525d68",
+        "created": "2026-10-21T22:37:22.870489069Z",
+        "public_labels": {},
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "library/postgres",
+        "requested": "16-alpine",
+        "role": "database candidate",
+        "index_or_manifest_digest": "sha256:0cefaabd882e42bcb2a2f3dc56d3ce4770560ba62fd7f197f1a2e008fd5731ab",
+        "linux_amd64_manifest_digest": "sha256:cbf42f0edc946c0bc1b8eeed62403734e1f25dc67a3491455d07a92fdb558b28",
+        "config_digest": "sha256:6a2e324ebe59af6031c4c1cd96c1d5072c2ebc36563d2196365e43b8297c062d",
+        "created": "2026-10-21T22:57:10.664514874Z",
+        "public_labels": {},
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "library/traefik",
+        "requested": "v3.7",
+        "role": "supported proxy candidate",
+        "index_or_manifest_digest": "sha256:e9338a01a43389362bdef90afd4ff4a30dd6c0a2e1b0ce00c5e0f52659aa2d9c",
+        "linux_amd64_manifest_digest": "sha256:c999a937a1bb51ba36c79adf2c9db1d1bb196896b66d524d30ef4945606d565f",
+        "config_digest": "sha256:a72cb2f4a2109f1ae52261c86d56b7d33a27dc5c4e211ce3c7835b772338b94f",
+        "created": "2026-10-30T20:17:26.761959825Z",
+        "public_labels": {
+          "org.opencontainers.image.description": "A modern reverse-proxy",
+          "org.opencontainers.image.documentation": "https://docs.traefik.io",
+          "org.opencontainers.image.source": "https://github.com/traefik/traefik",
+          "org.opencontainers.image.title": "Traefik",
+          "org.opencontainers.image.url": "https://traefik.io",
+          "org.opencontainers.image.vendor": "Traefik Labs",
+          "org.opencontainers.image.version": "v3.7.17"
+        },
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "rustfs/rustfs",
+        "requested": "1.0.4",
+        "role": "current storage candidate",
+        "index_or_manifest_digest": "sha256:ed9210d6411d77ffceb70d94b964a3cb7d225983368bc25bebe01e995293dcc2",
+        "linux_amd64_manifest_digest": "sha256:e287e99762a4a3e7b706526e01f2ff755f67db165e9be9f6b907adc6fb6d6ee1",
+        "config_digest": "sha256:2755bcf766f77f221f39e056864948fb4d1862381831ed0b347226e4bc1a43a9",
+        "created": "2026-10-25T16:28:08.936122522Z",
+        "public_labels": {
+          "org.opencontainers.image.title": "RustFS,org.opencontainers.image.description=RustFS distributed object storage system,org.opencontainers.image.version=1.0.4,org.opencontainers.image.revision=46337942d55f3a8e6a97b147ca98d9ea8115555d,org.opencontainers.image.source=https://github.com/rustfs/rustfs,org.opencontainers.image.created=2026-10-25T16:27:49Z,org.opencontainers.image.build-type=release"
+        },
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      },
+      {
+        "repository": "rustfs/rustfs",
+        "requested": "sha256:c917317a76af3df35b596612a32e297b6a31a5c815e023fdf62ca78c2cf84201",
+        "role": "historical pin; not automatically acceptable",
+        "index_or_manifest_digest": "sha256:c917317a76af3df35b596612a32e297b6a31a5c815e023fdf62ca78c2cf84201",
+        "linux_amd64_manifest_digest": "sha256:c917317a76af3df35b596612a32e297b6a31a5c815e023fdf62ca78c2cf84201",
+        "config_digest": "sha256:ad22dd67c8159a66010affbfd000b78a94b74c84524246a8124e1cd250483187",
+        "created": "2026-10-16T14:56:42.527546378Z",
+        "public_labels": {
+          "org.opencontainers.image.title": "RustFS,org.opencontainers.image.description=RustFS distributed object storage system,org.opencontainers.image.version=1.0.2,org.opencontainers.image.revision=2b243d8659497778c2406cc844a490565ec13287,org.opencontainers.image.source=https://github.com/rustfs/rustfs,org.opencontainers.image.created=2026-10-16T14:55:45Z,org.opencontainers.image.build-type=release"
+        },
+        "downloaded_image_layers": false,
+        "runtime_accepted": false,
+        "status": "metadata_verified"
+      }
+    ],
+    "official_latest_releases": [
+      {
+        "repository": "rustfs/rustfs",
+        "tag": "1.0.4",
+        "published_at": "2026-10-25T16:26:17Z",
+        "URL": "https://github.com/rustfs/rustfs/releases/tag/1.0.4",
+        "source_commit": "46337942d55f3a8e6a97b147ca98d9ea8115555d",
+        "prerelease": false
+      },
+      {
+        "repository": "traefik/traefik",
+        "tag": "v3.7.17",
+        "published_at": "2026-10-30T08:32:41Z",
+        "URL": "https://github.com/traefik/traefik/releases/tag/v3.7.17",
+        "source_commit": "04e8ccf84ada1dcb450cec06554fe27812903134",
+        "prerelease": false
+      }
+    ]
+  },
+  "Docker_Engine_candidate": {
+    "OS": "Ubuntu 24.04 LTS amd64",
+    "package_index_URL": "https://download.docker.com/linux/ubuntu/dists/noble/stable/binary-amd64/Packages.gz",
+    "index_compressed_SHA256": "e579dbac95bfce36dcf4ab2b4fdf4f97ff557f310a26955b60e31ad25cf6a5dc",
+    "metadata_candidates": {
+      "containerd.io": {
+        "Package": "containerd.io",
+        "Version": "2.4.2-3~ubuntu.24.04~noble",
+        "Architecture": "amd64",
+        "Filename": "dists/noble/pool/stable/amd64/containerd.io_2.4.2-3~ubuntu.24.04~noble_amd64.deb",
+        "SHA256": "f811ab57d1f4bb0cce19df7d526da8c711d8ebea0447cc83da1999188e664122",
+        "Size": "23271468"
+      },
+      "docker-buildx-plugin": {
+        "Package": "docker-buildx-plugin",
+        "Version": "0.38.1-1~ubuntu.24.04~noble",
+        "Architecture": "amd64",
+        "Filename": "dists/noble/pool/stable/amd64/docker-buildx-plugin_0.38.1-1~ubuntu.24.04~noble_amd64.deb",
+        "SHA256": "642e9a8a0d115a8a57ad7045a4c7c2561522331197f0c087a762de1b72591672",
+        "Size": "17800928"
+      },
+      "docker-ce-cli": {
+        "Package": "docker-ce-cli",
+        "Version": "5:29.8.2-1~ubuntu.24.04~noble",
+        "Architecture": "amd64",
+        "Filename": "dists/noble/pool/stable/amd64/docker-ce-cli_29.8.2-1~ubuntu.24.04~noble_amd64.deb",
+        "SHA256": "008b3b49b474136063fe0fbe8999b0e77c3e8556d7f7de21f98f05715e2f76ba",
+        "Size": "17549632"
+      },
+      "docker-ce": {
+        "Package": "docker-ce",
+        "Version": "5:29.8.2-1~ubuntu.24.04~noble",
+        "Architecture": "amd64",
+        "Filename": "dists/noble/pool/stable/amd64/docker-ce_29.8.2-1~ubuntu.24.04~noble_amd64.deb",
+        "SHA256": "b53a44a6ff13277710978adbdbfea27fcdd7ac9f198017e733d2b8dc2343f8dc",
+        "Size": "24358876"
+      },
+      "docker-compose-plugin": {
+        "Package": "docker-compose-plugin",
+        "Version": "5.6.1-1~ubuntu.24.04~noble",
+        "Architecture": "amd64",
+        "Filename": "dists/noble/pool/stable/amd64/docker-compose-plugin_5.6.1-1~ubuntu.24.04~noble_amd64.deb",
+        "SHA256": "9725be1df7fd5ccc6b21ac24112885896c8d134345e3f4aa20b3c2064ef4620e",
+        "Size": "8083388"
+      }
+    },
+    "signed_Release_verified": false,
+    "support_basis": "official Docker Ubuntu installation page lists Noble and Engine29.8.2; packages are candidates, not accepted/installed artifacts"
+  },
+  "actual_runtime_compatibility_tests": "NOT RUN; no independent target and no boot/install authority",
+  "smaller_alternative": {
+    "status": "PROPOSED FOR AETHER REVIEW, NOT QUALIFIED OR EXECUTED",
+    "topology": "one fresh Linux VM on a separate Owner-controlled machine plus client-only Windows Sandbox on the primary physical Pro PC",
+    "required_missing_resource": "Owner-controlled independent Linux host/VM and unoccupied fresh disk extent with a read-only management route; none available/identified",
+    "Linux_starting_budget_estimate": {
+      "vCPU": 2,
+      "RAM_GiB": 8,
+      "fresh_disk_GiB": 32,
+      "fixture_object_data_max_MiB": 10,
+      "note": "Sizing trial, not vendor minimum or a guaranteed fit. Record build/layer/cache/log/backup peak plus headroom before installing. Bound log and fixture growth. Increase/reject if measured budget fails."
+    },
+    "Windows_scope": "existing enabled Sandbox feature only; no separate Windows ISO/full-VM licence assumed. Verify actual Sandbox Framework, curl Schannel, shell/tray/Explorer, own CurrentUser store and filesystem/profile isolation after separately reviewed boot. No host trust writes. Never run Linux containers inside Sandbox or on the original engine.",
+    "isolation_conditions": [
+      "fresh independent Linux engine and containerd stores; no old disks/backups/credentials/sockets",
+      "no host drive mapping, host clipboard, printer, microphone/video or GPU redirection; guest clipboard only",
+      "review and enforce network egress only to the named Linux SSH endpoint; deny original host services and unrelated LAN; default Sandbox network is not accepted isolation",
+      "SSH host key pinned from verified console; loopback-only 8443 HTTPS and18081 CDP forwards; no credentials reused",
+      "verify Docker remains stopped before/during/after; any original startup or unexpected interface/store access stops the test",
+      "if primary-host Sandbox cannot satisfy these conditions, use Sandbox and the Linux role on a separate spare licensed Pro machine; no claim that either target exists"
+    ],
+    "cost_scope": "No purchases or paid services. Reuse or borrow Owner-controlled capacity if available. Removes second full Windows VM/media requirement; does not remove the independent Linux target gate.",
+    "reviewed_plan_delta": "This reduced topology and budget are not the accepted two-full-VM160GiB plan. Aether must accept the exact scope change before boot."
+  },
+  "installation_and_acceptance_gates": [
+    {
+      "gate": "A0",
+      "status": "BLOCKED",
+      "required": "named independent host/device/ownership, fresh storage budget, exact management/graphical route; no old media access; bind host and guest identities"
+    },
+    {
+      "gate": "R0",
+      "status": "METADATA ONLY",
+      "required": "signed official OS/package media, exact Engine/containerd/runc/Compose versions and digests, source-pinned lab build specification; SBOM/OS+Go+storage/proxy advisories with applicability; all exact images and exports; Docker Compose effective config with restart:no and fresh mounts; no historical root Compose"
+    },
+    {
+      "gate": "R0 functional",
+      "status": "NOT RUN",
+      "required": "Go/native vectors/unit/race/vet/lint/browser and actual backend builds; PG16 fresh schema12 plus isolated BYTEA/BIGINT/idempotency/restore; RustFS S3 private IAM/ownership/multipart/error/deletion preservation/backup; Traefik3.7 TLS/middleware/cookie/forwarded-header/body-limit/streaming and error status checks"
+    },
+    {
+      "gate": "A1",
+      "status": "PENDING EXACT REVIEW",
+      "required": "guest-only bootstrap reusing accepted1805 fixture logic; public root/leaf DER/SPKI/thumbprints, distinct issuer ledger, server-key custody/recovery, signed CRL dates and lifecycle; no real SFD CA or old controller; code currently forbids live transition"
+    },
+    {
+      "gate": "A2",
+      "status": "NO TRUST WRITE AUTHORISED",
+      "required": "specific guest/Sandbox instance and test SID; exact public fixture root; Owner-visible CurrentUser-only trust consent; before/after guest store diff, no host/LocalMachine writes"
+    },
+    {
+      "gate": "A3 strict HTTPS",
+      "status": "NOT RUN",
+      "required": "stock Schannel and Framework4.8-compatible actual client with revocation; cold guest profile obtains exact CRL bytes; good/expired/revoked/wrong-host/invalid-CRL/unavailable-CDP/custody negatives; no validation callback, cache/clock tricks or expired old CRL"
+    },
+    {
+      "gate": "A3 end-to-end",
+      "status": "NOT RUN",
+      "required": "real delivered-mail ordinary registration/verification, admin and two ordinary sessions/isolation/401+403/logout, upload/download SHA256,5min signed-link410 expiry, failed deletion preservation, empty-lab backup+restore; actual tray/picker/Explorer Quick Send and guest clipboard2min selfclear; Owner visual confirmation recorded separately"
+    }
+  ],
+  "controlled_staging_and_rollback": {
+    "proposed": "After scoped approval, stage official signed OS/deb/OCI and source/package hashes only on the independent Linux host via allowlisted temporary egress. Verify all hashes and signatures then close egress. Guest-only one-use SSH/SFTP transfers public source/client/bootstrap via a pinned host key, never host folders or clipboard. Copy private guest logs outward only after secret sanitisation; do not depend on closing Sandbox to retain evidence.",
+    "window": "one supervised six-hour run; certificate and CRL valid beyond full run plus margin, no clock adjustment; fresh fixture credentials only",
+    "rollback": "stop verified new guest/containers, seal logs and independent Linux disks for review; record guest trust diff before closing Sandbox. Closure discards only the newly created disposable guest state; do not delete old packages or host data. Exact fixture lifecycle/retention requires review before launch."
+  },
+  "reused_identities": {
+    "application": "61195434bee5f9221a6f55469c719cb360504ea9",
+    "PKI": "1805a108855817d7b36220a6253684bd6a018fb3",
+    "client_source": "c320861536914623ea22f28c1d4ea156d4c2132a",
+    "official_client_run": 40403397291,
+    "artifact": 12690070973,
+    "archive_SHA256": "f38b9f82dda5c0320c17a3d0a04de924c958750f8975be28d3914d0ec8b90c9e",
+    "executable_SHA256": "8f98bd9dca095c827e8ccf38000ae28fecf45df60ec10c9b484ed479748bb28b",
+    "config_SHA256": "4d83c0772f4b593d6e16657fb5be7e4478321cb9782ba744c93b90915fb7175b",
+    "package_status": "sealed existing seven-file archive retained; no extraction/launch; source/package unchanged",
+    "qualification_recheck": "Sealed archive SHA and seven entries plus executable/config SHA reverified2026-11-02 without extraction/execution."
+  },
+  "limitations_and_failures": [
+    "No independent target, Windows guest licence or graphical guest session established; bounded discovery is not a claim that no hardware exists elsewhere.",
+    "Browser-surface inventory tool failed initialization: system path unavailable; no surface, login or credential accessed.",
+    "Initial sandboxed sibling Git inspection denied; authorised read-only elevated check succeeded, no state overwritten.",
+    "First Docker package metadata URL HTTP404; corrected official index read succeeded; signature verification and installation NOT RUN.",
+    "Original status default5 versus expanded8 reconciled by --untracked-files=all. Initial digest guard omitted terminal LF and stopped before writing evidence; corrected exact LF-terminated raw status matches accepted digest.",
+    "No VM/Sandbox/WSL/Docker launch, engine API, disk-image mount, storage/backup/real CA/certificate/trust access or data operation. Local storage metadata and source/public artifacts only.",
+    "No new Go/native/browser/full-stack/security tests rerun for documentation-only qualification. Prior accepted checks are dated evidence, not new topology acceptance.",
+    "No production readiness or clean Owner-profile installation claimed."
+  ],
+  "primary_references": [
+    "https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/",
+    "https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-install",
+    "https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-configure-using-wsb-file",
+    "https://learn.microsoft.com/en-us/dotnet/framework/install/on-windows-and-server",
+    "https://docs.docker.com/engine/install/ubuntu/",
+    "https://ubuntu.com/about/release-cycle",
+    "https://alpinelinux.org/releases/",
+    "https://go.dev/doc/devel/release",
+    "https://www.postgresql.org/support/versioning/",
+    "https://doc.traefik.io/traefik/deprecation/releases/",
+    "https://github.com/traefik/traefik/releases/tag/v3.7.17",
+    "https://github.com/rustfs/rustfs/releases/tag/1.0.4"
+  ],
+  "runtime_support_observation": {
+    "date": "2026-11-02",
+    "Ubuntu24_04": "official standard maintenance to2029-05; Docker officially lists Noble",
+    "Go1_26_10": "official release2026-10-19, source toolchain; no build performed",
+    "Alpine3_24": "official stable3.24.3, main support to2028-06-01; actual image package inventory and advisory match pending",
+    "PostgreSQL16": "official current minor16.15, support to2028-11-09; exact image binary version/advisories require R0",
+    "Traefik3_7": "vendor active/security support, exact latest release3.7.17; supported does not mean source compatibility passed",
+    "RustFS1_0_4": "latest stable upstream release observed; no long-term support guarantee or accepted runtime provenance claimed",
+    "Framework": "4.8/4.8.1 supported on supported Windows; actual Sandbox image prerequisite and OS build/channel support must be checked, host release value is not guest proof"
+  },
+  "private_evidence_sources": [
+    {
+      "name": "additional-volume-provenance-metadata.json",
+      "bytes": 745,
+      "SHA256": "d72ae818f2337f3cdec3880ab47394fb99b4d9658a7457a61e8ca86c31ba79ff",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    },
+    {
+      "name": "authority.json",
+      "bytes": 420,
+      "SHA256": "3ffaa875ee3a98ffede6c76429584ae996c572fb4d8a6066d2dd8dd613170afa",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    },
+    {
+      "name": "configured-target-discovery.json",
+      "bytes": 2381,
+      "SHA256": "7ec92b0681edcd6c1606739a71b6de46b894fa2b7105016e3cf9604c920aeb03",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    },
+    {
+      "name": "connection-metadata-initial.json",
+      "bytes": 259,
+      "SHA256": "e161eeee13facd4843917cdc91dbd0eb7273b66f4dbe6c0348b2cf6b085a63f3",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    },
+    {
+      "name": "docker-noble-public-package-metadata.json",
+      "bytes": 98232,
+      "SHA256": "b7e011739fbdece3bfb663f7fea7c7187191a1dbe80c0069f79da1a649da9919",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    },
+    {
+      "name": "gui-and-service-observation.json",
+      "bytes": 348,
+      "SHA256": "0671324afb03bb53f0689bc777759185d420864794fabef6e46d135d7a0ffb15",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    },
+    {
+      "name": "media-metadata.json",
+      "bytes": 128,
+      "SHA256": "0403386a53bede04974c31dfffcb82eca82cb7e84b8c8d3818e5d7fe366f8a87",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    },
+    {
+      "name": "platform.json",
+      "bytes": 3999,
+      "SHA256": "4d176575643e307dd6bf27ed8a0ef37b6ee5d625696d1aa977d1a1b8f6a4c054",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    },
+    {
+      "name": "runtime-candidate-metadata.json",
+      "bytes": 6046,
+      "SHA256": "da4c6f3f3f1ee038f2264bbf44e00b6b0e8a2ef821387e7996134360091bb367",
+      "accessibility": "private local producer evidence, not independently readable in GitHub"
+    }
+  ]
+}

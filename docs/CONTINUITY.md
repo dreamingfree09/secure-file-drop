@@ -1,5 +1,12 @@
 # Secure File Drop continuity
 
+
+## A0 target qualification - 2026-11-02
+
+**A0 NO-HOST.** Read-only discovery under [Aether6571671732](https://github.com/dreamingfree09/secure-file-drop/pull/44#issuecomment-6571671732) established no available independent target. The Owner confirms saved remote entries are unavailable/uncertain. Current primary C18.98GiB/E31.29GiB and G85.06GiB/H288.23GiB supersede earlier capacity observations; G/H are partitions on the primary SATA disk, not an independent host or authorised storage. Original Docker stays stopped.
+
+[Qualification evidence and exact remaining gates](../tools/clean-install-plan/qualification.json) proposes an off-machine fresh Linux VM plus the existing licensed Windows Sandbox feature for client-only GUI, avoiding a second full Windows VM/ISO. This reduced topology needs Aether review and an actual independent Linux target; neither availability nor boot/TLS compatibility is claimed. Source61195434/PKI1805/client8f98bd9d and all historical packages remain preserved. No engine/VM/WSL boot, trust/CA/data/backups operation, cleanup or merge. Qualification is complete; installation remains blocked on A0. The separate qualification manifest binds this update; the historical plan manifest belongs to497ac571. Exact revision and published handover are in PR44.
+
 ## Clean installation and acceptance plan - 2026-11-02
 
 [Aether6566129478](https://github.com/dreamingfree09/secure-file-drop/pull/43#issuecomment-6566129478) accepts PR43/1805a108 for synthetic use and the old repeated-recovery finding is resolved. [One new preservation-first plan](CLEAN_INSTALL_ACCEPTANCE_PLAN.md) selects an independent Linux engine VM plus clean Windows guest, frozen master61195434, accepted PKI source and sealed latest611 desktop package8f98bd9d (seven files). All130 selected app/client/build files match accepted PKI-head application bytes; accepted tests are not rerun here. Current disk capacity fails the proposed lab budget and full Hyper-V management is disabled; historical packages total only0.61 MiB and are preserved. New proxy/storage candidates require exact-image/security/compatibility gates; guest creation, fixture trust, endpoint/client/Explorer and visual steps remain unexecuted/unapproved. Original engine/CA/trust/disks/backups/settings and old controllers remain untouched. Exact plan source/manifest/CI and Aether acknowledgement belong in the separate GHP-01 PR; this is not installation or production acceptance.
