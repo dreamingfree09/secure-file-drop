@@ -102,6 +102,16 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
+          name: stage1-runtime-receipt
+          path: |
+            ${{ runner.temp }}/sfd-stage1-runtime/runtime-receipt.json
+            ${{ runner.temp }}/sfd-stage1-runtime/sfd-auth-fixture/result.json
+            ${{ runner.temp }}/sfd-stage1-runtime/sfd-auth-fixture-bytea/result.json
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
           name: stage1-candidate-runtime-public-evidence
           path: |
             ${{ runner.temp }}/sfd-stage1-runtime/go-results.txt
