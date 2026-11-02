@@ -1,0 +1,477 @@
+{
+  "schema": "SFD_LOCAL_ISOLATED_LAB_FEASIBILITY_V1",
+  "work_id": "SFD-LOCAL-ISOLATED-LAB-FEASIBILITY-20261102",
+  "prepared_UTC": "2026-11-02T10:46:40.690987+00:00",
+  "base": "2bb7d6c2382c00a089774ad9fc20d8ccdb513bc6",
+  "producer": "Codex",
+  "reviewer": "Aether",
+  "recommendation": "NO-GO for creation/execution in the current Owner Windows account",
+  "execution_authorised": false,
+  "authority": {
+    "id": 6574300229,
+    "author": "dreamingfree09",
+    "author_id": 94070428,
+    "created": "2026-11-02T10:01:09Z",
+    "updated": "2026-11-02T10:01:09Z",
+    "URL": "https://github.com/dreamingfree09/secure-file-drop/pull/44#issuecomment-6574300229",
+    "body_UTF8_SHA256": "85e348ef65af67c495ef614933893c2538aa25a5f274264053d55b52fa1140a1"
+  },
+  "host_observation": {
+    "UTC": "2026-11-02T10:28:09.7544560Z",
+    "proposed_H_root": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1",
+    "target_exists": false,
+    "H_root_attributes": "ReadOnly, Hidden, System, Directory, Archive",
+    "H_root_reparse_point": false,
+    "H_root_acl_summary": [
+      {
+        "identity_class": "AuthenticatedUsers",
+        "rights": "-536805376",
+        "type": "Allow",
+        "inherited": false
+      },
+      {
+        "identity_class": "AuthenticatedUsers",
+        "rights": "Modify, Synchronize",
+        "type": "Allow",
+        "inherited": false
+      },
+      {
+        "identity_class": "other",
+        "rights": "FullControl",
+        "type": "Allow",
+        "inherited": false
+      },
+      {
+        "identity_class": "other",
+        "rights": "268435456",
+        "type": "Allow",
+        "inherited": false
+      },
+      {
+        "identity_class": "other",
+        "rights": "268435456",
+        "type": "Allow",
+        "inherited": false
+      },
+      {
+        "identity_class": "other",
+        "rights": "FullControl",
+        "type": "Allow",
+        "inherited": false
+      },
+      {
+        "identity_class": "BuiltinUsers",
+        "rights": "ReadAndExecute, Synchronize",
+        "type": "Allow",
+        "inherited": false
+      },
+      {
+        "identity_class": "BuiltinUsers",
+        "rights": "-1610612736",
+        "type": "Allow",
+        "inherited": false
+      }
+    ],
+    "H_content_enumerated": false,
+    "H_modified": false,
+    "volume_metadata": [
+      {
+        "DeviceID": "C:",
+        "FileSystem": "NTFS",
+        "Size": 499082326016,
+        "FreeSpace": 13223264256
+      },
+      {
+        "DeviceID": "H:",
+        "FileSystem": "NTFS",
+        "Size": 901773258752,
+        "FreeSpace": 295995125760
+      }
+    ],
+    "component_versions": [
+      {
+        "path": "C:\\Program Files\\WSL\\wsl.exe",
+        "product_version": "2.6.3.0",
+        "file_version": "2.6.3.0",
+        "executed": false
+      },
+      {
+        "path": "C:\\Windows\\System32\\wsl.exe",
+        "product_version": "10.0.26100.8737",
+        "file_version": "10.0.26100.8737 (WinBuild.160101.0800)",
+        "executed": false
+      },
+      {
+        "path": "C:\\Windows\\System32\\WindowsSandbox.exe",
+        "product_version": "10.0.26100.8875",
+        "file_version": "10.0.26100.8875 (WinBuild.160101.0800)",
+        "executed": false
+      }
+    ],
+    "Store_WSL_metadata": [
+      {
+        "Name": "MicrosoftCorporationII.WindowsSubsystemForLinux",
+        "Version": "2.6.3.0",
+        "Status": 0
+      }
+    ],
+    "global_wslconfig": {
+      "present": false,
+      "modified": false,
+      "whitelisted_values": {}
+    },
+    "Docker_settings_subset": [
+      {
+        "modified": false,
+        "file_name": "settings-store.json",
+        "sha256": "75a04d3bf50d4d864b9fed50034172b4c6923b3ee22495acd9b9a0e271a49d94",
+        "public_configuration_subset": {
+          "autoStart": false,
+          "integratedWslDistros": [
+            "Ubuntu"
+          ]
+        }
+      }
+    ],
+    "startup_metadata": [],
+    "scheduled_task_metadata": [],
+    "process_metadata": [
+      {
+        "Name": "wslservice.exe",
+        "ProcessId": 5932,
+        "ParentProcessId": 1880,
+        "CreationDate": "2026-10-31T12:28:06.806752+00:00"
+      }
+    ],
+    "service_metadata": [
+      {
+        "Name": "com.docker.service",
+        "State": "Stopped",
+        "StartMode": "Manual"
+      },
+      {
+        "Name": "vmcompute",
+        "State": "Running",
+        "StartMode": "Manual"
+      },
+      {
+        "Name": "WSLService",
+        "State": "Running",
+        "StartMode": "Auto"
+      }
+    ],
+    "WSL_executable_invoked": false,
+    "VM_or_engine_API_contacted": false,
+    "original_image_files_opened": false,
+    "registered_distros": [
+      {
+        "name": "Ubuntu",
+        "version": 2,
+        "default": true,
+        "flags": 15,
+        "distribution_image_not_opened": true
+      },
+      {
+        "name": "docker-desktop",
+        "version": 2,
+        "default": false,
+        "flags": 15,
+        "distribution_image_not_opened": true
+      }
+    ],
+    "raw_registration_paths": "private metadata only; original image contents not opened"
+  },
+  "firewall_creators": {
+    "UTC": "2026-11-02T10:29:02.0796296Z",
+    "creators": [
+      {
+        "VMCreatorId": "{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}",
+        "FriendlyName": "WSL"
+      }
+    ],
+    "policy_modified": false
+  },
+  "firewall_WSL_applied_settings": {
+    "Name": "{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}",
+    "Enabled": 1,
+    "DefaultInboundAction": 4,
+    "DefaultOutboundAction": 2,
+    "LoopbackEnabled": 1,
+    "AllowHostPolicyMerge": 1
+  },
+  "upstream_source_observation": {
+    "UTC": "2026-11-02T10:30:09.856498+00:00",
+    "authority": {
+      "id": 6574300229,
+      "author": "dreamingfree09",
+      "author_id": 94070428,
+      "created": "2026-11-02T10:01:09Z",
+      "updated": "2026-11-02T10:01:09Z",
+      "URL": "https://github.com/dreamingfree09/secure-file-drop/pull/44#issuecomment-6574300229",
+      "body_UTF8_SHA256": "85e348ef65af67c495ef614933893c2538aa25a5f274264053d55b52fa1140a1"
+    },
+    "WSL_tag": "2.6.3",
+    "WSL_source_commit": "eb7b0cff015998c199f62b2150c1cd8b5fcfe7b3",
+    "public_sources": [
+      {
+        "repository": "microsoft/WSL",
+        "commit": "eb7b0cff015998c199f62b2150c1cd8b5fcfe7b3",
+        "path": "src/windows/service/exe/DistributionRegistration.cpp",
+        "Git_blob": "bfda98c2f13fd75ad07437aae0b610c21320aafc",
+        "bytes": 7833,
+        "SHA256": "b652f7396652366fca1c5c456f5a2662c90b4ca6ca2bad869feceeffa7e31399",
+        "URL": "https://github.com/microsoft/WSL/blob/eb7b0cff015998c199f62b2150c1cd8b5fcfe7b3/src/windows/service/exe/DistributionRegistration.cpp"
+      },
+      {
+        "repository": "microsoft/WSL",
+        "commit": "eb7b0cff015998c199f62b2150c1cd8b5fcfe7b3",
+        "path": "src/windows/service/exe/WslCoreVm.cpp",
+        "Git_blob": "adb08bbc31964602dc6dc72b7e1380e0efed2e39",
+        "bytes": 122460,
+        "SHA256": "dd98ffef73aae152a7b24c550a211467520d639f9bca574f3a968941b0c718e8",
+        "URL": "https://github.com/microsoft/WSL/blob/eb7b0cff015998c199f62b2150c1cd8b5fcfe7b3/src/windows/service/exe/WslCoreVm.cpp"
+      },
+      {
+        "path": "src/windows/service/exe/WslCoreConfig.cpp",
+        "status": "unavailable"
+      },
+      {
+        "repository": "microsoft/WSL",
+        "commit": "1065a908203603e80d82573ff73cb58aa8df4f83",
+        "path": "doc/docs/technical-documentation/security.md",
+        "Git_blob": "c5c67813f133a7cb5f9271626b1d483453f80b55",
+        "bytes": 2737,
+        "SHA256": "d5f7a484facca9062787efdfdd8a63a9b42e02d8444cba4ca9c3c8dfd829270e",
+        "URL": "https://github.com/microsoft/WSL/blob/1065a908203603e80d82573ff73cb58aa8df4f83/doc/docs/technical-documentation/security.md"
+      },
+      {
+        "repository": "microsoft/WSL",
+        "commit": "1065a908203603e80d82573ff73cb58aa8df4f83",
+        "path": "doc/docs/technical-documentation/boot-process.md",
+        "Git_blob": "b880562e5cab8b85287bf5adea7a49c19f2b69ea",
+        "bytes": 7443,
+        "SHA256": "ce8df80d353bfa1f1f7ab004add327e8c9543c1e63796d468299f610e8a53b26",
+        "URL": "https://github.com/microsoft/WSL/blob/1065a908203603e80d82573ff73cb58aa8df4f83/doc/docs/technical-documentation/boot-process.md"
+      }
+    ]
+  },
+  "source_review_scope": "Selected2.6.3 registration/VM source plus current pinned upstream docs; not binary reproduction or complete startup proof. No escape/activation experiment.",
+  "private_evidence_identities": [
+    {
+      "name": "host-readonly-metadata.json",
+      "bytes": 4208,
+      "SHA256": "c36847c17dcae19a5e4f039683f1dcc7a2a57cb17c3c2bd911bacb990668dc47",
+      "access": "private producer observation; public source URLs separately verifiable"
+    },
+    {
+      "name": "hyperv-firewall-creators.json",
+      "bytes": 206,
+      "SHA256": "4a24a2099d48f475f2588d888ced18251a3c980d1a203eeb6f5d4e75e79904c7",
+      "access": "private producer observation; public source URLs separately verifiable"
+    },
+    {
+      "name": "hyperv-firewall-current-settings.json",
+      "bytes": 191,
+      "SHA256": "e7989faf08583985033fc08d0ebde5023eb9a244ca93963e7ae963843640c3ee",
+      "access": "private producer observation; public source URLs separately verifiable"
+    },
+    {
+      "name": "hyperv-firewall-current-profiles.json",
+      "bytes": 362,
+      "SHA256": "d3be1d21133b7d68ecbc00ff0d8238aad6bdbecb9c1a46faaabc718ea8529102",
+      "access": "private producer observation; public source URLs separately verifiable"
+    },
+    {
+      "name": "authority-and-public-WSL-source.json",
+      "bytes": 2558,
+      "SHA256": "f6a194f643bd4443de9297824b626c22f586f7a32d38af07dc381daae9315e4a",
+      "access": "private producer observation; public source URLs separately verifiable"
+    },
+    {
+      "name": "read-only-port-metadata.json",
+      "bytes": 210,
+      "SHA256": "99ca54258015796026307e55346f32ed5e9ee6d6e1779fb24bbe999e424ccc5c",
+      "access": "private producer read-only observation"
+    }
+  ],
+  "hard_gates": [
+    {
+      "id": "L0-activation",
+      "state": "UNRESOLVED",
+      "reason": "No preventive externally enforced barrier to original Docker Desktop/old distro activation; stopped/manual and autoStartfalse are not locks. A poll cannot precede an immediate backup prune reliably."
+    },
+    {
+      "id": "L0-filesystem",
+      "state": "NOT PROVIDED BY SAME-USER WSL",
+      "reason": "Same-user distributions are functional separation, not host/peer security boundaries. Interop/automount toggles cannot enforce original-file inaccessibility."
+    },
+    {
+      "id": "L0-global",
+      "state": "UNRESOLVED",
+      "reason": "VM memory/swap/network/host-localhost relay settings span Owner WSL distros. No .wslconfig is present. They cannot be silently changed for one lab."
+    },
+    {
+      "id": "L0-network",
+      "state": "UNRESOLVED",
+      "reason": "No pre-connect, outside-Sandbox per-instance deny/allow implementation or tested route; .wsb networking is enable/disable. Shared WSL creator policy is not per distro."
+    },
+    {
+      "id": "L0-capacity",
+      "state": "NOT PASSED",
+      "reason": "H275.67GiB can potentially cover new80GiB reservation; C12.32GiB cannot guarantee a possible16GiB default shared swap plus Sandbox/OS headroom. No actual allocation/capacity test."
+    },
+    {
+      "id": "R0-runtime",
+      "state": "NOT RUN",
+      "reason": "No media/signature/kernel/Engine/containerd/package/image/binary/advisory/SBOM/build/schema/storage/proxy compatibility execution."
+    },
+    {
+      "id": "A1-A3",
+      "state": "NOT RUN",
+      "reason": "No actual lab issuer, root approval, stock revocation-enabled TLS, transport/UI key handoff or application/Owner acceptance."
+    }
+  ],
+  "proposed_paths": {
+    "host_root": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1",
+    "new_distro": "SFD-Lab-20261102-8df9c4a1",
+    "disk": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1\\wsl\\ext4.vhdx",
+    "inputs": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1\\inputs",
+    "recovery": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1\\recovery",
+    "evidence": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1\\evidence",
+    "proposed_swap": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1\\vm\\swap.vhdx",
+    "proposed_host_temp": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1\\host-temp",
+    "Linux_source": "/opt/sfd-lab/source",
+    "Linux_fixture_state": "/srv/sfd-lab",
+    "Linux_Docker_root": "/var/lib/sfd-lab/docker",
+    "Linux_Docker_socket": "unix:///run/sfd-lab/docker.sock",
+    "Linux_containerd_root": "/var/lib/sfd-lab/containerd",
+    "Linux_containerd_socket": "/run/sfd-lab/containerd/containerd.sock",
+    "Sandbox_internal": "C:\\SFD-Lab",
+    "host_Sandbox_storage": "Windows-managed OS volume, not redirected to H",
+    "state": "NONE CREATED; old images/data not attached; only candidate-root absence checked"
+  },
+  "budget": {
+    "H_GiB": {
+      "root_physical_trial": 32,
+      "new_only_recovery_copy": 32,
+      "public_inputs": 4,
+      "logs_evidence": 2,
+      "proposed_lab_swap": 2,
+      "reserve": 8,
+      "total": 80
+    },
+    "workload_vCPU": 2,
+    "Linux_workload_RAM_GiB": 8,
+    "Sandbox_memory_MiB": 4096,
+    "fixture_objects_total_max_MiB": 10,
+    "C_no_global_change_trial_GiB": {
+      "possible_default_swap": 16,
+      "Sandbox_temp": 4,
+      "OS_margin": 8,
+      "total": 28
+    },
+    "vendor_minimum_claim": false,
+    "hard_disk_size_limit_or_resource_cap_installed": false,
+    "alternative": "Separately approved isolated context/resource model may reduce C allowance; verify and measure rather than globally moving Owner swap."
+  },
+  "port_correction": {
+    "new_issuer_CDP": "http://127.0.0.1:18082/sfd-local-ca-SYNTHETIC-LAB-20261102-8df9c4a1.crl",
+    "guest_HTTPS": "https://localhost:8443",
+    "guest_forward_map": {
+      "127.0.0.1:8443": "NEW_DISTRO:127.0.0.1:18443",
+      "127.0.0.1:18082": "NEW_DISTRO:127.0.0.1:18082"
+    },
+    "only_transport_destination": "NEW_DISTRO_IP:22222, not known/bound until approved named-distro creation",
+    "legacy_CDP": "127.0.0.1:18081/sfd-local-ca.crl: FORBIDDEN, no fallback/forward",
+    "accepted_design_port": 18082,
+    "old_qualification_parameter": 18081,
+    "correction_kind": "proposal-only correction; no publisher/cert exists or changed",
+    "Owner_host_forwarding_exposure": "UNRESOLVED with current shared WSL defaults; not covered by guest-only URI",
+    "actual_public_identities": {
+      "root_DER_SHA256": null,
+      "root_SPKI_SHA256": null,
+      "root_thumbprint": null,
+      "leaf_DER_SHA256": null,
+      "CRL_DER_SHA256": null
+    },
+    "accepted_policy_source": "1805a108855817d7b36220a6253684bd6a018fb3:tools/pki-transition-design/policy.json",
+    "accepted_profile": {
+      "new_initial_CRL": "0x2000",
+      "root": "RSA3072/SHA256,730days,pathlen0",
+      "leaf": "90days,serverAuth,localhost+127.0.0.1+::1",
+      "CRL_days": 7,
+      "renew_before_hours": 72,
+      "execution_minimum_margin_hours": 24,
+      "execution_extra_margin_hours": 6,
+      "six_hour_window_nextUpdate_margin_hours": 36,
+      "key_custody": "encryptedPKCS8 AES256-CBC/PBKDF2-HMAC-SHA256 >=600000; fixture archive/recovery evidence, no claim of distinct physical H custody",
+      "guest_trust": "explicit exact guest SID CurrentUser/Root only after public identity approval; no host/LocalMachine writes"
+    },
+    "fixture_fences": "Accepted implementation forbids live ports and real transition; new lab-only adapter exact review required; do not remove accepted fences"
+  },
+  "acceptance_NOT_RUN": [
+    "non-start and original-disk noninterference proof",
+    "actual H allocation/C swap/Sandbox peak measurement",
+    "outside-guest IPv4/IPv6/DNS/proxy/host/LAN denial and SSH route",
+    "guest stock SSH and verified UI public-key handoff",
+    "real media/package signature and supported runtime acceptance",
+    "fresh schema12/isolated BYTEA/BIGINT/idempotency/restore",
+    "RustFS privateIAM/S3/ownership/failed-deletion preservation and backup",
+    "Traefik3.7 new proxy compatibility",
+    "new issuer/CRL/custody/trust and cold Schannel/Framework/client positives and negatives",
+    "genuine new account registration/mail verification/session/logout/ownership",
+    "upload/download SHA256/expiry410/tray/Explorer/guest clipboard/Owner visual acceptance"
+  ],
+  "accepted_reused_sources": {
+    "application": "61195434bee5f9221a6f55469c719cb360504ea9",
+    "PKI": "1805a108855817d7b36220a6253684bd6a018fb3",
+    "client_source": "c320861536914623ea22f28c1d4ea156d4c2132a",
+    "official_client_run": 40403397291,
+    "artifact": 12690070973,
+    "exe_SHA256": "8f98bd9dca095c827e8ccf38000ae28fecf45df60ec10c9b484ed479748bb28b",
+    "archive_SHA256": "f38b9f82dda5c0320c17a3d0a04de924c958750f8975be28d3914d0ec8b90c9e",
+    "prior_qualification_CI": [
+      {
+        "run": 41419515705,
+        "jobs_successful": 4
+      },
+      {
+        "run": 41419521734,
+        "jobs_successful": 4
+      }
+    ],
+    "limitations": "Prior hosted checks re-read8/8success; not a boot/new-runtime/TLS/GUI pass."
+  },
+  "rollback_design": "No execution to undo. Future stop/quarantine only positively identified new Sandbox/distro/daemon; sanitise/export logs before closure, retain new disks and registration. No global shutdown, original process kill, unregister/delete/prune, old data restore or schema downgrade.",
+  "stronger_local_candidate": "One separately managed H-backed Linux VM outside Owner WSL plus client Sandbox. Uses existing hardware, not inherently a second full Windows VM. Hypervisor feature/reboot, preventive original-start protection and external network/C capacity gates require specific review/Owner scope, not performed. A new Windows lab account alone is not proved sufficient.",
+  "failures_and_limits": [
+    "One guessed upstream Config source filename returned404; pinned registration/VM files succeeded. A later source filename search yielded no applicable Windows config file and an rg literal wildcard returned error123; neither was treated as proof.",
+    "Read-only inventory was slow; a bounded Ctrl-C was sent only to its assignment-owned shell after it had already completed with exit0 and saved evidence. No service/VM process was stopped.",
+    "No runtime compatibility or security experiments were run. The recommendation is based on observed configuration and documented boundaries, not an attempted bypass.",
+    "Volume free-space drift and earlier vmwp disappearance are not attributed. No existing-image handle/mount proof was collected.",
+    "No RDP probing, WSL/Sandbox/VM boot, Docker/API contact, H write, key/cert generation, store access, backup operation, purchase, install or merge."
+  ],
+  "references": [
+    "https://learn.microsoft.com/en-us/windows/wsl/wsl-config",
+    "https://docs.docker.com/desktop/features/wsl/",
+    "https://docs.docker.com/engine/daemon/",
+    "https://docs.docker.com/engine/storage/containerd/",
+    "https://learn.microsoft.com/en-us/windows/security/application-security/application-isolation/windows-sandbox/windows-sandbox-configure-using-wsb-file",
+    "https://learn.microsoft.com/en-us/windows/security/operating-system-security/network-security/windows-firewall/hyper-v-firewall",
+    "https://man.openbsd.org/sshd_config",
+    "https://ubuntu.com/wsl/docs/latest/howto/install-ubuntu-wsl2/"
+  ],
+  "closing_listener_metadata": {
+    "UTC": "2026-11-02T10:47:48.1661752Z",
+    "ports": [
+      8443,
+      18443,
+      18081,
+      18082,
+      22222
+    ],
+    "listeners": [],
+    "connections_attempted": false,
+    "bindings_created": false
+  }
+}

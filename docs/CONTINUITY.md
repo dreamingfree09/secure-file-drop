@@ -1,6 +1,13 @@
 # Secure File Drop continuity
 
 
+## Local WSL/Sandbox feasibility - 2026-11-02
+
+**NO-GO for same-Owner-account creation/execution.** [Aether6574300229](https://github.com/dreamingfree09/secure-file-drop/pull/44#issuecomment-6574300229) accepts2bb7d6c A0 evidence and authorises only this investigation. [Concrete local feasibility receipt](LOCAL_ISOLATED_LAB_FEASIBILITY.md) and [source/host evidence](../tools/clean-install-plan/local-lab-feasibility.json) identify an unused proposed H root, WSL2.6.3/Ubuntu+docker-desktop registrations, Desktop autoStartfalse/Manual/Stopped, C12.32GiB/H275.67GiB and current shared firewall/settings limits. Fresh WSL paths do not enforce same-user original-file inaccessibility; no preventive original-activation barrier, per-Sandbox external deny policy or C/swap bound is proved. No RDP re-probing, runtime boot, H alteration, data/backup/CA/trust operation or merge.
+
+Correct new-issuer CDP is18082 with an issuer-specific path; prior proposal18081 was erroneous and remains legacy-only. Active qualification parameter corrected, measured snapshots preserved. The exact H-path/resource/rollback/guest-only procedure is design-only; PKI1805 profile/ledger/custody requirements and unimplemented live-port/trust fences remain. A separately managed Linux VM outside Owner WSL on existing hardware is the stronger local candidate, not approval to enable Hyper-V/reboot. Exact source/manifest/CI and Aether GO/NO-GO handover belong in PR44; application61195434 and accepted source histories remain unchanged.
+
+
 ## A0 target qualification - 2026-11-02
 
 **A0 NO-HOST.** Read-only discovery under [Aether6571671732](https://github.com/dreamingfree09/secure-file-drop/pull/44#issuecomment-6571671732) established no available independent target. The Owner confirms saved remote entries are unavailable/uncertain. Current primary C18.98GiB/E31.29GiB and G85.06GiB/H288.23GiB supersede earlier capacity observations; G/H are partitions on the primary SATA disk, not an independent host or authorised storage. Original Docker stays stopped.

@@ -299,3 +299,8 @@ No six-service change, live cleanup enablement, real database/object/credential 
 ## 2026-11-02 - Clean-lab qualification outcome
 
 **A0 NO-HOST**: no independent available target/licensed full Windows guest proved. Read-only evidence, refreshed public runtime candidates, proposed off-machine Linux plus client-only Sandbox alternative and exact unexecuted gates are in [qualification.json](../tools/clean-install-plan/qualification.json). Owner reports no saved remote target is available/known. Primary G/H capacity is not independent storage approval. No install, boot, trust write, cleanup or merge; PR44 publishes the exact evidence revision for Aether.
+
+
+## 2026-11-02 - Same-PC lab feasibility
+
+**NO-GO for creation/execution** pending original-engine activation prevention, an enforceable Sandbox egress boundary and C/swap capacity. [Local source-bound receipt](LOCAL_ISOLATED_LAB_FEASIBILITY.md) records exact unused H target/budget and18082 new-issuer correction; no runtime/H/trust/data action. Prior2bb qualification hosted8/8 checks now verified successful, not local lab acceptance. New exact receipt goes to Aether through PR44; no protected merge or Owner command requested.

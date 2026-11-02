@@ -465,12 +465,20 @@
       "fresh independent Linux engine and containerd stores; no old disks/backups/credentials/sockets",
       "no host drive mapping, host clipboard, printer, microphone/video or GPU redirection; guest clipboard only",
       "review and enforce network egress only to the named Linux SSH endpoint; deny original host services and unrelated LAN; default Sandbox network is not accepted isolation",
-      "SSH host key pinned from verified console; loopback-only 8443 HTTPS and18081 CDP forwards; no credentials reused",
+      "SSH host key pinned from verified console; loopback-only 8443 HTTPS and18082 CDP forwards; no credentials reused",
       "verify Docker remains stopped before/during/after; any original startup or unexpected interface/store access stops the test",
       "if primary-host Sandbox cannot satisfy these conditions, use Sandbox and the Linux role on a separate spare licensed Pro machine; no claim that either target exists"
     ],
     "cost_scope": "No purchases or paid services. Reuse or borrow Owner-controlled capacity if available. Removes second full Windows VM/media requirement; does not remove the independent Linux target gate.",
-    "reviewed_plan_delta": "This reduced topology and budget are not the accepted two-full-VM160GiB plan. Aether must accept the exact scope change before boot."
+    "reviewed_plan_delta": "This reduced topology and budget are not the accepted two-full-VM160GiB plan. Aether must accept the exact scope change before boot.",
+    "CDP_correction": {
+      "authority": 6574300229,
+      "accepted_qualification_revision": "2bb7d6c2382c00a089774ad9fc20d8ccdb513bc6",
+      "legacy_parameter": 18081,
+      "correct_new_issuer_CDP_port": 18082,
+      "governing_receipt": "docs/LOCAL_ISOLATED_LAB_FEASIBILITY.md",
+      "note": "Parameter correction only. Earlier measured observations unchanged. Topology remains design-only, no publication/trust/boot authority."
+    }
   },
   "installation_and_acceptance_gates": [
     {
