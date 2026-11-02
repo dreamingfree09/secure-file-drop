@@ -61,5 +61,5 @@ class GuardTests(unittest.TestCase):
             m['files'][0]['path']='../x';(root/'manifest.json').write_text(json.dumps(m))
             with self.assertRaises(guard.Stop):guard.verify_manifest(root)
     def test_port_and_budget_policy(self):
-        self.assertEqual(guard.POLICY['new_issuer_CDP_port'],18082);self.assertNotIn('guest-root-trust',guard.POLICY['effects']);self.assertEqual(sum(guard.POLICY['H_reservation_GiB'].values()),256)
+        self.assertEqual(guard.POLICY['new_issuer_CDP_port'],18082);self.assertNotIn('guest-root-trust',guard.POLICY['effects']);self.assertEqual(sum(guard.POLICY['H_reservation_GiB'].values()),168)
 if __name__=='__main__':unittest.main(verbosity=2)

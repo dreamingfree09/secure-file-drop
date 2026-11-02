@@ -525,3 +525,5 @@ Read exact Aether6574300229/body85e348ef65af67c495ef614933893c2538aa25a5f2742640
 ## 2026-11-02 — executable managed Stage 1 lab proposal
 
 Prepared source-bound preflight/staging, native activation-lock canary, two-VM/private-switch configuration, offline guest bootstrap, acceptance ledger and separately committed hosted workflow under SFD-STAGE1-INSTALLATION-20261102. Original runtime/data/trust remain untouched. [Procedure and current NO-GO gates](../docs/STAGE1_INSTALLATION.md); exact final revision, actual CI and independent review belong in the producer PR. C headroom, elevated attachment qualification, media/rights, runtime advisory acceptance and guest-only PKI remain unresolved; no installation or production readiness is claimed.
+
+Stage1 producer correction: the new-lab recovery scope is logical PG/object/issuer backup and tested restore, not an unimplemented full-VM clone. H budget is168GiB including8GiB capacity-only quarantine and16GiB saved guest RAM. Save-only rollback preserves new guests in place; no automatic reserve reuse or original preservation scope reduction. Exact correction and rerun evidence are in the same producer PR.

@@ -143,8 +143,8 @@
     },
     {
       "path": "install-stage1.ps1",
-      "bytes": 19915,
-      "SHA256": "85f069f4e3f89663e93a7d04508ecbbbce76962aea1674a01663ebc2603fd366"
+      "bytes": 19912,
+      "SHA256": "c1dc55c7fa2d6aff2f96406540b2b0d58059933d5c7fb69809f38ea3c94adf18"
     },
     {
       "path": "make-guest-media.ps1",
@@ -163,8 +163,8 @@
     },
     {
       "path": "policy.json",
-      "bytes": 3497,
-      "SHA256": "fd48a6217c954906bdd6804a8fd7192d0a2631bec781b28267704d525fcf51de"
+      "bytes": 3642,
+      "SHA256": "84eec52e08af4a5e368676563c6862b7524af2969476cf75667b940053e404be"
     },
     {
       "path": "prepare-client.ps1",
@@ -229,7 +229,7 @@
     {
       "path": "test_guard.py",
       "bytes": 6668,
-      "SHA256": "c943b2a2ad5cfb545adff6c6720c948ff89313f10bb34eb4537778e1751df113"
+      "SHA256": "6ae4054ad599b13ef177ba1dd3242f3775d6f8ba7cd740f94cf6af40677d6633"
     },
     {
       "path": "TlsProbe.cs",

@@ -28,7 +28,7 @@ selected route. Microsoft documents that a Private switch has no host networking
 | Gate | Actual evidence / required resolution |
 | --- | --- |
 | C headroom | Read-only14:53UTC snapshot9.4766GiB; proposed minimum14GiB before staging and10GiB running. No cleanup or deletion performed/authorised. Safely add capacity or separately approve unrelated space management before GO. |
-| H budget |275.67GiB observed,256GiB initial threshold. Root `H:\SFD-Isolated-Lab-20261102-8df9c4a1` absent. No reservation/write performed. Recheck exact volume and available space at execution. |
+| H budget |275.67GiB observed,168GiB initial threshold. Root `H:\SFD-Isolated-Lab-20261102-8df9c4a1` absent. No reservation/write performed. Recheck exact volume and available space at execution. |
 | Administrative evidence | Current automation token not UAC-elevated; HCS enumeration incomplete, HRESULT0x8037011B (HCS_E_ACCESS_DENIED in installed Microsoft SDK26100 winerror.h). Fresh elevated read-only attachment/compute qualification required. Never start vmcompute merely to make this check pass. Unknown is NO-GO. |
 | Original prevention | Native exclusive-handle canary passed; no real Docker/WSL lock or service change performed. Exact preventive implementation needs Aether review, then explicit informed Owner GO. |
 | OS media / rights | Neither ISO is staged or checksum/signature-qualified. Host Pro is not a guest licence. Microsoft evaluation registration, eligibility, activation/account requirements and offline provisioning compatibility remain unresolved. Do not bypass OOBE/activation or attach Internet temporarily. |
@@ -60,13 +60,18 @@ All seven member hashes/lengths are in [client-members.json](../tools/stage1/cli
 and Windows8GiB/2vCPU/64GiB fixed disk. Host minimum24GiB RAM; recheck available
 RAM, supported CPU, virtualization/SLAT and Windows feature availability before
 installation. Current source does not claim these metadata checks are a boot test.
-The H budget is32+64GiB disks,96GiB new-only recovery reservation,24GiB inputs,
-4GiB bounded logs,16GiB saved guest RAM and20GiB reserve =256GiB. Initial fixed
+The H budget is32+64GiB disks,8GiB capacity-only new-lab logical recovery reserve,24GiB inputs,
+4GiB bounded logs,16GiB saved guest RAM and20GiB reserve =168GiB. Initial fixed
 allocations and recovery reservation must physically allocate; sparse/compressed
-or parented disks fail. Free H must stay at least20GiB. Copying the new lab for
-recovery is allowed only after both guests are saved/off; never copy a live guest
-as a consistent backup claim. The reservation cannot be consumed without checking
-that the replacement copy fits. No original archive is an input.
+or parented disks fail. Free H must stay at least20GiB. The extra8GiB file is capacity-only quarantine, **not a completed backup or a
+whole-VM recovery promise**. It is not automatically consumed/released/overwritten.
+Whole-VM copying is outside this proposal; a saved VM disk alone is not a
+consistent standalone backup. Rollback saves the new guests and preserves their
+files in place. Mandatory logical PG/object/issuer export and restore uses only
+small new-lab synthetic data and the accepted recovery tests; record actual total
+bytes, consistency and hashes, and stop if they exceed the8GiB bound. Authorise
+any later host-custody transfer separately by exact new-owned paths. Original
+archives and VHDX copies are never inputs or part of this reduced *new-lab* budget.
 
 C budget14GiB is a conservative proposal (8GiB OS margin,4GiB servicing estimate,
 2GiB guard/transient), not Microsoft's exact servicing requirement. No WSL swap
@@ -254,9 +259,11 @@ It is a collector, **not an implementation of every scenario**.
    registration is explicit per-user **new guest only**, not automatic. Host
    clipboard is not used for credentials/files/links; Basic VMConnect provides
    display/input only. Record actual human results independently of hosted tests.
-8. Save both new guests, copy only consistent new lab disks/state into reserved
-   recovery area, hash readback, compare preservation snapshot. Do not delete
-   packages or retire old CA. Report remaining production/storage/TLS/capacity
+8. Require the new-lab logical backup/restore results from step6, actual byte
+   totals within8GiB and independent hash readback. Then save both new guests
+   and compare preservation metadata. No full-VM clone or disk-only backup from
+   a saved VM is claimed. The host capacity reservation remains untouched by
+   this controller. Do not delete packages or retire old CA. Report remaining production/storage/TLS/capacity
    gates explicitly. Genuine visual acceptance is never inferred from green CI.
 
 ## Rollback and one proposed Owner decision

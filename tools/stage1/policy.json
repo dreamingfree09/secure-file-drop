@@ -13,12 +13,12 @@
   "author_id": 94070428,
   "max_lease_hours": 8,
   "min_C_free_GiB": 14,
-  "min_H_free_GiB": 256,
+  "min_H_free_GiB": 168,
   "host_RAM_min_GiB": 24,
   "H_reservation_GiB": {
     "Linux_fixed": 32,
     "Windows_fixed": 64,
-    "new_only_recovery": 96,
+    "new_only_recovery": 8,
     "inputs_including_ISO_copies": 24,
     "bounded_evidence_logs": 4,
     "reserve": 20,
@@ -98,5 +98,6 @@
     "Sandbox": 0
   },
   "min_C_run_free_GiB": 10,
-  "preparation_input_root": "E:\\PROGRAMMING PROJECTS\\secure-file-drop-quality-closeout-20261015-codex\\.git\\sfd-stage1-installation-20261102-64e8b793\\inputs"
+  "preparation_input_root": "E:\\PROGRAMMING PROJECTS\\secure-file-drop-quality-closeout-20261015-codex\\.git\\sfd-stage1-installation-20261102-64e8b793\\inputs",
+  "recovery_scope": "8GiB capacity-only quarantine for small new-lab logical exports; not a whole-VM backup or automatic copy/release authority"
 }

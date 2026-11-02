@@ -86,7 +86,7 @@ function Get-AdmitFacts($Ownership,$Guardian){
  # Actual packet denial and guest route observations remain an acceptance gate.
  $f.no_default_gateway_DNS=$b.guest_network_payload_verified-eq$true;$f.no_external_route=$f.private_switch_verified-and$f.no_management_OS_adapter-and$f.no_extra_guest_NICs
  $payload=@($b.files|Where-Object{$_.role-eq'public_payload_iso'});$f.guest_payload_verified=($payload.Count-eq1-and(Get-Hash (Join-Path $script:Policy.root ('inputs\'+[IO.Path]::GetFileName($payload[0].path))))-eq$payload[0].sha256)
- $recovery=Join-Path $script:Policy.root 'recovery-reservation.bin';$f.H_recovery_reservation_verified=((Get-Item -LiteralPath $recovery).Length-eq96GB-and[Sfd.Stage1.HostNative]::AllocatedBytes($recovery)-ge96GB)
+ $recovery=Join-Path $script:Policy.root 'recovery-reservation.bin';$f.H_recovery_reservation_verified=((Get-Item -LiteralPath $recovery).Length-eq8GB-and[Sfd.Stage1.HostNative]::AllocatedBytes($recovery)-ge8GB)
  return $f
 }
 if($Phase-eq'Plan'){
@@ -150,7 +150,7 @@ if($Phase-eq'CreateGuests'){
  # Never overwrite the initial receipt; the two-VM record is a separate immutable generation.
  New-File (Join-Path $r 'guests.json') ($ownership|ConvertTo-Json -Depth 8)
  $reserve=[IO.File]::Open((Join-Path $r 'recovery-reservation.bin'),[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
- try{$buffer=[byte[]]::new(1MB);for($n=0;$n-lt98304;$n++){$reserve.Write($buffer,0,$buffer.Length)};$reserve.Flush($true)}finally{$reserve.Dispose()}
+ try{$buffer=[byte[]]::new(1MB);for($n=0;$n-lt8192;$n++){$reserve.Write($buffer,0,$buffer.Length)};$reserve.Flush($true)}finally{$reserve.Dispose()}
  [ordered]@{state='GUESTS_CREATED_OFF';guests=$ownership.guests;boot_authorised=$false}|ConvertTo-Json -Depth 8;return
 }
 $ownership=Read-Strict ([IO.File]::ReadAllText((Join-Path $r 'guests.json')))
