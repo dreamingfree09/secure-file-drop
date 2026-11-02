@@ -74,7 +74,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
   candidate-runtime:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v6
