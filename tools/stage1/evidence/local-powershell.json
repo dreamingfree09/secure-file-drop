@@ -1,0 +1,9 @@
+{
+  "schema": "SFD_STAGE1_POWERSHELL_TEST_V1",
+  "all_scripts_parse": true,
+  "Plan_no_mutation": true,
+  "no_approval_stops_before_collection": true,
+  "Framework48_probe_compiles": true,
+  "TLS_probe_executed": false,
+  "host_setting_changed": false
+}

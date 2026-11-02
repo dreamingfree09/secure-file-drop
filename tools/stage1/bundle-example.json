@@ -1,0 +1,12 @@
+{
+  "schema": "SFD_STAGE1_INPUT_BUNDLE_V1",
+  "work_id": "SFD-STAGE1-INSTALLATION-20261102",
+  "complete": false,
+  "signed_media_verified": false,
+  "windows_licence_verified": false,
+  "runtime_acceptance_verified": false,
+  "guest_network_payload_verified": false,
+  "runtime_CI_run": null,
+  "files": [],
+  "blocking": "No install-ready media/security bundle currently exists. Do not set booleans without independent proof and exact Aether/Owner acceptance."
+}

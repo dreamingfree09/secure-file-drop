@@ -1,0 +1,240 @@
+{
+  "schema": "SFD_STAGE1_SOURCE_MANIFEST_V1",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 14,
+      "SHA256": "a79691a93b46e49ce460c26ef22afcc03d6eca1e63bf2edbc20e96159510f6c9"
+    },
+    {
+      "path": "acceptance.json",
+      "bytes": 2633,
+      "SHA256": "6bc4fda1ec4efd7fb003746cb130c644a5c7311110cff60da9a404982d57f2b0"
+    },
+    {
+      "path": "acceptance.py",
+      "bytes": 1613,
+      "SHA256": "fe716808d0ce01a0c53acb0d97fa44d9a315348456c3addb299e511904ae8ae6"
+    },
+    {
+      "path": "ActivationGuard.cs",
+      "bytes": 5767,
+      "SHA256": "9ebd412bebdd45a3fe92fec9906bdcd1e1eb77953f5f80e961920eab65e569e2"
+    },
+    {
+      "path": "audit-rustfs.py",
+      "bytes": 2658,
+      "SHA256": "b3c5b3e167c86cd4b47e7ecbaa04320c49a86d22975bbdc4c2e8d44eabcda14e"
+    },
+    {
+      "path": "bundle-example.json",
+      "bytes": 465,
+      "SHA256": "e1d300177c48e482cc2e0ac8bf40bbf9d0a574d40226b2c1486137371caaa9bc"
+    },
+    {
+      "path": "ci-runtime.py",
+      "bytes": 4581,
+      "SHA256": "a6ebb43323171fe9029e8aa74c71dfe2cf57cc00355bfd252a2a8aa7c08d389b"
+    },
+    {
+      "path": "client-members.json",
+      "bytes": 993,
+      "SHA256": "16c326afcc16d63667c8e07c8e4760606b3641696f4f601eb903341c81a376a2"
+    },
+    {
+      "path": "collect-host.ps1",
+      "bytes": 6716,
+      "SHA256": "19da07ff8b2794e5c7323895a8dfb8cdaa2cc2de83e713ffa8acdc2dd68c5aed"
+    },
+    {
+      "path": "common.ps1",
+      "bytes": 7424,
+      "SHA256": "d0a97db5ab21b20b741ee6cac0a5d641fa3f43b63d5bb199d1b6e211265d11f3"
+    },
+    {
+      "path": "compose.yml",
+      "bytes": 2621,
+      "SHA256": "d3146b4f08f73314d71280ba1e62ba241a2ca4ace1b622af006202d6e2e49033"
+    },
+    {
+      "path": "Dockerfile.backend",
+      "bytes": 965,
+      "SHA256": "f25faf7addafba81f5909764f5d4a72989d7f09ad59d9bdf39c6294588b3b70d"
+    },
+    {
+      "path": "Dockerfile.rustfs-fixture",
+      "bytes": 483,
+      "SHA256": "95fd4c5f0fd1557c9099519e614f4c163e5ab06fff14e62637dfb1816d9e8ff0"
+    },
+    {
+      "path": "evidence/authority.json",
+      "bytes": 368,
+      "SHA256": "5ba8813991620090ecce88a42b2835247999be0e2f2a2c13a591729d1cf1990a"
+    },
+    {
+      "path": "evidence/local-native.json",
+      "bytes": 319,
+      "SHA256": "4884c8d96b53bf34abb6a0d4a7ec3bb4ed3736e0ad41247d9492a051dffcc1b0"
+    },
+    {
+      "path": "evidence/local-powershell.json",
+      "bytes": 254,
+      "SHA256": "d4577107901709bab1f34bc6a43998cd9e0e55a5f33f03452b60745c9d478106"
+    },
+    {
+      "path": "evidence/local-synthetic-final.json",
+      "bytes": 156,
+      "SHA256": "cb6602e81195fd80d5c86cfa726701e9d1c92aef3c95f5c307c5015a852ab9ca"
+    },
+    {
+      "path": "evidence/local-synthetic.json",
+      "bytes": 156,
+      "SHA256": "8dbd8cee8eda00ef6cf64d90bb135ac824aff2376d7fa484dc8dd2cec5e5595c"
+    },
+    {
+      "path": "evidence/rustfs-advisory-records.json",
+      "bytes": 37335,
+      "SHA256": "f33bef7c04a4c260229203e62ad5a982104d762ebd9f65364df3e3888f55ac72"
+    },
+    {
+      "path": "evidence/rustfs-SBOM-OSV.json",
+      "bytes": 4742,
+      "SHA256": "8aeb1ac4b098d7a74c9d866aa7e717d2aa216d54cbac92aca39090af6a5759df"
+    },
+    {
+      "path": "fixture-client/go.mod",
+      "bytes": 1213,
+      "SHA256": "3a68a50d3626f3a57579dcd0afd97aa8070b7216649b514ae5dd410795c42f98"
+    },
+    {
+      "path": "fixture-client/go.sum",
+      "bytes": 10580,
+      "SHA256": "486602e4ef2fa3d5ec3e1d8c8931c2d8589f82e8ab80be840918c5017d7b6c18"
+    },
+    {
+      "path": "fixture-client/main.go",
+      "bytes": 1726,
+      "SHA256": "4a155629237e0027c436f5a559fbb0af731996a60480ceeffd107c9fe6dfc1fc"
+    },
+    {
+      "path": "guard.py",
+      "bytes": 8843,
+      "SHA256": "57f0c20ef2fc6cd320dc9537f2199bd681de107b6ab38db7945a7fcf7c889dbf"
+    },
+    {
+      "path": "guest-linux.sh",
+      "bytes": 5961,
+      "SHA256": "5e7ee4b025b36fe6301491df26c06157bd67cdd2675b6e9c9859a06ef968ee2a"
+    },
+    {
+      "path": "guest-windows.ps1",
+      "bytes": 3833,
+      "SHA256": "a79dd3a541dc5871c87734c0be3b8bb32ee54ce426155957833f4766819ba3bc"
+    },
+    {
+      "path": "HostNative.cs",
+      "bytes": 3195,
+      "SHA256": "0abee4098098a6cc4440472567b1a96adc14bc01926e7ba73093688c39be48ee"
+    },
+    {
+      "path": "install-stage1.ps1",
+      "bytes": 19791,
+      "SHA256": "25254ddbc0da90731d799696feea15c8899468707c3e051f330a41f2751d00ca"
+    },
+    {
+      "path": "make-guest-media.ps1",
+      "bytes": 1755,
+      "SHA256": "afc06fb29a120410ad61770f808d1d616876d00cad4f7ca42ddc31201d78af40"
+    },
+    {
+      "path": "manifest.py",
+      "bytes": 924,
+      "SHA256": "19044afb4237ec3646af699503621a5368e305da84abe3a205e786f0d793c10b"
+    },
+    {
+      "path": "packet.py",
+      "bytes": 624,
+      "SHA256": "26b8b19e4ac2b6f40aef07cd928389b5b1baa3b511065a3a0e54be7aaa1eb320"
+    },
+    {
+      "path": "policy.json",
+      "bytes": 3497,
+      "SHA256": "fd48a6217c954906bdd6804a8fd7192d0a2631bec781b28267704d525fcf51de"
+    },
+    {
+      "path": "prepare-client.ps1",
+      "bytes": 2212,
+      "SHA256": "9e650c7d4e5172bf55819853ccd173554e758317a83833a496528a0a370a6384"
+    },
+    {
+      "path": "proxy.yml",
+      "bytes": 471,
+      "SHA256": "f3c1b8105dc71cd9a001ec5a356ac58508208b6d598293c6ac26c96c8f1a7f6b"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2493,
+      "SHA256": "593eaec68b9f0bd04727f0754ea7881d71189af172649f173607d8c724bc3aed"
+    },
+    {
+      "path": "run-tests.py",
+      "bytes": 897,
+      "SHA256": "e44abf79726e15f670d776419e42ccaac1e90fa84f9c516c5c0fab1ca98a5f5d"
+    },
+    {
+      "path": "runtime-lock.json",
+      "bytes": 3088,
+      "SHA256": "761011eec4bf6cb3e589727beb019dc593b9fd85364fe98577e77a4f2efbe0f5"
+    },
+    {
+      "path": "rustfs-fixture.sh",
+      "bytes": 379,
+      "SHA256": "ce36b073382c6babf73dbd4804f0c89a05fd2a6a61f45b4f1cc4f1fd18776846"
+    },
+    {
+      "path": "save-lab.ps1",
+      "bytes": 1488,
+      "SHA256": "6f84302e1d6faaf55f0d09f71fe08802b3501d96273cd02f39d3d81e453ac7f4"
+    },
+    {
+      "path": "stage.py",
+      "bytes": 2488,
+      "SHA256": "3db8ea16c0c25a6a505301dab354d2f3cc13115b07416e471b5a46ecf1b337d6"
+    },
+    {
+      "path": "test-compose.py",
+      "bytes": 1317,
+      "SHA256": "ab146537e8b326c285a6274c1ded220a32e34ee73631836845f482f831ae090f"
+    },
+    {
+      "path": "test-native.ps1",
+      "bytes": 2576,
+      "SHA256": "9442021baf39e03755058e5c0c5c2327ab59ef23a9c93e16ed0fc01e2daff1db"
+    },
+    {
+      "path": "test-powershell.ps1",
+      "bytes": 1449,
+      "SHA256": "a3b673c733f0576d9633d65a8f4907b3a7d30c06413166785b3d6b4096b76399"
+    },
+    {
+      "path": "test_configs.py",
+      "bytes": 2898,
+      "SHA256": "c0bad0efc30d7dc3d7a3a658e4ed24a3edc387430e0bf2321dec5a2c8fcba669"
+    },
+    {
+      "path": "test_guard.py",
+      "bytes": 6668,
+      "SHA256": "c943b2a2ad5cfb545adff6c6720c948ff89313f10bb34eb4537778e1751df113"
+    },
+    {
+      "path": "TlsProbe.cs",
+      "bytes": 830,
+      "SHA256": "fc1aa0ffcff94fa8c47ef04c5e51260e769e2525e6bc6194f89744f6d5c74831"
+    },
+    {
+      "path": "verify-import.py",
+      "bytes": 892,
+      "SHA256": "4958cdcc7fb42eb6c6c1996fceb5d998994daef8941e2e814b88cc308b88ede4"
+    }
+  ]
+}

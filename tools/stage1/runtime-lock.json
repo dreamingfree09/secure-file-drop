@@ -1,0 +1,69 @@
+{
+  "schema": "SFD_STAGE1_RUNTIME_LOCK_V1",
+  "platform": "linux/amd64",
+  "app_source": "61195434bee5f9221a6f55469c719cb360504ea9",
+  "versions": {
+    "go": "1.26.10",
+    "alpine": "3.24",
+    "postgres": "16",
+    "traefik": "3.7.17",
+    "rustfs": "1.0.4",
+    "DockerEngine": "29.8.2",
+    "containerd": "2.4.2"
+  },
+  "images": {
+    "go": "docker.io/library/golang@sha256:d1f3216ef30257c850cc136ba42a359ccd9d3e75f19b2c276e520c0b4ef327ce",
+    "alpine": "docker.io/library/alpine@sha256:c26612752c78b18faacd63c7d50f4592c2e7b0f25e0e20e82bd74e465c57ab0d",
+    "postgres": "docker.io/library/postgres@sha256:cbf42f0edc946c0bc1b8eeed62403734e1f25dc67a3491455d07a92fdb558b28",
+    "traefik": "docker.io/library/traefik@sha256:c999a937a1bb51ba36c79adf2c9db1d1bb196896b66d524d30ef4945606d565f",
+    "rustfs": "docker.io/rustfs/rustfs@sha256:e287e99762a4a3e7b706526e01f2ff755f67db165e9be9f6b907adc6fb6d6ee1"
+  },
+  "security_acceptance": "PENDING exact built-image/package/SBOM/advisory receipt. Metadata pins are not approval.",
+  "Engine_packages": {
+    "containerd.io": {
+      "Package": "containerd.io",
+      "Version": "2.4.2-3~ubuntu.24.04~noble",
+      "Architecture": "amd64",
+      "Filename": "dists/noble/pool/stable/amd64/containerd.io_2.4.2-3~ubuntu.24.04~noble_amd64.deb",
+      "SHA256": "f811ab57d1f4bb0cce19df7d526da8c711d8ebea0447cc83da1999188e664122",
+      "Size": "23271468"
+    },
+    "docker-buildx-plugin": {
+      "Package": "docker-buildx-plugin",
+      "Version": "0.38.1-1~ubuntu.24.04~noble",
+      "Architecture": "amd64",
+      "Filename": "dists/noble/pool/stable/amd64/docker-buildx-plugin_0.38.1-1~ubuntu.24.04~noble_amd64.deb",
+      "SHA256": "642e9a8a0d115a8a57ad7045a4c7c2561522331197f0c087a762de1b72591672",
+      "Size": "17800928"
+    },
+    "docker-ce-cli": {
+      "Package": "docker-ce-cli",
+      "Version": "5:29.8.2-1~ubuntu.24.04~noble",
+      "Architecture": "amd64",
+      "Filename": "dists/noble/pool/stable/amd64/docker-ce-cli_29.8.2-1~ubuntu.24.04~noble_amd64.deb",
+      "SHA256": "008b3b49b474136063fe0fbe8999b0e77c3e8556d7f7de21f98f05715e2f76ba",
+      "Size": "17549632"
+    },
+    "docker-ce": {
+      "Package": "docker-ce",
+      "Version": "5:29.8.2-1~ubuntu.24.04~noble",
+      "Architecture": "amd64",
+      "Filename": "dists/noble/pool/stable/amd64/docker-ce_29.8.2-1~ubuntu.24.04~noble_amd64.deb",
+      "SHA256": "b53a44a6ff13277710978adbdbfea27fcdd7ac9f198017e733d2b8dc2343f8dc",
+      "Size": "24358876"
+    },
+    "docker-compose-plugin": {
+      "Package": "docker-compose-plugin",
+      "Version": "5.6.1-1~ubuntu.24.04~noble",
+      "Architecture": "amd64",
+      "Filename": "dists/noble/pool/stable/amd64/docker-compose-plugin_5.6.1-1~ubuntu.24.04~noble_amd64.deb",
+      "SHA256": "9725be1df7fd5ccc6b21ac24112885896c8d134345e3f4aa20b3c2064ef4620e",
+      "Size": "8083388"
+    }
+  },
+  "RustFS_SBOM": {
+    "URL": "https://github.com/rustfs/rustfs/releases/download/1.0.4/rustfs-1.0.4.sbom.cdx.json",
+    "SHA256": "b328a37f6535773117332208f6e9c0b89c4cbb34d61452de062c039a9574213e",
+    "bytes": 342997
+  }
+}

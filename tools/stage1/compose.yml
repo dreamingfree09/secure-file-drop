@@ -1,0 +1,76 @@
+# New Linux guest only; render/validate first. No historical root Compose reuse.
+name: sfdlab64e8b793
+x-safe: &safe
+  restart: "no"
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  logging:
+    driver: json-file
+    options: {max-size: 1m, max-file: "3"}
+  networks: [private]
+services:
+  postgres:
+    <<: *safe
+    image: ${SFD_LAB_POSTGRES_IMAGE:?exact imported config digest required}
+    pull_policy: never
+    # PostgreSQL entrypoint needs its own namespace user-switch/chown capability.
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    env_file: [/srv/sfd-lab/private/postgres.env]
+    volumes: [pg:/var/lib/postgresql/data]
+    mem_limit: 768m
+    pids_limit: 128
+  storage:
+    <<: *safe
+    image: ${SFD_LAB_STORAGE_IMAGE:?exact imported config digest required}
+    pull_policy: never
+    env_file: [/srv/sfd-lab/private/storage.env]
+    environment:
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ENABLE: "false"
+      RUSTFS_FTP_ENABLE: "false"
+      RUSTFS_FTPS_ENABLE: "false"
+      RUSTFS_SFTP_ENABLE: "false"
+      RUSTFS_WEBDAV_ENABLE: "false"
+      RUSTFS_OBS_LOG_DIRECTORY: ""
+    command: [/data]
+    volumes: [objects:/data]
+    mem_limit: 1536m
+    pids_limit: 256
+  backend:
+    <<: *safe
+    image: ${SFD_LAB_BACKEND_IMAGE:?exact imported backend config digest required}
+    pull_policy: never
+    env_file: [/srv/sfd-lab/private/backend.env]
+    environment:
+      SFD_ADDR: :8080
+      SFD_PUBLIC_BASE_URL: https://localhost:8443
+      SFD_BASE_URL: https://localhost:8443
+      SFD_HASH_TOOL: /app/sfd-hash
+      SFD_CLEANUP_ENABLED: "false"
+      SFD_BACKUP_ENABLED: "true"
+      SFD_BACKUP_RETENTION_DAYS: "30"
+      SFD_BACKUP_INTERVAL: 24h
+      SFD_BACKUP_DIR: /var/backups/sfd
+      SFD_MAX_UPLOAD_BYTES: "1048576"
+      SFD_MAX_REQUEST_BYTES: "2097152"
+    volumes: [backups:/var/backups/sfd]
+    mem_limit: 512m
+    pids_limit: 128
+  proxy:
+    <<: *safe
+    image: ${SFD_LAB_PROXY_IMAGE:?exact imported config digest required}
+    pull_policy: never
+    command: [--entrypoints.websecure.address=:8443, --providers.file.filename=/fixture/proxy.yml, --api.dashboard=false, --log.level=ERROR]
+    ports: [172.31.250.1:8443:8443]
+    volumes:
+      - /srv/sfd-lab/public/proxy.yml:/fixture/proxy.yml:ro
+      - /srv/sfd-lab/public/localhost.crt:/fixture/localhost.crt:ro
+      - /srv/sfd-lab/private/localhost.key:/fixture/localhost.key:ro
+    mem_limit: 128m
+    pids_limit: 64
+networks:
+  private: {internal: true}
+volumes:
+  pg: {labels: {sfd.stage1: 64e8b793}}
+  objects: {labels: {sfd.stage1: 64e8b793}}
+  backups: {labels: {sfd.stage1: 64e8b793}}

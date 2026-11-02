@@ -1,0 +1,102 @@
+{
+  "schema": "SFD_STAGE1_POLICY_V1",
+  "work_id": "SFD-STAGE1-INSTALLATION-20261102",
+  "lab_id": "sfd-stage1-64e8b793",
+  "root": "H:\\SFD-Isolated-Lab-20261102-8df9c4a1",
+  "repository": "dreamingfree09/secure-file-drop",
+  "accepted_feasibility": "8a469d7c04de964254b9ee7021ba46812eb1443d",
+  "application": "61195434bee5f9221a6f55469c719cb360504ea9",
+  "PKI": "1805a108855817d7b36220a6253684bd6a018fb3",
+  "client_source": "c320861536914623ea22f28c1d4ea156d4c2132a",
+  "client_zip_SHA256": "f38b9f82dda5c0320c17a3d0a04de924c958750f8975be28d3914d0ec8b90c9e",
+  "client_exe_SHA256": "8f98bd9dca095c827e8ccf38000ae28fecf45df60ec10c9b484ed479748bb28b",
+  "author_id": 94070428,
+  "max_lease_hours": 8,
+  "min_C_free_GiB": 14,
+  "min_H_free_GiB": 256,
+  "host_RAM_min_GiB": 24,
+  "H_reservation_GiB": {
+    "Linux_fixed": 32,
+    "Windows_fixed": 64,
+    "new_only_recovery": 96,
+    "inputs_including_ISO_copies": 24,
+    "bounded_evidence_logs": 4,
+    "reserve": 20,
+    "new_guest_saved_memory": 16
+  },
+  "guests": {
+    "linux": {
+      "name": "SFD-Lab-Linux-64e8b793",
+      "RAM_GiB": 8,
+      "vCPU": 2,
+      "disk_GiB": 32,
+      "IPv4": "172.31.250.1",
+      "MAC": "00155DA1B701",
+      "secure_boot": "MicrosoftUEFICertificateAuthority"
+    },
+    "windows": {
+      "name": "SFD-Lab-Windows-64e8b793",
+      "RAM_GiB": 8,
+      "vCPU": 2,
+      "disk_GiB": 64,
+      "IPv4": "172.31.250.2",
+      "MAC": "00155DA1B702",
+      "secure_boot": "MicrosoftWindows"
+    }
+  },
+  "switch": "SFD-Lab-Private-64e8b793",
+  "prefix_length": 30,
+  "new_issuer_CDP_port": 18082,
+  "legacy_CDP_port_forbidden": 18081,
+  "preventive_services": [
+    "com.docker.service",
+    "WSLService",
+    "LxssManager"
+  ],
+  "barrier": "Persistent Disabled/Stopped WSL/Desktop SCM services plus a verified native guardian holding exclusive read handles to approved installed activation executables. Ordinary maintenance-start prevention, not a hostile-host/admin security boundary.",
+  "effects": [
+    "new-private-H-root",
+    "durable-original-service-inhibit-and-leased-binary-locks",
+    "enable-HyperV-NoRestart",
+    "new-private-switch",
+    "two-new-fixed-guest-disks",
+    "new-guest-local-vTPM",
+    "boot-only-two-new-guests",
+    "new-offline-guest-install-payloads"
+  ],
+  "reserved_effects": [
+    "host-trust",
+    "guest-root-trust",
+    "old-root-retirement",
+    "original-engine-start",
+    "old-disk-mount",
+    "delete",
+    "merge",
+    "unattended-host-reboot",
+    "barrier-release"
+  ],
+  "windows_media": {
+    "edition": "Windows11 Enterprise LTSC2024 evaluation x64",
+    "official_source": "https://www.microsoft.com/en-us/evalcenter/evaluate-windows-11-enterprise",
+    "SHA256": null,
+    "evaluation_terms_accepted": false,
+    "note": "Media/rights unresolved. No registration/personal data/terms acceptance occurred. No licence inferred from host Pro."
+  },
+  "linux_media": {
+    "edition": "Ubuntu24.04 LTS Server amd64",
+    "official_source": "https://releases.ubuntu.com/24.04/",
+    "SHA256": null,
+    "signed_checksum_verified": false
+  },
+  "media_and_runtime_execution_approved": false,
+  "min_H_run_free_GiB": 20,
+  "C_budget_GiB": {
+    "OS_reserved_headroom": 8,
+    "HyperV_servicing_estimate": 4,
+    "guard_transient": 2,
+    "WSL_swap": 0,
+    "Sandbox": 0
+  },
+  "min_C_run_free_GiB": 10,
+  "preparation_input_root": "E:\\PROGRAMMING PROJECTS\\secure-file-drop-quality-closeout-20261015-codex\\.git\\sfd-stage1-installation-20261102-64e8b793\\inputs"
+}
