@@ -1,0 +1,113 @@
+name: Stage 1 guarded lab proposal
+on:
+  push:
+    branches: [codex/sfd-stage1-installation-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: sfd-stage1-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  safeguards-linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.10'
+      - name: Source manifest and fail-closed regressions
+        run: |
+          python3 -I -B tools/stage1/manifest.py
+          python3 -I -B tools/stage1/run-tests.py --output "$RUNNER_TEMP/stage1-synthetic.json"
+          bash -n tools/stage1/guest-linux.sh
+          sh -n tools/stage1/rustfs-fixture.sh
+          python3 scripts/check-doc-links.py
+      - name: Offline Compose render only
+        run: python3 -I -B tools/stage1/test-compose.py
+      - name: Fixture client format, vet and build
+        working-directory: tools/stage1/fixture-client
+        run: |
+          gofmt main.go > "$RUNNER_TEMP/fixture-gofmt.go"
+          diff -u main.go "$RUNNER_TEMP/fixture-gofmt.go"
+          go vet ./...
+          go build -o "$RUNNER_TEMP/sfd-stage1-fixture-client" .
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage1-source-synthetic-evidence
+          path: |
+            ${{ runner.temp }}/stage1-synthetic.json
+            ${{ runner.temp }}/fixture-gofmt.go
+          if-no-files-found: error
+          retention-days: 14
+  safeguards-windows:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+      - name: Windows source and native canary only
+        shell: powershell
+        run: |
+          python -I -B tools/stage1/manifest.py
+          if ($LASTEXITCODE -ne 0) { throw 'Manifest' }
+          python -I -B tools/stage1/run-tests.py --output "$env:RUNNER_TEMP\stage1-synthetic-windows.json"
+          if ($LASTEXITCODE -ne 0) { throw 'Synthetic' }
+          & ./tools/stage1/test-native.ps1 | Set-Content -Encoding UTF8 "$env:RUNNER_TEMP\stage1-native.json"
+          & ./tools/stage1/test-powershell.ps1 | Set-Content -Encoding UTF8 "$env:RUNNER_TEMP\stage1-powershell.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage1-native-windows-evidence
+          path: |
+            ${{ runner.temp }}/stage1-synthetic-windows.json
+            ${{ runner.temp }}/stage1-native.json
+            ${{ runner.temp }}/stage1-powershell.json
+          if-no-files-found: error
+          retention-days: 14
+  candidate-runtime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@v6
+        with:
+          ref: 61195434bee5f9221a6f55469c719cb360504ea9
+          path: frozen-app
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.10'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Prepare isolated browser and native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools libssl-dev
+          npm ci --prefix frozen-app/tests/browser --ignore-scripts
+          node frozen-app/tests/browser/node_modules/playwright-core/cli.js install --with-deps --only-shell chromium
+      - name: Real candidate runtime and two PostgreSQL layouts
+        run: python3 -I -B tools/stage1/ci-runtime.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stage1-candidate-runtime-public-evidence
+          path: |
+            ${{ runner.temp }}/sfd-stage1-runtime/go-results.txt
+            ${{ runner.temp }}/sfd-stage1-runtime/runtime-receipt.json
+            ${{ runner.temp }}/sfd-stage1-runtime/runtime-images.tar
+            ${{ runner.temp }}/sfd-stage1-runtime/sfd-auth-fixture/result.json
+            ${{ runner.temp }}/sfd-stage1-runtime/sfd-auth-fixture-bytea/result.json
+          if-no-files-found: error
+          retention-days: 14
