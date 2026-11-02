@@ -50,6 +50,9 @@ $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 [Sfd.Stage1.HostNative]::NewPrivateDirectory($fixture,$sid)
 $repo=Join-Path $fixture 'repo';$lab=Join-Path $fixture 'new-lab';$empty=Join-Path $fixture 'empty-hooks'
 foreach($dir in @($repo,$lab,$empty,(Join-Path $repo 'tools'),(Join-Path $repo 'tools\stage1'),(Join-Path $lab 'linux'),(Join-Path $lab 'windows'))){[Sfd.Stage1.HostNative]::NewPrivateDirectory($dir,$sid)}
+# Hidden metadata is valid; only the NEW synthetic lab directory is marked.
+$labItem=Get-Item -Force -LiteralPath $lab;$labItem.Attributes=$labItem.Attributes-bor[IO.FileAttributes]::Hidden
+Check (((Get-Item -Force -LiteralPath $lab).Attributes-band[IO.FileAttributes]::Hidden)-ne0) 'hidden new fixture exercises real metadata checks'
 function FixtureGit([string[]]$Arguments){
  $out=& git -c "core.hooksPath=$empty" -c "init.templateDir=$empty" -c 'user.name=SFD synthetic fixture' -c 'user.email=fixture@example.invalid' -c 'commit.gpgsign=false' -C $repo @Arguments 2>&1
  if($LASTEXITCODE-ne0){throw 'Synthetic git command failed'};return $out

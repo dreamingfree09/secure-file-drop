@@ -16,11 +16,11 @@ function Assert-OwnRoot($Ownership){
  $acl=Get-Acl -LiteralPath $script:Policy.root;$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
  if($acl.GetOwner([Security.Principal.SecurityIdentifier]).Value-ne$sid-or-not$acl.AreAccessRulesProtected){throw 'STOP:root-custody'}
  foreach($r in $acl.Access){if($r.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value-notin@($sid,'S-1-5-18')){throw 'STOP:root-broad-access'}}
- if((Get-Item -LiteralPath $script:Policy.root).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:root-reparse'}
+ if((Get-Item -Force -LiteralPath $script:Policy.root).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:root-reparse'}
 }
 function Get-ActivationTargets {
  $paths=@("$env:ProgramFiles\Docker\Docker\Docker Desktop.exe","$env:ProgramFiles\Docker\Docker\com.docker.backend.exe","$env:ProgramFiles\Docker\Docker\resources\com.docker.backend.exe","$env:ProgramFiles\Docker\Docker\com.docker.service","$env:ProgramFiles\Docker\Docker\com.docker.service.exe","$env:ProgramFiles\WSL\wsl.exe","$env:ProgramFiles\WSL\wslservice.exe","$env:ProgramFiles\WSL\wslhost.exe","$env:WINDIR\System32\wsl.exe")
- $out=@();foreach($p in $paths){if(Test-Path -LiteralPath $p){$x=Get-Item -LiteralPath $p;if($x.Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:activation-target-reparse'};$out+=@{path=$p;sha256=Get-Hash $p}}}
+ $out=@();foreach($p in $paths){if(Test-Path -LiteralPath $p){$x=Get-Item -Force -LiteralPath $p;if($x.Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:activation-target-reparse'};$out+=@{path=$p;sha256=Get-Hash $p}}}
  if(@($out|Where-Object{[IO.Path]::GetFileName($_.path)-eq'Docker Desktop.exe'}).Count-ne1-or@($out|Where-Object{[IO.Path]::GetFileName($_.path)-eq'com.docker.backend.exe'}).Count-lt1){throw 'STOP:activation-inventory'}
  return $out
 }
@@ -73,7 +73,7 @@ function Get-AdmitFacts($Ownership,$Guardian){
   $adapters=@(Get-VMNetworkAdapter -VM $v);if($adapters.Count-ne1-or$adapters[0].SwitchId-ne$s.Id-or$adapters[0].MacAddress-ne$spec.MAC-or$adapters[0].MacAddressSpoofing-ne'Off'-or$adapters[0].DhcpGuard-ne'On'-or$adapters[0].RouterGuard-ne'On'){$f.no_extra_guest_NICs=$false}
   if($v.AutomaticStartAction-ne'Nothing'){$f.vm_autostart_nothing=$false};if($v.CheckpointType-ne'Disabled'-or$v.AutomaticCheckpointsEnabled){$f.checkpoint_off=$false}
   $drives=@(Get-VMHardDiskDrive -VM $v);if($drives.Count-ne1){throw 'STOP:guest-disk-count'}
-  foreach($drive in $drives){if($drive.Path-ne$record.disk){throw 'STOP:guest-disk-identity'};Assert-NewPath $drive.Path;if($null-ne$drive.DiskNumber){throw 'STOP:passthrough'};$disk=Get-VHD -Path $drive.Path;if([Sfd.Stage1.HostNative]::AllocatedBytes($drive.Path)-lt$disk.Size){throw 'STOP:disk-allocation'};if((Get-Item -LiteralPath $drive.Path).Attributes-band([IO.FileAttributes]::SparseFile-bor[IO.FileAttributes]::Compressed)){throw 'STOP:unreserved-disk'};if($disk.VhdType-ne'Fixed'-or$disk.ParentPath-or$disk.Size-ne($spec.disk_GiB*1GB)){$f.fixed_disks_reserved=$false}}
+  foreach($drive in $drives){if($drive.Path-ne$record.disk){throw 'STOP:guest-disk-identity'};Assert-NewPath $drive.Path;if($null-ne$drive.DiskNumber){throw 'STOP:passthrough'};$disk=Get-VHD -Path $drive.Path;if([Sfd.Stage1.HostNative]::AllocatedBytes($drive.Path)-lt$disk.Size){throw 'STOP:disk-allocation'};if((Get-Item -Force -LiteralPath $drive.Path).Attributes-band([IO.FileAttributes]::SparseFile-bor[IO.FileAttributes]::Compressed)){throw 'STOP:unreserved-disk'};if($disk.VhdType-ne'Fixed'-or$disk.ParentPath-or$disk.Size-ne($spec.disk_GiB*1GB)){$f.fixed_disks_reserved=$false}}
   $media=@($b.files|Where-Object{$_.role-in@(($record.role+'_iso'),'public_payload_iso')}|ForEach-Object{Join-Path $script:Policy.root ('inputs\'+[IO.Path]::GetFileName($_.path))});$media+=@($record.identity_iso)
   $dvd=@(Get-VMDvdDrive -VM $v);if($dvd.Count-ne3-or@($dvd|Where-Object{$_.Path-notin$media}).Count-ne0){throw 'STOP:guest-media-identity'}
   foreach($m in $b.files){$copy=Join-Path $script:Policy.root ('inputs\'+[IO.Path]::GetFileName($m.path));Assert-NewPath $copy;if((Get-Hash $copy)-ne$m.sha256){throw 'STOP:input-drift'}}
@@ -86,7 +86,7 @@ function Get-AdmitFacts($Ownership,$Guardian){
  # Actual packet denial and guest route observations remain an acceptance gate.
  $f.no_default_gateway_DNS=$b.guest_network_payload_verified-eq$true;$f.no_external_route=$f.private_switch_verified-and$f.no_management_OS_adapter-and$f.no_extra_guest_NICs
  $payload=@($b.files|Where-Object{$_.role-eq'public_payload_iso'});$f.guest_payload_verified=($payload.Count-eq1-and(Get-Hash (Join-Path $script:Policy.root ('inputs\'+[IO.Path]::GetFileName($payload[0].path))))-eq$payload[0].sha256)
- $recovery=Join-Path $script:Policy.root 'recovery-reservation.bin';$f.H_recovery_reservation_verified=((Get-Item -LiteralPath $recovery).Length-eq8GB-and[Sfd.Stage1.HostNative]::AllocatedBytes($recovery)-ge8GB)
+ $recovery=Join-Path $script:Policy.root 'recovery-reservation.bin';$f.H_recovery_reservation_verified=((Get-Item -Force -LiteralPath $recovery).Length-eq8GB-and[Sfd.Stage1.HostNative]::AllocatedBytes($recovery)-ge8GB)
  return $f
 }
 if($Phase-eq'Plan'){

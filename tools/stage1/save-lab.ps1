@@ -59,7 +59,7 @@ if(-not$Execute){Write-Output 'PLAN: save only exact approved new lab VMs; dirty
 # reading the source pointer, then verify committed policy/module against the
 # approval receipt's exact manifest. No git status/HEAD/working-file dependency.
 $root='H:\SFD-Isolated-Lab-20261102-8df9c4a1'
-for($p=$root;$p;$p=[IO.Path]::GetDirectoryName($p)){if((Get-Item -LiteralPath $p -ErrorAction Stop).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:containment-root-reparse'}}
+for($p=$root;$p;$p=[IO.Path]::GetDirectoryName($p)){if((Get-Item -Force -LiteralPath $p -ErrorAction Stop).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:containment-root-reparse'}}
 $acl=Get-Acl -LiteralPath $root;$sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
 if(-not$acl.AreAccessRulesProtected-or$acl.GetOwner([Security.Principal.SecurityIdentifier]).Value-ne$sid){throw 'STOP:containment-custody'}
 foreach($rule in $acl.Access){if($rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value-notin@($sid,'S-1-5-18')){throw 'STOP:containment-custody'}}

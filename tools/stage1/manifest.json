@@ -43,13 +43,13 @@
     },
     {
       "path": "collect-host.ps1",
-      "bytes": 7635,
-      "SHA256": "5e2e0d8f3b206e65d5db3538281036797f047336eba504f8672c6cfad5ad0e06"
+      "bytes": 7649,
+      "SHA256": "24d2464ac4c4b4f5d32a640302ed6b0716682569a4a50b4515fbf978dbba3ece"
     },
     {
       "path": "common.ps1",
-      "bytes": 7592,
-      "SHA256": "84760e031ff13fa4d6e9a557bb4ae57b5798421e521e8c4771f654ba10a06fd1"
+      "bytes": 7627,
+      "SHA256": "36c2987967783b5593754786aa684a12ea6d7cb0d6b187a5de7d9c73e291b4bd"
     },
     {
       "path": "compose.yml",
@@ -58,8 +58,8 @@
     },
     {
       "path": "containment.ps1",
-      "bytes": 2824,
-      "SHA256": "84f4273ac0d6ca371e7adc1d4c841f2187e19a87eab7baf7ad07441c0c70fb89"
+      "bytes": 2838,
+      "SHA256": "8be5f8f33b8b89f64e22e95b2253feb2eb1d79a0880c7c3eb8303a2a4c5a416b"
     },
     {
       "path": "Dockerfile.backend",
@@ -163,8 +163,8 @@
     },
     {
       "path": "install-stage1.ps1",
-      "bytes": 20473,
-      "SHA256": "cd7db37c30b93287c7e33cd34658d9087a896a89d98d1228650df47623227c85"
+      "bytes": 20501,
+      "SHA256": "3c98627a201814c91ffb0676192971af36175c451a97d003cea91f1ea8a3d42a"
     },
     {
       "path": "make-guest-media.ps1",
@@ -204,7 +204,7 @@
     {
       "path": "README.md",
       "bytes": 2989,
-      "SHA256": "9141c92780cc19734c603ea5124cba60cb5679d825d39ba920b447107d79f30c"
+      "SHA256": "91fdb03ac4e8ef9a44f1c4eac78ad85b9b37008b17edbcf80aeb53522e38f679"
     },
     {
       "path": "run-tests.py",
@@ -223,8 +223,8 @@
     },
     {
       "path": "save-lab.ps1",
-      "bytes": 6606,
-      "SHA256": "ec3017e14691de490d0ee4a6d08a2a38982218041bbc11ee003f71d45beffb3a"
+      "bytes": 6613,
+      "SHA256": "a78b9cbedff8db7efb50779d8a979fa974fcf53d2672b6501f05c71f05411bff"
     },
     {
       "path": "stage.py",
@@ -238,8 +238,8 @@
     },
     {
       "path": "test-lifecycle.ps1",
-      "bytes": 11716,
-      "SHA256": "5c3585994c83bfece31c6a5ab4382862522f5cfeaf553380c3f9e6ec8592dd37"
+      "bytes": 12051,
+      "SHA256": "c127325cc37e2a7ee2ecf257861149fce4f9cdcab89ed314dbad4198a5e38f0d"
     },
     {
       "path": "test-native.ps1",

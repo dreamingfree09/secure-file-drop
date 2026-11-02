@@ -2,7 +2,7 @@
 # source, checks checkout cleanliness, starts a guest, or changes a service.
 function Assert-ContainmentRoot([string]$Root){
  if([IO.Path]::GetFullPath($Root)-ne$Root-or$Root.Substring(2).Contains(':')){throw 'STOP:containment-root-path'}
- for($p=$Root;$p;$p=[IO.Path]::GetDirectoryName($p)){if((Get-Item -LiteralPath $p -ErrorAction Stop).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:containment-reparse'}}
+ for($p=$Root;$p;$p=[IO.Path]::GetDirectoryName($p)){if((Get-Item -Force -LiteralPath $p -ErrorAction Stop).Attributes-band[IO.FileAttributes]::ReparsePoint){throw 'STOP:containment-reparse'}}
  $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value;$acl=Get-Acl -LiteralPath $Root
  if(-not$acl.AreAccessRulesProtected-or$acl.GetOwner([Security.Principal.SecurityIdentifier]).Value-ne$sid){throw 'STOP:containment-root-custody'}
  foreach($rule in $acl.Access){if($rule.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value-notin@($sid,'S-1-5-18')){throw 'STOP:containment-ACL'}}
@@ -18,7 +18,7 @@ function Save-OwnedLab($Policy,$Ownership,[string]$ExpectedSourceSHA){
   [void][guid]::Parse($g.id);$ids+=@($g.id);$roles+=@($g.role)
   $expected=Join-Path $Policy.root ($g.role+'\root.vhdx');$spec=$Policy.guests.($g.role)
   if($g.disk-ne$expected-or$g.name-ne$spec.name){throw 'STOP:containment-disk-record'}
-  for($p=$expected;$p-and$p-ne$Policy.root;$p=[IO.Path]::GetDirectoryName($p)){if((Test-Path -LiteralPath $p)-and((Get-Item -LiteralPath $p -ErrorAction Stop).Attributes-band[IO.FileAttributes]::ReparsePoint)){throw 'STOP:containment-disk-reparse'}}
+  for($p=$expected;$p-and$p-ne$Policy.root;$p=[IO.Path]::GetDirectoryName($p)){if((Test-Path -LiteralPath $p)-and((Get-Item -Force -LiteralPath $p -ErrorAction Stop).Attributes-band[IO.FileAttributes]::ReparsePoint)){throw 'STOP:containment-disk-reparse'}}
   $v=Get-VM -Id $g.id -ErrorAction Stop;$disks=@(Get-VMHardDiskDrive -VM $v -ErrorAction Stop)
   if($v.Id.ToString()-ne$g.id-or$v.Name-ne$spec.name-or$disks.Count-ne1-or$disks[0].Path-ne$expected-or$null-ne$disks[0].DiskNumber){throw 'STOP:containment-VM-scope'}
   $targets+=@($v)
