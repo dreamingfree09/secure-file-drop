@@ -63,8 +63,8 @@ func TestPrivateBucketPolicy(t *testing.T) {
 
 func TestStorageBucketLookup(t *testing.T) {
 	for _, tc := range []struct {
-		name string
-		want minio.BucketLookupType
+		name   string
+		want   minio.BucketLookupType
 		reject bool
 	}{
 		{"", minio.BucketLookupAuto, false},
