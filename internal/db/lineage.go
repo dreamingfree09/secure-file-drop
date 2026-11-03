@@ -21,7 +21,7 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	}
 	var outside bool
 	if err := conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
- WHERE c.oid=ANY(ARRAY[to_regclass('schema_migrations'),to_regclass('files'),to_regclass('users'),to_regclass('auth_sessions'),to_regclass('resumable_uploads'),to_regclass('audit_logs'),to_regclass('sessions')]::oid[])
+ WHERE c.oid=ANY(ARRAY[to_regclass('schema_migrations'),to_regclass('files'),to_regclass('users'),to_regclass('auth_sessions'),to_regclass('resumable_uploads'),to_regclass('audit_logs'),to_regclass('sessions'),to_regclass('file_invitations')]::oid[])
  AND n.nspname<>current_schema())`).Scan(&outside); err != nil {
 		return fmt.Errorf("schema resolution inspection: %w", err)
 	}
@@ -31,7 +31,7 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	var versioned, files, users, sessions, canonical, applicationData bool
 	if err := conn.QueryRowContext(ctx, `SELECT to_regclass('schema_migrations') IS NOT NULL,to_regclass('files') IS NOT NULL,to_regclass('users') IS NOT NULL,to_regclass('auth_sessions') IS NOT NULL,
  EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=current_schema() AND table_name='sessions'),
- EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname IN ('files','users','auth_sessions','resumable_uploads','audit_logs','sessions'))`).Scan(&versioned, &files, &users, &sessions, &canonical, &applicationData); err != nil {
+ EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname IN ('files','users','auth_sessions','resumable_uploads','audit_logs','sessions','file_invitations'))`).Scan(&versioned, &files, &users, &sessions, &canonical, &applicationData); err != nil {
 		return fmt.Errorf("lineage inspection: %w", err)
 	}
 	if canonical {
@@ -55,7 +55,7 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	if err != nil {
 		return fmt.Errorf("schema version inspection: %w", err)
 	}
-	if dirty || rows != 1 || (version != 11 && version != 12) {
+	if dirty || rows != 1 || (version != 11 && version != 12 && version != 13) {
 		return incompatible
 	}
 	if version == 11 && sessions {
@@ -85,7 +85,7 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	if !compatible {
 		return incompatible
 	}
-	if version == 12 {
+	if version >= 12 {
 		if err := conn.QueryRowContext(ctx, `SELECT count(*)=3 FROM information_schema.columns WHERE table_schema=current_schema() AND
  ((table_name='auth_sessions' AND ((column_name='token_hash' AND data_type='text') OR (column_name='expires_at' AND data_type='timestamp with time zone')))
  OR (table_name='users' AND column_name='is_admin' AND data_type='boolean'))`).Scan(&compatible); err != nil {
@@ -94,6 +94,12 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 		if !compatible {
 			return incompatible
 		}
+	}
+	if version == 13 {
+		var compatibleInvitations bool
+		err := conn.QueryRowContext(ctx, "SELECT count(*)=10 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='file_invitations' AND column_name IN ('id','file_id','sender_id','recipient_email','description','code_digest','created_at','expires_at','failed_attempts','downloads')").Scan(&compatibleInvitations)
+		if err != nil { return fmt.Errorf("invitation schema inspection: %w", err) }
+		if !compatibleInvitations { return incompatible }
 	}
 	return nil
 }
