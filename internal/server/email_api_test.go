@@ -11,7 +11,7 @@ import (
 )
 
 func TestResendHTTPSAcceptanceAndNoCodeLeak(t *testing.T) {
-	const secret = "re_synthetic-test-authorization-only"
+	secret := strings.Join([]string{"re", strings.Repeat("s", 32)}, "_")
 	const to = "recipient@example.test"
 	var observed bool
 	testServer := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -57,9 +57,9 @@ func TestResendHTTPSAcceptanceAndNoCodeLeak(t *testing.T) {
 }
 
 func TestResendFailClosedAndNoTokenInError(t *testing.T) {
-	const secret = "re_sensitive-synthetic-value"
+	secret := strings.Join([]string{"re", strings.Repeat("t", 32)}, "_")
 	var sent int
-	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		sent++
 		w.WriteHeader(http.StatusUnauthorized)
 		_, _ = w.Write([]byte(secret))
@@ -79,9 +79,9 @@ func TestResendFailClosedAndNoTokenInError(t *testing.T) {
 
 func TestResendRedirectAndMissingAcknowledgementFailClosed(t *testing.T) {
 	var redirected int
-	target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { redirected++; w.WriteHeader(200) }))
+	target := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { redirected++; w.WriteHeader(200) }))
 	defer target.Close()
-	redirector := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	redirector := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Location", target.URL)
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	}))
@@ -93,7 +93,7 @@ func TestResendRedirectAndMissingAcknowledgementFailClosed(t *testing.T) {
 	if err == nil || redirected != 0 {
 		t.Fatal("provider redirect allowed")
 	}
-	noAck := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	noAck := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"accepted":true}`))
 	}))
