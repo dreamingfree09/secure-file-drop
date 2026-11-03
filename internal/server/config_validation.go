@@ -233,7 +233,26 @@ func ValidateAllConfiguration() error {
 		}
 	}
 
-	// Email configuration
+	// The HTTPS email API is required on platforms where SMTP egress is
+	// blocked. Require an explicit provider and verified-domain sender setup.
+	provider := strings.TrimSpace(os.Getenv("SFD_EMAIL_PROVIDER"))
+	v.ValidateEnum("SFD_EMAIL_PROVIDER", provider, []string{"", "smtp", "resend"})
+	if provider == "resend" {
+		if strings.TrimSpace(os.Getenv("SFD_RESEND_API_KEY")) == "" {
+			v.AddError("SFD_RESEND_API_KEY", "required when SFD_EMAIL_PROVIDER=resend")
+		}
+		sender := strings.TrimSpace(os.Getenv("SFD_EMAIL_FROM"))
+		if sender == "" || !validateEmail(sender) {
+			v.AddError("SFD_EMAIL_FROM", "a verified-domain sender email address is required")
+		}
+		origin, err := publicOrigin()
+		if err != nil || !strings.HasPrefix(origin, "https://") {
+			v.AddError("SFD_PUBLIC_BASE_URL", "a valid HTTPS public origin is required for email links")
+		}
+	} else if os.Getenv("SFD_RESEND_API_KEY") != "" {
+		v.AddError("SFD_EMAIL_PROVIDER", "set resend explicitly when supplying an email API key")
+	}
+	// Existing SMTP settings remain compatible with prior deployments.
 	if smtpPort := os.Getenv("SMTP_PORT"); smtpPort != "" {
 		v.ValidatePositiveInt("SMTP_PORT", smtpPort)
 	}
@@ -276,8 +295,8 @@ func WarnOnOptionalMissingConfig() {
 		warnings = append(warnings, "SFD_BASE_URL not set - using default http://localhost:8080")
 	}
 
-	if os.Getenv("SMTP_HOST") == "" {
-		warnings = append(warnings, "SMTP_HOST not set - email notifications disabled")
+	if !LoadEmailConfig().Enabled {
+		warnings = append(warnings, "no active email provider - registration and invitation emails unavailable")
 	}
 
 	if os.Getenv("SFD_BACKUP_ENABLED") != "true" {

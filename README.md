@@ -44,6 +44,16 @@ The [protected recipient delivery workflow](docs/RECIPIENT_DELIVERY.md) allows a
 
 The original signed bearer links remain available and are **not protected by invitation codes**. Use the email-invitation workflow rather than the ordinary copy-link action for code-protected sharing.
 
+## Email delivery on hosted platforms
+
+The existing SMTP delivery remains supported. For Railway Free/Hobby,
+where outbound SMTP is unavailable, choose `SFD_EMAIL_PROVIDER=resend`,
+`SFD_EMAIL_FROM` (a verified sender) and `SFD_RESEND_API_KEY` in protected
+service variables. This sends existing verification and recipient invitations
+through an HTTPS email API without putting access codes in emails. See the
+[Railway staging guide](docs/RAILWAY_STAGING.md) before provisioning.
+A configured provider does not by itself establish production readiness.
+
 ## Windows tray companion
 
 The [native Windows companion](docs/WINDOWS_COMPANION.md) adds Quick Send, verified expiring-link copying, transfer/service status and explicit per-user Explorer integration. It uses the existing authenticated backend without starting Docker or WSL. This development preview requires independent review and the documented interactive Windows acceptance; production and representative large-file gates remain open.

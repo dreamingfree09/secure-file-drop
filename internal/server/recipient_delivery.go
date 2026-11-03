@@ -117,7 +117,7 @@ func (s *EmailService) sendRecipientInvitation(ctx context.Context, to, sender, 
 }
 
 // POST /invitations is available only to the verified owner of a fully hashed file.
-// A successful 201 means SMTP accepted the message and the database committed the
+// A successful 201 means the email provider accepted the message and the database committed the
 // invitation. Only that one response contains the independently generated code.
 func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 	return cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -233,8 +233,8 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
 			return
 		}
-		// One event for each committed SMTP invitation, independent of the
-		// file's lifetime. If SMTP or COMMIT fails the transaction rolls back.
+		// One event for each committed email invitation, independent of the
+		// file's lifetime. If delivery or COMMIT fails the transaction rolls back.
 		_, err = tx.ExecContext(ctx,
 			"INSERT INTO invitation_send_ledger (id,sender_id) VALUES ($1,$2)", invitationID, userID)
 		if err != nil {
@@ -247,7 +247,7 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 			return
 		}
 		if err = tx.Commit(); err != nil {
-			// SMTP may have accepted the email, but no working invitation is
+			// The provider may have accepted the email, but no working invitation is
 			// reported to the sender unless persistence also succeeds.
 			http.Error(w, "invitation persistence failed", http.StatusServiceUnavailable)
 			return
