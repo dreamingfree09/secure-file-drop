@@ -11,6 +11,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/minio/minio-go/v7"
 )
 
 // ConfigValidationError represents a configuration validation error.
