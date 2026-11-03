@@ -129,7 +129,7 @@ def main():
         dump=docker('exec',backend,'pg_dump','--format=plain','--no-owner','--no-acl','--no-password')
         check('CREATE TABLE public.users' in dump and 'CREATE TABLE public.auth_sessions' in dump,'actual pg_dump accepts separated connection environment without credential arguments')
         del dump
-        check(fingerprint()==before,'migration 11 to 12 preserves synthetic user/file records and role');check(sql('SELECT version FROM schema_migrations;')=='12','migration reaches version 12')
+        check(fingerprint()==before,'migration 11 to 13 preserves synthetic user/file records and role');check(sql('SELECT version FROM schema_migrations;')=='13','migration reaches version 13')
         # Retained canonical bounds are checked on the actual selected image, without credentials.
         check(request('/login',b'{}{}',method='POST',headers={'Content-Type':'application/json'})[0]==400,'real login rejects trailing JSON')
         check(request('/login',b' '*(16385),method='POST',headers={'Content-Type':'application/json'})[0]==413,'real login bounds total JSON including whitespace')
@@ -212,6 +212,30 @@ def main():
         check(target.scheme=='https' and target.hostname=='localhost' and target.port==server.server_port and target.username is None and target.password is None and target.path=='/download' and not target.fragment,'signed download target confined to owned HTTPS origin')
         req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
+        # New recipient delivery: mail contains only locator; sender gets separate access code.
+        check(request('/invitations',{'file_id':fid,'recipient_email':'not-an-email','description':'safe'})[0]==400,'recipient delivery rejects malformed address')
+        check(request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'a'*1001})[0]==400,'recipient delivery rejects excessive description')
+        status,issued=request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'Private <notes> for you','ttl_hours':24})
+        check(status==201,'registered owner sends real SMTP recipient invitation')
+        receipt=json.loads(issued);one_code=receipt['access_code']
+        check(re.fullmatch(r'[A-Z2-7]{4}(?:-[A-Z2-7]{4}){3}',one_code) is not None and receipt['downloads_allowed']==3,'sender alone receives a strong, bounded access code')
+        messages=[json.loads(line) for line in docker('exec',backend,'cat','/tmp/sfd-fixture-mail.jsonl').splitlines()]
+        mail=[m for m in messages if m.get('To')=='recipient@example.invalid']
+        check(len(mail)==1 and one_code not in mail[0]['Body'] and 'Private &lt;notes&gt;' in mail[0]['Body'],'SMTP invitation escapes description and never emails the code')
+        invite_match=re.search(re.escape(origin)+r'/receive\?id=([0-9a-f-]{36})',mail[0]['Body'])
+        check(invite_match is not None,'recipient invitation contains a bounded HTTPS locator')
+        invite_id=invite_match.group(1)
+        status,landing=request('/receive?id='+invite_id,who=anonymous)
+        check(status==200 and b'/receive-download' in landing and one_code.encode() not in landing,'public landing asks for independent code without leaking it')
+        def redeem(value):
+            fields=urllib.parse.urlencode({'id':invite_id,'code':value}).encode()
+            return request('/receive-download',fields,method='POST',headers={'Content-Type':'application/x-www-form-urlencoded'},who=anonymous)
+        check(redeem('AAAA-AAAA-AAAA-AAAA')[0]==401,'real wrong code denied')
+        for index in range(3):
+            status,payload=redeem(one_code)
+            check(status==200 and payload==data,'real code-gated byte-equal recipient download '+str(index+1))
+        check(redeem(one_code)[0]==410,'recipient invitation download cap enforced')
+        check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+invite_id+"';")=='1,3','real PostgreSQL tracks code attempts and download reservations')
         # Preserve existing protected-row interpretation; this is a synthetic
         # historical fixture, not a newly implemented password-creation feature.
         sql("UPDATE files SET link_password='owned-historical-password' WHERE id='"+fid+"';")
@@ -377,7 +401,7 @@ def main():
                     if not owned('container',backend)['State']['Running']:break
                     time.sleep(.5)
                 result['rollback']={'image':args.rollback_image,'image_id':owned('container',backend)['Image'],'ready':rollback_ready,'schema_version':sql('SELECT version FROM schema_migrations;')}
-                check(fingerprint()==before_rollback and hashlib.sha256(sql('SELECT token_hash,expires_at FROM auth_sessions ORDER BY token_hash;').encode()).hexdigest()==sessions_before and sql('SELECT version FROM schema_migrations;')=='12','prior image rollback preserves additive schema and all synthetic records/sessions')
+                check(fingerprint()==before_rollback and hashlib.sha256(sql('SELECT token_hash,expires_at FROM auth_sessions ORDER BY token_hash;').encode()).hexdigest()==sessions_before and sql('SELECT version FROM schema_migrations;')=='13','prior image rollback preserves additive schema and all synthetic records/sessions')
                 if rollback_ready:
                     jar.clear()
                     status,_=request('/login',{'username':'admin','password':password})
