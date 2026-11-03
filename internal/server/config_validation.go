@@ -225,6 +225,15 @@ func ValidateAllConfiguration() error {
 		v.ValidateURL("SFD_PUBLIC_BASE_URL", publicURL)
 	}
 
+	// Preserve historical automatic S3 addressing, but require explicit
+	// virtual-hosted lookup for Railway's newer buckets.
+	lookup, lookupErr := storageBucketLookup(os.Getenv("SFD_S3_BUCKET_LOOKUP"))
+	if lookupErr != nil {
+		v.AddError("SFD_S3_BUCKET_LOOKUP", "must be auto, virtual or path")
+	}
+	if lookup == minio.BucketLookupDNS && !strings.HasPrefix(os.Getenv("SFD_S3_ENDPOINT"), "https://") {
+		v.AddError("SFD_S3_ENDPOINT", "virtual-hosted storage requires an HTTPS endpoint")
+	}
 	// MinIO/S3 configuration
 	if endpoint := os.Getenv("MINIO_ENDPOINT"); endpoint != "" {
 		// Can be host:port or URL

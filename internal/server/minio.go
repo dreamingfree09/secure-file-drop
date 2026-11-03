@@ -42,6 +42,21 @@ func normaliseEndpoint(raw string) (endpoint string, secure bool, err error) {
 	return raw, false, nil
 }
 
+// storageBucketLookup is explicit for non-AWS S3 services. Auto preserves the
+// historical client default, while newer Railway buckets require virtual DNS.
+func storageBucketLookup(mode string) (minio.BucketLookupType, error) {
+	switch strings.ToLower(strings.TrimSpace(mode)) {
+	case "", "auto":
+		return minio.BucketLookupAuto, nil
+	case "virtual":
+		return minio.BucketLookupDNS, nil
+	case "path":
+		return minio.BucketLookupPath, nil
+	default:
+		return minio.BucketLookupAuto, fmt.Errorf("unsupported S3 bucket addressing style")
+	}
+}
+
 func newMinioClient() (*minio.Client, string, error) {
 	rawEndpoint := os.Getenv("SFD_S3_ENDPOINT")
 	accessKey := os.Getenv("SFD_S3_ACCESS_KEY")
@@ -56,10 +71,18 @@ func newMinioClient() (*minio.Client, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+	lookup, err := storageBucketLookup(os.Getenv("SFD_S3_BUCKET_LOOKUP"))
+	if err != nil {
+		return nil, "", err
+	}
+	if lookup == minio.BucketLookupDNS && !secure {
+		return nil, "", fmt.Errorf("virtual-hosted S3 addressing requires HTTPS")
+	}
 
 	client, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: secure,
+		Creds:        credentials.NewStaticV4(accessKey, secretKey, ""),
+		Secure:       secure,
+		BucketLookup: lookup,
 	})
 	if err != nil {
 		return nil, "", err

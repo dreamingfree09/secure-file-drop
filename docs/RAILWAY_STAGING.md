@@ -14,9 +14,13 @@ database and one **private** S3-compatible Railway Storage Bucket. Use separate
 staging credentials and disposable files; do not copy existing data/secrets.
 PostgreSQL uses the private `DATABASE_URL` variable. The bucket's credentials
 supply `SFD_BUCKET`, `SFD_S3_ENDPOINT` (HTTPS), `SFD_S3_ACCESS_KEY` and
-`SFD_S3_SECRET_KEY`. The app's strict `GetBucketPolicy` private-policy check
-and bucket URL addressing MUST be validated against the actual provider before
-claiming this integration works. Do not disable that security check merely
+`SFD_S3_SECRET_KEY`. Set `SFD_S3_BUCKET_LOOKUP=virtual` for newer
+Railway buckets, or `path` only if the specific bucket's Credentials tab
+states that it is an older path-style bucket. Virtual-host lookup requires an
+HTTPS endpoint, and `auto` remains the existing MinIO default. The app's
+strict `GetBucketPolicy` private-policy check and the provider's actual bucket
+policy API compatibility MUST still be validated before claiming the service
+works. Do not disable that security check merely
 to reach readiness.
 
 Set `SFD_ADDR=:8080`, `PORT=8080`, and a Railway healthcheck at
