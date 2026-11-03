@@ -1,0 +1,26 @@
+name: Temporary safe Go format readback
+on:
+  push:
+    branches: [feature/recipient-passcode-delivery-20261103]
+permissions:
+  contents: read
+jobs:
+  format-readback:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Format a disposable runner copy and print bounded source
+        run: |
+          for f in internal/server/recipient_delivery.go internal/server/recipient_delivery_test.go internal/db/lineage.go; do
+            gofmt -w "$f"
+            echo "SFD_FORMAT_BEGIN $f"
+            base64 -w0 "$f"
+            echo
+            echo "SFD_FORMAT_END $f"
+          done
