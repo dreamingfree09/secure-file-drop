@@ -98,8 +98,12 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	if version == 13 {
 		var compatibleInvitations bool
 		err := conn.QueryRowContext(ctx, "SELECT count(*)=10 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='file_invitations' AND column_name IN ('id','file_id','sender_id','recipient_email','description','code_digest','created_at','expires_at','failed_attempts','downloads')").Scan(&compatibleInvitations)
-		if err != nil { return fmt.Errorf("invitation schema inspection: %w", err) }
-		if !compatibleInvitations { return incompatible }
+		if err != nil {
+			return fmt.Errorf("invitation schema inspection: %w", err)
+		}
+		if !compatibleInvitations {
+			return incompatible
+		}
 	}
 	return nil
 }

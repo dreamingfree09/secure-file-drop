@@ -1,4 +1,4 @@
-// Recipient invitations use an emailed locator and a separately delivered access code.
+// Package server implements recipient invitations using an emailed locator and a separately delivered access code.
 // The access code never enters email, URLs, logs or the database in plaintext.
 package server
 
@@ -28,25 +28,25 @@ import (
 )
 
 const (
-	deliveryMaxAttempts = 8
-	deliveryMaxDownloads = 3
+	deliveryMaxAttempts         = 8
+	deliveryMaxDownloads        = 3
 	deliveryMaxDescriptionBytes = 1000
 )
 
 var deliveryCodePattern = regexp.MustCompile("^[A-Z2-7]{16}$")
 
 type createInvitationRequest struct {
-	FileID string `json:"file_id"`
+	FileID         string `json:"file_id"`
 	RecipientEmail string `json:"recipient_email"`
-	Description string `json:"description"`
-	TTLHours int `json:"ttl_hours"`
+	Description    string `json:"description"`
+	TTLHours       int    `json:"ttl_hours"`
 }
 
 type invitationReceipt struct {
-	RecipientEmail string `json:"recipient_email"`
-	AccessCode string `json:"access_code"`
-	ExpiresAt string `json:"expires_at"`
-	DownloadsAllowed int `json:"downloads_allowed"`
+	RecipientEmail   string `json:"recipient_email"`
+	AccessCode       string `json:"access_code"`
+	ExpiresAt        string `json:"expires_at"`
+	DownloadsAllowed int    `json:"downloads_allowed"`
 }
 
 func generateDeliveryCode() (string, error) {
@@ -181,8 +181,8 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 		var autoDelete bool
 		err = tx.QueryRowContext(ctx,
 			"SELECT f.orig_name,f.status,f.expires_at,COALESCE(f.auto_delete,FALSE),u.email "+
-			"FROM files f JOIN users u ON u.id=f.user_id "+
-			"WHERE f.id=$1 AND f.user_id::text=$2 AND u.is_active=TRUE AND u.email_verified=TRUE FOR UPDATE OF f,u",
+				"FROM files f JOIN users u ON u.id=f.user_id "+
+				"WHERE f.id=$1 AND f.user_id::text=$2 AND u.is_active=TRUE AND u.email_verified=TRUE FOR UPDATE OF f,u",
 			id, userID).Scan(&filename, &status, &fileExpiry, &autoDelete, &senderEmail)
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "file not found", http.StatusNotFound)
@@ -241,9 +241,9 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_ = json.NewEncoder(w).Encode(invitationReceipt{
-			RecipientEmail: in.RecipientEmail,
-			AccessCode: code,
-			ExpiresAt: expiresAt.Format(time.RFC3339),
+			RecipientEmail:   in.RecipientEmail,
+			AccessCode:       code,
+			ExpiresAt:        expiresAt.Format(time.RFC3339),
 			DownloadsAllowed: deliveryMaxDownloads,
 		})
 	}))
@@ -264,7 +264,7 @@ func receiveInvitationPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST form submission sends code in the request body, never in a URL.
-// Failed attempts and download reservations are serialised in PostgreSQL.
+// Failed attempts and download reservations are serialized in PostgreSQL.
 func (cfg Config) recipientDownloadHandler(db *sql.DB, mc *minio.Client, bucket string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -308,8 +308,8 @@ func (cfg Config) recipientDownloadHandler(db *sql.DB, mc *minio.Client, bucket 
 		var autoDelete bool
 		err = tx.QueryRowContext(ctx,
 			"SELECT i.code_digest,i.failed_attempts,i.downloads,i.expires_at,f.object_key,f.orig_name,f.status,f.size_bytes,f.expires_at,COALESCE(f.auto_delete,FALSE) "+
-			"FROM file_invitations i JOIN files f ON f.id=i.file_id JOIN users u ON u.id=i.sender_id "+
-			"WHERE i.id=$1 AND u.is_active=TRUE FOR UPDATE OF i",
+				"FROM file_invitations i JOIN files f ON f.id=i.file_id JOIN users u ON u.id=i.sender_id "+
+				"WHERE i.id=$1 AND u.is_active=TRUE FOR UPDATE OF i",
 			id).Scan(&expectedHex, &attempts, &downloads, &invitationExpires, &objectKey, &filename, &status, &size, &fileExpires, &autoDelete)
 		if errors.Is(err, sql.ErrNoRows) {
 			http.Error(w, "invitation unavailable", http.StatusNotFound)
