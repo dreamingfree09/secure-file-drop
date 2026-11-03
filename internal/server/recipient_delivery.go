@@ -205,7 +205,7 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 			http.Error(w, "file expiry is too near", http.StatusConflict)
 			return
 		}
-		// The sender row is locked above, serialising invitations across
+		// The sender row is locked above, serializing invitations across
 		// files and IP addresses. The independent ledger deliberately survives
 		// file deletion, so revocation cannot reset a sender's email quota.
 		// Only expired rate-limit metadata from this sender is pruned.
