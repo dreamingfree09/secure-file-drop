@@ -118,3 +118,53 @@ test('forbidden HTTP403 does not discard a valid ordinary-user session', async (
   const response=await vm.runInContext("sessionFetch('/admin/files')",h.context);
   assert.equal(response.status,403);assert.equal(vm.runInContext('isLoggedIn && !isAdmin',h.context),true);
 });
+
+// Exercise the actual browser sender flow, not a hand-copied email regular expression.
+test('protected invitation form accepts ordinary destination emails and rejects malformed addresses', async () => {
+  const sent = [];
+  const h = harness(async (url, options) => {
+    if (url === '/invitations') {
+      sent.push(JSON.parse(options.body));
+      return {ok:true,status:201,json:async()=>({recipient_email:'sally@example.com',access_code:'ABCD-EFGH-JKLM-NPQR',downloads_allowed:3,expires_at:'2026-11-04T12:00:00Z'})};
+    }
+    return {ok:true,status:204};
+  });
+  vm.runInContext('isLoggedIn=true; sessionGeneration=2;',h.context);
+  h.node('deliveryFile').value='11111111-1111-4111-8111-111111111111';
+  h.node('deliveryRecipient').value='sally@example.com';
+  h.node('deliveryDescription').value='Private notes';
+  h.node('deliveryTTL').value='24';
+  await vm.runInContext('sendProtectedInvitation()',h.context);
+  assert.equal(sent.length,1,'ordinary recipient address must reach the endpoint');
+  assert.equal(sent[0].recipient_email,'sally@example.com');
+  assert.equal(h.node('deliveryCode').value,'ABCD-EFGH-JKLM-NPQR');
+  assert.equal(h.node('sendDeliveryButton').disabled,false);
+  h.node('deliveryRecipient').value='invalid@@example.com';
+  await vm.runInContext('sendProtectedInvitation()',h.context);
+  assert.equal(sent.length,1,'invalid email must not call the backend');
+});
+
+test('sign-out during an in-flight invitation resets the next session button', async () => {
+  let deliver;
+  let signal;
+  const pendingResponse = new Promise(resolve => { deliver=resolve; });
+  const h=harness(async (url,options)=>{
+    if (url==='/invitations') { signal=options.signal; return pendingResponse; }
+    return {ok:true,status:204};
+  });
+  vm.runInContext('isLoggedIn=true; sessionGeneration=8;',h.context);
+  h.node('deliveryFile').value='11111111-1111-4111-8111-111111111111';
+  h.node('deliveryRecipient').value='sally@example.com';
+  h.node('deliveryTTL').value='24';
+  const pending=vm.runInContext('sendProtectedInvitation()',h.context);
+  assert.equal(h.node('sendDeliveryButton').disabled,true);
+  vm.runInContext('resetSessionUI()',h.context);
+  assert.equal(signal.aborted,true);
+  assert.equal(h.node('sendDeliveryButton').disabled,false);
+  vm.runInContext('isLoggedIn=true; sessionGeneration++;',h.context);
+  deliver({ok:true,status:201,json:async()=>({access_code:'ABCD-EFGH-JKLM-NPQR'})});
+  await pending;
+  assert.equal(h.node('deliveryCode').value,'');
+  assert.equal(h.node('deliveryCodeBox').style.display,'none');
+  assert.equal(h.node('sendDeliveryButton').disabled,false);
+});

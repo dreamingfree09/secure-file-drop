@@ -14,3 +14,14 @@ CREATE TABLE file_invitations (
 );
 CREATE INDEX file_invitations_sender_created ON file_invitations(sender_id, created_at DESC);
 CREATE INDEX file_invitations_expiry ON file_invitations(expires_at);
+
+-- Hourly account-wide delivery quota survives deletion of the related file.
+-- This table has no foreign key to file_invitations or files: deleting a file
+-- invalidates access, but cannot reset already accepted SMTP usage.
+CREATE TABLE invitation_send_ledger (
+    id UUID PRIMARY KEY,
+    sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX invitation_send_ledger_sender_created
+    ON invitation_send_ledger(sender_id, created_at DESC);

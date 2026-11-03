@@ -236,6 +236,7 @@ def main():
             check(status==200 and payload==data,'real code-gated byte-equal recipient download '+str(index+1))
         check(redeem(one_code)[0]==410,'recipient invitation download cap enforced')
         check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+invite_id+"';")=='1,3','real PostgreSQL tracks code attempts and download reservations')
+        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='1','SMTP invitation recorded in independent hourly sender ledger')
         # Preserve existing protected-row interpretation; this is a synthetic
         # historical fixture, not a newly implemented password-creation feature.
         sql("UPDATE files SET link_password='owned-historical-password' WHERE id='"+fid+"';")
@@ -266,6 +267,8 @@ def main():
         admin_row=sql("SELECT EXISTS(SELECT 1 FROM files WHERE id='"+fid+"');")=='t'
         missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+fid],capture_output=True).returncode!=0
         check(admin_status==204 and not admin_row and missing,'administrator deletes exact stored object and metadata')
+        check(sql("SELECT count(*) FROM file_invitations WHERE file_id='"+fid+"';")=='0','file deletion invalidates its recipient invitations')
+        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='1','file deletion cannot erase accepted SMTP rate-limit history')
         check(request('/upload/resumable',{},method='POST')[0]==403,'environment identity cannot acquire unsupported UUID ownership')
         jar.clear();check(request('/login',{'username':'uploader','password':uploader_password})[0]==200,'lifecycle owner login')
         def create_file(filename,size):
@@ -277,6 +280,11 @@ def main():
             if complete:body+=('\r\n--'+boundary+'--\r\n').encode()
             return request('/upload?id='+file_id,body,headers={'Content-Type':'multipart/form-data; boundary='+boundary})
         fid=create_file('storage-failure.txt',len(data));check(upload_bytes(fid,data)[0]==200,'real file exists before storage-failure deletion')
+        # Seed only this disposable account's rate-ledger fixture so the
+        # account-wide quota is tested independently of HTTP IP limiting.
+        sql("INSERT INTO invitation_send_ledger (id,sender_id) SELECT gen_random_uuid(),u.id FROM users u CROSS JOIN generate_series(1,11) WHERE u.username='uploader';")
+        rate_status,rate_body=request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'limit-test'})
+        check(rate_status==429 and b'invitation limit reached' in rate_body,'account hourly invitation quota survives deletion and blocks cross-file sends')
         before_delete=hashlib.sha256(sql("SELECT row_to_json(f)::text FROM files f WHERE id='"+fid+"';").encode()).hexdigest()
         owned('container',storage);docker('stop',storage)
         failure_status,_=request('/user/files/'+fid,method='DELETE')

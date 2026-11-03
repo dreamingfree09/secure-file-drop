@@ -205,11 +205,19 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 			http.Error(w, "file expiry is too near", http.StatusConflict)
 			return
 		}
-		// The sender row is locked above so concurrent requests cannot evade
-		// the hourly per-account invitation cap.
+		// The sender row is locked above, serialising invitations across
+		// files and IP addresses. The independent ledger deliberately survives
+		// file deletion, so revocation cannot reset a sender's email quota.
+		// Only expired rate-limit metadata from this sender is pruned.
+		_, err = tx.ExecContext(ctx,
+			"DELETE FROM invitation_send_ledger WHERE sender_id::text=$1 AND created_at < CURRENT_TIMESTAMP - INTERVAL '7 days'", userID)
+		if err != nil {
+			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+			return
+		}
 		var recent int
 		err = tx.QueryRowContext(ctx,
-			"SELECT count(*) FROM file_invitations WHERE sender_id::text=$1 AND created_at > CURRENT_TIMESTAMP - INTERVAL '1 hour'", userID).Scan(&recent)
+			"SELECT count(*) FROM invitation_send_ledger WHERE sender_id::text=$1 AND created_at > CURRENT_TIMESTAMP - INTERVAL '1 hour'", userID).Scan(&recent)
 		if err != nil {
 			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
 			return
@@ -221,6 +229,14 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 		_, err = tx.ExecContext(ctx,
 			"INSERT INTO file_invitations (id,file_id,sender_id,recipient_email,description,code_digest,expires_at) VALUES ($1,$2,$3,$4,$5,$6,$7)",
 			invitationID, id, userID, in.RecipientEmail, in.Description, digest, expiresAt)
+		if err != nil {
+			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		// One event for each committed SMTP invitation, independent of the
+		// file's lifetime. If SMTP or COMMIT fails the transaction rolls back.
+		_, err = tx.ExecContext(ctx,
+			"INSERT INTO invitation_send_ledger (id,sender_id) VALUES ($1,$2)", invitationID, userID)
 		if err != nil {
 			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
 			return

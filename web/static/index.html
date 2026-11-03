@@ -987,6 +987,10 @@ function resetSessionUI() {
   activeUploads.clear();
   selectedFile = currentUpload = null; uploadQueue = []; queuedKeys.clear();
   document.getElementById('deliveryCodeBox').style.display = 'none';
+  // Any old request belongs to the invalidated session. A later login must
+  // never inherit the previous account's disabled send button.
+  const deliveryButton = document.getElementById('sendDeliveryButton');
+  if (deliveryButton) deliveryButton.disabled = false;
   uploadInProgress = false; allFiles = []; myFilesAll = []; myFilesRendered = []; mySelection.clear();
   for (const id of ['username','password','regEmail','regUsername','regPassword','regPasswordConfirm','linkPassword','downloadLink','fileInput','deliveryRecipient','deliveryDescription','deliveryCode','deliveryFile']) {
     const node = document.getElementById(id); if (node) node.value = '';
@@ -1882,7 +1886,7 @@ async function sendProtectedInvitation() {
   const alert = document.getElementById('deliveryAlert');
   const btn = document.getElementById('sendDeliveryButton');
   document.getElementById('deliveryCodeBox').style.display = 'none';
-  if (!fileID || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || new TextEncoder().encode(description).length > 1000) {
+  if (!fileID || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || new TextEncoder().encode(description).length > 1000) {
     showAlert(alert, 'Choose a verified upload, enter a valid recipient email and use a description under 1000 bytes.', 'error');
     return;
   }
