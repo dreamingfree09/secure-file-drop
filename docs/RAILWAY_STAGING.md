@@ -15,7 +15,11 @@ contexts throw. It deliberately leaves database/bucket/domain and source binding
 to the separately authorised account context. It does not install an app or
 connect GitHub. Keep automatic deployment off for this unmerged branch.
 Agent-operated CLI planning/application requires Railway CLI5.63+ and the
-Railway TypeScript SDK3.12.0; no Owner terminal commands are required. Use the
+Railway TypeScript SDK3.12.0; no Owner terminal commands are required. The
+committed .railway/package.json and lockfile pin it. The authorised agent uses
+`npm ci --prefix .railway --ignore-scripts` in its disposable execution checkout
+before planning; this preparation generated only the lockfile and installed no
+packages on the Owner host. Use the
 normal `railway config plan` readback against that exact staging scope, inspect
 its diff and apply only after separately authorised platform access. No plan or
 apply against a real account was executed here. The SDK contract tests evaluate
@@ -26,7 +30,9 @@ The file selects `Dockerfile.backend` with the DOCKERFILE builder. Its existing
 entrypoint remains `/app/backend`. Both `PORT=8080` and `SFD_ADDR=:8080` are set,
 so the backend listens on all interfaces at the same port as the provider check.
 The public domain target port must also be8080. `/ready` is the deployment check,
-with a300-second timeout; it is not continuous monitoring. One replica avoids
+with a300-second timeout; it is not continuous monitoring. The25-second
+provider draining time preserves the existing20-second application shutdown
+budget before forced termination. One replica avoids
 inventing untested shared-instance semantics. File cap10485760 and request
 envelope11534336 give a10MiB trial. File cleanup remains disabled.
 

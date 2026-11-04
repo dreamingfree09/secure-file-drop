@@ -46,3 +46,13 @@ test('sensitive settings remain private Railway values and cleanup stays disable
   assert.equal(backend.deploy.numReplicas,1);
   assert.equal(backend.deploy.healthcheckTimeout,300);
 });
+
+test('SDK dependency is locked and the shutdown budget preserves active-transfer handling',()=>{
+  const root=path.join(__dirname,'../../.railway');
+  const pkg=JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8'));
+  const lock=JSON.parse(fs.readFileSync(path.join(root,'package-lock.json'),'utf8'));
+  assert.equal(pkg.dependencies.railway,'3.12.0');
+  assert.equal(lock.packages['node_modules/railway'].version,'3.12.0');
+  assert.equal(lock.packages['node_modules/railway'].integrity,'sha512-a6th+76NE3fZ8QMTOtEIe15sPTjObWOJYx0pCHCR/rd00r++I2rZHLKTn2R1qmPAwvGdAj6vY45GDVJs0AzOXA==');
+  assert.equal(program({projectName:'secure-file-drop-staging',environment:'staging'}).resources[0].deploy.drainingSeconds,25);
+});

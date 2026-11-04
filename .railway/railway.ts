@@ -13,6 +13,7 @@ export default defineRailway((ctx) => {
     healthcheck: "/ready",
     healthcheckTimeout: 300,
     replicas: 1,
+    deploy: { drainingSeconds: 25 },
     env: {
       RAILWAY_DOCKERFILE_PATH: "Dockerfile.backend",
       PORT: "8080",
