@@ -99,12 +99,27 @@ func newMinioClient() (*minio.Client, string, error) {
 		return nil, "", fmt.Errorf("minio bucket does not exist: %s", bucket)
 	}
 
-	policy, err := client.GetBucketPolicy(ctx, bucket)
-	if err != nil {
-		return nil, "", classifyBucketPolicyError(err)
-	}
-	if !privateBucketPolicy(policy) {
-		return nil, "", fmt.Errorf("bucket policy check failed: unverified privacy")
+	mode := strings.TrimSpace(os.Getenv("SFD_S3_PRIVACY_MODE"))
+	if mode == "railway-probe" {
+		if err := validateRailwayProbeTarget(endpoint, secure, lookup, bucket); err != nil {
+			return nil, "", err
+		}
+		probeCtx, cancelProbe := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancelProbe()
+		if err := verifyRailwayPrivateBucket(probeCtx, client, bucket, endpoint); err != nil {
+			return nil, "", err
+		}
+	} else {
+		if mode != "" && mode != "policy" {
+			return nil, "", fmt.Errorf("unsupported S3 privacy mode")
+		}
+		policy, err := client.GetBucketPolicy(ctx, bucket)
+		if err != nil {
+			return nil, "", classifyBucketPolicyError(err)
+		}
+		if !privateBucketPolicy(policy) {
+			return nil, "", fmt.Errorf("bucket policy check failed: unverified privacy")
+		}
 	}
 	return client, bucket, nil
 }
