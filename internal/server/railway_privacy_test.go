@@ -148,13 +148,19 @@ func (f *privacyFixture) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 		if req.Method == http.MethodPut && (f.mode == "public_write" || f.mode == "denied_write_mutates") {
 			value, err := io.ReadAll(req.Body)
-			if err != nil { return nil, err }
+			if err != nil {
+				return nil, err
+			}
 			f.objects[key] = value
-			if f.mode == "public_write" { return f.response(req, 200, "", nil) }
+			if f.mode == "public_write" {
+				return f.response(req, 200, "", nil)
+			}
 		}
 		if req.Method == http.MethodDelete && (f.mode == "public_delete" || f.mode == "denied_delete_mutates") {
 			delete(f.objects, key)
-			if f.mode == "public_delete" { return f.response(req, 204, "", nil) }
+			if f.mode == "public_delete" {
+				return f.response(req, 204, "", nil)
+			}
 		}
 		if f.mode == "public_object" && !listing {
 			return f.response(req, 200, string(f.objects[key]), nil)
