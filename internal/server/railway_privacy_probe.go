@@ -52,7 +52,7 @@ func anonymousObjectReadDenied(ctx context.Context, location string, transport h
 }
 
 // verifyRailwayPrivateBucket creates and removes only its own random canary.
-// A failed operation cannot authorise startup, and cleanup failure always wins.
+// A failed operation cannot authorize startup, and cleanup failure always wins.
 func verifyRailwayPrivateBucket(ctx context.Context, client *minio.Client, bucket, endpoint string) (result error) {
 	var keyRandom [16]byte
 	var payload [32]byte

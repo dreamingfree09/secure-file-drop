@@ -144,10 +144,10 @@ func TestStorageBucketLookup(t *testing.T) {
 	}
 	for _, tc := range []struct {
 		endpoint string
-		secure bool
-		lookup minio.BucketLookupType
-		bucket string
-		ok bool
+		secure   bool
+		lookup   minio.BucketLookupType
+		bucket   string
+		ok       bool
 	}{
 		{"t3.storageapi.dev", true, minio.BucketLookupDNS, "private-staging-bucket", true},
 		{"t3.storageapi.dev", false, minio.BucketLookupDNS, "private-staging-bucket", false},
