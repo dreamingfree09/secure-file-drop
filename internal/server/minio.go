@@ -79,6 +79,13 @@ func newMinioClient() (*minio.Client, string, error) {
 		return nil, "", fmt.Errorf("virtual-hosted S3 addressing requires HTTPS")
 	}
 
+	railway, err := railwayPrivacySelected()
+	if err != nil { return nil, "", err }
+	if railway {
+		if err := validateRailwayPrivacyConfig(rawEndpoint, bucket, lookup); err != nil { return nil, "", err }
+		return newRailwayStagingClient(rawEndpoint, bucket, accessKey, secretKey)
+	}
+
 	client, err := minio.New(endpoint, &minio.Options{
 		Creds:        credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure:       secure,

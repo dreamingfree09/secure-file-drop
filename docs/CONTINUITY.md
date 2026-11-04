@@ -308,3 +308,8 @@ No six-service change, live cleanup enablement, real database/object/credential 
 ## 2026-11-04 — PR46 first-release source correction
 
 Continue existing feature/recipient-passcode-delivery-20261103 from cd464b8 under Owner6619865821. Protected recipient downloads bypass gzip; account reset drops previous file choices and stale parsed JSON cannot overwrite next-session arrays. [Railway staging](RAILWAY_STAGING.md) now provides supported scoped IaC, exact8080/ready/10MiB settings, protected Resend/private-PG/S3 mapping and a harmless trial/restore runbook. Actual GetBucketPolicy provider semantics remain unverified; no security check is bypassed. Exact CI and implementation identity are in PR46; source preparation does not authorise live resources/mail/deployment or integration. Original checkout, PR45, protected master, host engines/PKI/trust/data/backups remain preserved.
+
+
+## 2026-11-04 — Issue50 scoped Railway privacy correction
+
+Work ID SFD-RAILWAY-POSITIVE-ATTESTATION-20261104; base4db7fe592072e24e193a20b2cc9574f15297f47b. [Implementation and operating gates](../docs/RAILWAY_STORAGE_ATTESTATION.md) define an opt-in exact-staging HTTPS positive same-object/listing attestation with mandatory cleanup. Default GetBucketPolicy behavior is preserved. Fixed live diagnostic is operation_unsupported; PostgreSQL/volume/bucket remain untouched and the redacted mode patch is unapplied. Source-pinned hosted security/full-stack results and final SHA belong in the PR handover. Independent exact-revision review, actual merged-source acceptance and harmless backend-only startup precede any domain/mail trial. No master integration, live probe, account/secret change, host Docker/WSL/VM/PKI/trust/backup or real-data operation occurred in this preparation.

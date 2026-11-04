@@ -68,6 +68,8 @@ authorisation is external; code does not create it or accept paid terms.
 ## One unresolved provider compatibility blocker
 
 **RAILWAY-BUCKET-POLICY: authenticated GetBucketPolicy semantics are UNVERIFIED.**
+
+Issue50 adds an explicitly scoped [positive-attestation alternative](RAILWAY_STORAGE_ATTESTATION.md). It is opt-in, requires independent exact-revision acceptance and has not been applied to the current deployment. This default-policy limitation is retained; no unsupported response is accepted as privacy evidence.
 The official bucket page specifies private buckets and virtual-hosted addressing,
 but does not explicitly define this policy operation's responses. Its general
 S3-compatibility claim does not establish that the actual provisioned bucket

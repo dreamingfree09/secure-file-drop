@@ -509,3 +509,8 @@ Owner instruction6619865821 against cd464b8 authorises source/test/CI preparatio
 
 
 PR46 acceptance completion: final coverage review found invitation expiry and eight-wrong-code exhaustion lacked direct API/SQL assertions. Added two real SMTP invitations inside the already owned fixture, explicit expiry/no-reservation and 8x401 then correct-code410/8,0 assertions. Retained the original three-download gzip/byte checks and adjusted independent ledger expectation to three successful sends plus nine synthetic quota events (exactly12). Backend events rise114 to124; Go254/browser27/desktop17 and zero-skip gates remain. No application or real database change. Final exact-head evidence belongs in PR46.
+
+
+## 2026-11-04 — Issue50 scoped Railway privacy correction
+
+Work ID SFD-RAILWAY-POSITIVE-ATTESTATION-20261104; base4db7fe592072e24e193a20b2cc9574f15297f47b. [Implementation and operating gates](../docs/RAILWAY_STORAGE_ATTESTATION.md) define an opt-in exact-staging HTTPS positive same-object/listing attestation with mandatory cleanup. Default GetBucketPolicy behavior is preserved. Fixed live diagnostic is operation_unsupported; PostgreSQL/volume/bucket remain untouched and the redacted mode patch is unapplied. Source-pinned hosted security/full-stack results and final SHA belong in the PR handover. Independent exact-revision review, actual merged-source acceptance and harmless backend-only startup precede any domain/mail trial. No master integration, live probe, account/secret change, host Docker/WSL/VM/PKI/trust/backup or real-data operation occurred in this preparation.

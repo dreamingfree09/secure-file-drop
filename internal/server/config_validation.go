@@ -236,6 +236,14 @@ func ValidateAllConfiguration() error {
 	if lookup == minio.BucketLookupDNS && !strings.HasPrefix(os.Getenv("SFD_S3_ENDPOINT"), "https://") {
 		v.AddError("SFD_S3_ENDPOINT", "virtual-hosted storage requires an HTTPS endpoint")
 	}
+	railway, privacyErr := railwayPrivacySelected()
+	if privacyErr != nil {
+		v.AddError("SFD_S3_PRIVACY_MODE", "unrecognised storage privacy mode")
+	} else if railway {
+		if err := validateRailwayPrivacyConfig(os.Getenv("SFD_S3_ENDPOINT"), os.Getenv("SFD_BUCKET"), lookup); err != nil {
+			v.AddError("SFD_S3_PRIVACY_MODE", "Railway positive attestation requires the exact allowlisted staging context, HTTPS endpoint and virtual bucket")
+		}
+	}
 	// MinIO/S3 configuration
 	if endpoint := os.Getenv("MINIO_ENDPOINT"); endpoint != "" {
 		// Can be host:port or URL
