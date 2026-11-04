@@ -321,3 +321,8 @@ Correction work SFD-MERGED-MASTER-ACCEPTANCE-DIAGNOSTICS-20261104 adds bounded f
 ## 2026-11-04 — Issue53 protected-invitation errors and focused form correction
 
 Issue53 correction is in progress from4d19a552 on codex/live-invitations-ui-20261104: fixed private mail-error categories and a scoped responsive invitation form. Local browser-script22, pinned Railway SDK5 and documentation39 checks pass. Hosted exact-head/full-stack/Windows/storage evidence, independent Aether review, actual merged-master tests, bounded deployment and genuine permitted-mailbox invitation/download remain required. See [continuity](CONTINUITY.md#2026-11-04--issue53-protected-invitation-errors-and-focused-form-correction) and the complete correction PR handover; publication alone is not delivery.
+
+
+### Issue53 exact-head fixture correction
+
+Initial candidate1b55b807 passes the new provider unit cases, but hosted CI41937746538/job126950413370 fails two G101 findings for hard-coded synthetic Resend test keys. The tests now construct those non-secret fixture values using the established repository convention. No scanner suppression, annotation, production change or failed-run rerun is used. Exact-head replacement CI and all prior acceptance gates remain mandatory; the failed result is retained.

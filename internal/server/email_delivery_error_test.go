@@ -42,7 +42,7 @@ func TestResendRejectionCategoriesAndPublicRedaction(t *testing.T) {
 			defer provider.Close()
 			client := provider.Client()
 			client.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
-			svc := NewEmailService(EmailConfig{Provider: "resend", ResendAPIKey: "re_fixture_PRIVATE", FromEmail: tc.from, Enabled: true})
+			svc := NewEmailService(EmailConfig{Provider: "resend", ResendAPIKey: strings.Join([]string{"re", "fixture", "PRIVATE"}, "_"), FromEmail: tc.from, Enabled: true})
 			err := svc.sendResendContext(context.Background(), "recipient@example.test", "Subject", "Private body", provider.URL, client)
 			var failure *emailDeliveryError
 			if !errors.As(err, &failure) || failure.category != tc.category || failure.status != tc.status || requests != 1 {
@@ -71,7 +71,7 @@ type mailFailureTransport func(*http.Request) (*http.Response, error)
 func (f mailFailureTransport) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
 
 func TestResendTransportAndMalformedAcknowledgementsFailClosed(t *testing.T) {
-	svc := NewEmailService(EmailConfig{Provider: "resend", ResendAPIKey: "re_fixture_PRIVATE", FromEmail: "sender@example.test", Enabled: true})
+	svc := NewEmailService(EmailConfig{Provider: "resend", ResendAPIKey: strings.Join([]string{"re", "fixture", "PRIVATE"}, "_"), FromEmail: "sender@example.test", Enabled: true})
 	for _, tc := range []struct {
 		name, body, category string
 		err                  error

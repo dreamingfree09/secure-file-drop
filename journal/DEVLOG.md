@@ -541,3 +541,8 @@ Add at most32 origin-filtered fixed-path/status observations, completed-check co
 ## 2026-11-04 — Issue53 protected-invitation errors and focused form correction
 
 Implemented bounded Resend rejection categories and safe invitation HTTP503/JSON messages, fixed-message frontend failures, malformed-receipt rejection and aligned accessible responsive form styling. Added provider/redaction negatives and isolated Chromium desktop/mobile screenshots without changing production endpoints or security gates. Local22 browser-script/5 pinned-SDK/39 document checks pass; the initial Windows default-encoding documentation invocation failed and the UTF-8 invocation passes. Go/full-stack/Windows/storage hosted tests and real permitted-mailbox delivery are pending at this entry. Original two503 incidents remain historical, their raw provider reason unestablished. No source merge, corrected-backend deployment, secret reset, existing-record modification or storage/host operation performed.
+
+
+### Issue53 exact-head fixture correction
+
+Initial candidate1b55b807 passes the new provider unit cases, but hosted CI41937746538/job126950413370 fails two G101 findings for hard-coded synthetic Resend test keys. The tests now construct those non-secret fixture values using the established repository convention. No scanner suppression, annotation, production change or failed-run rerun is used. Exact-head replacement CI and all prior acceptance gates remain mandatory; the failed result is retained.
