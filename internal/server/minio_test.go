@@ -155,7 +155,7 @@ func TestStorageBucketLookup(t *testing.T) {
 		{"evil.storageapi.dev", true, minio.BucketLookupDNS, "private-staging-bucket", false},
 		{"t3.storageapi.dev:443", true, minio.BucketLookupDNS, "private-staging-bucket", false},
 		{"t3.storageapi.dev", true, minio.BucketLookupDNS, "bucket/name", false},
-	}{
+	} {
 		if (validateRailwayProbeTarget(tc.endpoint, tc.secure, tc.lookup, tc.bucket) == nil) != tc.ok {
 			t.Fatalf("Railway provider target policy incorrect for endpoint %q", tc.endpoint)
 		}
