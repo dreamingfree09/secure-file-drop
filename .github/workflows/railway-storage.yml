@@ -25,6 +25,10 @@ jobs:
         run: |
           set -o pipefail
           go test -race ./internal/server -run '^TestRailwayPrivacy' -count=1 -v 2>&1 | tee "$RUNNER_TEMP/railway-privacy-tests.txt"
+      - name: Require pinned old-parser failure and corrected SDK success
+        run: |
+          set -o pipefail
+          python3 -B tests/acceptance/railway-denial-regression.py | tee "$RUNNER_TEMP/railway-denial-regression.txt"
       - name: Require clean formatting
         run: test ! -s "$RUNNER_TEMP/railway-gofmt.patch"
       - uses: actions/upload-artifact@v4
@@ -34,5 +38,6 @@ jobs:
           path: |
             ${{ runner.temp }}/railway-gofmt.patch
             ${{ runner.temp }}/railway-privacy-tests.txt
+            ${{ runner.temp }}/railway-denial-regression.txt
           if-no-files-found: error
           retention-days: 14
