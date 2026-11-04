@@ -116,7 +116,7 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 	signedBytes, readErr := io.ReadAll(io.LimitReader(object, int64(len(payload)+1)))
 	closeErr := object.Close()
 	if readErr != nil || closeErr != nil || !bytes.Equal(signedBytes, payload) {
-		return fmt.Errorf("storage privacy probe signed bytes mismatch (actual=%d expected=%d readFailed=%t closeFailed=%t)", len(signedBytes), len(payload), readErr != nil, closeErr != nil)
+		return fmt.Errorf("storage privacy probe signed bytes mismatch (actual=%d expected=%d readFailed=%t closeFailed=%t readType=%T sdkCode=%s)", len(signedBytes), len(payload), readErr != nil, closeErr != nil, readErr, minio.ToErrorResponse(readErr).Code)
 	}
 
 	if anon == nil {

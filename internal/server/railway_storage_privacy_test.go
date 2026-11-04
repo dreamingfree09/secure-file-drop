@@ -76,6 +76,7 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 		var stored []byte
 		var objectPath string
 		var uploaded, signedRead, anonRead, deletes int
+		var signedGetRange string
 		transport := policyFixtureTransport(func(req *http.Request) (*http.Response, error) {
 			if req.URL.Scheme != "https" || req.URL.Host != bucket+".t3.storageapi.dev" {
 				t.Errorf("unexpected S3 origin")
@@ -115,6 +116,7 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 				return response(200, "")
 			case http.MethodGet:
 				signedRead++
+				signedGetRange = req.Header.Get("Range")
 				if req.URL.Path != objectPath {t.Errorf("signed read changed probe key")}
 				data := string(stored)
 				if tc.badSignedRead {data = "different"}
@@ -149,7 +151,7 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 		anon := &http.Client{Transport: transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 		err = verifyStoragePrivacy(context.Background(), client, bucket, railwayStagingProbeMode, anon)
 		if (err == nil) != tc.wantSuccess {
-			t.Fatalf("%s: success=%v expected=%v: %v (uploaded=%d, signedReads=%d, anonymousReads=%d, deletes=%d, storedLength=%d)", tc.name, err == nil, tc.wantSuccess, err, uploaded, signedRead, anonRead, deletes, len(stored))
+			t.Fatalf("%s: success=%v expected=%v: %v (uploaded=%d, signedReads=%d, anonymousReads=%d, deletes=%d, storedLength=%d, signedRange=%q)", tc.name, err == nil, tc.wantSuccess, err, uploaded, signedRead, anonRead, deletes, len(stored), signedGetRange)
 		}
 		if tc.publicPolicy {
 			if uploaded != 0 || signedRead != 0 || anonRead != 0 || deletes != 0 {t.Fatal("explicit public policy must stop before probing")}
