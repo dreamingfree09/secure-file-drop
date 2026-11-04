@@ -84,8 +84,10 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 			response := func(status int, content string) (*http.Response, error) {
 				h := make(http.Header)
 				h.Set("Content-Length", strconv.Itoa(len(content)))
-				if status == http.StatusOK {
+				if status == http.StatusOK || status == http.StatusPartialContent {
 					h.Set("ETag", "\"synthetic-etag\"")
+					// MinIO requires a valid RFC7231 Last-Modified value on GET.
+					h.Set("Last-Modified", "Wed, 21 Oct 2015 07:28:00 GMT")
 				}
 				return &http.Response{StatusCode: status, Header: h, ContentLength: int64(len(content)), Body: io.NopCloser(strings.NewReader(content)), Request: req}, nil
 			}
