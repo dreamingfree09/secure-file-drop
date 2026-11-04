@@ -157,8 +157,10 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 		}
 		if tc.publicPolicy {
 			if uploaded != 0 || signedRead != 0 || anonRead != 0 || deletes != 0 {t.Fatal("explicit public policy must stop before probing")}
-		} else if uploaded != 1 || deletes != 1 {
-			t.Fatalf("%s: probe and cleanup did not run exactly once (%d,%d)", tc.name, uploaded, deletes)
+		} else if uploaded != 1 || (tc.deleteFailure && deletes < 1) || (!tc.deleteFailure && deletes != 1) {
+			// The SDK retries failed DELETE operations; every attempt must
+			// remain fail-closed rather than silently succeeding.
+			t.Fatalf("%s: probe/cleanup accounting invalid (%d,%d)", tc.name, uploaded, deletes)
 		}
 		if tc.name == "private" && (signedRead == 0 || anonRead != 1 || len(stored) != 32) {
 			t.Fatal("valid staging attestation missing a check")
