@@ -46,3 +46,8 @@ Agent owns engineering commands. Owner input is limited to indispensable private
 ## Reproducible tests
 
 `go test -race ./internal/server -run '^TestRailwayPrivacy' -count=1 -v` exercises five test methods with deterministic SDK fault cases, request boundaries,12 concurrent independent starts and real loopback HTTPS success/untrusted/wrong-hostname/expired negatives. Certificate trust exists only in disposable test clients; no Windows/root store changes. Full hosted acceptance retains all existing no-skip contracts and adds these five methods:254 to259 Go events. Backend124, browser27, portable17 and native Windows32/protocol16/policy6 remain unchanged. The focused workflow publishes formatting and test receipts, including on failure. Passing synthetic tests is not live Railway acceptance.
+
+
+## XML document review correction
+
+Review4467498559 found that the standard XML Decode call skips non-XML characters before the root. Explicit token validation now precedes DecodeElement. Only literal XML whitespace, valid comments and one initial XML1.0 UTF-8 declaration are permitted before Error; non-XML prefixes, character references or Unicode spaces outside the root, directives, arbitrary processing instructions and malformed/duplicate/late declarations fail. The suffix retains the same strict whitespace-only rule. Four legitimate prolog cases plus12 negatives expand the SDK matrix46 to62 without new Go test methods or weakened old assertions. The focused workflow requires a pinned139490c overlay failure and corrected-source pass. This is a source correction, not live Railway acceptance.

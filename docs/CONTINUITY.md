@@ -313,3 +313,8 @@ Continue existing feature/recipient-passcode-delivery-20261103 from cd464b8 unde
 ## 2026-11-04 — Issue50 scoped Railway privacy correction
 
 Work ID SFD-RAILWAY-POSITIVE-ATTESTATION-20261104; base4db7fe592072e24e193a20b2cc9574f15297f47b. [Implementation and operating gates](../docs/RAILWAY_STORAGE_ATTESTATION.md) define an opt-in exact-staging HTTPS positive same-object/listing attestation with mandatory cleanup. Default GetBucketPolicy behavior is preserved. Fixed live diagnostic is operation_unsupported; PostgreSQL/volume/bucket remain untouched and the redacted mode patch is unapplied. Source-pinned hosted security/full-stack results and final SHA belong in the PR handover. Independent exact-revision review, actual merged-source acceptance and harmless backend-only startup precede any domain/mail trial. No master integration, live probe, account/secret change, host Docker/WSL/VM/PKI/trust/backup or real-data operation occurred in this preparation.
+
+
+## 2026-11-04 — PR51 XML denial review correction
+
+Received139490c324b1217044278e66df870c3570f9cbd2; review4467498559 confirms Decode skips leading non-XML data. The corrected parser validates every leading token before DecodeElement, restricts raw outside-root whitespace and XML declaration syntax, and retains all status/identity/TLS/cleanup checks. The SDK matrix expands46 to62 within the existing five methods; full-stack Go259/backend124/browser27/portable17 counts are unchanged. A source-pinned Go overlay regression must fail against139490c and pass against the correction without overwriting source. Final exact revision/CI/receipts belong in the PR handover. Independent acceptance remains pending; no protected merge, Railway change or live probe occurred.

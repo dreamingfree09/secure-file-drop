@@ -285,11 +285,13 @@ func requireAnonymousDenial(ctx context.Context, client *http.Client, target url
 		Resources []string `xml:"Resource"`
 	}
 	decoder := xml.NewDecoder(bytes.NewReader(body))
-	if decoder.Decode(&denial) != nil || denial.XMLName.Local != "Error" || len(denial.Codes) != 1 || denial.Codes[0] != "AccessDenied" || len(denial.Keys) > 1 || len(denial.Buckets) > 1 || len(denial.Resources) > 1 {
+	root, err := privacyDenialRoot(decoder, body)
+	if err != nil || decoder.DecodeElement(&denial, &root) != nil || denial.XMLName.Local != "Error" || len(denial.Codes) != 1 || denial.Codes[0] != "AccessDenied" || len(denial.Keys) > 1 || len(denial.Buckets) > 1 || len(denial.Resources) > 1 {
 		return privacyFailure("unsigned_denial")
 	}
 	// Require one complete XML document; no ambiguous suffix or second response.
 	for {
+		before := decoder.InputOffset()
 		token, err := decoder.Token()
 		if err == io.EOF {
 			break
@@ -297,7 +299,7 @@ func requireAnonymousDenial(ctx context.Context, client *http.Client, target url
 		if err != nil {
 			return privacyFailure("unsigned_denial")
 		}
-		if text, ok := token.(xml.CharData); !ok || len(bytes.TrimSpace(text)) != 0 {
+		if _, ok := token.(xml.CharData); !ok || len(bytes.Trim(body[before:decoder.InputOffset()], " \t\r\n")) != 0 {
 			return privacyFailure("unsigned_denial")
 		}
 	}
@@ -312,4 +314,79 @@ func requireAnonymousDenial(ctx context.Context, client *http.Client, target url
 		return privacyFailure("unsigned_identity")
 	}
 	return nil
+}
+
+// Decode skips leading character data. Validate every prolog token before
+// DecodeElement, and inspect raw whitespace so character references and Unicode
+// spaces outside the root cannot masquerade as legal XML document whitespace.
+func privacyDenialRoot(decoder *xml.Decoder, body []byte) (xml.StartElement, error) {
+	for {
+		before := decoder.InputOffset()
+		token, err := decoder.Token()
+		if err != nil {
+			return xml.StartElement{}, privacyFailure("unsigned_denial")
+		}
+		switch value := token.(type) {
+		case xml.StartElement:
+			return value, nil
+		case xml.CharData:
+			if len(bytes.Trim(body[before:decoder.InputOffset()], " \t\r\n")) != 0 {
+				return xml.StartElement{}, privacyFailure("unsigned_denial")
+			}
+		case xml.Comment:
+			// XML comments are legal before the document element.
+		case xml.ProcInst:
+			if before != 0 || value.Target != "xml" || !privacyXMLDeclaration(value.Inst) {
+				return xml.StartElement{}, privacyFailure("unsigned_denial")
+			}
+		default:
+			// No DTD or arbitrary processing instructions in an S3 denial.
+			return xml.StartElement{}, privacyFailure("unsigned_denial")
+		}
+	}
+}
+
+// Let encoding/xml validate attribute syntax, then enforce the XML1.0 UTF-8
+// declaration grammar and order. Entity references are not legal in a declaration.
+func privacyXMLDeclaration(instruction []byte) bool {
+	if bytes.ContainsAny(instruction, "&<") {
+		return false
+	}
+	decoder := xml.NewDecoder(strings.NewReader("<declaration " + string(instruction) + "/>"))
+	token, err := decoder.Token()
+	root, ok := token.(xml.StartElement)
+	if err != nil || !ok || root.Name.Local != "declaration" || len(root.Attr) == 0 {
+		return false
+	}
+	version := root.Attr[0]
+	if version.Name.Space != "" || version.Name.Local != "version" || version.Value != "1.0" {
+		return false
+	}
+	encoding, standalone := false, false
+	for _, attr := range root.Attr[1:] {
+		if attr.Name.Space != "" {
+			return false
+		}
+		switch attr.Name.Local {
+		case "encoding":
+			if encoding || standalone || !strings.EqualFold(attr.Value, "utf-8") {
+				return false
+			}
+			encoding = true
+		case "standalone":
+			if standalone || attr.Value != "yes" && attr.Value != "no" {
+				return false
+			}
+			standalone = true
+		default:
+			return false
+		}
+	}
+	end, err := decoder.Token()
+	closing, ok := end.(xml.EndElement)
+	if err != nil || !ok || closing.Name != root.Name {
+		return false
+	}
+	_, err = decoder.Token()
+	return err == io.EOF
 }
