@@ -8,6 +8,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -29,12 +30,18 @@ func validateRailwayProbeTarget(endpoint string, secure bool, lookup minio.Bucke
 	return nil
 }
 
-// anonymousObjectReadDenied performs an unauthenticated GET, disallows redirects,
-// and accepts only an explicit HTTP 403. This request has no S3 credentials,
-// signed query, cookies or authorization header.
-func anonymousObjectReadDenied(ctx context.Context, location string, transport http.RoundTripper) bool {
-	request, err := http.NewRequestWithContext(ctx, http.MethodGet, location, nil)
-	if err != nil || request.URL.Scheme != "https" || request.URL.User != nil || request.URL.RawQuery != "" {
+// matchedSignedReadAndAnonymousDenied makes signed and unsigned GETs through
+// one TLS transport and the same User-Agent. A generic 403 (e.g. from a WAF)
+// is NOT privacy evidence: require a structured S3 AccessDenied response.
+func matchedSignedReadAndAnonymousDenied(ctx context.Context, signedLocation, anonymousLocation string, expected []byte, transport http.RoundTripper) bool {
+	signedURL, signedErr := url.Parse(signedLocation)
+	anonymousURL, anonymousErr := url.Parse(anonymousLocation)
+	if signedErr != nil || anonymousErr != nil ||
+		signedURL.Scheme != "https" || anonymousURL.Scheme != "https" ||
+		signedURL.User != nil || anonymousURL.User != nil ||
+		signedURL.Host == "" || signedURL.Host != anonymousURL.Host ||
+		signedURL.EscapedPath() != anonymousURL.EscapedPath() ||
+		signedURL.RawQuery == "" || anonymousURL.RawQuery != "" {
 		return false
 	}
 	client := &http.Client{
@@ -44,12 +51,43 @@ func anonymousObjectReadDenied(ctx context.Context, location string, transport h
 			return http.ErrUseLastResponse
 		},
 	}
-	response, err := client.Do(request)
+	read := func(location string) (*http.Response, error) {
+		request, err := http.NewRequestWithContext(ctx, http.MethodGet, location, nil)
+		if err != nil {
+			return nil, err
+		}
+		request.Header.Set("User-Agent", "sfd-private-probe/1")
+		request.Header.Set("Cache-Control", "no-store")
+		request.Header.Set("Pragma", "no-cache")
+		return client.Do(request)
+	}
+	signedResponse, err := read(signedLocation)
 	if err != nil {
 		return false
 	}
-	defer func() { _ = response.Body.Close() }()
-	return response.StatusCode == http.StatusForbidden
+	signedBytes, signedReadErr := io.ReadAll(io.LimitReader(signedResponse.Body, int64(len(expected)+1)))
+	_ = signedResponse.Body.Close()
+	if signedReadErr != nil || signedResponse.StatusCode != http.StatusOK ||
+		signedResponse.Header.Get("Content-Encoding") != "" || !bytes.Equal(signedBytes, expected) {
+		return false
+	}
+	anonymousResponse, err := read(anonymousLocation)
+	if err != nil {
+		return false
+	}
+	defer func() { _ = anonymousResponse.Body.Close() }()
+	if anonymousResponse.StatusCode != http.StatusForbidden {
+		return false
+	}
+	deniedBody, err := io.ReadAll(io.LimitReader(anonymousResponse.Body, 4097))
+	if err != nil || len(deniedBody) > 4096 {
+		return false
+	}
+	var denied struct {
+		XMLName xml.Name `xml:"Error"`
+		Code string `xml:"Code"`
+	}
+	return xml.Unmarshal(deniedBody, &denied) == nil && denied.Code == "AccessDenied"
 }
 
 // verifyRailwayPrivateBucket creates and removes only its own random canary.
@@ -96,8 +134,9 @@ func verifyRailwayPrivateBucket(ctx context.Context, client *minio.Client, bucke
 		return fmt.Errorf("railway privacy probe signed bytes mismatch (fail-closed)")
 	}
 	objectURL := (&url.URL{Scheme: "https", Host: bucket + "." + endpoint, Path: "/" + key}).String()
-	if !anonymousObjectReadDenied(ctx, objectURL, nil) {
-		return fmt.Errorf("railway privacy probe anonymous denial unverified (fail-closed)")
+	signedURL, err := client.PresignedGetObject(ctx, bucket, key, time.Minute, nil)
+	if err != nil || !matchedSignedReadAndAnonymousDenied(ctx, signedURL.String(), objectURL, payload[:], nil) {
+		return fmt.Errorf("railway privacy probe signed/anonymous control unverified (fail-closed)")
 	}
 	return nil
 }

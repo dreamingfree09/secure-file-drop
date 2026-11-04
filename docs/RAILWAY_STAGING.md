@@ -165,8 +165,10 @@ still rejects this error and all anonymous grants. The explicit
 `SFD_S3_PRIVACY_MODE=railway-probe` is a **staging-only opt-in**, restricted
 to HTTPS `t3.storageapi.dev`, virtual-hosted DNS, and a strictly validated
 bucket identifier. It creates an OS-random canary object, verifies the
-authenticated contents byte-for-byte and exact length, then requires a
-**403 Access Denied** on an unauthenticated GET of the precise key.
+authenticated contents byte-for-byte and exact length, then requires a matched HTTPS presigned GET of the same object with exact
+bytes/length, followed by a **403 S3 XML AccessDenied** response on an
+unauthenticated GET of the precise key using the same transport, URL path and
+User-Agent. A generic frontend or WAF 403 does not establish privacy.
 A 2xx, 3xx, 401, 404, 5xx, TLS failure, timeout or object/cleanup error
 rejects startup. A separate bounded cleanup deletes the canary and verifies
 the key is absent through signed S3 metadata lookup. Do not bypass this probe

@@ -113,34 +113,47 @@ func TestStorageBucketLookup(t *testing.T) {
 			t.Fatalf("bucket lookup %q = %d, %v; want %d", tc.name, got, err, tc.want)
 		}
 	}
-	// This is a real TLS HTTP server, but no real provider bucket is used.
+	// Real TLS HTTP requests prove that signed and anonymous reads share
+	// the exact path, transport and headers. A generic frontend 403 fails.
 	for _, tc := range []struct {
 		status int
-		denied bool
+		body string
+		allowed bool
 	}{
-		{http.StatusForbidden, true},
-		{http.StatusNotFound, false},
-		{http.StatusUnauthorized, false},
-		{http.StatusOK, false},
-		{http.StatusInternalServerError, false},
-		{http.StatusTemporaryRedirect, false},
+		{http.StatusForbidden, `<Error><Code>AccessDenied</Code></Error>`, true},
+		{http.StatusForbidden, `blocked by CDN`, false},
+		{http.StatusForbidden, `<Error><Code>InvalidToken</Code></Error>`, false},
+		{http.StatusNotFound, `<Error><Code>NoSuchKey</Code></Error>`, false},
+		{http.StatusOK, `public-object`, false},
+		{http.StatusTemporaryRedirect, `redirect`, false},
 	} {
-		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Header.Get("User-Agent") != "sfd-private-probe/1" ||
+				r.Header.Get("Cache-Control") != "no-store" || r.URL.Path != "/canary" {
+				t.Error("probe requests must have matched paths and headers")
+			}
+			if r.URL.RawQuery != "" {
+				w.WriteHeader(http.StatusOK)
+				_, _ = w.Write([]byte("known-bytes"))
+				return
+			}
 			if tc.status == http.StatusTemporaryRedirect {
 				w.Header().Set("Location", "https://example.invalid/not-the-owned-canary")
 			}
 			w.WriteHeader(tc.status)
+			_, _ = w.Write([]byte(tc.body))
 		}))
-		got := anonymousObjectReadDenied(context.Background(), server.URL, server.Client().Transport)
+		got := matchedSignedReadAndAnonymousDenied(context.Background(), server.URL+"/canary?X-Amz-Signature=synthetic",
+			server.URL+"/canary", []byte("known-bytes"), server.Client().Transport)
 		server.Close()
-		if got != tc.denied {
-			t.Fatalf("anonymous object GET HTTP %d: denial=%v wanted %v", tc.status, got, tc.denied)
+		if got != tc.allowed {
+			t.Fatalf("matched S3 controls status %d: accepted=%v want=%v", tc.status, got, tc.allowed)
 		}
 	}
-	if anonymousObjectReadDenied(context.Background(), "http://example.invalid/probe", nil) ||
-		anonymousObjectReadDenied(context.Background(), "https://user:pass@example.invalid/probe", nil) ||
-		anonymousObjectReadDenied(context.Background(), "https://example.invalid/probe?X-Amz-Signature=bad", nil) {
-		t.Fatal("insecure or signed anonymous probe URL accepted")
+	if matchedSignedReadAndAnonymousDenied(context.Background(), "http://example.invalid/probe?X-Amz-Signature=bad", "http://example.invalid/probe", []byte("x"), nil) ||
+		matchedSignedReadAndAnonymousDenied(context.Background(), "https://one.example.invalid/probe?X-Amz-Signature=bad", "https://two.example.invalid/probe", []byte("x"), nil) ||
+		matchedSignedReadAndAnonymousDenied(context.Background(), "https://example.invalid/probe?X-Amz-Signature=bad", "https://example.invalid/other", []byte("x"), nil) {
+		t.Fatal("insecure or mismatched signed/anonymous control accepted")
 	}
 	t.Setenv("SFD_ENV", "staging")
 	for _, tc := range []struct {
