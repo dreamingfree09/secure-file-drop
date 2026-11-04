@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/minio/minio-go/v7"
 )
@@ -156,7 +157,7 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 // its first decodable element. The XML token decoder otherwise normalizes
 // character references outside the root and skips processing instructions.
 func strictS3AccessDeniedXML(input []byte) bool {
-	if len(input) == 0 || len(input) > 2048 {
+	if len(input) == 0 || len(input) > 2048 || !utf8.Valid(input) {
 		return false
 	}
 	body := input
@@ -199,6 +200,15 @@ func strictS3AccessDeniedXML(input []byte) bool {
 		}
 		switch item := token.(type) {
 		case xml.StartElement:
+			// encoding/xml may accept repeated attribute names. An XML
+			// document must be rejected if any element has duplicates.
+			seenAttributes := make(map[xml.Name]bool, len(item.Attr))
+			for _, attr := range item.Attr {
+				if seenAttributes[attr.Name] {
+					return false
+				}
+				seenAttributes[attr.Name] = true
+			}
 			if depth == 0 {
 				if roots != 0 || item.Name.Local != "Error" || item.Name.Space != "" {
 					return false
