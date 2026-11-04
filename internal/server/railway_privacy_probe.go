@@ -37,8 +37,8 @@ func anonymousObjectReadDenied(ctx context.Context, location string, transport h
 		return false
 	}
 	client := &http.Client{
-		Timeout:       6 * time.Second,
-		Transport:     transport,
+		Timeout:   6 * time.Second,
+		Transport: transport,
 		CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
