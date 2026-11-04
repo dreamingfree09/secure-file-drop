@@ -155,11 +155,21 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 		denial.XMLName.Local != "Error" || denial.Code != "AccessDenied" {
 		return errors.New("storage privacy probe unsigned denial not independently verifiable")
 	}
-	// A well-formed S3 AccessDenied document is one complete XML element.
-	// Reject truncated suffixes, additional roots and any non-whitespace data.
-	var trailing struct{}
-	if decoder.Decode(&trailing) != io.EOF {
-		return errors.New("storage privacy probe unsigned denial has trailing data")
+	// Decode is not sufficient for trailing character data: Decode may
+	// ignore text between root elements. Examine every remaining XML token.
+	// Only whitespace after the single complete error element is permitted.
+	for {
+		token, err := decoder.Token()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return errors.New("storage privacy probe unsigned denial XML invalid")
+		}
+		chars, ok := token.(xml.CharData)
+		if !ok || strings.TrimSpace(string(chars)) != "" {
+			return errors.New("storage privacy probe unsigned denial has trailing data")
+		}
 	}
 	return nil
 }
