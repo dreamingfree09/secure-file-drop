@@ -229,11 +229,15 @@ def main():
         check(status==200 and b'/receive-download' in landing and one_code.encode() not in landing,'public landing asks for independent code without leaking it')
         def redeem(value):
             fields=urllib.parse.urlencode({'id':invite_id,'code':value}).encode()
-            return request('/receive-download',fields,method='POST',headers={'Content-Type':'application/x-www-form-urlencoded'},who=anonymous)
+            req=urllib.request.Request(origin+'/receive-download',fields,{'Content-Type':'application/x-www-form-urlencoded','Accept-Encoding':'gzip'},method='POST')
+            try:
+                with anonymous.open(req,timeout=35) as response:return response.status,response.read(),response.headers
+            except urllib.error.HTTPError as error:return error.code,error.read(),error.headers
         check(redeem('AAAA-AAAA-AAAA-AAAA')[0]==401,'real wrong code denied')
         for index in range(3):
-            status,payload=redeem(one_code)
+            status,payload,response_headers=redeem(one_code)
             check(status==200 and payload==data,'real code-gated byte-equal recipient download '+str(index+1))
+            check(response_headers.get('Content-Encoding','')=='' and response_headers.get('Content-Length')==str(len(data)),'gzip-capable recipient preserves raw binary length '+str(index+1))
         check(redeem(one_code)[0]==410,'recipient invitation download cap enforced')
         check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+invite_id+"';")=='1,3','real PostgreSQL tracks code attempts and download reservations')
         check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='1','SMTP invitation recorded in independent hourly sender ledger')
