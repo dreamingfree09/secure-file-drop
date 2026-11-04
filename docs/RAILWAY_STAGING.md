@@ -168,3 +168,14 @@ remain external execution prerequisites. This is not public production readiness
 - [Private buckets and limitations](https://docs.railway.com/storage-buckets)
 - [Outbound mail networking](https://docs.railway.com/networking/outbound-networking)
 - [Resend acceptance API](https://resend.com/docs/api-reference/emails/send-email)
+
+## Reconciliation provenance — 4 November 2026
+
+The staging-only positive attestation has been reconciled with protected master
+following PR #48. The default policy-only path continues to classify known
+GetBucketPolicy errors and **refuses** startup; the separately scoped canary
+is never enabled without explicit staging mode, exact Railway project and
+environment names, HTTPS, virtual-host lookup and the fresh bucket prefix.
+There is no production bypass, public domain or real-data acceptance. Re-run
+all exact-head CI and review before deploying this revision to the already
+provisioned isolated staging service.
