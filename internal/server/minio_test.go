@@ -1,6 +1,8 @@
 package server
 
 import (
+	"errors"
+	"strings"
 	"testing"
 
 	"github.com/minio/minio-go/v7"
@@ -62,6 +64,28 @@ func TestPrivateBucketPolicy(t *testing.T) {
 }
 
 func TestStorageBucketLookup(t *testing.T) {
+	// Never expose arbitrary provider errors or silently authorize an unknown
+	// response. Rejection is mandatory even when the error is recognizable.
+	for _, tc := range []struct {
+		providerCode string
+		category     string
+	}{
+		{"AccessDenied", "access_denied"},
+		{"NotImplemented", "operation_unsupported"},
+		{"SignatureDoesNotMatch", "credential_or_signature"},
+		{"NoSuchBucket", "bucket_missing"},
+		{"UnexpectedSecretHostAndToken", "unclassified"},
+	} {
+		err := classifyBucketPolicyError(minio.ErrorResponse{Code: tc.providerCode, Message: "sensitive-staging-token.example"})
+		if err == nil || !strings.Contains(err.Error(), tc.category) || strings.Contains(err.Error(), "sensitive-staging-token") ||
+			!strings.Contains(err.Error(), "fail-closed") {
+			t.Fatalf("policy category %s was not safely rejected: %v", tc.providerCode, err)
+		}
+	}
+	if err := classifyBucketPolicyError(errors.New("private-key-and-address")); err == nil ||
+		strings.Contains(err.Error(), "private-key-and-address") {
+		t.Fatal("unknown provider error leaked untrusted text")
+	}
 	for _, tc := range []struct {
 		name   string
 		want   minio.BucketLookupType

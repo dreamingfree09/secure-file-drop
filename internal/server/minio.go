@@ -94,7 +94,7 @@ func newMinioClient() (*minio.Client, string, error) {
 		BucketLookup: lookup,
 	}
 	if privacyMode == railwayStagingProbeMode {
-		options.Region = "auto" // Railway's documented Tigris S3 signing region.
+		options.Region = "auto" // Railway Tigris S3 signing region for staging.
 	}
 	client, err := minio.New(endpoint, options)
 	if err != nil {
@@ -112,10 +112,42 @@ func newMinioClient() (*minio.Client, string, error) {
 		return nil, "", fmt.Errorf("minio bucket does not exist: %s", bucket)
 	}
 
-	if err := verifyStoragePrivacy(ctx, client, bucket, privacyMode, nil); err != nil {
-		return nil, "", err
+	if privacyMode == railwayStagingProbeMode {
+		if err := verifyStoragePrivacy(ctx, client, bucket, privacyMode, nil); err != nil {
+			return nil, "", err
+		}
+	} else {
+		// Preserve PR48's exact fail-closed policy error classification.
+		policy, err := client.GetBucketPolicy(ctx, bucket)
+		if err != nil {
+			return nil, "", classifyBucketPolicyError(err)
+		}
+		if !privateBucketPolicy(policy) {
+			return nil, "", fmt.Errorf("bucket policy check failed: unverified privacy")
+		}
 	}
 	return client, bucket, nil
+}
+
+// classifyBucketPolicyError exposes only allowlisted failure categories.
+// Do not include provider error text: it can contain hosts, buckets or signed URLs.
+// No category authorizes acceptance or changes the privacy decision.
+func classifyBucketPolicyError(err error) error {
+	response := minio.ToErrorResponse(err)
+	category := "unclassified"
+	switch response.Code {
+	case "AccessDenied":
+		category = "access_denied"
+	case "NotImplemented", "NotSupported", "UnsupportedOperation":
+		category = "operation_unsupported"
+	case "InvalidAccessKeyId", "SignatureDoesNotMatch", "AuthorizationHeaderMalformed":
+		category = "credential_or_signature"
+	case "NoSuchBucket":
+		category = "bucket_missing"
+	case "NoSuchBucketPolicy":
+		category = "bucket_policy_unavailable"
+	}
+	return fmt.Errorf("bucket policy verification unavailable: %s (fail-closed)", category)
 }
 
 // privateBucketPolicy permits policies restricted to named principals, but
