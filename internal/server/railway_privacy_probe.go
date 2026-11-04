@@ -41,8 +41,21 @@ func matchedSignedReadAndAnonymousDenied(ctx context.Context, signedLocation, an
 		signedURL.User != nil || anonymousURL.User != nil ||
 		signedURL.Host == "" || signedURL.Host != anonymousURL.Host ||
 		signedURL.EscapedPath() != anonymousURL.EscapedPath() ||
-		signedURL.RawQuery == "" || anonymousURL.RawQuery != "" {
+		signedURL.RawQuery == "" || anonymousURL.RawQuery != "" ||
+		signedURL.Fragment != "" || anonymousURL.Fragment != "" {
 		return false
+	}
+	// In production the HTTP transport is always the ordinary trusted TLS
+	// transport. Refuse all hosts except a single Railway bucket endpoint;
+	// the injected TLS transport is only used by the hermetic HTTP tests.
+	if transport == nil {
+		host := signedURL.Hostname()
+		suffix := ".t3.storageapi.dev"
+		if signedURL.Port() != "" || len(host) <= len(suffix) ||
+			host[len(host)-len(suffix):] != suffix ||
+			!railwayProbeBucketName.MatchString(host[:len(host)-len(suffix)]) {
+			return false
+		}
 	}
 	client := &http.Client{
 		Timeout:   6 * time.Second,
@@ -52,6 +65,10 @@ func matchedSignedReadAndAnonymousDenied(ctx context.Context, signedLocation, an
 		},
 	}
 	read := func(location string) (*http.Response, error) {
+		// #nosec G704 -- Both URLs are structurally matched HTTPS URLs. In
+		// production only a valid bucket.t3.storageapi.dev host is accepted,
+		// ordinary TLS verification is enabled, and redirects are disabled.
+		// A custom transport is available only to in-package TLS fixtures.
 		request, err := http.NewRequestWithContext(ctx, http.MethodGet, location, nil)
 		if err != nil {
 			return nil, err
@@ -59,6 +76,8 @@ func matchedSignedReadAndAnonymousDenied(ctx context.Context, signedLocation, an
 		request.Header.Set("User-Agent", "sfd-private-probe/1")
 		request.Header.Set("Cache-Control", "no-store")
 		request.Header.Set("Pragma", "no-cache")
+		// #nosec G704 -- The request host is validated above, the normal
+		// production TLS transport is used and all redirects are prohibited.
 		return client.Do(request)
 	}
 	signedResponse, err := read(signedLocation)
