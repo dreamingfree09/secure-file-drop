@@ -69,6 +69,10 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 		wantSuccess   bool
 	}{
 		{"private", 403, denial, false, false, false, true},
+		{"private-xml-whitespace", 403, denial+" \n\t", false, false, false, true},
+		{"malformed-xml-suffix", 403, denial+"<", false, false, false, false},
+		{"trailing-xml-root", 403, denial+"<Another/>", false, false, false, false},
+		{"trailing-garbage", 403, denial+"garbage", false, false, false, false},
 		{"public-200", 200, "public", false, false, false, false},
 		{"redirect", 302, "", false, false, false, false},
 		{"opaque-403", 403, "blocked", false, false, false, false},
