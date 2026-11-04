@@ -80,9 +80,13 @@ func newMinioClient() (*minio.Client, string, error) {
 	}
 
 	railway, err := railwayPrivacySelected()
-	if err != nil { return nil, "", err }
+	if err != nil {
+		return nil, "", err
+	}
 	if railway {
-		if err := validateRailwayPrivacyConfig(rawEndpoint, bucket, lookup); err != nil { return nil, "", err }
+		if err := validateRailwayPrivacyConfig(rawEndpoint, bucket, lookup); err != nil {
+			return nil, "", err
+		}
 		return newRailwayStagingClient(rawEndpoint, bucket, accessKey, secretKey)
 	}
 
