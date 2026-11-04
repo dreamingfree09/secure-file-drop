@@ -116,8 +116,15 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 			case http.MethodGet:
 				signedRead++
 				if req.URL.Path != objectPath {t.Errorf("signed read changed probe key")}
-				if tc.badSignedRead {return response(200, "different")}
-				return response(200, string(stored))
+				data := string(stored)
+				if tc.badSignedRead {data = "different"}
+				if req.Header.Get("Range") != "" {
+					reply, err := response(http.StatusPartialContent, data)
+					reply.Header.Set("Content-Range", "bytes 0-"+strconv.Itoa(len(data)-1)+"/"+strconv.Itoa(len(stored)))
+					reply.Header.Set("Accept-Ranges", "bytes")
+					return reply, err
+				}
+				return response(200, data)
 			case http.MethodHead:
 				// GetObject internally requests HEAD to learn the original size.
 				reply, err := response(200, "")
