@@ -142,7 +142,7 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 		anon := &http.Client{Transport: transport, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}
 		err = verifyStoragePrivacy(context.Background(), client, bucket, railwayStagingProbeMode, anon)
 		if (err == nil) != tc.wantSuccess {
-			t.Fatalf("%s: success=%v expected=%v: %v", tc.name, err == nil, tc.wantSuccess, err)
+			t.Fatalf("%s: success=%v expected=%v: %v (uploaded=%d, signedReads=%d, anonymousReads=%d, deletes=%d, storedLength=%d)", tc.name, err == nil, tc.wantSuccess, err, uploaded, signedRead, anonRead, deletes, len(stored))
 		}
 		if tc.publicPolicy {
 			if uploaded != 0 || signedRead != 0 || anonRead != 0 || deletes != 0 {t.Fatal("explicit public policy must stop before probing")}
