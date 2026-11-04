@@ -351,7 +351,17 @@ func TestRailwayPrivacyConfiguration(t *testing.T) {
 		}
 		t.Setenv(name, old)
 	}
-	t.Log("configuration: default and explicit strict policy preserved; 24 mode/scope/endpoint/bucket negatives exercised")
+	t.Setenv("SFD_S3_PRIVACY_MODE", railwayPrivacyMode)
+	t.Setenv("SFD_S3_ENDPOINT", "https://private-endpoint-sentinel@%invalid")
+	t.Setenv("SFD_S3_ACCESS_KEY", "synthetic-access")
+	t.Setenv("SFD_S3_SECRET_KEY", "synthetic-secret")
+	t.Setenv("SFD_BUCKET", privacyTestBucket)
+	t.Setenv("SFD_S3_BUCKET_LOOKUP", "virtual")
+	client, bucket, err := newMinioClient()
+	if err == nil || client != nil || bucket != "" || strings.Contains(err.Error(), "private-endpoint-sentinel") {
+		t.Error("startup must reject malformed endpoint scope without parser disclosure or IO")
+	}
+	t.Log("configuration: default and explicit strict policy preserved; 24 mode/scope/endpoint/bucket negatives plus redacted startup-path regression exercised")
 }
 
 func TestRailwayPrivacyAttestation(t *testing.T) {
