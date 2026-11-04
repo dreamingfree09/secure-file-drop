@@ -155,6 +155,7 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 	// Inspect every leading token so stray text cannot masquerade as a
 	// well-formed S3 denial. A normal XML declaration and whitespace are OK.
 	var root xml.StartElement
+	var declarationSeen, precedingWhitespace bool
 	for {
 		token, nextErr := decoder.Token()
 		if nextErr != nil {
@@ -165,10 +166,20 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 			if strings.TrimSpace(string(first)) != "" {
 				return errors.New("storage privacy probe unsigned denial has leading data")
 			}
+			precedingWhitespace = true
 		case xml.ProcInst:
-			if first.Target != "xml" {
-				return errors.New("storage privacy probe unsigned denial has unexpected preamble")
+			// The XML declaration, when present, must be first and unique.
+			// Only recognised UTF-8 XML 1.0 declarations are permitted;
+			// parser tokens alone do not validate processing instructions.
+			declaration := strings.TrimSpace(string(first.Inst))
+			if first.Target != "xml" || declarationSeen || precedingWhitespace ||
+				(declaration != `version="1.0"` &&
+					declaration != `version='1.0'` &&
+					declaration != `version="1.0" encoding="UTF-8"` &&
+					declaration != `version='1.0' encoding='UTF-8'`) {
+				return errors.New("storage privacy probe unsigned denial has invalid XML declaration")
 			}
+			declarationSeen = true
 		case xml.StartElement:
 			if first.Name.Local != "Error" || first.Name.Space != "" {
 				return errors.New("storage privacy probe unsigned denial root invalid")
