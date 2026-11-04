@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"strconv"
 	"testing"
 
 	"github.com/minio/minio-go/v7"
@@ -81,11 +82,11 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 			}
 			response := func(status int, content string) (*http.Response, error) {
 				h := make(http.Header)
-				h.Set("Content-Length", "0")
+				h.Set("Content-Length", strconv.Itoa(len(content)))
 				if status == http.StatusOK {
 					h.Set("ETag", "\"synthetic-etag\"")
 				}
-				return &http.Response{StatusCode: status, Header: h, Body: io.NopCloser(strings.NewReader(content)), Request: req}, nil
+				return &http.Response{StatusCode: status, Header: h, ContentLength: int64(len(content)), Body: io.NopCloser(strings.NewReader(content)), Request: req}, nil
 			}
 			if req.URL.Query().Has("policy") {
 				if tc.publicPolicy {
