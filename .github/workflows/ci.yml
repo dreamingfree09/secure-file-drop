@@ -13,15 +13,6 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - name: Temporary formatting readback for review branch
-        run: |
-          for path in internal/server/railway_storage_privacy.go internal/server/railway_storage_privacy_test.go; do
-            gofmt -w "$path"
-            echo "SFD_PRIVACY_FORMAT_BEGIN $path"
-            base64 -w0 "$path"
-            echo
-            echo "SFD_PRIVACY_FORMAT_END $path"
-          done
       - uses: actions/setup-node@v6
         with:
           node-version: '24'

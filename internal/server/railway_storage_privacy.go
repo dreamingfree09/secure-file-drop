@@ -8,7 +8,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
-	"fmt"
 	"net/http"
 	"net/url"
 	"os"
@@ -66,7 +65,7 @@ func verifyStoragePrivacy(ctx context.Context, client *minio.Client, bucket, mod
 		case "AccessDenied", "NotImplemented", "MethodNotAllowed":
 			// Not a privacy proof. Continue only to the positive byte-level test.
 		default:
-			return errors.New("unrecognised storage-policy failure; attestation refused")
+			return errors.New("unrecognized storage-policy failure; attestation refused")
 		}
 	}
 	return attestRailwayStagingBucket(client, bucket, anon)
@@ -116,13 +115,13 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 	signedBytes, readErr := io.ReadAll(io.LimitReader(object, int64(len(payload)+1)))
 	closeErr := object.Close()
 	if readErr != nil || closeErr != nil || !bytes.Equal(signedBytes, payload) {
-		return fmt.Errorf("storage privacy probe signed bytes mismatch (actual=%d expected=%d readFailed=%t closeFailed=%t readType=%T sdkCode=%s)", len(signedBytes), len(payload), readErr != nil, closeErr != nil, readErr, minio.ToErrorResponse(readErr).Code)
+		return errors.New("storage privacy probe signed bytes mismatch")
 	}
 
 	if anon == nil {
 		anon = &http.Client{
-			Timeout: 6 * time.Second,
-			Transport: &http.Transport{TLSHandshakeTimeout: 4 * time.Second},
+			Timeout:       6 * time.Second,
+			Transport:     &http.Transport{TLSHandshakeTimeout: 4 * time.Second},
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		}
 	}
@@ -157,4 +156,3 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 	}
 	return nil
 }
-
