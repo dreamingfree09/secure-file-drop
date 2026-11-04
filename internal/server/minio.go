@@ -67,6 +67,23 @@ func newMinioClient() (*minio.Client, string, error) {
 		return nil, "", fmt.Errorf("minio configuration incomplete")
 	}
 
+	// Validate the opt-in scope before parsing untrusted endpoint text. URL
+	// parser errors can echo their input, which must not reach startup logs.
+	railway, err := railwayPrivacySelected()
+	if err != nil {
+		return nil, "", err
+	}
+	if railway {
+		lookup, err := storageBucketLookup(os.Getenv("SFD_S3_BUCKET_LOOKUP"))
+		if err != nil {
+			return nil, "", err
+		}
+		if err := validateRailwayPrivacyConfig(rawEndpoint, bucket, lookup); err != nil {
+			return nil, "", err
+		}
+		return newRailwayStagingClient(rawEndpoint, bucket, accessKey, secretKey)
+	}
+
 	endpoint, secure, err := normaliseEndpoint(rawEndpoint)
 	if err != nil {
 		return nil, "", err

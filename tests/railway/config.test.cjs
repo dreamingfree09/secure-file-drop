@@ -41,7 +41,7 @@ test('official SDK accepts a minimal Dockerfile backend with fixed matching port
 
 test('sensitive settings remain private Railway values and cleanup stays disabled',()=>{
   const backend=program({projectName:'secure-file-drop-staging',environment:'staging'}).resources[0];
-  for(const key of ['DATABASE_URL','SFD_S3_ACCESS_KEY','SFD_S3_SECRET_KEY','SFD_ADMIN_PASS','SFD_SESSION_SECRET','SFD_DOWNLOAD_SECRET','SFD_RESEND_API_KEY','SFD_PUBLIC_BASE_URL'])assert.equal(JSON.stringify(backend.variables[key]),JSON.stringify(sdk.preserve()));
+  for(const key of ['SFD_ENV','SFD_S3_PRIVACY_MODE','DATABASE_URL','SFD_S3_ACCESS_KEY','SFD_S3_SECRET_KEY','SFD_ADMIN_PASS','SFD_SESSION_SECRET','SFD_DOWNLOAD_SECRET','SFD_RESEND_API_KEY','SFD_PUBLIC_BASE_URL'])assert.equal(JSON.stringify(backend.variables[key]),JSON.stringify(sdk.preserve()));
   assert.equal(backend.variables.SFD_CLEANUP_ENABLED.value,'false');
   assert.equal(backend.deploy.numReplicas,1);
   assert.equal(backend.deploy.healthcheckTimeout,300);

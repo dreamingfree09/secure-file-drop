@@ -308,3 +308,23 @@ No six-service change, live cleanup enablement, real database/object/credential 
 ## 2026-11-04 — PR46 first-release source correction
 
 Continue existing feature/recipient-passcode-delivery-20261103 from cd464b8 under Owner6619865821. Protected recipient downloads bypass gzip; account reset drops previous file choices and stale parsed JSON cannot overwrite next-session arrays. [Railway staging](RAILWAY_STAGING.md) now provides supported scoped IaC, exact8080/ready/10MiB settings, protected Resend/private-PG/S3 mapping and a harmless trial/restore runbook. Actual GetBucketPolicy provider semantics remain unverified; no security check is bypassed. Exact CI and implementation identity are in PR46; source preparation does not authorise live resources/mail/deployment or integration. Original checkout, PR45, protected master, host engines/PKI/trust/data/backups remain preserved.
+
+
+## 2026-11-04 — Issue50 scoped Railway privacy correction
+
+Work ID SFD-RAILWAY-POSITIVE-ATTESTATION-20261104; base4db7fe592072e24e193a20b2cc9574f15297f47b. [Implementation and operating gates](../docs/RAILWAY_STORAGE_ATTESTATION.md) define an opt-in exact-staging HTTPS positive same-object/listing attestation with mandatory cleanup. Default GetBucketPolicy behavior is preserved. Fixed live diagnostic is operation_unsupported; PostgreSQL/volume/bucket remain untouched and the redacted mode patch is unapplied. Source-pinned hosted security/full-stack results and final SHA belong in the PR handover. Independent exact-revision review, actual merged-source acceptance and harmless backend-only startup precede any domain/mail trial. No master integration, live probe, account/secret change, host Docker/WSL/VM/PKI/trust/backup or real-data operation occurred in this preparation.
+
+
+## 2026-11-04 — PR51 XML denial review correction
+
+Received139490c324b1217044278e66df870c3570f9cbd2; review4467498559 confirms Decode skips leading non-XML data. The corrected parser validates every leading token before DecodeElement, restricts raw outside-root whitespace and XML declaration syntax, and retains all status/identity/TLS/cleanup checks. The SDK matrix expands46 to62 within the existing five methods; full-stack Go259/backend124/browser27/portable17 counts are unchanged. A source-pinned Go overlay regression must fail against139490c and pass against the correction without overwriting source. Final exact revision/CI/receipts belong in the PR handover. Independent acceptance remains pending; no protected merge, Railway change or live probe occurred.
+
+
+## 2026-11-04 — PR51 raw declaration-separator correction
+
+Review4467963500 confirms that encoding/xml also accepts adjacent declaration attributes. Received99d6a09688b7bc2b41aee1ad8629b4dbdfe21fa2 is superseded for acceptance. The correction uses an anchored linear-time raw grammar for ordered XML1.0 UTF-8 declarations, with mandatory literal XML whitespace between attributes and matched quote pairs. Four malformed separator cases plus one legal-spacing positive expand the existing matrix62 to67; five methods/Go259 and all previous integration counts remain unchanged. The pinned overlay gate now requires original139490c prefix failure AND99d6a09 adjacent-encoding/standalone failures, then corrected67-case success. Final exact-head CI/review remains in the PR; no live/provider/master changes.
+
+
+## 2026-11-04 — Complete S3 denial element subset
+
+The separator finding applies to ordinary XML element attributes too. The accepted S3 Error subset now permits no element attributes except one standard S3 default namespace on the root; foreign namespaces, directives and interior processing instructions fail. Canonical namespaced Error remains positive coverage. Six additional cases expand67 to73 within the same five methods; Go259 and all prior acceptance counters are unchanged. A third pinned cfc1ad6 overlay must reproduce adjacent root/Code attribute acceptance before corrected73-case success. This closes the same permissive-parser class without inventing a general XML parser. Provider replies outside the documented subset fail closed and require independent compatibility review; no live operation or protected merge.

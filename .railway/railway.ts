@@ -24,6 +24,8 @@ export default defineRailway((ctx) => {
       SFD_EMAIL_PROVIDER: "resend",
       SFD_CLEANUP_ENABLED: "false",
       DATABASE_URL: preserve(),
+      SFD_ENV: preserve(),
+      SFD_S3_PRIVACY_MODE: preserve(),
       SFD_S3_ENDPOINT: preserve(),
       SFD_S3_ACCESS_KEY: preserve(),
       SFD_S3_SECRET_KEY: preserve(),
