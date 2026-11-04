@@ -2,12 +2,14 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const crypto = require('node:crypto');
 const { chromium } = require(process.env.SFD_AUTH_BROWSER_MODULE);
-let stage='fixture guard'; const checks=[];
+const {createBrowserTrace} = require('./browser-diagnostics.cjs');
+let stage='fixture guard'; const checks=[]; let responseTrace;
 function check(value,name){ assert.ok(value,name); checks.push(name); }
 (async()=>{
  const origin=process.argv[2],u=new URL(origin),fixture=JSON.parse(fs.readFileSync(process.argv[3],'utf8'));
  assert.equal(u.protocol,'https:');assert.equal(u.hostname,'localhost');assert.notEqual(u.port,'8443');assert.equal(fixture.Origin,origin);
  assert.match(fixture.FixtureOwner,/^sfd-auth-[0-9a-f]{12}$/);assert.equal(fixture.Uploader,'uploader');assert.ok(fixture.UploaderPassword);
+ responseTrace=createBrowserTrace(origin);
  const browser=await chromium.launch({headless:true,chromiumSandbox:true});
  try{
   const context=await browser.newContext({acceptDownloads:true,viewport:{width:1280,height:900}}),page=await context.newPage();
@@ -15,15 +17,18 @@ function check(value,name){ assert.ok(value,name); checks.push(name); }
   await context.route('**/*',route=>new URL(route.request().url()).origin===origin?route.continue():route.abort());
   await page.addInitScript(()=>{document.execCommand=command=>{if(command!=='copy')return false;window.fixtureCopied=document.getElementById('downloadLink').value;return true;};});
   const errors=[];page.on('pageerror',()=>errors.push('page error'));
+   page.on('response',response=>responseTrace.record(response.url(),response.status()));
   async function login(user,password){
    await page.locator('#username').fill(user);await page.locator('#password').fill(password);
    const response=page.waitForResponse(r=>r.url()===origin+'/login'&&r.request().method()==='POST');await page.evaluate(()=>login());
    check((await response).status()===200,'actual '+(user==='admin'?'environment administrator':'registered user')+' UI login');
   }
-  stage='admin login and quota';await page.goto(origin);await login(fixture.Username,fixture.Password);
+  stage='admin page load';await page.goto(origin);
+   stage='admin login request';await login(fixture.Username,fixture.Password);
+   stage='admin application visibility';
   await page.waitForFunction(()=>!document.getElementById('appScreen').classList.contains('hidden'));
   check(await page.locator('#password').inputValue()==='','sign-in password field cleared');
-  await page.waitForFunction(()=>document.getElementById('quotaOutput').textContent.includes('No personal storage quota'));
+  stage='admin quota readback';await page.waitForFunction(()=>document.getElementById('quotaOutput').textContent.includes('No personal storage quota'));
   check(await page.locator('#quotaBanner').evaluate(el=>el.classList.contains('hidden')),'environment administrator quota is inapplicable, not a temporary failure');
   check(await page.locator('#adminSection').isVisible(),'environment administrator dashboard visible');
   const admin=await page.evaluate(async()=>{const r=await fetch('/me');return {status:r.status,body:await r.json()};});
@@ -64,4 +69,4 @@ function check(value,name){ assert.ok(value,name); checks.push(name); }
   await context.close();console.log('BROWSER ACCEPTANCE PASS: actual historical browser UI with verified identities, role-correct quota, upload/hash/download and session-state cleanup');
   console.log('LEGACY BROWSER CHECKS: '+JSON.stringify({count:checks.length,checks,clipboard:'isolated test clipboard; OS clipboard unexecuted',external_QR:'external requests blocked in synthetic fixture; QR integration unexecuted'}));
  }finally{await browser.close();}
-})().catch(error=>{console.error('BROWSER DIAGNOSTIC: '+JSON.stringify({stage,kind:error.name,certificate_error:/CERT_|certificate/i.test(error.message),assertion:error.name==='AssertionError'?error.message:'runtime failure; values redacted'}));process.exitCode=1;});
+})().catch(error=>{console.error('BROWSER DIAGNOSTIC: '+JSON.stringify({stage,kind:error.name,certificate_error:/CERT_|certificate/i.test(error.message),assertion:error.name==='AssertionError'?error.message:'runtime failure; values redacted',completed_check_count:checks.length,responses:responseTrace?responseTrace.snapshot():[]}));process.exitCode=1;});

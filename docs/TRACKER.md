@@ -309,3 +309,10 @@ Review4467963500 confirms that encoding/xml also accepts adjacent declaration at
 ## 2026-11-04 — Complete S3 denial element subset
 
 The separator finding applies to ordinary XML element attributes too. The accepted S3 Error subset now permits no element attributes except one standard S3 default namespace on the root; foreign namespaces, directives and interior processing instructions fail. Canonical namespaced Error remains positive coverage. Six additional cases expand67 to73 within the same five methods; Go259 and all prior acceptance counters are unchanged. A third pinned cfc1ad6 overlay must reproduce adjacent root/Code attribute acceptance before corrected73-case success. This closes the same permissive-parser class without inventing a general XML parser. Provider replies outside the documented subset fail closed and require independent compatibility review; no live operation or protected merge.
+
+
+## 2026-11-04 — actual-master acceptance diagnostics and checkout portability
+
+PR51 is integrated as5d826096e824577b6adff640311a254402d51e47 after Aether6637297525. Its actual-master CI41877368160 fails one BYTEA administrator-browser wait; six other jobs pass. Source integration is complete, deployment is held. The failure is retained, not reclassified as flaky or passed.
+
+Correction work SFD-MERGED-MASTER-ACCEPTANCE-DIAGNOSTICS-20261104 adds bounded fixed-path/status diagnostics and a reproduced CRLF test-loader correction only. Browser19/SDK5/docs39/syntax checks pass locally; full exact-head hosted acceptance and independent review remain pending. Production source/limits are unchanged. Railway patch remains unapplied; original data/engines/trust/backups are preserved and genuine email/domain/transfer/recovery gates remain open.
