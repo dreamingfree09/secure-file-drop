@@ -100,10 +100,34 @@ func newMinioClient() (*minio.Client, string, error) {
 	}
 
 	policy, err := client.GetBucketPolicy(ctx, bucket)
-	if err != nil || !privateBucketPolicy(policy) {
-		return nil, "", fmt.Errorf("bucket policy must exclude anonymous access")
+	if err != nil {
+		return nil, "", classifyBucketPolicyError(err)
+	}
+	if !privateBucketPolicy(policy) {
+		return nil, "", fmt.Errorf("bucket policy check failed: unverified privacy")
 	}
 	return client, bucket, nil
+}
+
+// classifyBucketPolicyError exposes only allowlisted failure categories.
+// Do not include provider error text: it can contain hosts, buckets or signed URLs.
+// No category authorises acceptance or changes the privacy decision.
+func classifyBucketPolicyError(err error) error {
+	response := minio.ToErrorResponse(err)
+	category := "unclassified"
+	switch response.Code {
+	case "AccessDenied":
+		category = "access_denied"
+	case "NotImplemented", "NotSupported", "UnsupportedOperation":
+		category = "operation_unsupported"
+	case "InvalidAccessKeyId", "SignatureDoesNotMatch", "AuthorizationHeaderMalformed":
+		category = "credential_or_signature"
+	case "NoSuchBucket":
+		category = "bucket_missing"
+	case "NoSuchBucketPolicy":
+		category = "bucket_policy_unavailable"
+	}
+	return fmt.Errorf("bucket policy verification unavailable: %s (fail-closed)", category)
 }
 
 // privateBucketPolicy permits policies restricted to named principals, but

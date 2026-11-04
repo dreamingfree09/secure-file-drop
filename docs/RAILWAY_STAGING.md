@@ -73,8 +73,10 @@ but does not explicitly define this policy operation's responses. Its general
 S3-compatibility claim does not establish that the actual provisioned bucket
 satisfies this application's strict privacy check. No real bucket/credentials
 were available or used. Do not silently interpret403,501 or an unknown response
-as proof of privacy. The existing `newMinioClient`/`privateBucketPolicy` code is
-unchanged and fails closed on errors, malformed policy or anonymous grants.
+as proof of privacy. The existing `newMinioClient`/`privateBucketPolicy` protection remains
+fail-closed on errors, malformed policy or anonymous grants. A separate
+source-only diagnostic revision may classify known S3 provider failure codes
+into non-sensitive error categories; this does not authorise access.
 
 The safe SDK response fixtures verify HTTPS virtual addressing and the actual
 client's accepted named policy/NoSuchBucketPolicy versus denied, unsupported,
