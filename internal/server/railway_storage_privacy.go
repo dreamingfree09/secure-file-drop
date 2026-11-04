@@ -146,71 +146,90 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 	if err != nil || len(body) > 2048 {
 		return errors.New("storage privacy probe unsigned denial response invalid")
 	}
-	var denial struct {
-		XMLName xml.Name
-		Code    string
+	if !strictS3AccessDeniedXML(body) {
+		return errors.New("storage privacy probe unsigned denial XML not independently verifiable")
+	}
+	return nil
+}
+
+// strictS3AccessDeniedXML checks the entire bounded provider response, not just
+// its first decodable element. The XML token decoder otherwise normalizes
+// character references outside the root and skips processing instructions.
+func strictS3AccessDeniedXML(input []byte) bool {
+	if len(input) == 0 || len(input) > 2048 {
+		return false
+	}
+	body := input
+	// A declaration is accepted only at byte zero, at most once, and only
+	// in one of these canonical XML 1.0 UTF-8 spellings.
+	if bytes.HasPrefix(body, []byte("<?xml")) {
+		known := []string{
+			`<?xml version="1.0"?>`,
+			`<?xml version='1.0'?>`,
+			`<?xml version="1.0" encoding="UTF-8"?>`,
+			`<?xml version='1.0' encoding='UTF-8'?>`,
+		}
+		found := false
+		for _, declaration := range known {
+			if bytes.HasPrefix(body, []byte(declaration)) {
+				body = body[len(declaration):]
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	// Only literal XML whitespace is permissible outside the root. Numeric
+	// entities and non-XML Unicode whitespace are not stripped.
+	body = bytes.Trim(body, " \t\r\n")
+	if len(body) == 0 {
+		return false
 	}
 	decoder := xml.NewDecoder(bytes.NewReader(body))
-	// xml.Decoder.Decode skips character data before the root element.
-	// Inspect every leading token so stray text cannot masquerade as a
-	// well-formed S3 denial. A normal XML declaration and whitespace are OK.
-	var root xml.StartElement
-	var declarationSeen, precedingWhitespace bool
-	for {
-		token, nextErr := decoder.Token()
-		if nextErr != nil {
-			return errors.New("storage privacy probe unsigned denial XML invalid")
-		}
-		switch first := token.(type) {
-		case xml.CharData:
-			if strings.TrimSpace(string(first)) != "" {
-				return errors.New("storage privacy probe unsigned denial has leading data")
-			}
-			precedingWhitespace = true
-		case xml.ProcInst:
-			// The XML declaration, when present, must be first and unique.
-			// Only recognized UTF-8 XML 1.0 declarations are permitted;
-			// parser tokens alone do not validate processing instructions.
-			declaration := strings.TrimSpace(string(first.Inst))
-			if first.Target != "xml" || declarationSeen || precedingWhitespace ||
-				(declaration != `version="1.0"` &&
-					declaration != `version='1.0'` &&
-					declaration != `version="1.0" encoding="UTF-8"` &&
-					declaration != `version='1.0' encoding='UTF-8'`) {
-				return errors.New("storage privacy probe unsigned denial has invalid XML declaration")
-			}
-			declarationSeen = true
-		case xml.StartElement:
-			if first.Name.Local != "Error" || first.Name.Space != "" {
-				return errors.New("storage privacy probe unsigned denial root invalid")
-			}
-			root = first
-		default:
-			return errors.New("storage privacy probe unsigned denial preamble invalid")
-		}
-		if root.Name.Local != "" {
-			break
-		}
-	}
-	if decoder.DecodeElement(&denial, &root) != nil ||
-		denial.XMLName.Local != "Error" || denial.Code != "AccessDenied" {
-		return errors.New("storage privacy probe unsigned denial not independently verifiable")
-	}
-	// DecodeElement is not sufficient for trailing character data: examine
-	// every remaining token and require only whitespace through EOF.
-	// Only whitespace after the single complete error element is permitted.
+	var depth, roots, codeElements int
 	for {
 		token, err := decoder.Token()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return errors.New("storage privacy probe unsigned denial XML invalid")
+			return false
 		}
-		chars, ok := token.(xml.CharData)
-		if !ok || strings.TrimSpace(string(chars)) != "" {
-			return errors.New("storage privacy probe unsigned denial has trailing data")
+		switch item := token.(type) {
+		case xml.StartElement:
+			if depth == 0 {
+				if roots != 0 || item.Name.Local != "Error" || item.Name.Space != "" {
+					return false
+				}
+				roots++
+			}
+			if depth == 1 && item.Name.Local == "Code" && item.Name.Space == "" {
+				codeElements++
+			}
+			depth++
+		case xml.EndElement:
+			depth--
+			if depth < 0 {
+				return false
+			}
+		case xml.CharData:
+			if depth == 0 {
+				return false
+			}
+		default:
+			// Reject comments, directives and processing instructions even
+			// inside Error or Code; a genuine S3 denial needs none of them.
+			return false
 		}
 	}
-	return nil
+	if roots != 1 || depth != 0 || codeElements != 1 {
+		return false
+	}
+	var denial struct {
+		XMLName xml.Name `xml:"Error"`
+		Code    string   `xml:"Code"`
+	}
+	return xml.Unmarshal(body, &denial) == nil && denial.Code == "AccessDenied"
 }
