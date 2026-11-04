@@ -1,7 +1,10 @@
 package server
 
 import (
+	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -108,6 +111,53 @@ func TestStorageBucketLookup(t *testing.T) {
 		}
 		if err != nil || got != tc.want {
 			t.Fatalf("bucket lookup %q = %d, %v; want %d", tc.name, got, err, tc.want)
+		}
+	}
+	// This is a real TLS HTTP server, but no real provider bucket is used.
+	for _, tc := range []struct {
+		status int
+		denied bool
+	}{
+		{http.StatusForbidden, true},
+		{http.StatusNotFound, false},
+		{http.StatusUnauthorized, false},
+		{http.StatusOK, false},
+		{http.StatusInternalServerError, false},
+		{http.StatusTemporaryRedirect, false},
+	} {
+		server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			if tc.status == http.StatusTemporaryRedirect {
+				w.Header().Set("Location", "https://example.invalid/not-the-owned-canary")
+			}
+			w.WriteHeader(tc.status)
+		}))
+		got := anonymousObjectReadDenied(context.Background(), server.URL, server.Client().Transport)
+		server.Close()
+		if got != tc.denied {
+			t.Fatalf("anonymous object GET HTTP %d: denial=%v wanted %v", tc.status, got, tc.denied)
+		}
+	}
+	if anonymousObjectReadDenied(context.Background(), "http://example.invalid/probe", nil) ||
+		anonymousObjectReadDenied(context.Background(), "https://user:pass@example.invalid/probe", nil) ||
+		anonymousObjectReadDenied(context.Background(), "https://example.invalid/probe?X-Amz-Signature=bad", nil) {
+		t.Fatal("insecure or signed anonymous probe URL accepted")
+	}
+	for _, tc := range []struct {
+		endpoint string
+		secure bool
+		lookup minio.BucketLookupType
+		bucket string
+		ok bool
+	}{
+		{"t3.storageapi.dev", true, minio.BucketLookupDNS, "private-staging-bucket", true},
+		{"t3.storageapi.dev", false, minio.BucketLookupDNS, "private-staging-bucket", false},
+		{"t3.storageapi.dev", true, minio.BucketLookupPath, "private-staging-bucket", false},
+		{"evil.storageapi.dev", true, minio.BucketLookupDNS, "private-staging-bucket", false},
+		{"t3.storageapi.dev:443", true, minio.BucketLookupDNS, "private-staging-bucket", false},
+		{"t3.storageapi.dev", true, minio.BucketLookupDNS, "bucket/name", false},
+	}{
+		if (validateRailwayProbeTarget(tc.endpoint, tc.secure, tc.lookup, tc.bucket) == nil) != tc.ok {
+			t.Fatalf("Railway provider target policy incorrect for endpoint %q", tc.endpoint)
 		}
 	}
 }

@@ -156,3 +156,28 @@ remain external execution prerequisites. This is not public production readiness
 - [Private buckets and limitations](https://docs.railway.com/storage-buckets)
 - [Outbound mail networking](https://docs.railway.com/networking/outbound-networking)
 - [Resend acceptance API](https://resend.com/docs/api-reference/emails/send-email)
+
+## Railway runtime privacy probe (candidate, requires independent acceptance)
+
+Railway confirmed a new fresh bucket returns `operation_unsupported` for
+authenticated `GetBucketPolicy`. The default `SFD_S3_PRIVACY_MODE=policy`
+still rejects this error and all anonymous grants. The explicit
+`SFD_S3_PRIVACY_MODE=railway-probe` is a **staging-only opt-in**, restricted
+to HTTPS `t3.storageapi.dev`, virtual-hosted DNS, and a strictly validated
+bucket identifier. It creates an OS-random canary object, verifies the
+authenticated contents byte-for-byte and exact length, then requires a
+**403 Access Denied** on an unauthenticated GET of the precise key.
+A 2xx, 3xx, 401, 404, 5xx, TLS failure, timeout or object/cleanup error
+rejects startup. A separate bounded cleanup deletes the canary and verifies
+the key is absent through signed S3 metadata lookup. Do not bypass this probe
+if a provider changes behaviour. Other S3 providers must still pass the
+original policy check; nothing is enabled by default.
+
+This proof demonstrates one canary key cannot be read anonymously at
+startup. It does not establish universal policy semantics or guarantee
+against a future change of bucket access. Railway's explicit private-only
+storage contract and repeated negative testing support **harmless staging
+qualification**, not confidential production use. The first real provider
+run should report only pass/fail classifications, never keys, canary URLs
+or signed headers. No production or public files may be sent until Aether
+reviews the exact implementation and its negative-case tests.
