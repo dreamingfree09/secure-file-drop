@@ -238,7 +238,7 @@ func ValidateAllConfiguration() error {
 	}
 	railway, privacyErr := railwayPrivacySelected()
 	if privacyErr != nil {
-		v.AddError("SFD_S3_PRIVACY_MODE", "unrecognised storage privacy mode")
+		v.AddError("SFD_S3_PRIVACY_MODE", "unrecognized storage privacy mode")
 	} else if railway {
 		if err := validateRailwayPrivacyConfig(os.Getenv("SFD_S3_ENDPOINT"), os.Getenv("SFD_BUCKET"), lookup); err != nil {
 			v.AddError("SFD_S3_PRIVACY_MODE", "Railway positive attestation requires the exact allowlisted staging context, HTTPS endpoint and virtual bucket")

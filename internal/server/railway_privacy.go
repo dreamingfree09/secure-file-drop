@@ -49,7 +49,7 @@ func validateRailwayPrivacyConfig(endpoint, bucket string, lookup minio.BucketLo
 		return privacyFailure("bucket_identity")
 	}
 	for _, c := range bucket {
-		if !(c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-') {
+		if (c < 'a' || c > 'z') && (c < '0' || c > '9') && c != '-' {
 			return privacyFailure("bucket_identity")
 		}
 	}
@@ -58,7 +58,7 @@ func validateRailwayPrivacyConfig(endpoint, bucket string, lookup minio.BucketLo
 
 // Stage names are code constants. Never wrap provider errors, URLs or payloads.
 func privacyFailure(stage string) error {
-	return fmt.Errorf("Railway staging storage attestation failed: %s (fail-closed)", stage)
+	return fmt.Errorf("railway staging storage attestation failed: %s (fail-closed)", stage)
 }
 
 type privacyTransport struct {
@@ -73,7 +73,7 @@ func (t privacyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return nil, privacyFailure("request_identity")
 	}
 	if t.unsigned {
-		if req.Method != http.MethodGet || req.Header.Get("Authorization") != "" ||
+		if req.Method != http.MethodGet && req.Method != http.MethodPut && req.Method != http.MethodDelete || req.Header.Get("Authorization") != "" ||
 			req.Header.Get("Proxy-Authorization") != "" || req.Header.Get("Cookie") != "" {
 			return nil, privacyFailure("unsigned_credentials")
 		}
@@ -86,7 +86,7 @@ func (t privacyTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 			return nil, privacyFailure("unsigned_identity")
 		}
 		if req.URL.Path == "/" {
-			if req.URL.RawQuery != "max-keys=1" && req.URL.RawQuery != "list-type=2&max-keys=1" {
+			if req.Method != http.MethodGet || req.URL.RawQuery != "max-keys=1" && req.URL.RawQuery != "list-type=2&max-keys=1" {
 				return nil, privacyFailure("unsigned_query")
 			}
 		} else if !strings.HasPrefix(req.URL.Path, "/_sfd_privacy_attestation/") || req.URL.RawQuery != "" {
@@ -230,13 +230,20 @@ func attestRailwayStorage(ctx context.Context, client *minio.Client, bucket stri
 		return privacyFailure("authenticated_list")
 	}
 	objectURL := url.URL{Scheme: "https", Host: bucket + ".t3.storageapi.dev", Path: "/" + key}
-	if err := requireAnonymousDenial(ctx, unsigned, objectURL, bucket, key); err != nil {
+	if err := requireAnonymousDenial(ctx, unsigned, objectURL, bucket, key, http.MethodGet); err != nil {
 		return err
 	}
 	// Check both S3 listing forms, not merely a prefix-restricted view.
 	for _, query := range []string{"max-keys=1", "list-type=2&max-keys=1"} {
 		listingURL := url.URL{Scheme: "https", Host: objectURL.Host, Path: "/", RawQuery: query}
-		if err := requireAnonymousDenial(ctx, unsigned, listingURL, bucket, ""); err != nil {
+		if err := requireAnonymousDenial(ctx, unsigned, listingURL, bucket, "", http.MethodGet); err != nil {
+			return err
+		}
+	}
+	// Public write/delete grants are not compatible with private storage either.
+	// These requests can touch only the newly created harmless probe.
+	for _, method := range []string{http.MethodPut, http.MethodDelete} {
+		if err := requireAnonymousDenial(ctx, unsigned, objectURL, bucket, key, method); err != nil {
 			return err
 		}
 	}
@@ -248,11 +255,15 @@ func attestRailwayStorage(ctx context.Context, client *minio.Client, bucket stri
 	return nil
 }
 
-func requireAnonymousDenial(ctx context.Context, client *http.Client, target url.URL, bucket, key string) error {
+func requireAnonymousDenial(ctx context.Context, client *http.Client, target url.URL, bucket, key, method string) error {
 	if target.Scheme != "https" || target.Host != bucket+".t3.storageapi.dev" || target.Path != "/"+key || target.User != nil || target.RawPath != "" || target.Opaque != "" || target.Fragment != "" {
 		return privacyFailure("unsigned_identity")
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, target.String(), nil)
+	var requestBody io.Reader
+	if method == http.MethodPut {
+		requestBody = strings.NewReader("unauthenticated probe write must be denied")
+	}
+	req, err := http.NewRequestWithContext(ctx, method, target.String(), requestBody)
 	if err != nil {
 		return privacyFailure("unsigned_request")
 	}

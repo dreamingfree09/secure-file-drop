@@ -49,7 +49,7 @@ type privacyFixture struct {
 	objects                                   map[string][]byte
 	seen                                      map[string]bool
 	requests, puts, deletes, open, signedGets int
-	closedBodies chan struct{}
+	closedBodies                              chan struct{}
 }
 
 func newPrivacyFixture(mode string) *privacyFixture {
@@ -75,7 +75,10 @@ func (f *privacyFixture) response(req *http.Request, status int, value string, h
 		if !closed {
 			f.open--
 			closed = true
-			select { case f.closedBodies <- struct{}{}: default: }
+			select {
+			case f.closedBodies <- struct{}{}:
+			default:
+			}
 		}
 		if f.mode == "denial_close_error" && req.Header.Get("Authorization") == "" {
 			return errors.New("private-provider-sentinel")
@@ -92,11 +95,16 @@ func (f *privacyFixture) requireClosed(t *testing.T) {
 	deadline := time.NewTimer(time.Second)
 	defer deadline.Stop()
 	for {
-		f.mu.Lock(); open := f.open; f.mu.Unlock()
-		if open == 0 { return }
+		f.mu.Lock()
+		open := f.open
+		f.mu.Unlock()
+		if open == 0 {
+			return
+		}
 		select {
 		case <-f.closedBodies:
-		case <-deadline.C: t.Fatal("SDK response reader did not close within the fixture deadline")
+		case <-deadline.C:
+			t.Fatal("SDK response reader did not close within the fixture deadline")
 		}
 	}
 }
@@ -137,6 +145,16 @@ func (f *privacyFixture) RoundTrip(req *http.Request) (*http.Response, error) {
 		}
 		if f.mode == "object_disappears" {
 			delete(f.objects, key)
+		}
+		if req.Method == http.MethodPut && (f.mode == "public_write" || f.mode == "denied_write_mutates") {
+			value, err := io.ReadAll(req.Body)
+			if err != nil { return nil, err }
+			f.objects[key] = value
+			if f.mode == "public_write" { return f.response(req, 200, "", nil) }
+		}
+		if req.Method == http.MethodDelete && (f.mode == "public_delete" || f.mode == "denied_delete_mutates") {
+			delete(f.objects, key)
+			if f.mode == "public_delete" { return f.response(req, 204, "", nil) }
 		}
 		if f.mode == "public_object" && !listing {
 			return f.response(req, 200, string(f.objects[key]), nil)
@@ -331,7 +349,7 @@ func TestRailwayPrivacyConfiguration(t *testing.T) {
 }
 
 func TestRailwayPrivacyAttestation(t *testing.T) {
-	cases := []string{"private", "public_object", "public_list_v1", "public_list_v2", "unsigned_network", "unsigned_timeout", "unsigned_redirect", "unsigned_status_200", "unsigned_status_204", "unsigned_status_401", "unsigned_status_404", "unsigned_status_429", "unsigned_status_500", "denial_wrong_code", "denial_wrong_key", "denial_wrong_bucket", "denial_wrong_resource", "denial_html", "denial_truncated", "denial_trailing", "denial_oversize", "denial_close_error", "denial_read_error", "denial_duplicate_code", "denial_duplicate_key", "object_disappears", "put_before_error", "put_after_error", "put_collision", "unknown_put_foreign", "signed_redirect", "authenticated_get_error", "authenticated_read_error", "authenticated_get_corrupt", "authenticated_get_long", "authenticated_recheck_corrupt", "authenticated_list_error", "authenticated_list_key", "cleanup_error", "cleanup_ignored", "cleanup_head_error", "entropy_failure"}
+	cases := []string{"private", "public_write", "public_delete", "denied_write_mutates", "denied_delete_mutates", "public_object", "public_list_v1", "public_list_v2", "unsigned_network", "unsigned_timeout", "unsigned_redirect", "unsigned_status_200", "unsigned_status_204", "unsigned_status_401", "unsigned_status_404", "unsigned_status_429", "unsigned_status_500", "denial_wrong_code", "denial_wrong_key", "denial_wrong_bucket", "denial_wrong_resource", "denial_html", "denial_truncated", "denial_trailing", "denial_oversize", "denial_close_error", "denial_read_error", "denial_duplicate_code", "denial_duplicate_key", "object_disappears", "put_before_error", "put_after_error", "put_collision", "unknown_put_foreign", "signed_redirect", "authenticated_get_error", "authenticated_read_error", "authenticated_get_corrupt", "authenticated_get_long", "authenticated_recheck_corrupt", "authenticated_list_error", "authenticated_list_key", "cleanup_error", "cleanup_ignored", "cleanup_head_error", "entropy_failure"}
 	for _, mode := range cases {
 		fixture := newPrivacyFixture(mode)
 		client, anon, err := privacyTestClients(fixture, fixture)
@@ -343,7 +361,7 @@ func TestRailwayPrivacyAttestation(t *testing.T) {
 			budget = 20 * time.Millisecond
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), budget)
-		var entropy io.Reader = rand.Reader
+		entropy := rand.Reader
 		if mode == "entropy_failure" {
 			entropy = strings.NewReader("")
 		}
@@ -381,7 +399,7 @@ func TestRailwayPrivacyAttestation(t *testing.T) {
 func TestRailwayPrivacyTransportBoundaries(t *testing.T) {
 	for _, mutate := range []string{"host", "scheme", "userinfo", "authorization", "cookie", "token", "signed_query", "method"} {
 		calls := 0
-		base := policyFixtureTransport(func(req *http.Request) (*http.Response, error) { calls++; return nil, errors.New("must not run") })
+		base := policyFixtureTransport(func(_ *http.Request) (*http.Response, error) { calls++; return nil, errors.New("must not run") })
 		req, err := http.NewRequest(http.MethodGet, "https://"+privacyTestHost+"/known-key", nil)
 		if err != nil {
 			t.Fatal(err)
@@ -499,6 +517,9 @@ func TestRailwayPrivacyTLS(t *testing.T) {
 			transport.TLSClientConfig.RootCAs.AddCert(cert)
 		}
 		transport.DialContext = func(ctx context.Context, network, address string) (net.Conn, error) {
+			if address != privacyTestHost+":443" {
+				return nil, errors.New("unexpected fixture dial target")
+			}
 			return (&net.Dialer{}).DialContext(ctx, network, server.Listener.Addr().String())
 		}
 		anonTransport := transport.Clone()
