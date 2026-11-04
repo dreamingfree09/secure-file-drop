@@ -151,12 +151,42 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 		Code    string
 	}
 	decoder := xml.NewDecoder(bytes.NewReader(body))
-	if decoder.Decode(&denial) != nil ||
+	// xml.Decoder.Decode skips character data before the root element.
+	// Inspect every leading token so stray text cannot masquerade as a
+	// well-formed S3 denial. A normal XML declaration and whitespace are OK.
+	var root xml.StartElement
+	for {
+		token, nextErr := decoder.Token()
+		if nextErr != nil {
+			return errors.New("storage privacy probe unsigned denial XML invalid")
+		}
+		switch first := token.(type) {
+		case xml.CharData:
+			if strings.TrimSpace(string(first)) != "" {
+				return errors.New("storage privacy probe unsigned denial has leading data")
+			}
+		case xml.ProcInst:
+			if first.Target != "xml" {
+				return errors.New("storage privacy probe unsigned denial has unexpected preamble")
+			}
+		case xml.StartElement:
+			if first.Name.Local != "Error" || first.Name.Space != "" {
+				return errors.New("storage privacy probe unsigned denial root invalid")
+			}
+			root = first
+		default:
+			return errors.New("storage privacy probe unsigned denial preamble invalid")
+		}
+		if root.Name.Local != "" {
+			break
+		}
+	}
+	if decoder.DecodeElement(&denial, &root) != nil ||
 		denial.XMLName.Local != "Error" || denial.Code != "AccessDenied" {
 		return errors.New("storage privacy probe unsigned denial not independently verifiable")
 	}
-	// Decode is not sufficient for trailing character data: Decode may
-	// ignore text between root elements. Examine every remaining XML token.
+	// DecodeElement is not sufficient for trailing character data: examine
+	// every remaining token and require only whitespace through EOF.
 	// Only whitespace after the single complete error element is permitted.
 	for {
 		token, err := decoder.Token()
