@@ -51,3 +51,8 @@ Agent owns engineering commands. Owner input is limited to indispensable private
 ## XML document review correction
 
 Review4467498559 found that the standard XML Decode call skips non-XML characters before the root. Explicit token validation now precedes DecodeElement. Only literal XML whitespace, valid comments and one initial XML1.0 UTF-8 declaration are permitted before Error; non-XML prefixes, character references or Unicode spaces outside the root, directives, arbitrary processing instructions and malformed/duplicate/late declarations fail. The suffix retains the same strict whitespace-only rule. Four legitimate prolog cases plus12 negatives expand the SDK matrix46 to62 without new Go test methods or weakened old assertions. The focused workflow requires a pinned139490c overlay failure and corrected-source pass. This is a source correction, not live Railway acceptance.
+
+
+## 2026-11-04 — PR51 raw declaration-separator correction
+
+Review4467963500 confirms that encoding/xml also accepts adjacent declaration attributes. Received99d6a09688b7bc2b41aee1ad8629b4dbdfe21fa2 is superseded for acceptance. The correction uses an anchored linear-time raw grammar for ordered XML1.0 UTF-8 declarations, with mandatory literal XML whitespace between attributes and matched quote pairs. Four malformed separator cases plus one legal-spacing positive expand the existing matrix62 to67; five methods/Go259 and all previous integration counts remain unchanged. The pinned overlay gate now requires original139490c prefix failure AND99d6a09 adjacent-encoding/standalone failures, then corrected67-case success. Final exact-head CI/review remains in the PR; no live/provider/master changes.

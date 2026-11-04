@@ -188,6 +188,16 @@ func (f *privacyFixture) RoundTrip(req *http.Request) (*http.Response, error) {
 			body = "<!-- harmless provider prolog -->\n" + body
 		case "valid_denial_single_quote":
 			body = "<?xml version='1.0' encoding='utf-8' standalone='no'?>" + body
+		case "valid_denial_declaration_spacing":
+			body = "<?xml version \t=\t\"1.0\"\nencoding \r\n=\t'UTF-8'\tstandalone=\"yes\" ?>" + body
+		case "denial_adjacent_encoding":
+			body = `<?xml version="1.0"encoding="UTF-8"?>` + body
+		case "denial_adjacent_standalone":
+			body = `<?xml version="1.0"standalone="yes"?>` + body
+		case "denial_adjacent_after_encoding":
+			body = `<?xml version="1.0" encoding="UTF-8"standalone="yes"?>` + body
+		case "denial_declaration_vertical_space":
+			body = "<?xml version=\"1.0\"\vencoding=\"UTF-8\"?>" + body
 		case "denial_leading_text":
 			body = "not XML" + body
 		case "denial_leading_text_declaration":
@@ -397,7 +407,7 @@ func TestRailwayPrivacyConfiguration(t *testing.T) {
 }
 
 func TestRailwayPrivacyAttestation(t *testing.T) {
-	cases := []string{"private", "valid_denial_whitespace", "valid_denial_declaration", "valid_denial_comment", "valid_denial_single_quote", "denial_leading_text", "denial_leading_text_declaration", "denial_leading_nbsp", "denial_trailing_nbsp", "denial_leading_space_entity", "denial_trailing_space_entity", "denial_unknown_pi", "denial_directive", "denial_duplicate_declaration", "denial_late_declaration", "denial_bad_declaration", "denial_duplicate_version", "public_write", "public_delete", "denied_write_mutates", "denied_delete_mutates", "public_object", "public_list_v1", "public_list_v2", "unsigned_network", "unsigned_timeout", "unsigned_redirect", "unsigned_status_200", "unsigned_status_204", "unsigned_status_401", "unsigned_status_404", "unsigned_status_429", "unsigned_status_500", "denial_wrong_code", "denial_wrong_key", "denial_wrong_bucket", "denial_wrong_resource", "denial_html", "denial_truncated", "denial_trailing", "denial_oversize", "denial_close_error", "denial_read_error", "denial_duplicate_code", "denial_duplicate_key", "object_disappears", "put_before_error", "put_after_error", "put_collision", "unknown_put_foreign", "signed_redirect", "authenticated_get_error", "authenticated_read_error", "authenticated_get_corrupt", "authenticated_get_long", "authenticated_recheck_corrupt", "authenticated_list_error", "authenticated_list_key", "cleanup_error", "cleanup_ignored", "cleanup_head_error", "entropy_failure"}
+	cases := []string{"private", "valid_denial_declaration_spacing", "denial_adjacent_encoding", "denial_adjacent_standalone", "denial_adjacent_after_encoding", "denial_declaration_vertical_space", "valid_denial_whitespace", "valid_denial_declaration", "valid_denial_comment", "valid_denial_single_quote", "denial_leading_text", "denial_leading_text_declaration", "denial_leading_nbsp", "denial_trailing_nbsp", "denial_leading_space_entity", "denial_trailing_space_entity", "denial_unknown_pi", "denial_directive", "denial_duplicate_declaration", "denial_late_declaration", "denial_bad_declaration", "denial_duplicate_version", "public_write", "public_delete", "denied_write_mutates", "denied_delete_mutates", "public_object", "public_list_v1", "public_list_v2", "unsigned_network", "unsigned_timeout", "unsigned_redirect", "unsigned_status_200", "unsigned_status_204", "unsigned_status_401", "unsigned_status_404", "unsigned_status_429", "unsigned_status_500", "denial_wrong_code", "denial_wrong_key", "denial_wrong_bucket", "denial_wrong_resource", "denial_html", "denial_truncated", "denial_trailing", "denial_oversize", "denial_close_error", "denial_read_error", "denial_duplicate_code", "denial_duplicate_key", "object_disappears", "put_before_error", "put_after_error", "put_collision", "unknown_put_foreign", "signed_redirect", "authenticated_get_error", "authenticated_read_error", "authenticated_get_corrupt", "authenticated_get_long", "authenticated_recheck_corrupt", "authenticated_list_error", "authenticated_list_key", "cleanup_error", "cleanup_ignored", "cleanup_head_error", "entropy_failure"}
 	for _, mode := range cases {
 		fixture := newPrivacyFixture(mode)
 		client, anon, err := privacyTestClients(fixture, fixture)

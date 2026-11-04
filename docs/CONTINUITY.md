@@ -318,3 +318,8 @@ Work ID SFD-RAILWAY-POSITIVE-ATTESTATION-20261104; base4db7fe592072e24e193a20b2c
 ## 2026-11-04 — PR51 XML denial review correction
 
 Received139490c324b1217044278e66df870c3570f9cbd2; review4467498559 confirms Decode skips leading non-XML data. The corrected parser validates every leading token before DecodeElement, restricts raw outside-root whitespace and XML declaration syntax, and retains all status/identity/TLS/cleanup checks. The SDK matrix expands46 to62 within the existing five methods; full-stack Go259/backend124/browser27/portable17 counts are unchanged. A source-pinned Go overlay regression must fail against139490c and pass against the correction without overwriting source. Final exact revision/CI/receipts belong in the PR handover. Independent acceptance remains pending; no protected merge, Railway change or live probe occurred.
+
+
+## 2026-11-04 — PR51 raw declaration-separator correction
+
+Review4467963500 confirms that encoding/xml also accepts adjacent declaration attributes. Received99d6a09688b7bc2b41aee1ad8629b4dbdfe21fa2 is superseded for acceptance. The correction uses an anchored linear-time raw grammar for ordered XML1.0 UTF-8 declarations, with mandatory literal XML whitespace between attributes and matched quote pairs. Four malformed separator cases plus one legal-spacing positive expand the existing matrix62 to67; five methods/Go259 and all previous integration counts remain unchanged. The pinned overlay gate now requires original139490c prefix failure AND99d6a09 adjacent-encoding/standalone failures, then corrected67-case success. Final exact-head CI/review remains in the PR; no live/provider/master changes.

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -346,47 +347,11 @@ func privacyDenialRoot(decoder *xml.Decoder, body []byte) (xml.StartElement, err
 	}
 }
 
-// Let encoding/xml validate attribute syntax, then enforce the XML1.0 UTF-8
-// declaration grammar and order. Entity references are not legal in a declaration.
+// XML declarations require literal XML whitespace between attributes. The XML
+// decoder also accepts adjacent attributes, so enforce this bounded, anchored
+// XML1.0 UTF-8 subset against the original instruction, not decoded attributes.
+var privacyXMLDeclarationPattern = regexp.MustCompile(`^[ \t\r\n]*version[ \t\r\n]*=[ \t\r\n]*(?:"1\.0"|'1\.0')(?:[ \t\r\n]+encoding[ \t\r\n]*=[ \t\r\n]*(?:"(?i:utf-8)"|'(?i:utf-8)'))?(?:[ \t\r\n]+standalone[ \t\r\n]*=[ \t\r\n]*(?:"(?:yes|no)"|'(?:yes|no)'))?[ \t\r\n]*$`)
+
 func privacyXMLDeclaration(instruction []byte) bool {
-	if bytes.ContainsAny(instruction, "&<") {
-		return false
-	}
-	decoder := xml.NewDecoder(strings.NewReader("<declaration " + string(instruction) + "/>"))
-	token, err := decoder.Token()
-	root, ok := token.(xml.StartElement)
-	if err != nil || !ok || root.Name.Local != "declaration" || len(root.Attr) == 0 {
-		return false
-	}
-	version := root.Attr[0]
-	if version.Name.Space != "" || version.Name.Local != "version" || version.Value != "1.0" {
-		return false
-	}
-	encoding, standalone := false, false
-	for _, attr := range root.Attr[1:] {
-		if attr.Name.Space != "" {
-			return false
-		}
-		switch attr.Name.Local {
-		case "encoding":
-			if encoding || standalone || !strings.EqualFold(attr.Value, "utf-8") {
-				return false
-			}
-			encoding = true
-		case "standalone":
-			if standalone || attr.Value != "yes" && attr.Value != "no" {
-				return false
-			}
-			standalone = true
-		default:
-			return false
-		}
-	}
-	end, err := decoder.Token()
-	closing, ok := end.(xml.EndElement)
-	if err != nil || !ok || closing.Name != root.Name {
-		return false
-	}
-	_, err = decoder.Token()
-	return err == io.EOF
+	return privacyXMLDeclarationPattern.Match(instruction)
 }
