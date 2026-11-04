@@ -15,8 +15,11 @@ const sandbox={exports:{}, require(name){
 vm.runInNewContext(fs.readFileSync(fixture,'utf8'),sandbox,{timeout:2000});
 const sdk=sandbox.exports;
 const input=fs.readFileSync(path.join(__dirname,'../../.railway/railway.ts'),'utf8');
-const executable=input.replace(/^import[^\n]+;\n/,'').replace(/^export const partial[^\n]+;$/m,'').replace('export default','return');
-const program=new Function('defineRailway','project','service','preserve',executable)(sdk.defineRailway,sdk.project,sdk.service,sdk.preserve);
+function compileProgram(source) {
+  const executable=source.replace(/\r\n/g,'\n').replace(/^import[^\n]+;\n/,'').replace(/^export const partial[^\n]+;$/m,'').replace('export default','return');
+  return new Function('defineRailway','project','service','preserve',executable)(sdk.defineRailway,sdk.project,sdk.service,sdk.preserve);
+}
+const program=compileProgram(input);
 test('only the explicitly named fresh staging scope is allowed',()=>{
   for(const context of [{projectName:'production',environment:'staging'},{projectName:'secure-file-drop-staging',environment:'production'},{}])assert.throws(()=>program(context),/STOP:/);
 });
@@ -55,4 +58,12 @@ test('SDK dependency is locked and the shutdown budget preserves active-transfer
   assert.equal(lock.packages['node_modules/railway'].version,'3.12.0');
   assert.equal(lock.packages['node_modules/railway'].integrity,'sha512-a6th+76NE3fZ8QMTOtEIe15sPTjObWOJYx0pCHCR/rd00r++I2rZHLKTn2R1qmPAwvGdAj6vY45GDVJs0AzOXA==');
   assert.equal(program({projectName:'secure-file-drop-staging',environment:'staging'}).resources[0].deploy.drainingSeconds,25);
+});
+
+test('the same pinned IaC contract works with LF and Windows CRLF source bytes',()=>{
+  const context={projectName:'secure-file-drop-staging',environment:'staging'};
+  const lf=input.replace(/\r\n/g,'\n');
+  const crlf=lf.replace(/\n/g,'\r\n');
+  assert.equal(JSON.stringify(compileProgram(lf)(context)),JSON.stringify(compileProgram(crlf)(context)));
+  for(const source of [lf,crlf]) assert.throws(()=>compileProgram(source)({projectName:'production',environment:'staging'}),/STOP:/);
 });

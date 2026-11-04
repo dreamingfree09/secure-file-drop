@@ -529,3 +529,10 @@ Review4467963500 confirms that encoding/xml also accepts adjacent declaration at
 ## 2026-11-04 — Complete S3 denial element subset
 
 The separator finding applies to ordinary XML element attributes too. The accepted S3 Error subset now permits no element attributes except one standard S3 default namespace on the root; foreign namespaces, directives and interior processing instructions fail. Canonical namespaced Error remains positive coverage. Six additional cases expand67 to73 within the same five methods; Go259 and all prior acceptance counters are unchanged. A third pinned cfc1ad6 overlay must reproduce adjacent root/Code attribute acceptance before corrected73-case success. This closes the same permissive-parser class without inventing a general XML parser. Provider replies outside the documented subset fail closed and require independent compatibility review; no live operation or protected merge.
+
+
+## 2026-11-04 — actual-master acceptance diagnostics and checkout portability
+
+Work ID SFD-MERGED-MASTER-ACCEPTANCE-DIAGNOSTICS-20261104, base5d826096e824577b6adff640311a254402d51e47. Retain actual-master failed job126740353797/artifact13347542927: BIGINT124/backend27/browser259/Go passes; BYTEA114 backend plus259 Go passes then administrator-browser TimeoutError, certificate_error=false; owned cleanup/preservation true. No product cause is yet established and deployment remains held.
+
+Add at most32 origin-filtered fixed-path/status observations, completed-check count and granular administrator wait stages to the browser receipt without logging URLs, credentials, queries, signed-link paths, headers or bodies. Three privacy/boundary regressions join16 prior browser-script cases. Correct the independently reproduced SDK fixture's CRLF import-strip assumption and add LF/CRLF graph equality plus denied-scope regression. Local Node19/SDK5/docs39/syntax/whitespace pass. No production, authentication, rate-limit, desktop, migration or workflow change; hosted actual-head acceptance and Aether review remain required.
