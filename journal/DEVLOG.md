@@ -524,3 +524,8 @@ Received139490c324b1217044278e66df870c3570f9cbd2; review4467498559 confirms Deco
 ## 2026-11-04 — PR51 raw declaration-separator correction
 
 Review4467963500 confirms that encoding/xml also accepts adjacent declaration attributes. Received99d6a09688b7bc2b41aee1ad8629b4dbdfe21fa2 is superseded for acceptance. The correction uses an anchored linear-time raw grammar for ordered XML1.0 UTF-8 declarations, with mandatory literal XML whitespace between attributes and matched quote pairs. Four malformed separator cases plus one legal-spacing positive expand the existing matrix62 to67; five methods/Go259 and all previous integration counts remain unchanged. The pinned overlay gate now requires original139490c prefix failure AND99d6a09 adjacent-encoding/standalone failures, then corrected67-case success. Final exact-head CI/review remains in the PR; no live/provider/master changes.
+
+
+## 2026-11-04 — Complete S3 denial element subset
+
+The separator finding applies to ordinary XML element attributes too. The accepted S3 Error subset now permits no element attributes except one standard S3 default namespace on the root; foreign namespaces, directives and interior processing instructions fail. Canonical namespaced Error remains positive coverage. Six additional cases expand67 to73 within the same five methods; Go259 and all prior acceptance counters are unchanged. A third pinned cfc1ad6 overlay must reproduce adjacent root/Code attribute acceptance before corrected73-case success. This closes the same permissive-parser class without inventing a general XML parser. Provider replies outside the documented subset fail closed and require independent compatibility review; no live operation or protected merge.

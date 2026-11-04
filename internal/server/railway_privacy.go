@@ -285,6 +285,9 @@ func requireAnonymousDenial(ctx context.Context, client *http.Client, target url
 		Buckets   []string `xml:"BucketName"`
 		Resources []string `xml:"Resource"`
 	}
+	if !privacyDenialElements(body) {
+		return privacyFailure("unsigned_denial")
+	}
 	decoder := xml.NewDecoder(bytes.NewReader(body))
 	root, err := privacyDenialRoot(decoder, body)
 	if err != nil || decoder.DecodeElement(&denial, &root) != nil || denial.XMLName.Local != "Error" || len(denial.Codes) != 1 || denial.Codes[0] != "AccessDenied" || len(denial.Keys) > 1 || len(denial.Buckets) > 1 || len(denial.Resources) > 1 {
@@ -315,6 +318,47 @@ func requireAnonymousDenial(ctx context.Context, client *http.Client, target url
 		return privacyFailure("unsigned_identity")
 	}
 	return nil
+}
+
+
+// A denial needs no element attributes except an optional standard S3 default
+// namespace on its root. Reject other attributes instead of trusting the XML
+// decoder's permissive attribute-separator grammar. No directives or interior
+// processing instructions are part of this accepted S3 error subset.
+func privacyDenialElements(body []byte) bool {
+	const namespace = "http://s3.amazonaws.com/doc/2006-03-01/"
+	decoder := xml.NewDecoder(bytes.NewReader(body))
+	depth := 0
+	for {
+		before := decoder.InputOffset()
+		token, err := decoder.Token()
+		if err == io.EOF {
+			return depth == 0
+		}
+		if err != nil {
+			return false
+		}
+		switch value := token.(type) {
+		case xml.StartElement:
+			depth++
+			if value.Name.Space != "" && value.Name.Space != namespace {
+				return false
+			}
+			if len(value.Attr) != 0 {
+				if depth != 1 || len(value.Attr) != 1 || value.Attr[0].Name.Space != "" || value.Attr[0].Name.Local != "xmlns" || value.Attr[0].Value != namespace {
+					return false
+				}
+			}
+		case xml.EndElement:
+			depth--
+		case xml.Directive:
+			return false
+		case xml.ProcInst:
+			if before != 0 || value.Target != "xml" || !privacyXMLDeclaration(value.Inst) {
+				return false
+			}
+		}
+	}
 }
 
 // Decode skips leading character data. Validate every prolog token before
