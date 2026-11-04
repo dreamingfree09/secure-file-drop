@@ -227,8 +227,8 @@ def main():
         invite_id=invite_match.group(1)
         status,landing=request('/receive?id='+invite_id,who=anonymous)
         check(status==200 and b'/receive-download' in landing and one_code.encode() not in landing,'public landing asks for independent code without leaking it')
-        def redeem(value):
-            fields=urllib.parse.urlencode({'id':invite_id,'code':value}).encode()
+        def redeem(value, target_id=None):
+            fields=urllib.parse.urlencode({'id':target_id or invite_id,'code':value}).encode()
             req=urllib.request.Request(origin+'/receive-download',fields,{'Content-Type':'application/x-www-form-urlencoded','Accept-Encoding':'gzip'},method='POST')
             try:
                 with anonymous.open(req,timeout=35) as response:return response.status,response.read(),response.headers
@@ -262,6 +262,29 @@ def main():
             owned('container',backend);docker('rm','-f',backend);created.remove(backend)
             backend=start_backend();ready()
             check(request('/me')[0]==200,label_name+' preserves the existing verified session')
+        # Independent real invitations exercise persisted expiry/retry state.
+        # Only this uniquely owned synthetic namespace is edited; no live data.
+        result['stage']='real-recipient-expiry-and-attempt-policy'
+        restart_phase('recipient policy phase restart')
+        def policy_invitation(address):
+            status,body=request('/invitations',{'file_id':fid,'recipient_email':address,'description':'Harmless policy fixture','ttl_hours':1},method='POST')
+            check(status==201,'real SMTP policy invitation '+address.split('@')[0])
+            policy_code=json.loads(body)['access_code']
+            messages=[json.loads(line) for line in docker('exec',backend,'cat','/tmp/sfd-fixture-mail.jsonl').splitlines()]
+            delivered=[message for message in messages if message.get('To')==address]
+            match=re.search(re.escape(origin)+r'/receive\?id=([0-9a-f-]{36})',delivered[0]['Body']) if len(delivered)==1 else None
+            check(match is not None and policy_code not in delivered[0]['Body'],'policy invitation locator and separate code '+address.split('@')[0])
+            return match.group(1),policy_code
+        expired_id,expired_code=policy_invitation('expiry-recipient@example.invalid')
+        sql("UPDATE file_invitations SET expires_at=NOW()-INTERVAL '1 minute' WHERE id='"+expired_id+"';")
+        check(redeem(expired_code,expired_id)[0]==410,'real invitation expiry rejects a correct code')
+        check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+expired_id+"';")=='0,0','expired invitation consumes no attempt or download reservation')
+        retry_id,retry_code=policy_invitation('retry-recipient@example.invalid')
+        wrong='AAAA-AAAA-AAAA-AAAA' if retry_code!='AAAA-AAAA-AAAA-AAAA' else 'BBBB-BBBB-BBBB-BBBB'
+        statuses=[redeem(wrong,retry_id)[0] for _ in range(8)]
+        check(statuses==[401]*8,'exactly eight real wrong-code attempts are recorded')
+        check(redeem(retry_code,retry_id)[0]==410,'correct code cannot revive an attempt-exhausted invitation')
+        check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+retry_id+"';")=='8,0','wrong-code lockout does not consume downloads')
         result['stage']='real-https-lifecycle-preservation'
         restart_phase('lifecycle phase restart')
         check(request('/upload/resumable',{},method='POST')[0]==501,'unaccepted resumable path fails closed for registered users')
@@ -272,7 +295,7 @@ def main():
         missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+fid],capture_output=True).returncode!=0
         check(admin_status==204 and not admin_row and missing,'administrator deletes exact stored object and metadata')
         check(sql("SELECT count(*) FROM file_invitations WHERE file_id='"+fid+"';")=='0','file deletion invalidates its recipient invitations')
-        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='1','file deletion cannot erase accepted SMTP rate-limit history')
+        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='3','file deletion cannot erase accepted SMTP rate-limit history')
         check(request('/upload/resumable',{},method='POST')[0]==403,'environment identity cannot acquire unsupported UUID ownership')
         jar.clear();check(request('/login',{'username':'uploader','password':uploader_password})[0]==200,'lifecycle owner login')
         def create_file(filename,size):
@@ -286,7 +309,7 @@ def main():
         fid=create_file('storage-failure.txt',len(data));check(upload_bytes(fid,data)[0]==200,'real file exists before storage-failure deletion')
         # Seed only this disposable account's rate-ledger fixture so the
         # account-wide quota is tested independently of HTTP IP limiting.
-        sql("INSERT INTO invitation_send_ledger (id,sender_id) SELECT gen_random_uuid(),u.id FROM users u CROSS JOIN generate_series(1,11) WHERE u.username='uploader';")
+        sql("INSERT INTO invitation_send_ledger (id,sender_id) SELECT gen_random_uuid(),u.id FROM users u CROSS JOIN generate_series(1,9) WHERE u.username='uploader';")
         rate_status,rate_body=request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'limit-test'})
         check(rate_status==429 and b'invitation limit reached' in rate_body,'account hourly invitation quota survives deletion and blocks cross-file sends')
         before_delete=hashlib.sha256(sql("SELECT row_to_json(f)::text FROM files f WHERE id='"+fid+"';").encode()).hexdigest()
