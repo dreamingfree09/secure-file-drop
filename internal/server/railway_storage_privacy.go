@@ -169,7 +169,7 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 			precedingWhitespace = true
 		case xml.ProcInst:
 			// The XML declaration, when present, must be first and unique.
-			// Only recognised UTF-8 XML 1.0 declarations are permitted;
+			// Only recognized UTF-8 XML 1.0 declarations are permitted;
 			// parser tokens alone do not validate processing instructions.
 			declaration := strings.TrimSpace(string(first.Inst))
 			if first.Target != "xml" || declarationSeen || precedingWhitespace ||
