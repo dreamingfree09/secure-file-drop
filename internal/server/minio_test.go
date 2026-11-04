@@ -64,8 +64,8 @@ func TestPrivateBucketPolicy(t *testing.T) {
 }
 
 func TestStorageBucketLookup(t *testing.T) {
-	// Never expose arbitrary provider errors or silently authorise an unknown
-	// response. Rejection is mandatory even when the error is recognisable.
+	// Never expose arbitrary provider errors or silently authorize an unknown
+	// response. Rejection is mandatory even when the error is recognizable.
 	for _, tc := range []struct {
 		providerCode string
 		category     string

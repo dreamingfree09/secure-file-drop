@@ -111,7 +111,7 @@ func newMinioClient() (*minio.Client, string, error) {
 
 // classifyBucketPolicyError exposes only allowlisted failure categories.
 // Do not include provider error text: it can contain hosts, buckets or signed URLs.
-// No category authorises acceptance or changes the privacy decision.
+// No category authorizes acceptance or changes the privacy decision.
 func classifyBucketPolicyError(err error) error {
 	response := minio.ToErrorResponse(err)
 	category := "unclassified"
