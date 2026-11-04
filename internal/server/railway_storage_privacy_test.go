@@ -70,6 +70,10 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 	}{
 		{"private", 403, denial, false, false, false, true},
 		{"private-xml-whitespace", 403, denial + " \n\t", false, false, false, true},
+		{"private-leading-whitespace", 403, " \n\t" + denial, false, false, false, true},
+		{"private-xml-declaration", 403, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + denial, false, false, false, true},
+		{"leading-garbage", 403, "garbage" + denial, false, false, false, false},
+		{"leading-comment", 403, "<!-- extra -->" + denial, false, false, false, false},
 		{"malformed-xml-suffix", 403, denial + "<", false, false, false, false},
 		{"trailing-xml-root", 403, denial + "<Another/>", false, false, false, false},
 		{"trailing-garbage", 403, denial + "garbage", false, false, false, false},
