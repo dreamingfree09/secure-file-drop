@@ -320,7 +320,6 @@ func requireAnonymousDenial(ctx context.Context, client *http.Client, target url
 	return nil
 }
 
-
 // A denial needs no element attributes except an optional standard S3 default
 // namespace on its root. Reject other attributes instead of trusting the XML
 // decoder's permissive attribute-separator grammar. No directives or interior
