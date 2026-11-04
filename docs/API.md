@@ -1,5 +1,7 @@
 # API
 
+Recipient delivery is an additive schema13 **draft**; it requires an authenticated sender, configured SMTP and an explicit HTTPS origin. The access code is never sent in email or a URL. The original signed-link download path remains a separate bearer-link mechanism.
+
 JSON requests/responses are used except multipart uploads, file downloads and generic plain-text HTTP errors. Login, registration, metadata and link JSON bodies accept exactly one complete value within a total 16 KiB, including trailing whitespace. Oversized envelopes return 413; malformed or multiple values return 400. Ordinary authenticated requests require an active registered account and an unrevoked session. Administrative routes additionally require a signed administrator identity.
 
 | Method and path | Authorization | Behavior |
@@ -11,7 +13,10 @@ JSON requests/responses are used except multipart uploads, file downloads and ge
 | POST /files | Session | orig_name, content_type, size_bytes; returns id/object_key/pending, 201 |
 | GET /files | Session | Up to 100 of the current principal's files, newest first |
 | POST /upload?id=UUID | Owner or administrator | multipart field file; synchronous store/hash, returns hashed |
-| POST /links | Owner or administrator | id, ttl_seconds; returns url/expires_at for hashed or ready files |
+| POST /links | Owner | id, ttl_seconds; existing bearer download link, **NOT invitation-code protected** |
+| POST /invitations | Verified file owner | file_id, recipient_email, description?, ttl_hours?; emails protected invitation; returns one-time-displayed access_code |
+| GET /receive?id=UUID | Public | Renders code-entry form; does not reveal file bytes |
+| POST /receive-download | Public with UUID + code in POST body | Code-gated attachment; max eight incorrect attempts, three download reservations and finite expiry |
 | GET /download?token=... | Valid bearer link | Attachment bytes; expired 410, invalid/tampered 401 |
 | GET /admin/files | Administrator | Up to 100 files across owners |
 | DELETE /admin/files/UUID | Administrator | Removes exact object key, then metadata, 204 |

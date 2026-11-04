@@ -38,6 +38,22 @@ This builds the real runtime image and C tool, creates unique disposable Postgre
 
 For a fresh development stack, follow [deployment](docs/DEPLOYMENT.md). Never point startup migrations or cleanup at existing storage for tests. Compose uses persistent development volumes and is not the disposable test harness. Production needs a separately reviewed TLS/proxy and operations configuration.
 
+## Recipient email invitations (schema13 development beta)
+
+The [protected recipient delivery workflow](docs/RECIPIENT_DELIVERY.md) allows a verified user to select a previously uploaded file, enter the recipient's email and an optional description, and email an invitation. The sender gets a separate random code displayed once; it is **never emailed**. Recipient downloads require the code, expire, and have bounded retries. This is **not** yet a public-production release or a Windows installer. An HTTPS public origin, genuine SMTP and live recipient acceptance are mandatory.
+
+The original signed bearer links remain available and are **not protected by invitation codes**. Use the email-invitation workflow rather than the ordinary copy-link action for code-protected sharing.
+
+## Email delivery on hosted platforms
+
+The existing SMTP delivery remains supported. For Railway Free/Hobby,
+where outbound SMTP is unavailable, choose `SFD_EMAIL_PROVIDER=resend`,
+`SFD_EMAIL_FROM` (a verified sender) and `SFD_RESEND_API_KEY` in protected
+service variables. This sends existing verification and recipient invitations
+through an HTTPS email API without putting access codes in emails. See the
+[Railway staging guide](docs/RAILWAY_STAGING.md) before provisioning.
+A configured provider does not by itself establish production readiness.
+
 ## Windows tray companion
 
 The [native Windows companion](docs/WINDOWS_COMPANION.md) adds Quick Send, verified expiring-link copying, transfer/service status and explicit per-user Explorer integration. It uses the existing authenticated backend without starting Docker or WSL. This development preview requires independent review and the documented interactive Windows acceptance; production and representative large-file gates remain open.

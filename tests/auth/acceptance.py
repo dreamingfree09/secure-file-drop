@@ -129,7 +129,7 @@ def main():
         dump=docker('exec',backend,'pg_dump','--format=plain','--no-owner','--no-acl','--no-password')
         check('CREATE TABLE public.users' in dump and 'CREATE TABLE public.auth_sessions' in dump,'actual pg_dump accepts separated connection environment without credential arguments')
         del dump
-        check(fingerprint()==before,'migration 11 to 12 preserves synthetic user/file records and role');check(sql('SELECT version FROM schema_migrations;')=='12','migration reaches version 12')
+        check(fingerprint()==before,'migration 11 to 13 preserves synthetic user/file records and role');check(sql('SELECT version FROM schema_migrations;')=='13','migration reaches version 13')
         # Retained canonical bounds are checked on the actual selected image, without credentials.
         check(request('/login',b'{}{}',method='POST',headers={'Content-Type':'application/json'})[0]==400,'real login rejects trailing JSON')
         check(request('/login',b' '*(16385),method='POST',headers={'Content-Type':'application/json'})[0]==413,'real login bounds total JSON including whitespace')
@@ -212,6 +212,35 @@ def main():
         check(target.scheme=='https' and target.hostname=='localhost' and target.port==server.server_port and target.username is None and target.password is None and target.path=='/download' and not target.fragment,'signed download target confined to owned HTTPS origin')
         req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
+        # New recipient delivery: mail contains only locator; sender gets separate access code.
+        check(request('/invitations',{'file_id':fid,'recipient_email':'not-an-email','description':'safe'})[0]==400,'recipient delivery rejects malformed address')
+        check(request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'a'*1001})[0]==400,'recipient delivery rejects excessive description')
+        status,issued=request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'Private <notes> for you','ttl_hours':24})
+        check(status==201,'registered owner sends real SMTP recipient invitation')
+        receipt=json.loads(issued);one_code=receipt['access_code']
+        check(re.fullmatch(r'[A-Z2-7]{4}(?:-[A-Z2-7]{4}){3}',one_code) is not None and receipt['downloads_allowed']==3,'sender alone receives a strong, bounded access code')
+        messages=[json.loads(line) for line in docker('exec',backend,'cat','/tmp/sfd-fixture-mail.jsonl').splitlines()]
+        mail=[m for m in messages if m.get('To')=='recipient@example.invalid']
+        check(len(mail)==1 and one_code not in mail[0]['Body'] and 'Private &lt;notes&gt;' in mail[0]['Body'],'SMTP invitation escapes description and never emails the code')
+        invite_match=re.search(re.escape(origin)+r'/receive\?id=([0-9a-f-]{36})',mail[0]['Body'])
+        check(invite_match is not None,'recipient invitation contains a bounded HTTPS locator')
+        invite_id=invite_match.group(1)
+        status,landing=request('/receive?id='+invite_id,who=anonymous)
+        check(status==200 and b'/receive-download' in landing and one_code.encode() not in landing,'public landing asks for independent code without leaking it')
+        def redeem(value, target_id=None):
+            fields=urllib.parse.urlencode({'id':target_id or invite_id,'code':value}).encode()
+            req=urllib.request.Request(origin+'/receive-download',fields,{'Content-Type':'application/x-www-form-urlencoded','Accept-Encoding':'gzip'},method='POST')
+            try:
+                with anonymous.open(req,timeout=35) as response:return response.status,response.read(),response.headers
+            except urllib.error.HTTPError as error:return error.code,error.read(),error.headers
+        check(redeem('AAAA-AAAA-AAAA-AAAA')[0]==401,'real wrong code denied')
+        for index in range(3):
+            status,payload,response_headers=redeem(one_code)
+            check(status==200 and payload==data,'real code-gated byte-equal recipient download '+str(index+1))
+            check(response_headers.get('Content-Encoding','')=='' and response_headers.get('Content-Length')==str(len(data)),'gzip-capable recipient preserves raw binary length '+str(index+1))
+        check(redeem(one_code)[0]==410,'recipient invitation download cap enforced')
+        check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+invite_id+"';")=='1,3','real PostgreSQL tracks code attempts and download reservations')
+        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='1','SMTP invitation recorded in independent hourly sender ledger')
         # Preserve existing protected-row interpretation; this is a synthetic
         # historical fixture, not a newly implemented password-creation feature.
         sql("UPDATE files SET link_password='owned-historical-password' WHERE id='"+fid+"';")
@@ -233,6 +262,30 @@ def main():
             owned('container',backend);docker('rm','-f',backend);created.remove(backend)
             backend=start_backend();ready()
             check(request('/me')[0]==200,label_name+' preserves the existing verified session')
+        # Independent real invitations exercise persisted expiry/retry state.
+        # Only this uniquely owned synthetic namespace is edited; no live data.
+        result['stage']='real-recipient-expiry-and-attempt-policy'
+        restart_phase('recipient policy phase restart')
+        def policy_invitation(address):
+            status,body=request('/invitations',{'file_id':fid,'recipient_email':address,'description':'Harmless policy fixture','ttl_hours':1},method='POST')
+            check(status==201,'real SMTP policy invitation '+address.split('@')[0])
+            policy_code=json.loads(body)['access_code']
+            messages=[json.loads(line) for line in docker('exec',backend,'cat','/tmp/sfd-fixture-mail.jsonl').splitlines()]
+            delivered=[message for message in messages if message.get('To')==address]
+            match=re.search(re.escape(origin)+r'/receive\?id=([0-9a-f-]{36})',delivered[0]['Body']) if len(delivered)==1 else None
+            check(match is not None and policy_code not in delivered[0]['Body'],'policy invitation locator and separate code '+address.split('@')[0])
+            return match.group(1),policy_code
+        expired_id,expired_code=policy_invitation('expiry-recipient@example.invalid')
+        # Backdate only this new fixture, preserving expires_at > created_at.
+        sql("UPDATE file_invitations SET created_at=NOW()-INTERVAL '2 minutes',expires_at=NOW()-INTERVAL '1 minute' WHERE id='"+expired_id+"';")
+        check(redeem(expired_code,expired_id)[0]==410,'real invitation expiry rejects a correct code')
+        check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+expired_id+"';")=='0,0','expired invitation consumes no attempt or download reservation')
+        retry_id,retry_code=policy_invitation('retry-recipient@example.invalid')
+        wrong='AAAA-AAAA-AAAA-AAAA' if retry_code!='AAAA-AAAA-AAAA-AAAA' else 'BBBB-BBBB-BBBB-BBBB'
+        statuses=[redeem(wrong,retry_id)[0] for _ in range(8)]
+        check(statuses==[401]*8,'exactly eight real wrong-code attempts are recorded')
+        check(redeem(retry_code,retry_id)[0]==410,'correct code cannot revive an attempt-exhausted invitation')
+        check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+retry_id+"';")=='8,0','wrong-code lockout does not consume downloads')
         result['stage']='real-https-lifecycle-preservation'
         restart_phase('lifecycle phase restart')
         check(request('/upload/resumable',{},method='POST')[0]==501,'unaccepted resumable path fails closed for registered users')
@@ -242,6 +295,8 @@ def main():
         admin_row=sql("SELECT EXISTS(SELECT 1 FROM files WHERE id='"+fid+"');")=='t'
         missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+fid],capture_output=True).returncode!=0
         check(admin_status==204 and not admin_row and missing,'administrator deletes exact stored object and metadata')
+        check(sql("SELECT count(*) FROM file_invitations WHERE file_id='"+fid+"';")=='0','file deletion invalidates its recipient invitations')
+        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='3','file deletion cannot erase accepted SMTP rate-limit history')
         check(request('/upload/resumable',{},method='POST')[0]==403,'environment identity cannot acquire unsupported UUID ownership')
         jar.clear();check(request('/login',{'username':'uploader','password':uploader_password})[0]==200,'lifecycle owner login')
         def create_file(filename,size):
@@ -253,6 +308,11 @@ def main():
             if complete:body+=('\r\n--'+boundary+'--\r\n').encode()
             return request('/upload?id='+file_id,body,headers={'Content-Type':'multipart/form-data; boundary='+boundary})
         fid=create_file('storage-failure.txt',len(data));check(upload_bytes(fid,data)[0]==200,'real file exists before storage-failure deletion')
+        # Seed only this disposable account's rate-ledger fixture so the
+        # account-wide quota is tested independently of HTTP IP limiting.
+        sql("INSERT INTO invitation_send_ledger (id,sender_id) SELECT gen_random_uuid(),u.id FROM users u CROSS JOIN generate_series(1,9) WHERE u.username='uploader';")
+        rate_status,rate_body=request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'limit-test'})
+        check(rate_status==429 and b'invitation limit reached' in rate_body,'account hourly invitation quota survives deletion and blocks cross-file sends')
         before_delete=hashlib.sha256(sql("SELECT row_to_json(f)::text FROM files f WHERE id='"+fid+"';").encode()).hexdigest()
         owned('container',storage);docker('stop',storage)
         failure_status,_=request('/user/files/'+fid,method='DELETE')
@@ -377,7 +437,7 @@ def main():
                     if not owned('container',backend)['State']['Running']:break
                     time.sleep(.5)
                 result['rollback']={'image':args.rollback_image,'image_id':owned('container',backend)['Image'],'ready':rollback_ready,'schema_version':sql('SELECT version FROM schema_migrations;')}
-                check(fingerprint()==before_rollback and hashlib.sha256(sql('SELECT token_hash,expires_at FROM auth_sessions ORDER BY token_hash;').encode()).hexdigest()==sessions_before and sql('SELECT version FROM schema_migrations;')=='12','prior image rollback preserves additive schema and all synthetic records/sessions')
+                check(fingerprint()==before_rollback and hashlib.sha256(sql('SELECT token_hash,expires_at FROM auth_sessions ORDER BY token_hash;').encode()).hexdigest()==sessions_before and sql('SELECT version FROM schema_migrations;')=='13','prior image rollback preserves additive schema and all synthetic records/sessions')
                 if rollback_ready:
                     jar.clear()
                     status,_=request('/login',{'username':'admin','password':password})

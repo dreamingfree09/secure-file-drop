@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protected file download — Secure File Drop</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;background:#f1f5f9;color:#14213d;margin:0;padding:48px 16px}
+main{max-width:460px;margin:auto;padding:32px;border-radius:16px;background:white;box-shadow:0 12px 36px #14213d18}
+h1{font-size:1.5rem}label{display:block;font-weight:600;margin:22px 0 8px}
+input{display:block;width:100%;box-sizing:border-box;border:1px solid #64748b;border-radius:8px;padding:13px;font-size:1.1rem;letter-spacing:.08em}
+button{width:100%;margin-top:20px;background:#1744aa;color:white;border:0;border-radius:8px;padding:14px;font-size:1rem;cursor:pointer}
+p{line-height:1.5;color:#475569}small{color:#64748b}
+</style>
+</head>
+<body>
+<main>
+<h1>Secure File Drop</h1>
+<p>The sender has emailed you an invitation. Enter the access code they shared with you separately. The email alone cannot download the file.</p>
+<form method="POST" action="/receive-download" autocomplete="off">
+<input type="hidden" name="id" id="invitation-id">
+<label for="access-code">Access code</label>
+<input id="access-code" name="code" required minlength="16" maxlength="24" placeholder="XXXX-XXXX-XXXX-XXXX" autocapitalize="characters" spellcheck="false">
+<button type="submit">Download protected file</button>
+</form>
+<p><small>Invitations expire and allow at most three downloads. Do not share your access code publicly. An unsuccessful download may consume an attempt.</small></p>
+</main>
+<script>
+const params = new URLSearchParams(location.search);
+const id = params.get("id") || "";
+if (/^[0-9a-fA-F-]{36}$/.test(id)) {
+  document.getElementById("invitation-id").value = id;
+} else {
+  document.querySelector("button").disabled = true;
+  document.querySelector("p").textContent = "The invitation link is invalid. Ask the sender for a new email.";
+}
+</script>
+</body>
+</html>

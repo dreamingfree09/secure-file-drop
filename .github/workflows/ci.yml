@@ -18,6 +18,12 @@ jobs:
           node-version: '24'
       - name: Browser-script session unit tests
         run: node --test tests/web/*.test.cjs
+      - name: Railway IaC contract (pinned SDK, external IO denied)
+        run: python3 -B tests/railway/check.py
+      - name: Download regression red and green (Go overlays, no source overwrite)
+        run: python3 -B tests/acceptance/download-compression-regression.py
+      - name: Review Go formatting differences
+        run: gofmt -d internal/server/compression_test.go internal/server/storage_policy_transport_test.go
       - name: Install native build dependencies
         run: sudo apt-get update && sudo apt-get install -y libssl-dev
       - name: Synthetic environment-validator regressions

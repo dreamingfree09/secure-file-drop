@@ -844,7 +844,7 @@
           </div>
 
           <div class="link-container" id="linkContainer">
-            <div class="link-title">✓ Upload Complete!</div>
+            <div class="link-title">✓ Upload Complete — manual link (NOT protected by recipient access code)</div>
             <div class="link-box">
               <input type="text" class="link-input" id="downloadLink" readonly>
               <button class="btn-copy" onclick="copyLink(event)">Copy Link</button>
@@ -854,6 +854,32 @@
           </div>
 
           <div id="uploadAlert"></div>
+        </div>
+      </div>
+
+
+      <!-- A protected recipient invitation uses a separate one-time-displayed code. -->
+      <div class="main-card" id="deliveryPanel">
+        <div class="section-title">✉ Send a protected file invitation</div>
+        <p style="color: var(--text-secondary);">Upload a file, choose it below and enter the recipient's email. They receive an invitation link; only you receive the access code.</p>
+        <div style="display: grid; gap: 12px; max-width: 650px;">
+          <label class="input-label" for="deliveryFile">Uploaded file</label>
+          <select id="deliveryFile" aria-label="Choose an uploaded file" style="padding:12px;"><option value="">Choose an uploaded file</option></select>
+          <label class="input-label" for="deliveryRecipient">Recipient's email address</label>
+          <input type="email" id="deliveryRecipient" autocomplete="off" maxlength="254" placeholder="recipient@example.com" style="padding:12px;">
+          <label class="input-label" for="deliveryDescription">File description (optional)</label>
+          <textarea id="deliveryDescription" rows="3" maxlength="1000" placeholder="What is the file for?" style="padding:12px;"></textarea>
+          <label class="input-label" for="deliveryTTL">Invitation expiry</label>
+          <select id="deliveryTTL" style="padding:12px;"><option value="1">1 hour</option><option value="24" selected>24 hours</option><option value="72">3 days</option></select>
+          <button class="btn btn-primary" id="sendDeliveryButton" onclick="sendProtectedInvitation()">Email protected invitation</button>
+          <div id="deliveryAlert" role="status" aria-live="polite"></div>
+          <div id="deliveryCodeBox" style="display:none;padding:16px;border:1px solid var(--primary);border-radius:8px;">
+            <strong>Access code — shown once</strong>
+            <p>Record this code now and give it to the recipient separately, for example by phone. It is never included in their email.</p>
+            <input id="deliveryCode" type="text" readonly aria-label="Access code" autocomplete="off" style="width:100%;padding:12px;font-family:monospace;font-size:1.2rem;">
+            <button class="btn btn-secondary" onclick="copyDeliveryCode()">Copy access code</button>
+            <div id="deliverySentSummary" style="margin-top:10px;"></div>
+          </div>
         </div>
       </div>
 
@@ -960,8 +986,14 @@ function resetSessionUI() {
   for (const upload of activeUploads) upload.abort();
   activeUploads.clear();
   selectedFile = currentUpload = null; uploadQueue = []; queuedKeys.clear();
+  document.getElementById('deliveryCodeBox').style.display = 'none';
+  // Any old request belongs to the invalidated session. A later login must
+  // never inherit the previous account's disabled send button.
+  const deliveryButton = document.getElementById('sendDeliveryButton');
+  if (deliveryButton) deliveryButton.disabled = false;
   uploadInProgress = false; allFiles = []; myFilesAll = []; myFilesRendered = []; mySelection.clear();
-  for (const id of ['username','password','regEmail','regUsername','regPassword','regPasswordConfirm','linkPassword','downloadLink','fileInput']) {
+  updateDeliveryChoices();
+  for (const id of ['username','password','regEmail','regUsername','regPassword','regPasswordConfirm','linkPassword','downloadLink','fileInput','deliveryRecipient','deliveryDescription','deliveryCode','deliveryFile']) {
     const node = document.getElementById(id); if (node) node.value = '';
   }
   for (const id of ['metricsOutput','filesOutput','myFilesOutput','quotaOutput','uploadAlert','loginAlert','qrCodeContainer','fileName','fileSize','linkExpires','myFilesCount','myFilesUpdated']) {
@@ -1679,8 +1711,9 @@ async function loadFiles() {
     if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!res.ok) return;
 
-    allFiles = await res.json();
+    const files = await res.json();
     if (!isLoggedIn || generation !== sessionGeneration) return;
+    allFiles = files;
     renderFiles(allFiles);
   } catch (err) {
     console.error('Failed to load files:', err);
@@ -1751,8 +1784,9 @@ async function loadMyFiles() {
     if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!res.ok) return;
 
-    myFilesAll = await res.json();
+    const files = await res.json();
     if (!isLoggedIn || generation !== sessionGeneration) return;
+    myFilesAll = files;
 
     const countEl = document.getElementById('myFilesCount');
     if (countEl) {
@@ -1774,6 +1808,7 @@ async function loadMyFiles() {
     const statusSel = document.getElementById('myFilesStatus');
     if (statusSel) statusSel.value = myFilesState.status;
 
+    updateDeliveryChoices();
     applySortAndFilter();
   } catch (err) {
     console.error('Failed to load my files:', err);
@@ -1830,6 +1865,78 @@ function applySortAndFilter() {
 
   myFilesRendered = files;
   renderMyFiles(files);
+}
+
+
+function updateDeliveryChoices() {
+  const selector = document.getElementById('deliveryFile');
+  if (!selector) return;
+  const previous = selector.value;
+  selector.replaceChildren(new Option('Choose an uploaded file', ''));
+  for (const file of (Array.isArray(myFilesAll) ? myFilesAll : [])) {
+    if (file.status !== 'hashed' && file.status !== 'ready') continue;
+    selector.add(new Option(file.orig_name + ' (' + file.id.slice(0, 8) + ')', file.id));
+  }
+  if ([...selector.options].some(opt => opt.value === previous)) selector.value = previous;
+}
+
+async function sendProtectedInvitation() {
+  if (!isLoggedIn) return;
+  const generation = sessionGeneration;
+  const fileID = document.getElementById('deliveryFile').value;
+  const email = document.getElementById('deliveryRecipient').value.trim();
+  const description = document.getElementById('deliveryDescription').value.trim();
+  const alert = document.getElementById('deliveryAlert');
+  const btn = document.getElementById('sendDeliveryButton');
+  document.getElementById('deliveryCodeBox').style.display = 'none';
+  if (!fileID || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || new TextEncoder().encode(description).length > 1000) {
+    showAlert(alert, 'Choose a verified upload, enter a valid recipient email and use a description under 1000 bytes.', 'error');
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const res = await sessionFetch('/invitations', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        file_id: fileID, recipient_email: email, description,
+        ttl_hours: Number(document.getElementById('deliveryTTL').value)
+      })
+    });
+    if (!isLoggedIn || generation !== sessionGeneration) return;
+    if (!res.ok) throw new Error((await res.text()).slice(0, 200));
+    const receipt = await res.json();
+    if (!isLoggedIn || generation !== sessionGeneration) return;
+    document.getElementById('deliveryCode').value = receipt.access_code;
+    document.getElementById('deliverySentSummary').textContent =
+      'Invitation accepted for ' + receipt.recipient_email +
+      '. Expires ' + new Date(receipt.expires_at).toLocaleString() +
+      '. Maximum ' + receipt.downloads_allowed + ' downloads.';
+    document.getElementById('deliveryCodeBox').style.display = 'block';
+    showAlert(alert, 'Mail server accepted the invitation. Save the code now; it cannot be recovered.', 'success');
+  } catch (err) {
+    if (isLoggedIn && generation === sessionGeneration) {
+      showAlert(alert, 'The invitation was not confirmed: ' + err.message, 'error');
+    }
+  } finally {
+    if (sessionGeneration === generation) btn.disabled = false;
+  }
+}
+
+async function copyDeliveryCode() {
+  const field = document.getElementById('deliveryCode');
+  if (!field.value) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(field.value);
+    } else {
+      field.select();
+      if (!document.execCommand('copy')) throw new Error('clipboard unavailable');
+    }
+    showAlert(document.getElementById('deliveryAlert'), 'Access code copied. Share it separately from the invitation email.', 'success');
+  } catch (_) {
+    showAlert(document.getElementById('deliveryAlert'), 'Clipboard access unavailable; record the displayed code manually.', 'error');
+  }
 }
 
 function renderMyFiles(files) {

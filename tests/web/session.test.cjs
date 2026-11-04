@@ -10,6 +10,7 @@ function harness(fetch) {
     if (!nodes.has(id)) {
       const classes = new Set();
       nodes.set(id, { value: '', textContent: '', innerHTML: '', style: {}, files: [],
+        options: [], replaceChildren(...children) { this.options=children; this.value=''; }, add(option) { this.options.push(option); },
         addEventListener() {},
         classList: { add(x) { classes.add(x); }, remove(x) { classes.delete(x); },
           toggle(x, value) { if (value) classes.add(x); else classes.delete(x); },
@@ -21,6 +22,7 @@ function harness(fetch) {
   }
   const context = vm.createContext({
     document: { readyState: 'loading', addEventListener() {}, getElementById: node, querySelectorAll: () => [] },
+    Option: function(text, value) { this.text=text; this.value=value; },
     fetch, console, DOMException, AbortController, clearTimeout, TextEncoder, setTimeout() {}
   });
   const html = fs.readFileSync(path.join(__dirname, '../../web/static/index.html'), 'utf8');
@@ -117,4 +119,99 @@ test('forbidden HTTP403 does not discard a valid ordinary-user session', async (
   const h=harness(async()=>({ok:false,status:403}));vm.runInContext('isLoggedIn=true; isAdmin=false;',h.context);
   const response=await vm.runInContext("sessionFetch('/admin/files')",h.context);
   assert.equal(response.status,403);assert.equal(vm.runInContext('isLoggedIn && !isAdmin',h.context),true);
+});
+
+// Exercise the actual browser sender flow, not a hand-copied email regular expression.
+test('protected invitation form accepts ordinary destination emails and rejects malformed addresses', async () => {
+  const sent = [];
+  const h = harness(async (url, options) => {
+    if (url === '/invitations') {
+      sent.push(JSON.parse(options.body));
+      return {ok:true,status:201,json:async()=>({recipient_email:'sally@example.com',access_code:'ABCD-EFGH-JKLM-NPQR',downloads_allowed:3,expires_at:'2026-11-04T12:00:00Z'})};
+    }
+    return {ok:true,status:204};
+  });
+  vm.runInContext('isLoggedIn=true; sessionGeneration=2;',h.context);
+  h.node('deliveryFile').value='11111111-1111-4111-8111-111111111111';
+  h.node('deliveryRecipient').value='sally@example.com';
+  h.node('deliveryDescription').value='Private notes';
+  h.node('deliveryTTL').value='24';
+  await vm.runInContext('sendProtectedInvitation()',h.context);
+  assert.equal(sent.length,1,'ordinary recipient address must reach the endpoint');
+  assert.equal(sent[0].recipient_email,'sally@example.com');
+  assert.equal(h.node('deliveryCode').value,'ABCD-EFGH-JKLM-NPQR');
+  assert.equal(h.node('sendDeliveryButton').disabled,false);
+  h.node('deliveryRecipient').value='invalid@@example.com';
+  await vm.runInContext('sendProtectedInvitation()',h.context);
+  assert.equal(sent.length,1,'invalid email must not call the backend');
+});
+
+test('sign-out during an in-flight invitation resets the next session button', async () => {
+  let deliver;
+  let signal;
+  const pendingResponse = new Promise(resolve => { deliver=resolve; });
+  const h=harness(async (url,options)=>{
+    if (url==='/invitations') { signal=options.signal; return pendingResponse; }
+    return {ok:true,status:204};
+  });
+  vm.runInContext('isLoggedIn=true; sessionGeneration=8;',h.context);
+  h.node('deliveryFile').value='11111111-1111-4111-8111-111111111111';
+  h.node('deliveryRecipient').value='sally@example.com';
+  h.node('deliveryTTL').value='24';
+  const pending=vm.runInContext('sendProtectedInvitation()',h.context);
+  assert.equal(h.node('sendDeliveryButton').disabled,true);
+  vm.runInContext('resetSessionUI()',h.context);
+  assert.equal(signal.aborted,true);
+  assert.equal(h.node('sendDeliveryButton').disabled,false);
+  vm.runInContext('isLoggedIn=true; sessionGeneration++;',h.context);
+  deliver({ok:true,status:201,json:async()=>({access_code:'ABCD-EFGH-JKLM-NPQR'})});
+  await pending;
+  assert.equal(h.node('deliveryCode').value,'');
+  assert.equal(h.node('deliveryCodeBox').style.display,'none');
+  assert.equal(h.node('sendDeliveryButton').disabled,false);
+});
+
+
+function seedPreviousFiles(h) {
+  vm.runInContext('isLoggedIn=true; sessionGeneration=20; myFilesAll=[{id:"11111111-1111-4111-8111-111111111111",orig_name:"private-previous.txt",status:"hashed"}]; updateDeliveryChoices();',h.context);
+  assert.equal(h.node('deliveryFile').options.length,2);
+}
+function assertOnlyPlaceholder(h) {
+  assert.deepEqual(h.node('deliveryFile').options.map(o=>[o.value,o.text]),[['','Choose an uploaded file']]);
+}
+test('account switch clears file choices before a failed replacement list', async () => {
+  let finish;const response=new Promise(resolve=>{finish=resolve;});
+  const h=harness(async()=>response);seedPreviousFiles(h);
+  vm.runInContext('resetSessionUI(); isLoggedIn=true; sessionGeneration++;',h.context);
+  assertOnlyPlaceholder(h);
+  const pending=vm.runInContext('loadMyFiles()',h.context);
+  assertOnlyPlaceholder(h);finish({ok:false,status:503});await pending;assertOnlyPlaceholder(h);
+});
+test('old file-list fetch cannot restore previous-account options', async () => {
+  let finish;const response=new Promise(resolve=>{finish=resolve;});
+  const h=harness(async()=>response);seedPreviousFiles(h);
+  const pending=vm.runInContext('loadMyFiles()',h.context);
+  vm.runInContext('resetSessionUI(); isLoggedIn=true; sessionGeneration++;',h.context);
+  finish({ok:true,status:200,json:async()=>[{id:'old-id',orig_name:'private-previous.txt',status:'hashed'}]});await pending;
+  assertOnlyPlaceholder(h);
+  assert.equal(vm.runInContext('myFilesAll.length',h.context),0);
+});
+test('old parsed file-list body cannot replace the next account backing state', async () => {
+  let finish,started;const body=new Promise(resolve=>{finish=resolve;});const reading=new Promise(resolve=>{started=resolve;});
+  const h=harness(async()=>({ok:true,status:200,json(){started();return body;}}));seedPreviousFiles(h);
+  const pending=vm.runInContext('loadMyFiles()',h.context);await reading;
+  vm.runInContext('resetSessionUI(); isLoggedIn=true; sessionGeneration++;',h.context);
+  finish([{id:'old-id',orig_name:'private-previous.txt',status:'hashed'}]);await pending;
+  assert.equal(vm.runInContext('myFilesAll.length',h.context),0);
+  vm.runInContext('updateDeliveryChoices()',h.context);assertOnlyPlaceholder(h);
+});
+
+test('old parsed administrator list cannot replace next-session backing state', async () => {
+  let finish,started;const body=new Promise(resolve=>{finish=resolve;});const reading=new Promise(resolve=>{started=resolve;});
+  const h=harness(async()=>({ok:true,status:200,json(){started();return body;}}));
+  vm.runInContext('isLoggedIn=true; isAdmin=true; allFiles=[]; sessionGeneration=30;',h.context);
+  const pending=vm.runInContext('loadFiles()',h.context);await reading;
+  vm.runInContext('resetSessionUI(); isLoggedIn=true; sessionGeneration++;',h.context);
+  finish([{orig_name:'previous-administrator-file.txt'}]);await pending;
+  assert.equal(vm.runInContext('allFiles.length',h.context),0);
 });

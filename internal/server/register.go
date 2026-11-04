@@ -228,13 +228,13 @@ func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Never begin delivery without the full SMTP budget plus commit headroom.
+	// Never begin delivery without the full email-provider budget plus commit headroom.
 	deadline, _ := ctx.Deadline()
 	if ctx.Err() != nil || time.Until(deadline) < 20*time.Second {
 		http.Error(w, "registration unavailable", http.StatusServiceUnavailable)
 		return
 	}
-	// SMTP and SQL cannot form a distributed transaction. Roll back on delivery
+	// Email delivery and SQL cannot form a distributed transaction. Roll back on delivery
 	// failure; a post-delivery database failure is still reported as failure.
 	// Do not commit an account whose verification message could not be delivered.
 	if err := cfg.EmailSvc.sendVerificationEmailContext(ctx, req.Email, verificationToken, cfg.BaseURL); err != nil {

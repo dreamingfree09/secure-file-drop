@@ -1,24 +1,30 @@
-// email.go - SMTP email notifications (verification, resets, file events).
+// email.go - Email notifications via SMTP or reviewed HTTPS provider API.
 //
-// Wraps SMTP client configuration and provides convenience methods
+// Wraps SMTP/HTTPS client configuration and provides convenience methods
 // for sending user-facing emails.
 
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
+	"net/http"
 	"net/smtp"
 	"os"
 	"strings"
 	"time"
 )
 
-// EmailConfig holds configuration for sending emails via SMTP
+// EmailConfig holds configuration for the selected delivery provider.
 type EmailConfig struct {
+	Provider     string // smtp (legacy default), or resend
+	ResendAPIKey string // never put in URLs, logs or response bodies
 	SMTPHost     string
 	SMTPPort     string
 	SMTPUser     string
@@ -29,25 +35,33 @@ type EmailConfig struct {
 
 // LoadEmailConfig reads email configuration from environment variables
 func LoadEmailConfig() EmailConfig {
+	provider := strings.ToLower(strings.TrimSpace(os.Getenv("SFD_EMAIL_PROVIDER")))
+	if provider == "" {
+		provider = "smtp" // Preserve the existing SMTP deployment contract.
+	}
 	cfg := EmailConfig{
+		Provider:     provider,
+		ResendAPIKey: strings.TrimSpace(os.Getenv("SFD_RESEND_API_KEY")),
 		SMTPHost:     os.Getenv("SFD_SMTP_HOST"),
 		SMTPPort:     os.Getenv("SFD_SMTP_PORT"),
 		SMTPUser:     os.Getenv("SFD_SMTP_USER"),
 		SMTPPassword: os.Getenv("SFD_SMTP_PASS"),
-		FromEmail:    os.Getenv("SFD_SMTP_FROM"),
+		FromEmail:    strings.TrimSpace(os.Getenv("SFD_SMTP_FROM")),
 	}
 
-	// Set defaults if not provided
+	if cfg.Provider == "resend" {
+		cfg.FromEmail = strings.TrimSpace(os.Getenv("SFD_EMAIL_FROM"))
+		cfg.Enabled = cfg.ResendAPIKey != "" && cfg.FromEmail != "" && validateEmail(cfg.FromEmail)
+		return cfg
+	}
+
 	if cfg.SMTPPort == "" {
 		cfg.SMTPPort = "587"
 	}
 	if cfg.FromEmail == "" {
 		cfg.FromEmail = cfg.SMTPUser
 	}
-
-	// Auto-enable if SMTP host is configured
-	cfg.Enabled = cfg.SMTPHost != "" && cfg.SMTPUser != "" && cfg.SMTPPassword != ""
-
+	cfg.Enabled = cfg.Provider == "smtp" && cfg.SMTPHost != "" && cfg.SMTPUser != "" && cfg.SMTPPassword != ""
 	return cfg
 }
 
@@ -67,10 +81,20 @@ func (s *EmailService) SendEmail(to, subject, body string) error {
 }
 
 func (s *EmailService) sendEmailContext(ctx context.Context, to, subject, body string) error {
-	if !s.config.Enabled {
+	if s == nil || !s.config.Enabled {
 		// Email disabled, just log (sanitized - no email addresses)
-		log.Printf("EMAIL (disabled): Subject: %s", subject)
+		log.Printf("EMAIL (disabled): no configured provider")
 		return fmt.Errorf("email delivery disabled")
+	}
+
+	if s.config.Provider == "resend" {
+		// No fallback to SMTP after an API error: recipients must never
+		// receive an unexpected duplicate invitation.
+		return s.sendResendContext(ctx, to, subject, body,
+			"https://api.resend.com/emails",
+			&http.Client{Timeout: 12 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error {
+				return http.ErrUseLastResponse
+			}})
 	}
 
 	// Validate configuration
@@ -103,6 +127,54 @@ func (s *EmailService) sendEmailContext(ctx context.Context, to, subject, body s
 	}
 
 	log.Printf("EMAIL SENT: delivery accepted")
+	return nil
+}
+
+// sendResendContext sends a bounded HTTPS JSON request. The endpoint/client
+// arguments are only a test seam; production always pins api.resend.com above.
+// The API key, body and provider error response never enter logs or errors.
+func (s *EmailService) sendResendContext(ctx context.Context, to, subject, body, endpoint string, client *http.Client) error {
+	if s == nil || s.config.Provider != "resend" || !s.config.Enabled ||
+		!validateEmail(s.config.FromEmail) || !validateEmail(to) ||
+		strings.ContainsAny(subject, "\r\n") || strings.TrimSpace(s.config.ResendAPIKey) == "" {
+		return fmt.Errorf("email API configuration invalid")
+	}
+	payload, err := json.Marshal(struct {
+		From    string   `json:"from"`
+		To      []string `json:"to"`
+		Subject string   `json:"subject"`
+		HTML    string   `json:"html"`
+	}{From: s.config.FromEmail, To: []string{to}, Subject: subject, HTML: body})
+	if err != nil {
+		return fmt.Errorf("email API payload invalid")
+	}
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
+	if err != nil {
+		return fmt.Errorf("email API request invalid")
+	}
+	request.Header.Set("Authorization", "Bearer "+s.config.ResendAPIKey)
+	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("Accept", "application/json")
+	response, err := client.Do(request)
+	if err != nil {
+		return fmt.Errorf("email API request failed")
+	}
+	defer func() { _ = response.Body.Close() }()
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return fmt.Errorf("email API delivery not accepted")
+	}
+	// A successful status without an acceptance identifier is not evidence
+	// of a queued message. Bound all response bytes before decoding.
+	data, err := io.ReadAll(io.LimitReader(response.Body, 4097))
+	if err != nil || len(data) > 4096 {
+		return fmt.Errorf("email API response invalid")
+	}
+	var accepted struct {
+		ID string `json:"id"`
+	}
+	if json.Unmarshal(data, &accepted) != nil || accepted.ID == "" {
+		return fmt.Errorf("email API acknowledgement missing")
+	}
 	return nil
 }
 

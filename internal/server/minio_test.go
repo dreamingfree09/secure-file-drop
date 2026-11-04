@@ -1,6 +1,10 @@
 package server
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/minio/minio-go/v7"
+)
 
 func TestNormaliseEndpoint(t *testing.T) {
 	tests := []struct {
@@ -53,6 +57,33 @@ func TestPrivateBucketPolicy(t *testing.T) {
 	} {
 		if got := privateBucketPolicy(tt.policy); got != tt.private {
 			t.Fatalf("policy privacy got %v want %v", got, tt.private)
+		}
+	}
+}
+
+func TestStorageBucketLookup(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		want   minio.BucketLookupType
+		reject bool
+	}{
+		{"", minio.BucketLookupAuto, false},
+		{"auto", minio.BucketLookupAuto, false},
+		{"virtual", minio.BucketLookupDNS, false},
+		{"path", minio.BucketLookupPath, false},
+		{"VIRTUAL", minio.BucketLookupDNS, false},
+		{"invalid", minio.BucketLookupAuto, true},
+		{"virtual-host://unsafe", minio.BucketLookupAuto, true},
+	} {
+		got, err := storageBucketLookup(tc.name)
+		if tc.reject {
+			if err == nil {
+				t.Fatalf("invalid addressing mode %q accepted", tc.name)
+			}
+			continue
+		}
+		if err != nil || got != tc.want {
+			t.Fatalf("bucket lookup %q = %d, %v; want %d", tc.name, got, err, tc.want)
 		}
 	}
 }

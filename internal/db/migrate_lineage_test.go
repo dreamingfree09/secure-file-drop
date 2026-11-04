@@ -210,8 +210,8 @@ func TestLegacyLineage(t *testing.T) {
 				}
 				var version int
 				var dirty bool
-				if target.QueryRowContext(ctx, "SELECT version,dirty FROM schema_migrations").Scan(&version, &dirty) != nil || version != 12 || dirty {
-					t.Error("expected clean additive version12")
+				if target.QueryRowContext(ctx, "SELECT version,dirty FROM schema_migrations").Scan(&version, &dirty) != nil || version != 13 || dirty {
+					t.Error("expected clean additive version13")
 				}
 				if err := RunMigrations(target); err != nil {
 					t.Error("idempotent migration failed")

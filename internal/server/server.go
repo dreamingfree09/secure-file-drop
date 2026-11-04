@@ -327,6 +327,10 @@ func New(cfg Config) *Server {
 
 	// Download file via signed token.
 	mux.Handle("/download", cfg.downloadHandler(cfg.DB, mc, bucket))
+	// Recipient invitation links are not unauthenticated file download tokens.
+	mux.Handle("/invitations", newRateLimiter(12, time.Hour).middleware(cfg.createInvitationHandler(cfg.DB)))
+	mux.HandleFunc("/receive", receiveInvitationPage)
+	mux.Handle("/receive-download", newRateLimiter(12, time.Minute).middleware(cfg.recipientDownloadHandler(cfg.DB, mc, bucket)))
 
 	// Wrap middleware stack (order matters - innermost to outermost):
 	// 1. Compression (compress responses)

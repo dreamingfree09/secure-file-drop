@@ -71,7 +71,7 @@ func shouldSkipCompression(r *http.Request) bool {
 	path := r.URL.Path
 
 	// Skip compression for file downloads (already compressed or binary)
-	if strings.HasPrefix(path, "/download") {
+	if strings.HasPrefix(path, "/download") || path == "/receive-download" {
 		return true
 	}
 
