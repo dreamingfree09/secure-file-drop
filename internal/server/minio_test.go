@@ -142,6 +142,7 @@ func TestStorageBucketLookup(t *testing.T) {
 		anonymousObjectReadDenied(context.Background(), "https://example.invalid/probe?X-Amz-Signature=bad", nil) {
 		t.Fatal("insecure or signed anonymous probe URL accepted")
 	}
+	t.Setenv("SFD_ENV", "staging")
 	for _, tc := range []struct {
 		endpoint string
 		secure   bool
@@ -159,5 +160,13 @@ func TestStorageBucketLookup(t *testing.T) {
 		if (validateRailwayProbeTarget(tc.endpoint, tc.secure, tc.lookup, tc.bucket) == nil) != tc.ok {
 			t.Fatalf("Railway provider target policy incorrect for endpoint %q", tc.endpoint)
 		}
+	}
+	t.Setenv("SFD_ENV", "production")
+	if validateRailwayProbeTarget("t3.storageapi.dev", true, minio.BucketLookupDNS, "private-staging-bucket") == nil {
+		t.Fatal("Railway-only probe must never enable in production")
+	}
+	t.Setenv("SFD_ENV", "")
+	if validateRailwayProbeTarget("t3.storageapi.dev", true, minio.BucketLookupDNS, "private-staging-bucket") == nil {
+		t.Fatal("Railway-only probe requires an explicit staging environment")
 	}
 }

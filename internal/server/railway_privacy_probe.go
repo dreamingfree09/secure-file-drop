@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"regexp"
 	"time"
 
@@ -21,7 +22,7 @@ import (
 var railwayProbeBucketName = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$`)
 
 func validateRailwayProbeTarget(endpoint string, secure bool, lookup minio.BucketLookupType, bucket string) error {
-	if endpoint != "t3.storageapi.dev" || !secure || lookup != minio.BucketLookupDNS ||
+	if os.Getenv("SFD_ENV") != "staging" || endpoint != "t3.storageapi.dev" || !secure || lookup != minio.BucketLookupDNS ||
 		!railwayProbeBucketName.MatchString(bucket) {
 		return fmt.Errorf("railway privacy probe target invalid (fail-closed)")
 	}
