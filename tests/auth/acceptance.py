@@ -276,7 +276,8 @@ def main():
             check(match is not None and policy_code not in delivered[0]['Body'],'policy invitation locator and separate code '+address.split('@')[0])
             return match.group(1),policy_code
         expired_id,expired_code=policy_invitation('expiry-recipient@example.invalid')
-        sql("UPDATE file_invitations SET expires_at=NOW()-INTERVAL '1 minute' WHERE id='"+expired_id+"';")
+        # Backdate only this new fixture, preserving expires_at > created_at.
+        sql("UPDATE file_invitations SET created_at=NOW()-INTERVAL '2 minutes',expires_at=NOW()-INTERVAL '1 minute' WHERE id='"+expired_id+"';")
         check(redeem(expired_code,expired_id)[0]==410,'real invitation expiry rejects a correct code')
         check(sql("SELECT failed_attempts::text||','||downloads::text FROM file_invitations WHERE id='"+expired_id+"';")=='0,0','expired invitation consumes no attempt or download reservation')
         retry_id,retry_code=policy_invitation('retry-recipient@example.invalid')
