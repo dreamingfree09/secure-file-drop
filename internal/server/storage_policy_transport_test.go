@@ -41,7 +41,7 @@ func TestStoragePolicyResponses(t *testing.T) {
 			return &http.Response{StatusCode: tc.status, Header: http.Header{"Content-Type": []string{"application/xml"}}, Body: io.NopCloser(strings.NewReader(tc.body)), Request: req}, nil
 		})
 		client, err := minio.New("objects.example.invalid", &minio.Options{
-			Creds: credentials.NewStaticV4("synthetic-access", "synthetic-secret", ""),
+			Creds:  credentials.NewStaticV4("synthetic-access", "synthetic-secret", ""),
 			Secure: true, Region: "auto", BucketLookup: minio.BucketLookupDNS, Transport: transport,
 		})
 		if err != nil {
