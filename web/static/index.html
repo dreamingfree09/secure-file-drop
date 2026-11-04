@@ -992,6 +992,7 @@ function resetSessionUI() {
   const deliveryButton = document.getElementById('sendDeliveryButton');
   if (deliveryButton) deliveryButton.disabled = false;
   uploadInProgress = false; allFiles = []; myFilesAll = []; myFilesRendered = []; mySelection.clear();
+  updateDeliveryChoices();
   for (const id of ['username','password','regEmail','regUsername','regPassword','regPasswordConfirm','linkPassword','downloadLink','fileInput','deliveryRecipient','deliveryDescription','deliveryCode','deliveryFile']) {
     const node = document.getElementById(id); if (node) node.value = '';
   }
@@ -1710,8 +1711,9 @@ async function loadFiles() {
     if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!res.ok) return;
 
-    allFiles = await res.json();
+    const files = await res.json();
     if (!isLoggedIn || generation !== sessionGeneration) return;
+    allFiles = files;
     renderFiles(allFiles);
   } catch (err) {
     console.error('Failed to load files:', err);
@@ -1782,8 +1784,9 @@ async function loadMyFiles() {
     if (!isLoggedIn || generation !== sessionGeneration) return;
     if (!res.ok) return;
 
-    myFilesAll = await res.json();
+    const files = await res.json();
     if (!isLoggedIn || generation !== sessionGeneration) return;
+    myFilesAll = files;
 
     const countEl = document.getElementById('myFilesCount');
     if (countEl) {
