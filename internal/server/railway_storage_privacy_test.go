@@ -119,7 +119,11 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 				if tc.badSignedRead {return response(200, "different")}
 				return response(200, string(stored))
 			case http.MethodHead:
-				return response(200, "")
+				// GetObject internally requests HEAD to learn the original size.
+				reply, err := response(200, "")
+				reply.Header.Set("Content-Length", strconv.Itoa(len(stored)))
+				reply.ContentLength = int64(len(stored))
+				return reply, err
 			case http.MethodDelete:
 				deletes++
 				if req.URL.Path != objectPath {t.Errorf("cleanup changed probe key")}
