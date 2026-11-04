@@ -85,7 +85,7 @@ func matchedSignedReadAndAnonymousDenied(ctx context.Context, signedLocation, an
 	}
 	var denied struct {
 		XMLName xml.Name `xml:"Error"`
-		Code string `xml:"Code"`
+		Code    string   `xml:"Code"`
 	}
 	return xml.Unmarshal(deniedBody, &denied) == nil && denied.Code == "AccessDenied"
 }

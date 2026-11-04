@@ -116,8 +116,8 @@ func TestStorageBucketLookup(t *testing.T) {
 	// Real TLS HTTP requests prove that signed and anonymous reads share
 	// the exact path, transport and headers. A generic frontend 403 fails.
 	for _, tc := range []struct {
-		status int
-		body string
+		status  int
+		body    string
 		allowed bool
 	}{
 		{http.StatusForbidden, `<Error><Code>AccessDenied</Code></Error>`, true},
