@@ -215,3 +215,55 @@ test('old parsed administrator list cannot replace next-session backing state', 
   finish([{orig_name:'previous-administrator-file.txt'}]);await pending;
   assert.equal(vm.runInContext('allFiles.length',h.context),0);
 });
+
+test('invitation errors use fixed messages and clear old access codes', async () => {
+  const cases = [
+    ['email_test_recipient_restricted', 'test sender can email only'],
+    ['email_configuration', 'attention from the operator'],
+    ['email_rate_limited', 'sending limit'],
+    ['email_temporarily_unavailable', 'temporarily unavailable'],
+    ['__proto__', 'could not be confirmed'],
+    ['unknown', 'could not be confirmed']
+  ];
+  for (const [code, expected] of cases) {
+    const h = harness(async()=>({ok:false,status:503,json:async()=>({error:code,message:'PRIVATE provider response recipient@example.test re_fixture'})}));
+    vm.runInContext('isLoggedIn=true; sessionGeneration=2;',h.context);
+    h.node('deliveryFile').value='11111111-1111-4111-8111-111111111111';
+    h.node('deliveryRecipient').value='fixture@example.test';h.node('deliveryTTL').value='24';
+    h.node('deliveryCode').value='AAAA-BBBB-CCCC-DDDD';
+    await vm.runInContext('sendProtectedInvitation()',h.context);
+    assert.match(h.node('deliveryAlert').textContent,new RegExp(expected));
+    assert.doesNotMatch(h.node('deliveryAlert').textContent,/PRIVATE|recipient@example.test|re_fixture/);
+    assert.equal(h.node('deliveryCodeBox').style.display,'none');
+    assert.equal(h.node('deliveryCode').value,'');assert.equal(h.node('sendDeliveryButton').disabled,false);
+    assert.equal(vm.runInContext('isLoggedIn',h.context),true);
+  }
+});
+
+test('malformed invitation responses and network errors never display raw diagnostics or success', async()=>{
+  for(const fetcher of [
+    async()=>({ok:false,status:503,json:async()=>{throw Error('PRIVATE payload')}}),
+    async()=>{throw Error('PRIVATE connection re_fixture')},
+    async()=>({ok:true,status:201,json:async()=>({access_code:'PRIVATE malformed receipt'})})
+  ]) {
+    const h=harness(fetcher);vm.runInContext('isLoggedIn=true; sessionGeneration=2;',h.context);
+    h.node('deliveryFile').value='11111111-1111-4111-8111-111111111111';
+    h.node('deliveryRecipient').value='fixture@example.test';h.node('deliveryTTL').value='24';
+    await vm.runInContext('sendProtectedInvitation()',h.context);
+    assert.match(h.node('deliveryAlert').textContent,/could not be confirmed/);
+    assert.doesNotMatch(h.node('deliveryAlert').textContent,/PRIVATE|re_fixture/);
+    assert.equal(h.node('deliveryCodeBox').style.display,'none');
+    assert.equal(h.node('deliveryCode').value,'');assert.equal(h.node('sendDeliveryButton').disabled,false);
+  }
+});
+
+test('a delayed invitation error cannot appear in the next account',async()=>{
+  let finish,started;const body=new Promise(r=>finish=r),reading=new Promise(r=>started=r);
+  const h=harness(async()=>({ok:false,status:503,json(){started();return body}}));
+  vm.runInContext('isLoggedIn=true; sessionGeneration=2;',h.context);
+  h.node('deliveryFile').value='11111111-1111-4111-8111-111111111111';h.node('deliveryRecipient').value='fixture@example.test';h.node('deliveryTTL').value='24';
+  const pending=vm.runInContext('sendProtectedInvitation()',h.context);await reading;
+  vm.runInContext('resetSessionUI(); isLoggedIn=true; sessionGeneration++;',h.context);
+  h.node('deliveryAlert').textContent='Next account';finish({error:'email_test_recipient_restricted'});await pending;
+  assert.equal(h.node('deliveryAlert').textContent,'Next account');
+});

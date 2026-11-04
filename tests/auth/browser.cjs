@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 const { chromium } = require(process.env.SFD_AUTH_BROWSER_MODULE);
 const {createBrowserTrace} = require('./browser-diagnostics.cjs');
+const {verifyInvitationUI} = require('./invitation-ui.cjs');
 let stage='fixture guard'; const checks=[]; let responseTrace;
 function check(value,name){ assert.ok(value,name); checks.push(name); }
 (async()=>{
@@ -51,7 +52,10 @@ function check(value,name){ assert.ok(value,name); checks.push(name); }
    check(row&&row.sha256_hex===crypto.createHash('sha256').update(sample.data).digest('hex'),'native hash and owned browser metadata '+i);
    await page.getByRole('button',{name:'Copy Link',exact:true}).click();check(await page.evaluate(()=>window.fixtureCopied===document.getElementById('downloadLink').value),'copy control with isolated test clipboard '+i);
   }
-  stage='logout clears transfer state';await page.evaluate(()=>logout());await page.waitForFunction(()=>!logoutPending);
+  stage='invitation form rendering and safe errors';
+   const invitationUI=await verifyInvitationUI(page,origin);
+   console.log('INVITATION UI ACCEPTANCE: '+JSON.stringify(invitationUI));
+   stage='logout clears transfer state';await page.evaluate(()=>logout());await page.waitForFunction(()=>!logoutPending);
   check(await page.locator('#downloadLink').inputValue()==='','logout clears signed link immediately');
   check(await page.locator('#fileInput').inputValue()===''||await page.locator('#appScreen').evaluate(el=>el.classList.contains('hidden')),'signed-out application hidden');
   check((await page.request.get(origin+'/me')).status()===401,'registered logout rejects protected readback');

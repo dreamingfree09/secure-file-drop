@@ -390,6 +390,10 @@ def main():
             command(['certutil','-A','-d','sql:'+str(nss),'-n',name,'-t','C,,','-i',str(cert)])
             browserenv=dict(os.environ,SFD_AUTH_BROWSER_MODULE=str(pathlib.Path(args.browser_module).resolve()),NODE_EXTRA_CA_CERTS=str(pathlib.Path(args.ca) if args.ca else cert))
             browserout=command(['node',str(repo/'tests/auth/browser.cjs'),origin,str(root/'windows-fixture.json')],env=browserenv,timeout=60)
+            ui_lines=[line for line in browserout.splitlines() if line.startswith('INVITATION UI ACCEPTANCE: ')]
+            assert len(ui_lines)==1,'missing isolated invitation UI acceptance'
+            result['invitation_ui']=json.loads(ui_lines[0].split(': ',1)[1])
+            assert result['invitation_ui']['count']==14 and len(result['invitation_ui']['screenshots'])==2
             (root/'browser-tests.txt').write_text(browserout+'\n')
             result['browser']=json.loads(next(line.split(': ',1)[1] for line in browserout.splitlines() if line.startswith('LEGACY BROWSER CHECKS: ')))
             check('BROWSER ACCEPTANCE PASS:' in browserout,'real historical browser UI over normally validated HTTPS')

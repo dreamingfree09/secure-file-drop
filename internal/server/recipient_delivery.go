@@ -243,7 +243,7 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 		}
 		link := origin + "/receive?id=" + invitationID.String()
 		if err = cfg.EmailSvc.sendRecipientInvitation(ctx, in.RecipientEmail, senderEmail, filename, in.Description, link, expiresAt); err != nil {
-			http.Error(w, "invitation delivery failed", http.StatusServiceUnavailable)
+			writeInvitationDeliveryError(w, err)
 			return
 		}
 		if err = tx.Commit(); err != nil {
