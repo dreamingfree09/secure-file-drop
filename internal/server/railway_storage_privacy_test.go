@@ -1,12 +1,10 @@
 package server
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 
@@ -146,9 +144,8 @@ func TestRailwayStoragePrivacyAttestation(t *testing.T) {
 		} else if uploaded != 1 || deletes != 1 {
 			t.Fatalf("%s: probe and cleanup did not run exactly once (%d,%d)", tc.name, uploaded, deletes)
 		}
-		if tc.name == "private" && (signedRead == 0 || anonRead != 1 || !bytes.Equal(stored, stored)) {
+		if tc.name == "private" && (signedRead == 0 || anonRead != 1 || len(stored) != 32) {
 			t.Fatal("valid staging attestation missing a check")
 		}
 	}
-	_ = os.Getenv
 }

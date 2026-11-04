@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/xml"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -158,6 +157,3 @@ func attestRailwayStagingBucket(client *minio.Client, bucket string, anon *http.
 	return nil
 }
 
-// fmt ensures the staging mode is not silently treated as a general-purpose
-// S3 policy bypass. Keep production policy handling in verifyStoragePrivacy.
-var _ = fmt.Errorf
