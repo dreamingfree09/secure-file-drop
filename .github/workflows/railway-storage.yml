@@ -17,7 +17,10 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Capture formatting differences without editing the checked out source
-        run: gofmt -d internal/server/railway_privacy.go internal/server/railway_privacy_test.go internal/server/minio.go internal/server/config_validation.go > "$RUNNER_TEMP/railway-gofmt.patch"
+        run: |
+          status=0
+          gofmt -d internal/server/railway_privacy.go internal/server/railway_privacy_test.go internal/server/minio.go internal/server/config_validation.go > "$RUNNER_TEMP/railway-gofmt.patch" || status=$?
+          test "$status" -le 1
       - name: Execute actual-head focused SDK, cleanup, scope, concurrency and HTTPS cases
         run: |
           set -o pipefail
