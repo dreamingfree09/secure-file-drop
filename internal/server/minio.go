@@ -79,11 +79,24 @@ func newMinioClient() (*minio.Client, string, error) {
 		return nil, "", fmt.Errorf("virtual-hosted S3 addressing requires HTTPS")
 	}
 
-	client, err := minio.New(endpoint, &minio.Options{
+	privacyMode, err := storagePrivacyMode(os.Getenv("SFD_S3_PRIVACY_MODE"))
+	if err != nil {
+		return nil, "", err
+	}
+	if privacyMode == railwayStagingProbeMode {
+		if err := validateRailwayProbeScope(endpoint, secure, lookup, bucket); err != nil {
+			return nil, "", err
+		}
+	}
+	options := &minio.Options{
 		Creds:        credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure:       secure,
 		BucketLookup: lookup,
-	})
+	}
+	if privacyMode == railwayStagingProbeMode {
+		options.Region = "auto" // Railway Tigris S3 signing region for staging.
+	}
+	client, err := minio.New(endpoint, options)
 	if err != nil {
 		return nil, "", err
 	}
@@ -99,12 +112,19 @@ func newMinioClient() (*minio.Client, string, error) {
 		return nil, "", fmt.Errorf("minio bucket does not exist: %s", bucket)
 	}
 
-	policy, err := client.GetBucketPolicy(ctx, bucket)
-	if err != nil {
-		return nil, "", classifyBucketPolicyError(err)
-	}
-	if !privateBucketPolicy(policy) {
-		return nil, "", fmt.Errorf("bucket policy check failed: unverified privacy")
+	if privacyMode == railwayStagingProbeMode {
+		if err := verifyStoragePrivacy(ctx, client, bucket, privacyMode, nil); err != nil {
+			return nil, "", err
+		}
+	} else {
+		// Preserve PR48's exact fail-closed policy error classification.
+		policy, err := client.GetBucketPolicy(ctx, bucket)
+		if err != nil {
+			return nil, "", classifyBucketPolicyError(err)
+		}
+		if !privateBucketPolicy(policy) {
+			return nil, "", fmt.Errorf("bucket policy check failed: unverified privacy")
+		}
 	}
 	return client, bucket, nil
 }

@@ -65,31 +65,43 @@ validation, no redirects and no fallback. A provider acceptance ID does not prov
 mailbox delivery; the smoke test checks the actual test inbox. Domain/account
 authorisation is external; code does not create it or accept paid terms.
 
-## One unresolved provider compatibility blocker
+## Railway-only positive bucket privacy attestation
 
-**RAILWAY-BUCKET-POLICY: authenticated GetBucketPolicy semantics are UNVERIFIED.**
-The official bucket page specifies private buckets and virtual-hosted addressing,
-but does not explicitly define this policy operation's responses. Its general
-S3-compatibility claim does not establish that the actual provisioned bucket
-satisfies this application's strict privacy check. No real bucket/credentials
-were available or used. Do not silently interpret403,501 or an unknown response
-as proof of privacy. The existing `newMinioClient`/`privateBucketPolicy` protection remains
-fail-closed on errors, malformed policy or anonymous grants. A separate
-source-only diagnostic revision may classify known S3 provider failure codes
-into non-sensitive error categories; this does not authorise access.
+**RAILWAY-BUCKET-POLICY: the provider's authenticated GetBucketPolicy operation is
+not accepted as proof of privacy when its response is unsupported.**
+The existing `privateBucketPolicy` function and default strict policy mode
+remain unchanged. A separate opt-in `SFD_S3_PRIVACY_MODE=railway-staging-probe`
+is permitted ONLY for Railway project `secure-file-drop-staging`, environment
+`staging`, `SFD_ENV=staging`, the exact HTTPS base endpoint
+`https://t3.storageapi.dev`, virtual-hosted lookup and a bucket name beginning
+`sfd-private-staging-`. No other host, bucket, production project or plain HTTP
+is accepted; an unknown mode fails configuration validation.
 
-The safe SDK response fixtures verify HTTPS virtual addressing and the actual
-client's accepted named policy/NoSuchBucketPolicy versus denied, unsupported,
-malformed and anonymous cases. These model responses, not the Railway service.
-Before any invitation/real file, an authorised agent must run startup and /ready
-with the specific fresh bucket credentials, verify the actual policy result and
-prove anonymous access to a harmless probe object is denied. Stop if the API is
-unsupported or access cannot be established; obtain provider evidence or choose
-a separately qualified private S3 service. There is no bypass flag or alternate
-startup path. Buckets are private over an HTTPS S3 endpoint, not claimed to be a
-PostgreSQL-style private-network service. The provider currently lists no SSE,
-versioning, object lock or lifecycle configuration; this is not an archival or
-sensitive-data security qualification.
+Under the opt-in, a policy query that succeeds with anonymous-allow access
+still causes startup rejection. Only documented-style `AccessDenied`,
+`NotImplemented` or `MethodNotAllowed` errors permit the alternative check.
+The app generates an unpredictable unique key and random harmless bytes,
+requires authenticated upload and byte-equal download, then issues an entirely
+unauthenticated, unsigned HTTPS GET for exactly the same object. It accepts
+ONLY HTTP 403 containing a well-formed S3 XML `AccessDenied` error, never
+a redirect, successful response, 404, malformed error or TLS failure.
+Every attempt must delete the probe using the authenticated API; cleanup
+failure also prevents startup. All operations are time bounded, and neither
+object URL, object key nor credential enters application logs. Fixture tests
+simulate both successful and adverse outcomes without claiming real Railway
+storage acceptance.
+
+The existing real staging service previously failed before this new code
+existed. Set the opt-in only **after the corrected branch passes independent
+review and full exact-head CI**. Redeploy only the already-authorised
+disposable staging backend. Verify `/ready` passes on its actual fresh bucket
+with the strict dynamic proof, and separately verify anonymous reads of the
+probe object are denied. Do not claim a result without observing it. This is
+a staging compatibility exception, NOT production storage approval. The
+provider currently does not provide bucket versioning, object lock or bucket
+lifecycle configuration, and does not provide automatic bucket backups.
+Railway documents encryption at rest, but this is not end-to-end encryption,
+an archival guarantee or an independently reviewed multi-region recovery design.
 
 ## Agent-operated live smoke runbook (not executed)
 
@@ -156,3 +168,14 @@ remain external execution prerequisites. This is not public production readiness
 - [Private buckets and limitations](https://docs.railway.com/storage-buckets)
 - [Outbound mail networking](https://docs.railway.com/networking/outbound-networking)
 - [Resend acceptance API](https://resend.com/docs/api-reference/emails/send-email)
+
+## Reconciliation provenance — 4 November 2026
+
+The staging-only positive attestation has been reconciled with protected master
+following PR #48. The default policy-only path continues to classify known
+GetBucketPolicy errors and **refuses** startup; the separately scoped canary
+is never enabled without explicit staging mode, exact Railway project and
+environment names, HTTPS, virtual-host lookup and the fresh bucket prefix.
+There is no production bypass, public domain or real-data acceptance. Re-run
+all exact-head CI and review before deploying this revision to the already
+provisioned isolated staging service.
