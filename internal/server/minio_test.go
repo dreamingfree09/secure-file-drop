@@ -68,7 +68,7 @@ func TestStorageBucketLookup(t *testing.T) {
 	// response. Rejection is mandatory even when the error is recognisable.
 	for _, tc := range []struct {
 		providerCode string
-		category string
+		category     string
 	}{
 		{"AccessDenied", "access_denied"},
 		{"NotImplemented", "operation_unsupported"},
