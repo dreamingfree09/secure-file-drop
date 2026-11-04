@@ -1,0 +1,35 @@
+name: Railway storage security
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  privacy:
+    name: Positive privacy attestation SDK and real TLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Capture formatting differences without editing the checked out source
+        run: gofmt -d internal/server/railway_privacy.go internal/server/railway_privacy_test.go internal/server/minio.go internal/server/config_validation.go > "$RUNNER_TEMP/railway-gofmt.patch"
+      - name: Execute actual-head focused SDK, cleanup, scope, concurrency and HTTPS cases
+        run: |
+          set -o pipefail
+          go test -race ./internal/server -run '^TestRailwayPrivacy' -count=1 -v 2>&1 | tee "$RUNNER_TEMP/railway-privacy-tests.txt"
+      - name: Require clean formatting
+        run: test ! -s "$RUNNER_TEMP/railway-gofmt.patch"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: railway-privacy-security-receipt
+          path: |
+            ${{ runner.temp }}/railway-gofmt.patch
+            ${{ runner.temp }}/railway-privacy-tests.txt
+          if-no-files-found: error
+          retention-days: 14
