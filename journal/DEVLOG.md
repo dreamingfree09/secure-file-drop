@@ -536,3 +536,18 @@ The separator finding applies to ordinary XML element attributes too. The accept
 Work ID SFD-MERGED-MASTER-ACCEPTANCE-DIAGNOSTICS-20261104, base5d826096e824577b6adff640311a254402d51e47. Retain actual-master failed job126740353797/artifact13347542927: BIGINT124/backend27/browser259/Go passes; BYTEA114 backend plus259 Go passes then administrator-browser TimeoutError, certificate_error=false; owned cleanup/preservation true. No product cause is yet established and deployment remains held.
 
 Add at most32 origin-filtered fixed-path/status observations, completed-check count and granular administrator wait stages to the browser receipt without logging URLs, credentials, queries, signed-link paths, headers or bodies. Three privacy/boundary regressions join16 prior browser-script cases. Correct the independently reproduced SDK fixture's CRLF import-strip assumption and add LF/CRLF graph equality plus denied-scope regression. Local Node19/SDK5/docs39/syntax/whitespace pass. No production, authentication, rate-limit, desktop, migration or workflow change; hosted actual-head acceptance and Aether review remain required.
+
+
+## 2026-11-04 — Issue53 protected-invitation errors and focused form correction
+
+Implemented bounded Resend rejection categories and safe invitation HTTP503/JSON messages, fixed-message frontend failures, malformed-receipt rejection and aligned accessible responsive form styling. Added provider/redaction negatives and isolated Chromium desktop/mobile screenshots without changing production endpoints or security gates. Local22 browser-script/5 pinned-SDK/39 document checks pass; the initial Windows default-encoding documentation invocation failed and the UTF-8 invocation passes. Go/full-stack/Windows/storage hosted tests and real permitted-mailbox delivery are pending at this entry. Original two503 incidents remain historical, their raw provider reason unestablished. No source merge, corrected-backend deployment, secret reset, existing-record modification or storage/host operation performed.
+
+
+### Issue53 exact-head fixture correction
+
+Initial candidate1b55b807 passes the new provider unit cases, but hosted CI41937746538/job126950413370 fails two G101 findings for hard-coded synthetic Resend test keys. The tests now construct those non-secret fixture values using the established repository convention. No scanner suppression, annotation, production change or failed-run rerun is used. Exact-head replacement CI and all prior acceptance gates remain mandatory; the failed result is retained.
+
+
+### 2026-11-05 — Issue53 exact-count enforcement
+
+The provider regression addition contributes20 Go pass events (two parent tests plus18 subcases). The unchanged full-stack baseline259 therefore becomes279; the portable fixture and its hosted workflow retain exact equality, zero skips/failures and every existing lineage/lifecycle/COMMIT counter. Update the workflow expectation in its own commit under AGENTS.md; do not disable or loosen any check. Exact-head artifacts must confirm the actual count. Browser27/backend124 and the additional isolated invitation UI14 remain separate.

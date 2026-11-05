@@ -10,6 +10,7 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -133,11 +134,16 @@ func (s *EmailService) sendEmailContext(ctx context.Context, to, subject, body s
 // sendResendContext sends a bounded HTTPS JSON request. The endpoint/client
 // arguments are only a test seam; production always pins api.resend.com above.
 // The API key, body and provider error response never enter logs or errors.
-func (s *EmailService) sendResendContext(ctx context.Context, to, subject, body, endpoint string, client *http.Client) error {
+func (s *EmailService) sendResendContext(ctx context.Context, to, subject, body, endpoint string, client *http.Client) (resultErr error) {
+	defer func() {
+		if resultErr != nil {
+			log.Print(emailFailureDiagnostic(resultErr))
+		}
+	}()
 	if s == nil || s.config.Provider != "resend" || !s.config.Enabled ||
 		!validateEmail(s.config.FromEmail) || !validateEmail(to) ||
 		strings.ContainsAny(subject, "\r\n") || strings.TrimSpace(s.config.ResendAPIKey) == "" {
-		return fmt.Errorf("email API configuration invalid")
+		return mailDeliveryFailure("configuration", 0)
 	}
 	payload, err := json.Marshal(struct {
 		From    string   `json:"from"`
@@ -146,34 +152,38 @@ func (s *EmailService) sendResendContext(ctx context.Context, to, subject, body,
 		HTML    string   `json:"html"`
 	}{From: s.config.FromEmail, To: []string{to}, Subject: subject, HTML: body})
 	if err != nil {
-		return fmt.Errorf("email API payload invalid")
+		return mailDeliveryFailure("configuration", 0)
 	}
 	request, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(payload))
 	if err != nil {
-		return fmt.Errorf("email API request invalid")
+		return mailDeliveryFailure("configuration", 0)
 	}
 	request.Header.Set("Authorization", "Bearer "+s.config.ResendAPIKey)
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("Accept", "application/json")
 	response, err := client.Do(request)
 	if err != nil {
-		return fmt.Errorf("email API request failed")
+		var timeout net.Error
+		if errors.Is(err, context.DeadlineExceeded) || (errors.As(err, &timeout) && timeout.Timeout()) {
+			return mailDeliveryFailure("timeout", 0)
+		}
+		return mailDeliveryFailure("network", 0)
 	}
 	defer func() { _ = response.Body.Close() }()
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return fmt.Errorf("email API delivery not accepted")
-	}
 	// A successful status without an acceptance identifier is not evidence
 	// of a queued message. Bound all response bytes before decoding.
 	data, err := io.ReadAll(io.LimitReader(response.Body, 4097))
 	if err != nil || len(data) > 4096 {
-		return fmt.Errorf("email API response invalid")
+		return mailDeliveryFailure("invalid_response", response.StatusCode)
+	}
+	if response.StatusCode < 200 || response.StatusCode >= 300 {
+		return classifyResendRejection(response.StatusCode, data, s.config.FromEmail)
 	}
 	var accepted struct {
 		ID string `json:"id"`
 	}
-	if json.Unmarshal(data, &accepted) != nil || accepted.ID == "" {
-		return fmt.Errorf("email API acknowledgement missing")
+	if json.Unmarshal(data, &accepted) != nil || strings.TrimSpace(accepted.ID) == "" {
+		return mailDeliveryFailure("invalid_response", response.StatusCode)
 	}
 	return nil
 }

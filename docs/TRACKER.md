@@ -316,3 +316,18 @@ The separator finding applies to ordinary XML element attributes too. The accept
 PR51 is integrated as5d826096e824577b6adff640311a254402d51e47 after Aether6637297525. Its actual-master CI41877368160 fails one BYTEA administrator-browser wait; six other jobs pass. Source integration is complete, deployment is held. The failure is retained, not reclassified as flaky or passed.
 
 Correction work SFD-MERGED-MASTER-ACCEPTANCE-DIAGNOSTICS-20261104 adds bounded fixed-path/status diagnostics and a reproduced CRLF test-loader correction only. Browser19/SDK5/docs39/syntax checks pass locally; full exact-head hosted acceptance and independent review remain pending. Production source/limits are unchanged. Railway patch remains unapplied; original data/engines/trust/backups are preserved and genuine email/domain/transfer/recovery gates remain open.
+
+
+## 2026-11-04 — Issue53 protected-invitation errors and focused form correction
+
+Issue53 correction is in progress from4d19a552 on codex/live-invitations-ui-20261104: fixed private mail-error categories and a scoped responsive invitation form. Local browser-script22, pinned Railway SDK5 and documentation39 checks pass. Hosted exact-head/full-stack/Windows/storage evidence, independent Aether review, actual merged-master tests, bounded deployment and genuine permitted-mailbox invitation/download remain required. See [continuity](CONTINUITY.md#2026-11-04--issue53-protected-invitation-errors-and-focused-form-correction) and the complete correction PR handover; publication alone is not delivery.
+
+
+### Issue53 exact-head fixture correction
+
+Initial candidate1b55b807 passes the new provider unit cases, but hosted CI41937746538/job126950413370 fails two G101 findings for hard-coded synthetic Resend test keys. The tests now construct those non-secret fixture values using the established repository convention. No scanner suppression, annotation, production change or failed-run rerun is used. Exact-head replacement CI and all prior acceptance gates remain mandatory; the failed result is retained.
+
+
+### 2026-11-05 — Issue53 exact-count enforcement
+
+The provider regression addition contributes20 Go pass events (two parent tests plus18 subcases). The unchanged full-stack baseline259 therefore becomes279; the portable fixture and its hosted workflow retain exact equality, zero skips/failures and every existing lineage/lifecycle/COMMIT counter. Update the workflow expectation in its own commit under AGENTS.md; do not disable or loosen any check. Exact-head artifacts must confirm the actual count. Browser27/backend124 and the additional isolated invitation UI14 remain separate.
