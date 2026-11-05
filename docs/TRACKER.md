@@ -326,3 +326,8 @@ Issue53 correction is in progress from4d19a552 on codex/live-invitations-ui-2026
 ### Issue53 exact-head fixture correction
 
 Initial candidate1b55b807 passes the new provider unit cases, but hosted CI41937746538/job126950413370 fails two G101 findings for hard-coded synthetic Resend test keys. The tests now construct those non-secret fixture values using the established repository convention. No scanner suppression, annotation, production change or failed-run rerun is used. Exact-head replacement CI and all prior acceptance gates remain mandatory; the failed result is retained.
+
+
+### 2026-11-05 — Issue53 exact-count enforcement
+
+The provider regression addition contributes20 Go pass events (two parent tests plus18 subcases). The unchanged full-stack baseline259 therefore becomes279; the portable fixture and its hosted workflow retain exact equality, zero skips/failures and every existing lineage/lifecycle/COMMIT counter. Update the workflow expectation in its own commit under AGENTS.md; do not disable or loosen any check. Exact-head artifacts must confirm the actual count. Browser27/backend124 and the additional isolated invitation UI14 remain separate.
