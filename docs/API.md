@@ -17,7 +17,7 @@ JSON requests/responses are used except multipart uploads, file downloads and ge
 | POST /invitations | Verified file owner | file_id, recipient_email, description?, ttl_hours?; emails protected invitation; returns one-time-displayed access_code |
 | GET /receive?id=UUID | Public | Renders code-entry form; does not reveal file bytes |
 | POST /receive-download | Public with UUID + code in POST body | Code-gated attachment; max eight incorrect attempts, three download reservations and finite expiry |
-| GET /download?token=... | Valid bearer link | Attachment bytes; expired 410, invalid/tampered 401 |
+| GET /download?token=... | Valid bearer link | Attachment bytes with optional single byte range. Expired 410, invalid/tampered 401, unsatisfiable range 416. |
 | GET /admin/files | Administrator | Up to 100 files across owners |
 | DELETE /admin/files/UUID | Administrator | Removes exact object key, then metadata, 204 |
 | POST /admin/cleanup | Administrator | Removes old pending/failed records and objects; JSON deleted_count |
@@ -31,6 +31,8 @@ Ordinary users receive 403 on administrative routes; inaccessible file IDs retur
 Registration preserves password bytes, requires letters and digits and accepts 8–72 bytes (bcrypt limit). Usernames are 3–50 ASCII letters/digits/underscore and cannot match the configured administrator name; emails are normalized. Registration does not grant administrator access.
 
 Link TTL defaults to 300 seconds for missing/non-positive values and is capped at 86400; positive shorter TTLs are allowed. A token is expired at its expiry second. Configure SFD_PUBLIC_BASE_URL for production; untrusted forwarding headers are ignored when building fallback origins. No download token is logged by request middleware.
+
+Signed bearer downloads with a storage validator advertise `Accept-Ranges: bytes` and a strong `ETag`. A valid single range returns 206 with the exact `Content-Range` and length. A matching `If-Range` resumes the representation. A stale validator, unsupported range unit or multiple ranges falls back to a complete response. Every resumed request still requires a valid link and the existing file authorization checks. This does not change the protected invitation download reservation policy.
 
 The browser sends a same-origin Origin on state-changing requests; cross-origin values are rejected. Existing stateless sessions are deliberately invalidated when adopting migration 4. See [schema](DB_SCHEMA.md) and [validation](TRACKER.md).
 

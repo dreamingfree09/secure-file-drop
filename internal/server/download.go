@@ -10,14 +10,57 @@ import (
 	"crypto/sha256"
 	"database/sql"
 	"errors"
+	"fmt"
 	"io"
 	"mime"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/minio/minio-go/v7"
 )
+
+type downloadRange struct{ first, last int64 }
+
+func parseDownloadRange(value string, size int64) (downloadRange, bool) {
+	offsets, supported := strings.CutPrefix(value, "bytes=")
+	start, end, separated := strings.Cut(offsets, "-")
+	if !supported || !separated || size <= 0 || strings.HasPrefix(start, "+") || strings.HasPrefix(end, "+") {
+		return downloadRange{}, false
+	}
+	if start == "" {
+		count, err := strconv.ParseInt(end, 10, 64)
+		if err != nil || count <= 0 {
+			return downloadRange{}, false
+		}
+		return downloadRange{max(0, size-count), size - 1}, true
+	}
+	first, err := strconv.ParseInt(start, 10, 64)
+	if err != nil || first < 0 || first >= size {
+		return downloadRange{}, false
+	}
+	if end == "" {
+		return downloadRange{first, size - 1}, true
+	}
+	last, err := strconv.ParseInt(end, 10, 64)
+	if err != nil || last < first {
+		return downloadRange{}, false
+	}
+	return downloadRange{first, min(last, size-1)}, true
+}
+
+func downloadETag(raw string) string {
+	if raw == "" || len(raw) > 128 {
+		return ""
+	}
+	for _, c := range raw {
+		if c <= 0x20 || c > 0x7e || c == '"' || c == '\\' {
+			return ""
+		}
+	}
+	return "\"" + raw + "\""
+}
 
 // downloadHandler handles GET /download?token={signed-token} requests for streaming
 // file downloads from MinIO. It validates the signed download token (HMAC-SHA256),
@@ -134,6 +177,45 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			http.Error(w, "stored size mismatch", http.StatusBadGateway)
 			return
 		}
+		var source io.Reader = obj
+		length, responseStatus := sizeBytes, http.StatusOK
+		tag := downloadETag(info.ETag)
+		if tag != "" {
+			w.Header().Set("Accept-Ranges", "bytes")
+			w.Header().Set("ETag", tag)
+		}
+		rangeHeader := r.Header.Get("Range")
+		ifRange := r.Header.Get("If-Range")
+		// Ignore unsupported units, multiple ranges and stale validators.
+		if tag != "" && (ifRange == "" || ifRange == tag) && len(r.Header.Values("Range")) == 1 &&
+			strings.HasPrefix(rangeHeader, "bytes=") && !strings.Contains(rangeHeader, ",") {
+			part, ok := parseDownloadRange(rangeHeader, sizeBytes)
+			if !ok {
+				w.Header().Set("Content-Range", fmt.Sprintf("bytes */%d", sizeBytes))
+				w.Header().Set("Cache-Control", "private, no-store")
+				http.Error(w, "requested range unavailable", http.StatusRequestedRangeNotSatisfiable)
+				return
+			}
+			opts := minio.GetObjectOptions{}
+			if opts.SetRange(part.first, part.last) != nil || opts.SetMatchETag(info.ETag) != nil {
+				http.Error(w, "storage unavailable", http.StatusBadGateway)
+				return
+			}
+			body, partInfo, headers, err := (minio.Core{Client: mc}).GetObject(ctx, bucket, objectKey, opts)
+			if err != nil {
+				http.Error(w, "stored range unavailable", http.StatusBadGateway)
+				return
+			}
+			defer func() { _ = body.Close() }()
+			length = part.last - part.first + 1
+			contentRange := fmt.Sprintf("bytes %d-%d/%d", part.first, part.last, sizeBytes)
+			if headers.Get("Content-Range") != contentRange || partInfo.Size != length || partInfo.ETag != info.ETag {
+				http.Error(w, "stored range mismatch", http.StatusBadGateway)
+				return
+			}
+			source, responseStatus = body, http.StatusPartialContent
+			w.Header().Set("Content-Range", contentRange)
+		}
 		if _, _, err := mime.ParseMediaType(contentType); err != nil {
 			contentType = "application/octet-stream"
 		}
@@ -143,24 +225,25 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 		} else {
 			w.Header().Set("Content-Type", "application/octet-stream")
 		}
-		if sizeBytes >= 0 {
-			w.Header().Set("Content-Length", strconv.FormatInt(sizeBytes, 10))
-		}
+		w.Header().Set("Content-Length", strconv.FormatInt(length, 10))
 
 		// Encourage safe download behavior in browsers.
 		w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": SanitizeFilename(origName)}))
 
 		w.Header().Set("Cache-Control", "private, no-store")
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(responseStatus)
 
-		n, copyErr := io.Copy(w, obj)
-		if copyErr != nil || n != sizeBytes {
+		n, copyErr := io.Copy(w, source)
+		if copyErr != nil || n != length {
 			Warn("download stream interrupted", nil)
 			return
 		}
 
 		completed = true
 		GetMetrics().RecordDownload(n, time.Since(started))
+		if responseStatus == http.StatusPartialContent {
+			return
+		}
 
 		// Track download statistics and send notification (fire and forget)
 		downloaderIP := getClientIP(r)
