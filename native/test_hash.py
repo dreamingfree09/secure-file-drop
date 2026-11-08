@@ -1,6 +1,7 @@
 """Known SHA-256 vectors and failure exit codes for the real native CLI."""
 import hashlib
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -16,9 +17,17 @@ with tempfile.TemporaryDirectory(prefix="sfd-native-vectors-") as temp:
         result = subprocess.run([tool, str(path)], check=True, capture_output=True, text=True)
         actual = json.loads(result.stdout)
         assert actual == {"algorithm": "sha256", "hash": hashlib.sha256(data).hexdigest(), "bytes": len(data)}, actual
+        streamed = subprocess.run([tool, "--stdin"], input=data, check=True, capture_output=True)
+        assert json.loads(streamed.stdout) == actual
     assert subprocess.run([tool], capture_output=True).returncode == 1
     assert subprocess.run([tool, str(path.parent / "missing")], capture_output=True).returncode == 2
     assert subprocess.run([tool, str(path.parent)], capture_output=True).returncode == 2
+    if sys.platform.startswith("linux"):
+        invalid_input = os.open(path.parent, os.O_RDONLY)
+        try:
+            assert subprocess.run([tool, "--stdin"], stdin=invalid_input, capture_output=True).returncode == 2
+        finally:
+            os.close(invalid_input)
     if pathlib.Path("/dev/full").exists():
         with open("/dev/full", "wb") as output:
             result = subprocess.run([tool, str(path)], stdout=output, stderr=subprocess.PIPE)
@@ -26,4 +35,4 @@ with tempfile.TemporaryDirectory(prefix="sfd-native-vectors-") as temp:
         assert b"Output I/O error" in result.stderr
     else:
         print("BLOCKED: /dev/full output-failure regression unavailable")
-print("PASS: 5 native SHA-256 vectors, byte counts, usage and I/O failures")
+print("PASS: 5 file and 5 streaming SHA-256 vectors, byte counts, usage and I/O failures")

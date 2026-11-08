@@ -1,6 +1,5 @@
 #include "sfd_hash.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -27,38 +26,45 @@ int sfd_sha256_file(const char *path, uint8_t out_hash[SFD_SHA256_LEN], uint64_t
         return 2;
     }
 
+    int rc = sfd_sha256_stream(f, out_hash, out_bytes);
+    fclose(f);
+    return rc;
+}
+
+int sfd_sha256_stream(FILE *stream, uint8_t out_hash[SFD_SHA256_LEN], uint64_t *out_bytes) {
+    if (stream == NULL || out_hash == NULL || out_bytes == NULL) {
+        return 1;
+    }
+
+    *out_bytes = 0;
     EVP_MD_CTX *ctx = EVP_MD_CTX_new();
     if (!ctx) {
-        fclose(f);
         return 3;
     }
 
     if (EVP_DigestInit_ex(ctx, EVP_sha256(), NULL) != 1) {
         EVP_MD_CTX_free(ctx);
-        fclose(f);
         return 3;
     }
 
     unsigned char buf[64 * 1024];
     while (1) {
-        size_t n = fread(buf, 1, sizeof(buf), f);
+        size_t n = fread(buf, 1, sizeof(buf), stream);
         if (n > 0) {
-            if (EVP_DigestUpdate(ctx, buf, n) != 1) {
+            if (UINT64_MAX - *out_bytes < (uint64_t)n || EVP_DigestUpdate(ctx, buf, n) != 1) {
                 EVP_MD_CTX_free(ctx);
-                fclose(f);
                 return 3;
             }
             *out_bytes += (uint64_t)n;
         }
 
         if (n < sizeof(buf)) {
-            if (feof(f)) {
-                break;
-            }
-            if (ferror(f)) {
+            if (ferror(stream)) {
                 EVP_MD_CTX_free(ctx);
-                fclose(f);
                 return 2;
+            }
+            if (feof(stream)) {
+                break;
             }
         }
     }
@@ -68,13 +74,10 @@ int sfd_sha256_file(const char *path, uint8_t out_hash[SFD_SHA256_LEN], uint64_t
 
     if (EVP_DigestFinal_ex(ctx, md, &md_len) != 1) {
         EVP_MD_CTX_free(ctx);
-        fclose(f);
         return 3;
     }
 
     EVP_MD_CTX_free(ctx);
-    fclose(f);
-
     if (md_len != SFD_SHA256_LEN) {
         return 3;
     }

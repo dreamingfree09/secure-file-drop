@@ -2,9 +2,15 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
+
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 static void usage(const char *prog) {
-    fprintf(stderr, "Usage: %s <file-path>\n", prog);
+    fprintf(stderr, "Usage: %s <file-path|--stdin>\n", prog);
 }
 
 int main(int argc, char **argv) {
@@ -13,12 +19,21 @@ int main(int argc, char **argv) {
         return 1; /* usage error */
     }
 
-    const char *path = argv[1];
-
     uint8_t hash[SFD_SHA256_LEN];
     uint64_t bytes = 0;
 
-    int rc = sfd_sha256_file(path, hash, &bytes);
+    int rc;
+    if (strcmp(argv[1], "--stdin") == 0) {
+#ifdef _WIN32
+        if (_setmode(_fileno(stdin), _O_BINARY) == -1) {
+            fprintf(stderr, "Stream I/O error\n");
+            return 2;
+        }
+#endif
+        rc = sfd_sha256_stream(stdin, hash, &bytes);
+    } else {
+        rc = sfd_sha256_file(argv[1], hash, &bytes);
+    }
     if (rc != 0) {
         if (rc == 2) {
             fprintf(stderr, "File I/O error\n");

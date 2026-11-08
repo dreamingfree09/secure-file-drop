@@ -1,11 +1,3 @@
-// sha256FromMinioObject reads an object from MinIO, computes its SHA-256
-// and returns both hex and raw byte representations along with the number
-// of bytes processed. Errors are returned when streaming fails.
-// hash.go - SHA-256 computation via native helper for stored objects.
-//
-// Downloads MinIO objects to temp files and invokes sfd-hash to
-// produce deterministic integrity metadata.
-
 package server
 
 import (
@@ -34,18 +26,14 @@ type hashToolOutput struct {
 	Bytes     uint64 `json:"bytes"`
 }
 
-// runHashTool executes the native C hash utility (sfd-hash) to calculate the SHA-256
-// hash of a local file. The tool path is read from SFD_HASH_TOOL env var, defaulting
-// to "/app/sfd-hash". The function validates the JSON output and ensures the hash is
-// valid hex-encoded SHA-256 (64 characters).
-//
-// Returns hashToolOutput with algorithm ("sha256"), hash (hex string), and byte count.
-// Times out after 2 minutes to prevent indefinite hangs on large files.
+// runHashTool keeps the existing operator-supplied file-only helper contract.
 func runHashTool(ctx context.Context, filePath string) (hashToolOutput, error) {
-	// Ensure we do not hang indefinitely on large files or slow storage
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
+	return runNativeHash(ctx, filePath, nil)
+}
 
+func runNativeHash(ctx context.Context, argument string, input io.Reader) (hashToolOutput, error) {
 	toolPath := os.Getenv("SFD_HASH_TOOL")
 	if toolPath == "" {
 		toolPath = "/app/sfd-hash"
@@ -58,8 +46,10 @@ func runHashTool(ctx context.Context, filePath string) (hashToolOutput, error) {
 	if err != nil || !info.Mode().IsRegular() || info.Mode().Perm()&0022 != 0 || info.Mode().Perm()&0111 == 0 {
 		return hashToolOutput{}, errors.New("hash tool must be a regular executable without group/other write access")
 	}
-	// #nosec G204 G702 -- Operator-only absolute regular executable; generated local file argument; no shell. Mirrors the reviewed c320861 native boundary.
-	cmd := exec.CommandContext(ctx, toolPath, filePath)
+	// #nosec G204 G702 -- Operator-only absolute regular executable; constant stream flag or generated local file argument; no shell.
+	cmd := exec.CommandContext(ctx, toolPath, argument)
+	cmd.Stdin = input
+	cmd.WaitDelay = 2 * time.Second
 	out, err := cmd.Output()
 	if err != nil {
 		return hashToolOutput{}, fmt.Errorf("hash tool failed: %w", err)
@@ -88,13 +78,8 @@ func runHashTool(ctx context.Context, filePath string) (hashToolOutput, error) {
 	return parsed, nil
 }
 
-// sha256FromMinioObject downloads a file from MinIO to a temporary local file,
-// runs the C hash utility on it, and returns the SHA-256 hash in both hex string
-// and raw byte formats, plus the file size. This is used during the upload flow
-// to verify file integrity after storage.
-//
-// The temporary file is automatically cleaned up after hashing.
-// Returns error if MinIO stream fails or hash calculation fails.
+// sha256FromMinioObject hashes the stored bytes using the native C utility.
+// The bundled utility reads through a bounded pipe under the caller's context.
 func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, objectKey string) (sha256Hex string, sha256Bytes []byte, size uint64, err error) {
 	// Validate required parameters
 	if mc == nil {
@@ -104,64 +89,96 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 		return "", nil, 0, errors.New("bucket/objectKey missing")
 	}
 
-	// Stream MinIO object to a temporary file, then hash locally via the C utility.
-	tmp, err := os.CreateTemp("", "sfd-hash-*")
-	if err != nil {
-		return "", nil, 0, fmt.Errorf("create temp file: %w", err)
-	}
-	tmpPath := tmp.Name()
-	defer func() {
-		_ = tmp.Close()
-		_ = os.Remove(tmpPath)
-	}()
-
 	obj, err := mc.GetObject(ctx, bucket, objectKey, minio.GetObjectOptions{})
 	if err != nil {
 		return "", nil, 0, fmt.Errorf("get object: %w", err)
 	}
 	defer func() { _ = obj.Close() }()
 
-	copied, copyErr := io.Copy(tmp, obj)
-	if copyErr != nil {
-		return "", nil, 0, fmt.Errorf("copy object to temp: %w", copyErr)
+	var out hashToolOutput
+	if os.Getenv("SFD_HASH_TOOL") == "" {
+		out, err = hashStream(ctx, obj)
+	} else {
+		out, err = hashViaTemporaryFile(ctx, obj)
 	}
-	if err := tmp.Sync(); err != nil {
-		return "", nil, 0, fmt.Errorf("sync temp: %w", err)
-	}
-	if err := tmp.Close(); err != nil {
-		return "", nil, 0, fmt.Errorf("close temp: %w", err)
-	}
-
-	out, err := runHashTool(ctx, tmpPath)
 	if err != nil {
 		return "", nil, 0, err
-	}
-
-	if out.Bytes > math.MaxInt64 || int64(out.Bytes) != copied {
-		return "", nil, 0, errors.New("hash tool byte count mismatch")
 	}
 	raw, err := hex.DecodeString(out.Hash)
 	if err != nil {
 		return "", nil, 0, fmt.Errorf("decode sha256 hex: %w", err)
 	}
-	if len(raw) != 32 {
-		return "", nil, 0, fmt.Errorf("decoded sha256 length unexpected: %d", len(raw))
-	}
-
 	return out.Hash, raw, out.Bytes, nil
 }
 
-// Native readiness executes a known empty-file vector, not just a path lookup.
-func hashToolReady(ctx context.Context) error {
-	f, err := os.CreateTemp("", "sfd-ready-*")
+type hashInput struct {
+	reader io.Reader
+	bytes  int64
+	eof    bool
+}
+
+func (input *hashInput) Read(buffer []byte) (int, error) {
+	n, err := input.reader.Read(buffer)
+	if n < 0 || input.bytes > math.MaxInt64-int64(n) {
+		return 0, errors.New("invalid hash input size")
+	}
+	input.bytes += int64(n)
+	input.eof = err == io.EOF
+	return n, err
+}
+
+func hashStream(ctx context.Context, input io.Reader) (hashToolOutput, error) {
+	source := &hashInput{reader: input}
+	out, err := runNativeHash(ctx, "--stdin", source)
 	if err != nil {
-		return err
+		return hashToolOutput{}, err
 	}
-	defer func() { _ = os.Remove(f.Name()) }()
-	if err = f.Close(); err != nil {
-		return err
+	if !source.eof || out.Bytes > math.MaxInt64 || int64(out.Bytes) != source.bytes {
+		return hashToolOutput{}, errors.New("hash tool did not verify the complete input")
 	}
-	out, err := runHashTool(ctx, f.Name())
+	return out, nil
+}
+
+func hashViaTemporaryFile(ctx context.Context, input io.Reader) (hashToolOutput, error) {
+	tmp, err := os.CreateTemp("", "sfd-hash-*")
+	if err != nil {
+		return hashToolOutput{}, fmt.Errorf("create temp file: %w", err)
+	}
+	defer func() {
+		_ = tmp.Close()
+		_ = os.Remove(tmp.Name())
+	}()
+	copied, copyErr := io.Copy(tmp, input)
+	if copyErr != nil {
+		return hashToolOutput{}, fmt.Errorf("copy object to temp: %w", copyErr)
+	}
+	if err := tmp.Sync(); err != nil {
+		return hashToolOutput{}, fmt.Errorf("sync temp: %w", err)
+	}
+	if err := tmp.Close(); err != nil {
+		return hashToolOutput{}, fmt.Errorf("close temp: %w", err)
+	}
+
+	out, err := runHashTool(ctx, tmp.Name())
+	if err != nil {
+		return hashToolOutput{}, err
+	}
+
+	if out.Bytes > math.MaxInt64 || int64(out.Bytes) != copied {
+		return hashToolOutput{}, errors.New("hash tool byte count mismatch")
+	}
+	return out, nil
+}
+
+// Native readiness executes the empty-input vector on the active hashing path.
+func hashToolReady(ctx context.Context) error {
+	var out hashToolOutput
+	var err error
+	if os.Getenv("SFD_HASH_TOOL") == "" {
+		out, err = hashStream(ctx, strings.NewReader(""))
+	} else {
+		out, err = hashViaTemporaryFile(ctx, strings.NewReader(""))
+	}
 	if err != nil {
 		return err
 	}
