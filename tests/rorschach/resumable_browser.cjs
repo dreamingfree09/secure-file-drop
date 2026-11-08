@@ -24,6 +24,7 @@ async function main() {
     await page.locator('#password').fill(process.env.SFD_R1_FIXTURE_USER_PASSWORD);
     await page.getByRole('button', {name:'Sign In',exact:true}).click();
     await page.locator('#resumablePanel').waitFor({state:'visible'});
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
     await page.locator('#resumableFile').setInputFiles(fixture);
     let interrupted = false;
     await page.route('**/uploads/resumable/*', async route => {
@@ -52,7 +53,35 @@ async function main() {
     await page.locator('#resumableLinkValue').evaluate(input => window.location.assign(input.value));
     const savedFile = await download;
     assert.equal(await hash(await savedFile.path()), await hash(fixture));
+    await page.unroute('**/uploads/resumable/*');
+    let partArrived, releasePart;
+    const arrival = new Promise(resolve => { partArrived = resolve; });
+    const hold = new Promise(resolve => { releasePart = resolve; });
+    await page.route('**/uploads/resumable/*', async route => {
+      if (route.request().method() !== 'PATCH') {
+        await route.continue();
+        return;
+      }
+      partArrived();
+      await hold;
+      await route.abort('aborted').catch(() => {});
+    });
+    await page.locator('#resumableSaved').selectOption('');
+    await page.locator('#resumableFile').setInputFiles({
+      name:'browser-cancel.bin', mimeType:'application/octet-stream', buffer:Buffer.from('owned cancellation fixture')
+    });
+    await page.locator('#resumableStart').click();
+    try {
+      await Promise.race([arrival, new Promise((_, reject) => setTimeout(() => reject(new Error('part did not start')), 30000).unref())]);
+      await page.locator('#resumablePause').click();
+      await page.getByText('Paused. Resume to check the server’s committed progress.', {exact:true}).waitFor();
+    } finally {
+      releasePart();
+    }
+    await page.locator('#resumableCancel').click();
+    await page.getByText('Cancellation accepted. Storage cleanup continues on the server.', {exact:true}).waitFor();
     console.log('PASS: strict HTTPS Chromium upload, interrupted second part, reload/reselect, resume and byte-exact download');
+    console.log('PASS: Chromium pause and real cancellation request');
   } finally {
     await browser.close();
   }

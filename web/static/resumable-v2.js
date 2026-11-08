@@ -161,8 +161,8 @@
       const committedDigests = upload.part_sha256 || [];
       upload = await waitFor(upload, ['new','finalizing'], generation, signal);
       if (upload.state === 'open') {
-        if (!file || file.name !== upload.name || file.size !== upload.size_bytes) {
-          throw new Error('Reselect the original file with the same name and size to resume.');
+        if (!file || file.size !== upload.size_bytes) {
+          throw new Error('Reselect the original file to resume.');
         }
         const identity = await prepare(file, generation, signal);
         if (identity.manifest !== upload.manifest_sha256) {

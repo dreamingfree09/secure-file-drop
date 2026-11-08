@@ -80,6 +80,9 @@ func (s r2ObjectStore) putPart(ctx context.Context, key, uploadID string, plan r
 	result, err := c.PutObjectPart(ctx, s.bucket, key, uploadID, plan.Number, bytes.NewReader(data), plan.Length,
 		minio.PutObjectPartOptions{Sha256Hex: digest})
 	if err != nil {
+		if response := minio.ToErrorResponse(err); response.StatusCode == 507 || response.Code == "XMinioStorageFull" {
+			return minio.CompletePart{}, errR2Capacity
+		}
 		return minio.CompletePart{}, err
 	}
 	if result.PartNumber != plan.Number || downloadETag(result.ETag) == "" {

@@ -6,9 +6,6 @@ umask 077
 [[ "$(docker context show)" == default && -z "${DOCKER_HOST:-}" && -z "${DOCKER_CONTEXT:-}" ]]
 root=$(mktemp -d "${RUNNER_TEMP:?}/sfd-rorschach.XXXXXXXX")
 export R1_RUNTIME="$root"
-if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
-    export R1_RESUMABLE_MAX_BYTES=1073741824 R1_RESUMABLE_RESERVED_BYTES=2147483648
-fi
 export R1_SOURCE_REVISION
 R1_SOURCE_REVISION=$(git rev-parse HEAD)
 export R1_HOST=sfd.fixture.test R1_ORIGIN_PORT=18443 R1_PUBLIC_PORT_SUFFIX=:18443
@@ -63,7 +60,13 @@ fixture_sql() {
 }
 python3 -B tests/rorschach/https_acceptance.py create
 if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 13 ]]
+    export R1_RESUMABLE_MAX_BYTES=1073741824 R1_RESUMABLE_RESERVED_BYTES=2147483648
+    "${compose[@]}" stop proxy backend
+    "${compose[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
     [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 14 ]]
+    python3 -B tests/rorschach/https_acceptance.py reopen
+    echo "PASS: opt-in schema 13 to 14 upgrade preserved the existing ordinary user's verified file"
     printf "INSERT INTO users (email, username, password_hash, email_verified, is_active,storage_quota_bytes) VALUES ('r2other@example.invalid','r2other','%s',true,true,NULL),('r2limited@example.invalid','r2limited','%s',true,true,1024);\n" "$user_hash" "$user_hash" | fixture_sql
     python3 -B tests/rorschach/resumable_acceptance.py before
 fi
@@ -95,6 +98,7 @@ SQL
     [[ "$(fixture_sql <<< 'SELECT is_called FROM r2_fixture_attempt')" == t ]]
     [[ "$(fixture_sql <<< "SELECT state FROM r2_uploads WHERE orig_name='r2-restart.bin'")" == finalizing ]]
     [[ "$(fixture_sql <<< "SELECT count(*) FROM files WHERE orig_name='r2-restart.bin'")" == 0 ]]
+    python3 -B tests/rorschach/resumable_acceptance.py reject-cancel
     "${compose[@]}" stop proxy backend
     fixture_sql <<'SQL'
 DROP TRIGGER r2_fixture_fail_publish ON files;
@@ -162,7 +166,17 @@ if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
     docker_root=$(docker info --format '{{.DockerRootDir}}')
     available=$(sudo df -B1 --output=avail "$docker_root" | tail -1)
     [[ "$available" -ge 10737418240 ]]
-    python3 -B tests/rorschach/resumable_acceptance.py large
+    echo "Hosted fixture free bytes before 1 GiB acceptance: $available"
+    python3 -B tests/rorschach/resumable_acceptance.py large 1
+    available=$(sudo df -B1 --output=avail "$docker_root" | tail -1)
+    if [[ "$available" -ge 34359738368 ]]; then
+        export R1_RESUMABLE_MAX_BYTES=10737418240 R1_RESUMABLE_RESERVED_BYTES=12884901888
+        "${restore[@]}" stop proxy backend
+        "${restore[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+        python3 -B tests/rorschach/resumable_acceptance.py large 10
+    else
+        echo "CAPACITY GATE: 10 GiB fixture unexecuted. Available $available bytes, requires 34359738368."
+    fi
 fi
 "${restore[@]}" stop
 echo "PASS: paired database/object restore into a new project; original disposable services remain stopped"
