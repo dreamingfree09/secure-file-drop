@@ -10,7 +10,7 @@ import (
 // event accounting explicit. All cases execute even if an earlier one fails.
 func TestRorschachMultipartPartGeometryAndIntegrity(t *testing.T) {
 	const target = 100 << 30
-	if r2ChunkBytes != 32<<20 || r2MaximumBytes != target || r2MaximumParts != 10000 {
+	if r2ChunkBytes != 32 << 20 || r2MaximumBytes != target || r2MaximumParts != 10000 {
 		t.Error("public 100 GiB/32 MiB/S3 part ceiling has drifted")
 	}
 	if n, err := r2PartCount(target, target); err != nil || n != 3200 {
@@ -26,12 +26,12 @@ func TestRorschachMultipartPartGeometryAndIntegrity(t *testing.T) {
 	}
 	for _, tc := range []struct {
 		total, offset, length, cap int64
-		number int
-		last bool
-		ok bool
+		number                     int
+		last                       bool
+		ok                         bool
 	}{
 		{target, 0, r2ChunkBytes, target, 1, false, true},
-		{target, target-r2ChunkBytes, r2ChunkBytes, target, 3200, true, true},
+		{target, target - r2ChunkBytes, r2ChunkBytes, target, 3200, true, true},
 		{r2ChunkBytes + 1, r2ChunkBytes, 1, target, 2, true, true},
 		{1, 0, 1, target, 1, true, true},
 		{target + 1, 0, r2ChunkBytes, target + 1, 0, false, false},
@@ -39,8 +39,8 @@ func TestRorschachMultipartPartGeometryAndIntegrity(t *testing.T) {
 		{target, -r2ChunkBytes, r2ChunkBytes, target, 0, false, false},
 		{target, target, r2ChunkBytes, target, 0, false, false},
 		{target, 0, 1, target, 0, false, false},
-		{target, 0, r2ChunkBytes+1, target, 0, false, false},
-		{target, 0, r2ChunkBytes, 10<<20, 0, false, false},
+		{target, 0, r2ChunkBytes + 1, target, 0, false, false},
+		{target, 0, r2ChunkBytes, 10 << 20, 0, false, false},
 	} {
 		got, err := r2PlanPart(tc.total, tc.offset, tc.length, tc.cap)
 		if (err == nil) != tc.ok {
@@ -56,13 +56,13 @@ func TestRorschachMultipartPartGeometryAndIntegrity(t *testing.T) {
 	}
 	for _, value := range []string{"", "BAD", "ABCD" + hex.EncodeToString(digest[:])[4:], hex.EncodeToString(digest[:])[:63]} {
 		if err := r2ValidatePartDigest(value, digest); err == nil {
-			t.Errorf("incorrect checksum variant accepted: %q", value[:min(8,len(value))])
+			t.Errorf("incorrect checksum variant accepted: %q", value[:min(8, len(value))])
 		}
 	}
 	partNumbers := make([]int, 3200)
 	etags := make([]string, 3200)
 	for i := range partNumbers {
-		partNumbers[i], etags[i] = i+1, "private-s3-etag"
+		partNumbers[i], etags[i] = i + 1, "private-s3-etag"
 	}
 	if err := r2ValidateCompletion(target, target, partNumbers, etags); err != nil {
 		t.Errorf("complete 3200-part ledger rejected: %v", err)
@@ -80,7 +80,17 @@ func TestRorschachMultipartPartGeometryAndIntegrity(t *testing.T) {
 	if err := r2ValidateCompletion(target, target, partNumbers[:3199], etags[:3199]); err == nil {
 		t.Error("incomplete multipart ledger accepted")
 	}
-	if _, err := (r2ObjectStore{}).begin(t.Context(), "key"); err == nil {
-		t.Error("unconfigured private S3 adapter must fail closed")
+	store := r2ObjectStore{}
+	if _, err := store.begin(t.Context(), "key"); err == nil {
+		t.Error("unconfigured private S3 multipart initiation must fail closed")
+	}
+	if _, err := store.putPart(t.Context(), "key", "upload-id", r2PartPlan{}, nil, ""); err == nil {
+		t.Error("unconfigured private S3 part upload must fail closed")
+	}
+	if err := store.complete(t.Context(), "key", "upload-id", 1, 1, nil); err == nil {
+		t.Error("unconfigured private S3 completion must fail closed")
+	}
+	if err := store.abort(t.Context(), "key", "upload-id"); err == nil {
+		t.Error("unconfigured private S3 abort must fail closed")
 	}
 }
