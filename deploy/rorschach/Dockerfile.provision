@@ -1,0 +1,8 @@
+FROM alpine:3.24@sha256:0f49f331d9212aff11b932863be4eb01cdf962969aa86dab7d1ee21ac6f5f52b
+RUN apk add --no-cache curl ca-certificates
+ADD --checksum=sha256:31e79fe7697c870e60f5b5c9008adbb3ad5af7f9f2ab45a3d68585c5f87238d1 https://github.com/rustfs/cli/releases/download/v0.1.37/rustfs-cli-linux-amd64-v0.1.37.tar.gz /tmp/rc.tar.gz
+RUN tar -xzf /tmp/rc.tar.gz -C /tmp && install -m 0755 /tmp/rc /usr/local/bin/rc && rm /tmp/rc /tmp/rc.tar.gz
+COPY deploy/rorschach/provision.sh /opt/sfd/provision.sh
+COPY tests/storage/rustfs-app-policy.json /opt/sfd/app-policy-template.json
+USER 10001:10001
+ENTRYPOINT ["/bin/sh", "/opt/sfd/provision.sh"]
