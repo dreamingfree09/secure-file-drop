@@ -34,12 +34,13 @@ type BuildInfo struct {
 // EmailSvc is optional; when nil, a service is constructed from env.
 // BaseURL is the publicly reachable URL used in emails and link generation.
 type Config struct {
-	Addr     string // e.g. ":8080"
-	Build    BuildInfo
-	Auth     AuthConfig
-	DB       *sql.DB
-	EmailSvc *EmailService
-	BaseURL  string // Base URL for email links (e.g. "http://localhost:8080")
+	Addr      string // e.g. ":8080"
+	Build     BuildInfo
+	Auth      AuthConfig
+	DB        *sql.DB
+	EmailSvc  *EmailService
+	BaseURL   string // Base URL for email links (e.g. "http://localhost:8080")
+	Resumable ResumableConfig
 }
 
 // Server wires HTTP routes to handlers and holds external dependencies.
@@ -59,6 +60,7 @@ type Server struct {
 	minio           *minio.Client
 	bucket          string
 	cleanupDone     chan struct{}
+	resumable       *r2Service
 	authCfg         AuthConfig // Store auth config for getCurrentUser
 	emailSvc        *EmailService
 	csrf            *CSRFProtection        // CSRF token management
@@ -232,11 +234,14 @@ func New(cfg Config) *Server {
 	// maximum upload size in bytes.
 	mux.HandleFunc("/config", func(w http.ResponseWriter, _ *http.Request) {
 		maxBytes, _ := maxUploadBytes()
+		result := map[string]any{"max_upload_bytes": maxBytes}
+		if cfg.Resumable.MaxFileBytes > 0 {
+			result["resumable_max_bytes"] = cfg.Resumable.MaxFileBytes
+			result["resumable_chunk_bytes"] = r2ChunkBytes
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_ = json.NewEncoder(w).Encode(map[string]any{
-			"max_upload_bytes": maxBytes,
-		})
+		_ = json.NewEncoder(w).Encode(result)
 	})
 
 	// Prometheus metrics endpoint (public for scraping by Prometheus)
@@ -321,6 +326,14 @@ func New(cfg Config) *Server {
 
 	// Stream upload to MinIO (pending -> stored).
 	mux.Handle("/upload", cfg.uploadHandler(cfg.DB, mc, bucket))
+	var resumable *r2Service
+	if cfg.Resumable.MaxFileBytes > 0 {
+		resumable = &r2Service{
+			db: cfg.DB, store: r2ObjectStore{client: mc, bucket: bucket}, config: cfg.Resumable,
+			slots: make(chan struct{}, 4), wake: make(chan struct{}, 1),
+		}
+		resumable.endpoints(mux, cfg.Auth)
+	}
 
 	// Create signed, expiring download links.
 	mux.Handle("/links", cfg.createLinkHandler(cfg.DB))
@@ -373,6 +386,7 @@ func New(cfg Config) *Server {
 		minio:           mc,
 		bucket:          bucket,
 		cleanupDone:     make(chan struct{}),
+		resumable:       resumable,
 		authCfg:         cfg.Auth,
 		emailSvc:        cfg.EmailSvc,
 		csrf:            csrf,
@@ -446,7 +460,17 @@ func (s *Server) Start() error {
 	// Start cleanup job in background
 	cleanupCfg := GetCleanupConfigFromEnv(s.db, s.minio, s.bucket)
 	defer s.cleanupCancel()
-	go func() { defer close(s.cleanupDone); StartCleanupJob(s.cleanupCtx, cleanupCfg) }()
+	go func() {
+		defer close(s.cleanupDone)
+		var workers sync.WaitGroup
+		if s.resumable != nil {
+			for range 2 {
+				workers.Go(func() { s.resumable.work(s.cleanupCtx) })
+			}
+		}
+		StartCleanupJob(s.cleanupCtx, cleanupCfg)
+		workers.Wait()
+	}()
 	ln, err := net.Listen("tcp", s.httpServer.Addr)
 	if err != nil {
 		s.cleanupCancel()

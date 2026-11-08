@@ -1,40 +1,27 @@
-# Rorschach R2 — resumable S3 part primitive (not yet active)
+# Rorschach R2 resumable uploads
 
-This is the first **implemented source prerequisite** for a new, secure, durable
-100 GiB upload path. It does not enable the inherited TUS handler or change the
-10 MiB staging cap. The live `/upload/resumable` endpoint remains HTTP 501.
+The R2 browser and API use authenticated Secure File Drop requests to stage fixed 32 MiB parts in private RustFS. The final part may be shorter. The protocol hard maximum is 107,374,182,400 bytes (100 GiB), or 3,200 parts. The legacy whole-file route and the disabled inherited resumable routes keep their original behavior. The production feature is off by default.
 
-The multipart primitive in `internal/server/resumable_v2_parts.go` caps each file at
-**100 GiB** (107374182400 bytes) as its hard upper bound and
-**exactly 32 MiB** (33554432 bytes) per non-final part. A final part may be
-shorter. 100 GiB therefore requires 3200 consecutive S3 parts, below the
-standard 10000-part limit. Each part's declared offset and body length must
-match a predictable plan; no sparse offsets, unbounded chunks, duplicate or
-missing completion records are accepted. The environment-configured file
-maximum still applies and may be lower than the hard bound.
+## Enable only in an accepted self-hosted environment
 
-`internal/server/resumable_v2_s3.go` now contains usable private S3
-operations for initiate, transfer a streamed part with a SHA-256 body check,
-complete a fully validated ordered part list, and abort **only** an
-independently confirmed owned multipart session. No private S3 endpoint or
-presigned transfer URL is sent to browsers. Completion verifies the actual S3
-object size independently of the completion acknowledgement. A browser's own
-reported digest is *not* proof of the final object's native SHA-256.
+Set both R1_RESUMABLE_MAX_BYTES and R1_RESUMABLE_RESERVED_BYTES in the private Rorschach environment. These map to the corresponding SFD_RESUMABLE variables. Both zero or omitted retain schema 13 and the current 10 MiB whole-file limit. The enabled deployment migrates to schema 14. An existing schema 14 database requires an enabled compatible runtime. The application does not apply a down migration. An upgrade needs an independent paired PostgreSQL and RustFS checkpoint, enough local capacity for incomplete parts and completed bytes, and isolated restore before any production use.
 
-**Not yet implemented or exposed:** authenticated, durable DB upload-session
-leases; PostgreSQL part-number/ETag/digest ledger and ownership checks; request
-timeout, exact Content-Length and per-part rate limiting; resumable browser
-client; restart and storage-failure recovery; owned stale-session cleanup;
-final native-C SHA-256 transition and unknown-COMMIT reconciliation; actual
-1/10/50/100 GiB transfer acceptance. These MUST be added and tested before
-enabling public upload endpoints or changing the 10 MiB production/staging
-envelope. Merely merging this primitive does **not** constitute completion.
+Use the bundled native hash utility and the strict bucket-policy storage mode. The RustFS service remains private. Its scoped identity needs signed multipart create, list, part write, complete and abort, plus object stat and read. Caddy allows exactly 32 MiB bodies only for the new PATCH route. All other requests retain the prior 11 MiB proxy envelope. Keep a reviewed tunnel request cap above 32 MiB and verify request deadlines with representative clients.
 
-Implementation sequence: persist an upload session with a unique owner+file
-reservation before initiating S3; record S3 upload ID securely; serialize
-writes to one chunk offset under a session lock; write S3 part with exact
-checksum; record its ETag/checksum/offset transactionally; report the committed
-offset only; finalize after verifying all numbered parts and owner; stream
-native-C hash from the completed object and commit the file state; reconcile
-any uncertain completion with a fresh DB lock and S3 stat, never delete object
-bytes merely because a response failed. All S3 identities stay private.
+## HTTP contract
+
+- POST /uploads/resumable reserves capacity for an owned file. Supply a client-generated UUID request_id, name, content_type and size_bytes. Retrying the same request returns the same session. A conflicting use of the UUID returns 409.
+- GET /uploads/resumable lists the caller’s active sessions. GET /uploads/resumable/{id} reports only durable progress. Add parts=1 to retrieve committed SHA-256 digests for bounded prefix verification after reselecting a file.
+- PATCH /uploads/resumable/{id} submits a raw application/octet-stream body with exact Content-Length, Upload-Offset and Upload-SHA256. A correct replay returns durable progress without writing a committed part again. A different digest for an already claimed part returns 409.
+- POST /uploads/resumable/{id}/complete records intent after all parts are committed. Poll session status. A completed session returns the same file ID and native SHA-256 on repeat requests.
+- DELETE /uploads/resumable/{id} requests cancellation before finalization. The worker aborts only known incomplete uploads belonging to the exact owned key. Expired open sessions use the same path. A file already being finalized is preserved for reconciliation.
+
+The existing signed link API accepts the file ID after the verified file row becomes visible. The browser keeps the transfer selection in memory and reads durable progress from the server after sign-in or refresh. When resuming with a reselected file, it checks each already committed chunk against its recorded SHA-256. Its upload and checksum buffers are bounded to one chunk at a time.
+
+## Recovery and operations
+
+An open session reserves quota shared with ordinary uploads. A per-owner creation rate and active-session limit bound reservations, and a deployment-wide limit bounds active staging bytes. These controls complement, but do not replace, disk monitoring and filesystem quotas. An error after a storage call or database commit leaves the durable state as the authority. The server validates the entire bounded request before issuing S3 PUT. It commits the part digest intent before S3 and acknowledges only after committing the ETag and new offset.
+
+Finalization is asynchronous. The worker can adopt the result of an uncertain S3 completion only after verifying the object under the owned key, its exact length and validator, each committed part digest and the bundled native SHA-256. Publishing the file row and releasing the reservation share one transaction. A definitive integrity failure quarantines the transfer and retains its object and reservation for investigation. The protocol never compensates an ambiguous completion by deleting object bytes.
+
+Use separate storage and database backups. Include the schema 14 sessions and incomplete multipart state in any coordinated checkpoint, or drain them first. Off-host recoverability, proxy behavior through the real external route and progressive 10 GiB, 50 GiB and 100 GiB acceptance remain separate rollout gates. The synthetic suite guards storage capacity before its 1 GiB check. A configured maximum is not evidence of a completed transfer.

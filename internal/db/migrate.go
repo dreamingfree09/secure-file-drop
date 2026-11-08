@@ -7,6 +7,8 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
+	"strings"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -17,11 +19,37 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
+type legacyMigrationSource struct{ embed.FS }
+
+func (source legacyMigrationSource) ReadDir(name string) ([]fs.DirEntry, error) {
+	entries, err := source.FS.ReadDir(name)
+	visible := entries[:0]
+	for _, entry := range entries {
+		if !strings.HasPrefix(entry.Name(), "000014_") {
+			visible = append(visible, entry)
+		}
+	}
+	return visible, err
+}
+
 // RunMigrations borrows one connection and leaves the shared pool usable.
-func RunMigrations(db *sql.DB) (result error) {
+func RunMigrations(db *sql.DB) error {
+	return runMigrations(db, 13)
+}
+
+// RunResumableMigrations enables the separately opted-in self-hosted schema.
+func RunResumableMigrations(db *sql.DB) error {
+	return runMigrations(db, 14)
+}
+
+func runMigrations(db *sql.DB, target uint) (result error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	source, err := iofs.New(migrationsFS, "migrations")
+	var files fs.FS = migrationsFS
+	if target == 13 {
+		files = legacyMigrationSource{migrationsFS}
+	}
+	source, err := iofs.New(files, "migrations")
 	if err != nil {
 		return fmt.Errorf("migration source: %w", err)
 	}
@@ -44,8 +72,18 @@ func RunMigrations(db *sql.DB) (result error) {
 		return fmt.Errorf("migration instance: %w", err)
 	}
 	m.LockTimeout = 10 * time.Second
+	version, _, err := m.Version()
+	if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
+		return fmt.Errorf("read migration version: %w", err)
+	}
+	if version > target {
+		return errors.New("existing resumable schema requires its original enabled configuration")
+	}
 	if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return fmt.Errorf("migration failed: %w", err)
+	}
+	if version, dirty, err := m.Version(); err != nil || dirty || version != target {
+		return errors.New("migration version does not match enabled runtime")
 	}
 	return nil
 }

@@ -1,18 +1,17 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"io"
 
 	"github.com/minio/minio-go/v7"
 )
 
-// r2ObjectStore is the storage-side primitive for a future durable upload
-// session. It is deliberately not wired to HTTP until transactional ownership,
-// part-record persistence, crash reconciliation and signed-byte acceptance pass.
+var errR2Integrity = errors.New("stored object failed integrity verification")
+
 type r2ObjectStore struct {
 	client *minio.Client
 	bucket string
@@ -25,101 +24,129 @@ func (s r2ObjectStore) core() (minio.Core, error) {
 	return minio.Core{Client: s.client}, nil
 }
 
-func (s r2ObjectStore) begin(ctx context.Context, key string) (string, error) {
+// Only exact matches on a server-generated, session-owned key are eligible.
+// A malformed or truncated response cannot authorize a new write or an abort.
+func (s r2ObjectStore) uploads(ctx context.Context, key string) ([]string, error) {
 	c, err := s.core()
+	if err != nil || key == "" {
+		return nil, errors.New("multipart list unavailable")
+	}
+	list, err := c.ListMultipartUploads(ctx, s.bucket, key, "", "", "", 100)
+	if err != nil || list.IsTruncated {
+		return nil, errors.New("multipart list unavailable")
+	}
+	var ids []string
+	for _, upload := range list.Uploads {
+		if upload.Key != key {
+			continue
+		}
+		if upload.UploadID == "" || len(upload.UploadID) > 2048 {
+			return nil, errors.New("invalid multipart identity")
+		}
+		ids = append(ids, upload.UploadID)
+	}
+	return ids, nil
+}
+
+func (s r2ObjectStore) begin(ctx context.Context, key string) (string, error) {
+	ids, err := s.uploads(ctx, key)
 	if err != nil {
 		return "", err
 	}
-	if key == "" {
-		return "", errors.New("object key missing")
+	if len(ids) > 0 {
+		return ids[0], nil
 	}
-	return c.NewMultipartUpload(ctx, s.bucket, key, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	c := minio.Core{Client: s.client}
+	id, err := c.NewMultipartUpload(ctx, s.bucket, key, minio.PutObjectOptions{ContentType: "application/octet-stream"})
+	if err != nil || id == "" || len(id) > 2048 {
+		return "", errors.New("multipart initiation unavailable")
+	}
+	return id, nil
 }
 
-// putPart streams one exact-sized, already validated part to private S3 and
-// returns the opaque ETag for durable PostgreSQL recording. The caller must
-// hold the upload-session lease and enforce owner, offset, reservation, request
-// deadline and at-most-32 MiB Content-Length before calling this method.
-func (s r2ObjectStore) putPart(ctx context.Context, key, uploadID string, plan r2PartPlan, input io.Reader, expectedSHA256 string) (minio.CompletePart, error) {
+func (s r2ObjectStore) putPart(ctx context.Context, key, uploadID string, plan r2PartPlan, data []byte, digest string) (minio.CompletePart, error) {
 	c, err := s.core()
 	if err != nil {
 		return minio.CompletePart{}, err
 	}
-	if key == "" || uploadID == "" || input == nil || plan.Number <= 0 ||
-		plan.Number > int(r2MaximumParts) || plan.Length <= 0 || plan.Length > r2ChunkBytes ||
-		plan.Offset < 0 || plan.Offset%r2ChunkBytes != 0 ||
-		int64(plan.Number) != plan.Offset/r2ChunkBytes+1 {
+	if key == "" || uploadID == "" || plan.Number <= 0 || plan.Number > int(r2MaximumParts) ||
+		plan.Length <= 0 || plan.Length > r2ChunkBytes || int64(len(data)) != plan.Length ||
+		plan.Offset < 0 || plan.Offset%r2ChunkBytes != 0 || int64(plan.Number) != plan.Offset/r2ChunkBytes+1 {
 		return minio.CompletePart{}, errors.New("multipart part parameters invalid")
 	}
-	if len(expectedSHA256) != 64 {
-		return minio.CompletePart{}, errors.New("part checksum required")
+	if err := r2ValidatePartDigest(digest, sha256.Sum256(data)); err != nil {
+		return minio.CompletePart{}, err
 	}
-	if _, err := hex.DecodeString(expectedSHA256); err != nil {
-		return minio.CompletePart{}, errors.New("part checksum invalid")
-	}
-	limited := &io.LimitedReader{R: input, N: plan.Length}
-	hasher := sha256.New()
-	stream := io.TeeReader(limited, hasher)
-	received, err := c.PutObjectPart(ctx, s.bucket, key, uploadID, plan.Number, stream, plan.Length, minio.PutObjectPartOptions{})
+	result, err := c.PutObjectPart(ctx, s.bucket, key, uploadID, plan.Number, bytes.NewReader(data), plan.Length,
+		minio.PutObjectPartOptions{Sha256Hex: digest})
 	if err != nil {
 		return minio.CompletePart{}, err
 	}
-	if limited.N != 0 || received.PartNumber != plan.Number || received.ETag == "" {
-		return minio.CompletePart{}, errors.New("storage did not acknowledge complete part")
+	if result.PartNumber != plan.Number || downloadETag(result.ETag) == "" {
+		return minio.CompletePart{}, errors.New("invalid storage part acknowledgement")
 	}
-	var extra [1]byte
-	n, endErr := input.Read(extra[:])
-	if n != 0 || endErr != io.EOF {
-		return minio.CompletePart{}, errors.New("extra bytes or incomplete part body")
-	}
-	var actual [sha256.Size]byte
-	copy(actual[:], hasher.Sum(nil))
-	if err := r2ValidatePartDigest(expectedSHA256, actual); err != nil {
-		return minio.CompletePart{}, err
-	}
-	return minio.CompletePart{PartNumber: received.PartNumber, ETag: received.ETag}, nil
+	return minio.CompletePart{PartNumber: result.PartNumber, ETag: result.ETag}, nil
 }
 
-// complete only addresses the exact session-owned key; its caller must first
-// prove durable per-part ETags, exact offsets, and a locked, owned file record.
-// An ambiguous S3 COMMIT must be reconciled against persisted state and hashes,
-// never compensated by blind object deletion.
-func (s r2ObjectStore) complete(ctx context.Context, key, uploadID string, total, configuredLimit int64, parts []minio.CompletePart) error {
+func r2ObjectMissing(err error) bool {
+	return minio.ToErrorResponse(err).Code == "NoSuchKey"
+}
+
+// A missing completion receipt leaves finalizing state intact. An exact-key
+// object readback is only a candidate until its bytes are verified.
+func (s r2ObjectStore) complete(ctx context.Context, key, uploadID string, total, limit int64, parts []minio.CompletePart) (minio.ObjectInfo, error) {
 	c, err := s.core()
-	if err != nil {
-		return err
-	}
-	if key == "" || uploadID == "" {
-		return errors.New("incomplete multipart identity")
+	if err != nil || key == "" || uploadID == "" {
+		return minio.ObjectInfo{}, errors.New("multipart completion unavailable")
 	}
 	numbers, etags := make([]int, len(parts)), make([]string, len(parts))
 	for i, part := range parts {
 		numbers[i], etags[i] = part.PartNumber, part.ETag
 	}
-	if err := r2ValidateCompletion(total, configuredLimit, numbers, etags); err != nil {
-		return err
-	}
-	if _, err := c.CompleteMultipartUpload(ctx, s.bucket, key, uploadID, parts, minio.PutObjectOptions{}); err != nil {
-		return err
+	if err := r2ValidateCompletion(total, limit, numbers, etags); err != nil {
+		return minio.ObjectInfo{}, err
 	}
 	info, err := s.client.StatObject(ctx, s.bucket, key, minio.StatObjectOptions{})
+	if r2ObjectMissing(err) {
+		_, completeErr := c.CompleteMultipartUpload(ctx, s.bucket, key, uploadID, parts, minio.PutObjectOptions{})
+		info, err = s.client.StatObject(ctx, s.bucket, key, minio.StatObjectOptions{})
+		if err != nil {
+			return minio.ObjectInfo{}, errors.Join(completeErr, err)
+		}
+	}
 	if err != nil {
-		return err
+		return minio.ObjectInfo{}, err
 	}
-	if info.Size != total {
-		return errors.New("completed object size differs from reserved file")
+	if info.Size != total || downloadETag(info.ETag) == "" {
+		return minio.ObjectInfo{}, errR2Integrity
 	}
-	return nil
+	return info, nil
+}
+
+func (s r2ObjectStore) read(ctx context.Context, key string, info minio.ObjectInfo) (io.ReadCloser, error) {
+	opts := minio.GetObjectOptions{}
+	if err := opts.SetMatchETag(info.ETag); err != nil {
+		return nil, err
+	}
+	body, received, _, err := (minio.Core{Client: s.client}).GetObject(ctx, s.bucket, key, opts)
+	if err != nil {
+		return nil, err
+	}
+	if received.Size != info.Size || received.ETag != info.ETag {
+		_ = body.Close()
+		return nil, errR2Integrity
+	}
+	return body, nil
 }
 
 func (s r2ObjectStore) abort(ctx context.Context, key, uploadID string) error {
 	c, err := s.core()
-	if err != nil {
-		return err
+	if err != nil || key == "" || uploadID == "" {
+		return errors.New("multipart abort unavailable")
 	}
-	if key == "" || uploadID == "" {
-		return errors.New("incomplete multipart identity")
+	err = c.AbortMultipartUpload(ctx, s.bucket, key, uploadID)
+	if minio.ToErrorResponse(err).Code == "NoSuchUpload" {
+		return nil
 	}
-	// Only caller-verified-owned incomplete sessions may reach abort.
-	return c.AbortMultipartUpload(ctx, s.bucket, key, uploadID)
+	return err
 }

@@ -118,7 +118,7 @@ func (cfg Config) createFileHandler(db *sql.DB) http.Handler {
 		var currentUsage int64
 		err = tx.QueryRowContext(ctx, "SELECT storage_quota_bytes FROM users WHERE id::text=$1 FOR UPDATE", userID).Scan(&quota)
 		if err == nil {
-			err = tx.QueryRowContext(ctx, "SELECT COALESCE(SUM(size_bytes),0) FROM files WHERE user_id::text=$1 AND status IN ('pending','stored','hashed','ready')", userID).Scan(&currentUsage)
+			currentUsage, err = readStorageUsage(ctx, tx, userID, cfg.Resumable.MaxFileBytes > 0)
 		}
 		if err != nil {
 			http.Error(w, "database error", http.StatusInternalServerError)

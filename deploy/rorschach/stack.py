@@ -58,7 +58,15 @@ def parse_env(content):
         "R1_HOST", "R1_ORIGIN_PORT", "R1_PUBLIC_PORT_SUFFIX",
         "R1_S3_ROOT_KEY", "R1_S3_APP_KEY", "R1_ADMIN_HASH",
     }
-    require(result.keys() == expected, "Unexpected or missing environment key")
+    capacity = {"R1_RESUMABLE_MAX_BYTES", "R1_RESUMABLE_RESERVED_BYTES"}
+    require(expected <= result.keys() <= expected | capacity, "Unexpected or missing environment key")
+    if capacity & result.keys():
+        require(capacity <= result.keys() and all(re.fullmatch(r"0|[1-9][0-9]{0,15}", result[k]) for k in capacity),
+                "Invalid resumable capacity format")
+        max_file = int(result["R1_RESUMABLE_MAX_BYTES"])
+        reserved = int(result["R1_RESUMABLE_RESERVED_BYTES"])
+        require((max_file == reserved == 0) or (0 < max_file <= 100 << 30 and max_file <= reserved <= 1 << 50),
+                "Invalid resumable capacity")
     require(re.fullmatch(r"(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?", result["R1_HOST"]),
             "Expected a DNS host name")
     port = result["R1_ORIGIN_PORT"]

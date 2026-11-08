@@ -87,7 +87,7 @@ func TestRorschachMultipartPartGeometryAndIntegrity(t *testing.T) {
 	if _, err := store.putPart(t.Context(), "key", "upload-id", r2PartPlan{}, nil, ""); err == nil {
 		t.Error("unconfigured private S3 part upload must fail closed")
 	}
-	if err := store.complete(t.Context(), "key", "upload-id", 1, 1, nil); err == nil {
+	if _, err := store.complete(t.Context(), "key", "upload-id", 1, 1, nil); err == nil {
 		t.Error("unconfigured private S3 completion must fail closed")
 	}
 	if err := store.abort(t.Context(), "key", "upload-id"); err == nil {
