@@ -1,4 +1,4 @@
-// Package server implements recipient invitations using an emailed locator and a separately delivered access code.
+// Package server implements protected invitations with a separately delivered access code.
 // The access code never enters email, URLs, logs or the database in plaintext.
 package server
 
@@ -37,13 +37,15 @@ var deliveryCodePattern = regexp.MustCompile("^[A-Z2-7]{16}$")
 
 type createInvitationRequest struct {
 	FileID         string `json:"file_id"`
+	Delivery       string `json:"delivery"`
 	RecipientEmail string `json:"recipient_email"`
 	Description    string `json:"description"`
 	TTLHours       int    `json:"ttl_hours"`
 }
 
 type invitationReceipt struct {
-	RecipientEmail   string `json:"recipient_email"`
+	RecipientEmail   string `json:"recipient_email,omitempty"`
+	InvitationURL    string `json:"invitation_url,omitempty"`
 	AccessCode       string `json:"access_code"`
 	ExpiresAt        string `json:"expires_at"`
 	DownloadsAllowed int    `json:"downloads_allowed"`
@@ -117,8 +119,8 @@ func (s *EmailService) sendRecipientInvitation(ctx context.Context, to, sender, 
 }
 
 // POST /invitations is available only to the verified owner of a fully hashed file.
-// A successful 201 means the email provider accepted the message and the database committed the
-// invitation. Only that one response contains the independently generated code.
+// An emailed invitation requires provider acceptance. Both modes require a committed
+// invitation before returning its independently generated code.
 func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 	return cfg.Auth.requireAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -136,8 +138,11 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 		}
 		in.RecipientEmail = strings.ToLower(strings.TrimSpace(in.RecipientEmail))
 		in.Description = strings.TrimSpace(in.Description)
+		manual := in.Delivery == "manual"
+		validRecipient := (manual && in.RecipientEmail == "") ||
+			(in.Delivery == "" && len(in.RecipientEmail) <= 254 && validateEmail(in.RecipientEmail))
 		id, idErr := uuid.Parse(in.FileID)
-		if idErr != nil || !validateEmail(in.RecipientEmail) || len(in.RecipientEmail) > 254 || !validDeliveryDescription(in.Description) || in.TTLHours < 0 || in.TTLHours > 72 {
+		if idErr != nil || !validRecipient || !validDeliveryDescription(in.Description) || in.TTLHours < 0 || in.TTLHours > 72 {
 			http.Error(w, "invalid invitation", http.StatusBadRequest)
 			return
 		}
@@ -150,7 +155,7 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 			http.Error(w, "a configured HTTPS public origin is required", http.StatusServiceUnavailable)
 			return
 		}
-		if cfg.EmailSvc == nil || !cfg.EmailSvc.config.Enabled {
+		if !manual && (cfg.EmailSvc == nil || !cfg.EmailSvc.config.Enabled) {
 			http.Error(w, "email delivery unavailable", http.StatusServiceUnavailable)
 			return
 		}
@@ -207,7 +212,7 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 		}
 		// The sender row is locked above, serializing invitations across
 		// files and IP addresses. The independent ledger deliberately survives
-		// file deletion, so revocation cannot reset a sender's email quota.
+		// file deletion, so revocation cannot reset a sender's invitation quota.
 		// Only expired rate-limit metadata from this sender is pruned.
 		_, err = tx.ExecContext(ctx,
 			"DELETE FROM invitation_send_ledger WHERE sender_id::text=$1 AND created_at < CURRENT_TIMESTAMP - INTERVAL '7 days'", userID)
@@ -233,7 +238,7 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 			http.Error(w, "database unavailable", http.StatusServiceUnavailable)
 			return
 		}
-		// One event for each committed email invitation, independent of the
+		// One event for each committed invitation, independent of the
 		// file's lifetime. If delivery or COMMIT fails the transaction rolls back.
 		_, err = tx.ExecContext(ctx,
 			"INSERT INTO invitation_send_ledger (id,sender_id) VALUES ($1,$2)", invitationID, userID)
@@ -242,9 +247,17 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 			return
 		}
 		link := origin + "/receive?id=" + invitationID.String()
-		if err = cfg.EmailSvc.sendRecipientInvitation(ctx, in.RecipientEmail, senderEmail, filename, in.Description, link, expiresAt); err != nil {
-			writeInvitationDeliveryError(w, err)
-			return
+		receipt := invitationReceipt{
+			RecipientEmail: in.RecipientEmail, AccessCode: code,
+			ExpiresAt: expiresAt.Format(time.RFC3339), DownloadsAllowed: deliveryMaxDownloads,
+		}
+		if manual {
+			receipt.InvitationURL = link
+		} else {
+			if err = cfg.EmailSvc.sendRecipientInvitation(ctx, in.RecipientEmail, senderEmail, filename, in.Description, link, expiresAt); err != nil {
+				writeInvitationDeliveryError(w, err)
+				return
+			}
 		}
 		if err = tx.Commit(); err != nil {
 			// The provider may have accepted the email, but no working invitation is
@@ -256,12 +269,7 @@ func (cfg Config) createInvitationHandler(db *sql.DB) http.Handler {
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		_ = json.NewEncoder(w).Encode(invitationReceipt{
-			RecipientEmail:   in.RecipientEmail,
-			AccessCode:       code,
-			ExpiresAt:        expiresAt.Format(time.RFC3339),
-			DownloadsAllowed: deliveryMaxDownloads,
-		})
+		_ = json.NewEncoder(w).Encode(receipt)
 	}))
 }
 

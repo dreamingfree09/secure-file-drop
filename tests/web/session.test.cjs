@@ -23,7 +23,8 @@ function harness(fetch) {
   const context = vm.createContext({
     document: { readyState: 'loading', addEventListener() {}, getElementById: node, querySelectorAll: () => [] },
     Option: function(text, value) { this.text=text; this.value=value; },
-    fetch, console, DOMException, AbortController, clearTimeout, TextEncoder, setTimeout() {}
+    fetch, console, DOMException, AbortController, clearTimeout, TextEncoder, URL, setTimeout() {},
+    window: { location: { origin: 'https://sfd.example.test' } }
   });
   const html = fs.readFileSync(path.join(__dirname, '../../web/static/index.html'), 'utf8');
   vm.runInContext(html.split('<script>')[1].split('</script>')[0], context);
@@ -169,6 +170,48 @@ test('sign-out during an in-flight invitation resets the next session button', a
   assert.equal(h.node('deliveryCode').value,'');
   assert.equal(h.node('deliveryCodeBox').style.display,'none');
   assert.equal(h.node('sendDeliveryButton').disabled,false);
+});
+
+test('manual protected sharing sends no email address and clears both credentials on account change', async () => {
+  const link = 'https://sfd.example.test/receive?id=11111111-1111-4111-8111-111111111111';
+  let submitted;
+  const h = harness(async (url, options) => {
+    if (url !== '/invitations') return {ok:true,status:204};
+    submitted = JSON.parse(options.body);
+    return {ok:true,status:201,json:async()=>({
+      invitation_url:link,access_code:'ABCD-EFGH-JKLM-NPQR',downloads_allowed:3,expires_at:'2026-11-04T12:00:00Z'
+    })};
+  });
+  vm.runInContext('isLoggedIn=true; sessionGeneration=2;',h.context);
+  h.node('deliveryMethod').value='manual';
+  vm.runInContext('updateDeliveryMethod()',h.context);
+  assert.equal(h.node('deliveryRecipientField').hidden,true);
+  h.node('deliveryRecipient').value='previous@example.test';
+  h.node('deliveryFile').value='22222222-2222-4222-8222-222222222222';
+  await vm.runInContext('sendProtectedInvitation()',h.context);
+  assert.equal(submitted.delivery,'manual');
+  assert.equal('recipient_email' in submitted,false);
+  assert.equal(h.node('deliveryLink').value,link);
+  assert.equal(h.node('deliveryCode').value,'ABCD-EFGH-JKLM-NPQR');
+  await vm.runInContext('logout()',h.context);
+  assert.equal(h.node('deliveryLink').value,'');
+  assert.equal(h.node('deliveryCode').value,'');
+  assert.equal(h.node('deliveryLinkField').hidden,true);
+});
+
+test('manual receipt rejects a foreign, raw download or ambiguous URL', () => {
+  const h = harness(async () => ({ok:true,status:204}));
+  const id = '11111111-1111-4111-8111-111111111111';
+  for (const link of [
+    'https://foreign.example.test/receive?id='+id,
+    'http://sfd.example.test/receive?id='+id,
+    'https://sfd.example.test/download?id='+id,
+    'https://sfd.example.test/receive?id='+id+'&id='+id,
+    'https://sfd.example.test/receive?id='+id+'#secret',
+    'https://sfd.example.test/receive?another='+id,
+  ]) {
+    assert.equal(vm.runInContext('protectedInvitationURL('+JSON.stringify(link)+')',h.context),'');
+  }
 });
 
 
