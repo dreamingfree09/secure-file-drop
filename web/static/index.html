@@ -1572,7 +1572,8 @@ async function uploadFile() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
         id: meta.id,
-        ttl_seconds: 300
+        ttl_seconds: 86400,
+        share_page: true
       })
     });
 

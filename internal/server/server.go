@@ -341,8 +341,12 @@ func New(cfg Config) *Server {
 	// Create signed, expiring download links.
 	mux.Handle("/links", cfg.createLinkHandler(cfg.DB))
 
-	// Download file via signed token.
-	mux.Handle("/download", cfg.downloadHandler(cfg.DB, mc, bucket))
+	// Preserve the legacy direct-byte API. New browser links may opt in to
+	// a generic landing with an explicit POST before any file data is returned.
+	download := cfg.downloadHandler(cfg.DB, mc, bucket)
+	mux.Handle("/download", download)
+	mux.HandleFunc("/share", sharePageHandler)
+	mux.Handle("/share-download", shareDownloadFormHandler(download))
 	// Recipient invitation links are not unauthenticated file download tokens.
 	mux.Handle("/invitations", newRateLimiter(12, time.Hour).middleware(cfg.createInvitationHandler(cfg.DB)))
 	mux.HandleFunc("/receive", receiveInvitationPage)

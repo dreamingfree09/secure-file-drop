@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <title>Secure File Drop — Download</title>
+  <style>
+    :root{color-scheme:dark;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;background:#101827;color:#f7f9fd}
+    body{min-height:100vh;margin:0;display:grid;place-items:center;padding:1.25rem;box-sizing:border-box}
+    main{width:min(100%,28rem);border:1px solid #364356;border-radius:1.25rem;padding:2rem;background:#172235;box-shadow:0 12px 36px #070c1959}
+    .eyebrow{letter-spacing:.12em;text-transform:uppercase;color:#98b6d5;font-size:.75rem;font-weight:700}
+    h1{font-size:1.7rem;margin:.5rem 0}p{color:#d3ddeb}
+    label{display:block;margin:1rem 0 .35rem}input{box-sizing:border-box;width:100%;padding:.75rem;border:1px solid #63748a;border-radius:.5rem;background:#0f1727;color:#fff}
+    button{cursor:pointer;background:#8bc6ff;color:#092443;border:0;border-radius:.6rem;padding:.85rem 1.1rem;font-size:1rem;font-weight:700;width:100%;margin-top:1.2rem}
+    button:focus-visible,input:focus-visible{outline:3px solid #f1ce73;outline-offset:2px}
+    [hidden]{display:none!important}.fine{font-size:.85rem;color:#bbc9da}
+  </style>
+  <script src="/static/share.js" defer></script>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Secure File Drop</div>
+    <h1>Download shared file</h1>
+    <p>This page does not display the file automatically. Select Download when you wish to retrieve it.</p>
+    <form id="download-form" action="/share-download" method="post" hidden>
+      <input type="hidden" name="token" id="share-token">
+      <label for="share-password">Access password (if one was provided)</label>
+      <input type="password" id="share-password" name="password" autocomplete="off" maxlength="512">
+      <button type="submit">Download file</button>
+    </form>
+    <p id="share-status" role="status" aria-live="polite">Checking link…</p>
+    <p class="fine">Anyone possessing an active ordinary sharing link may download the file. For confidential transfers, request a separate protected access code.</p>
+  </main>
+</body>
+</html>

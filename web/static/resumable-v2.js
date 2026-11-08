@@ -239,9 +239,9 @@
     const generation = sessionGeneration;
     try {
       const result = await request('/links', {method:'POST', headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({id:completed,ttl_seconds:3600})}, generation);
+        body:JSON.stringify({id:completed,ttl_seconds:86400,share_page:true})}, generation);
       const url = new URL(result.url);
-      if (url.protocol !== 'https:' || url.origin !== location.origin || url.pathname !== '/download' ||
+      if (url.protocol !== 'https:' || url.origin !== location.origin || url.pathname !== '/share' ||
           url.username || url.password || url.hash || !url.searchParams.has('token')) throw new Error('The download link could not be verified.');
       field('resumableLinkValue').value = url.href;
       field('resumableLinkBox').classList.remove('hidden');
