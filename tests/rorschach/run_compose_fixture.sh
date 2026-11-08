@@ -18,9 +18,11 @@ R1_S3_ROOT_KEY=$(openssl rand -hex 10 | tr '[:lower:]' '[:upper:]')
 R1_S3_APP_KEY=$(openssl rand -hex 10 | tr '[:lower:]' '[:upper:]')
 R1_S3_ROOT_SECRET=$(openssl rand -hex 32)
 R1_S3_APP_SECRET=$(openssl rand -hex 32)
-export SFD_R1_FIXTURE_PASSWORD R1_ADMIN_HASH
+export SFD_R1_FIXTURE_PASSWORD SFD_R1_FIXTURE_USER_PASSWORD R1_ADMIN_HASH
 SFD_R1_FIXTURE_PASSWORD=$(openssl rand -hex 16)
+SFD_R1_FIXTURE_USER_PASSWORD=$(openssl rand -hex 16)
 R1_ADMIN_HASH=$(printf '%s\n' "$SFD_R1_FIXTURE_PASSWORD" | htpasswd -niBC 12 admin | cut -d: -f2-)
+user_hash=$(printf '%s\n' "$SFD_R1_FIXTURE_USER_PASSWORD" | htpasswd -niBC 12 fixture | cut -d: -f2-)
 mkdir "$root/origin-tls" "$root/storage-tls"
 
 cert_pair() {
@@ -49,6 +51,10 @@ trap '"${compose[@]}" ps -a' ERR
 "${compose[@]}" up -d postgres storage
 "${compose[@]}" run --rm --no-deps provision initialize
 "${compose[@]}" up -d --no-build --wait --wait-timeout 180 backend proxy
+# Seed a verified ordinary identity only in this hosted disposable database.
+# Real signup continues to require its existing email verification.
+printf "INSERT INTO users (email, username, password_hash, email_verified, is_active) VALUES ('fixture@example.invalid', 'fixture', '%s', true, true);\n" "$user_hash" |
+    "${compose[@]}" exec -T postgres sh -c 'export PGPASSWORD="$POSTGRES_PASSWORD"; exec psql -h 127.0.0.1 -U postgres -d sfd -q -v ON_ERROR_STOP=1'
 python3 -B tests/rorschach/https_acceptance.py create
 "${compose[@]}" stop proxy backend storage postgres
 "${compose[@]}" start postgres storage

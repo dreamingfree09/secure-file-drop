@@ -56,13 +56,22 @@ def main():
     components = json.loads(data)["components"]
     assert all(components[name]["status"] == "ok" for name in ("postgres", "minio", "native_hash"))
     request("GET", "/me", 401)
-    _, headers = json_request("POST", "/login", 200, {
-        "username": "admin", "password": os.environ["SFD_R1_FIXTURE_PASSWORD"],
-    })
-    receipt = headers["Set-Cookie"]
-    assert "; Secure" in receipt and "; HttpOnly" in receipt
-    COOKIE = receipt.split(";", 1)[0]
-    request("GET", "/me", 200)
+    def login(username, password_name, is_admin):
+        global COOKIE
+        COOKIE = ""
+        _, headers = json_request("POST", "/login", 200, {
+            "username": username, "password": os.environ[password_name],
+        })
+        receipt = headers["Set-Cookie"]
+        assert "; Secure" in receipt and "; HttpOnly" in receipt
+        COOKIE = receipt.split(";", 1)[0]
+        identity, _ = request("GET", "/me", 200)
+        assert json.loads(identity)["is_admin"] is is_admin
+        return COOKIE
+
+    administrator = login("admin", "SFD_R1_FIXTURE_PASSWORD", True)
+    ordinary = login("fixture", "SFD_R1_FIXTURE_USER_PASSWORD", False)
+    request("GET", "/admin/files", 403)
     id_file = Path(os.environ["R1_RUNTIME"]) / "synthetic-file-id"
     if sys.argv[1] == "create":
         data, _ = json_request("POST", "/files", 201, {
@@ -78,9 +87,11 @@ def main():
         id_file.write_text(file_id, encoding="ascii")
     else:
         file_id = id_file.read_text(encoding="ascii")
+    COOKIE = administrator
     data, _ = request("GET", "/admin/files", 200)
     files = json.loads(data)
     assert any(row["id"] == file_id and row["sha256_hex"] == sha256(PAYLOAD).hexdigest() for row in files)
+    COOKIE = ordinary
     data, _ = json_request("POST", "/links", 200, {"id": file_id, "ttl_seconds": 300})
     link = urlsplit(json.loads(data)["url"])
     assert (link.scheme, link.hostname, link.port, link.path) == ("https", HOST, PORT, "/download")
