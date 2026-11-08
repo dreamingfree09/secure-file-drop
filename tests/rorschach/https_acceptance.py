@@ -21,7 +21,9 @@ COOKIE = ""
 def request(method, path, status, body=None, content_type="application/json"):
     conn = http.client.HTTPSConnection(HOST, PORT, context=CONTEXT, timeout=20)
     conn._create_connection = lambda _address, *args: socket.create_connection(("127.0.0.1", PORT), *args)
-    headers = {"Origin": f"https://{HOST}:{PORT}", "Accept-Encoding": "gzip"}
+    headers = {"Origin": f"https://{HOST}:{PORT}"}
+    if path.startswith("/download?"):
+        headers["Accept-Encoding"] = "gzip"
     if body is not None:
         headers["Content-Type"] = content_type
     if COOKIE:
