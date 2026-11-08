@@ -52,7 +52,7 @@ def main():
                 raise
             time.sleep(2)
     components = json.loads(data)["components"]
-    assert all(components[name] == "ok" for name in ("postgres", "minio", "native_hash"))
+    assert all(components[name]["status"] == "ok" for name in ("postgres", "minio", "native_hash"))
     request("GET", "/me", 401)
     _, headers = json_request("POST", "/login", 200, {
         "username": "admin", "password": os.environ["SFD_R1_FIXTURE_PASSWORD"],

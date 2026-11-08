@@ -5,9 +5,10 @@ umask 077
 endpoint=https://storage:9000
 ca=/trust/storage-ca.pem
 bucket=sfd-files
+export SSL_CERT_FILE="$ca"
 
 rc_checked() {
-    rc --ca-cert "$ca" "$@" >/dev/null 2>&1
+    rc "$@" >/dev/null 2>&1
 }
 
 fail() {
@@ -24,9 +25,9 @@ for _ in $(seq 1 30); do
     sleep 2
 done
 [ "$ready" = true ] || fail 'Storage TLS readiness did not pass'
-rc_checked alias set root "$endpoint" "$R1_S3_ROOT_KEY" "$R1_S3_ROOT_SECRET" || fail 'Root authentication failed'
 case "${1:-}" in
     initialize)
+        rc_checked alias set root "$endpoint" "$R1_S3_ROOT_KEY" "$R1_S3_ROOT_SECRET" || fail 'Root alias setup failed'
         rc_checked mb "root/$bucket" || fail 'Fresh bucket creation failed'
         sed 's/${BUCKET}/sfd-files/g' /opt/sfd/app-policy-template.json >/tmp/app-policy.json
         rc_checked admin user add root/ "$R1_S3_APP_KEY" "$R1_S3_APP_SECRET" || fail 'Scoped user creation failed'
@@ -44,7 +45,7 @@ rc_checked cp /tmp/payload "app/$bucket/$object" || fail 'Signed canary write fa
 # After a positively acknowledged create, remove only this invocation's random key.
 trap 'rc_checked rm "app/$bucket/$object" || printf "%s\n" "Signed canary cleanup failed" >&2' EXIT
 trap 'exit 1' HUP INT TERM
-rc --ca-cert "$ca" cat "app/$bucket/$object" >/tmp/readback 2>/dev/null && cmp -s /tmp/payload /tmp/readback ||
+rc cat "app/$bucket/$object" >/tmp/readback 2>/dev/null && cmp -s /tmp/payload /tmp/readback ||
     fail 'Signed canary bytes did not match'
 
 expect_denied() {
@@ -58,7 +59,7 @@ expect_denied --head "$endpoint/$bucket/$object"
 expect_denied "$endpoint/$bucket?list-type=2"
 expect_denied -X PUT --data-binary @/tmp/payload "$endpoint/$bucket/$object"
 expect_denied -X DELETE "$endpoint/$bucket/$object"
-rc --ca-cert "$ca" cat "app/$bucket/$object" >/tmp/readback 2>/dev/null && cmp -s /tmp/payload /tmp/readback ||
+rc cat "app/$bucket/$object" >/tmp/readback 2>/dev/null && cmp -s /tmp/payload /tmp/readback ||
     fail 'Canary preservation check failed after denied requests'
 trap - EXIT HUP INT TERM
 rc_checked rm "app/$bucket/$object" || fail 'Signed canary cleanup failed'
