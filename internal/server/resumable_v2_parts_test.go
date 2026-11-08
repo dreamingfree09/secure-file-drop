@@ -10,7 +10,7 @@ import (
 // event accounting explicit. All cases execute even if an earlier one fails.
 func TestRorschachMultipartPartGeometryAndIntegrity(t *testing.T) {
 	const target = 100 << 30
-	if r2ChunkBytes != 32 << 20 || r2MaximumBytes != target || r2MaximumParts != 10000 {
+	if r2ChunkBytes != 32<<20 || r2MaximumBytes != target || r2MaximumParts != 10000 {
 		t.Error("public 100 GiB/32 MiB/S3 part ceiling has drifted")
 	}
 	if n, err := r2PartCount(target, target); err != nil || n != 3200 {
