@@ -40,6 +40,9 @@ async function main() {
     await page.locator('#resumableSaved option').filter({hasText:'r2-browser.bin'}).waitFor({state:'attached'});
     const saved = await page.locator('#resumableSaved option').filter({hasText:'r2-browser.bin'}).getAttribute('value');
     await page.locator('#resumableSaved').selectOption(saved);
+    await page.locator('#resumableFile').setInputFiles(join(root, 'different-file', 'r2-browser.bin'));
+    await page.locator('#resumableStart').click();
+    await page.getByText('The selected file differs from the original file. Reselect the original to resume.', {exact:true}).waitFor();
     await page.locator('#resumableFile').setInputFiles(fixture);
     await page.locator('#resumableStart').click();
     await page.getByText('Upload verified. Create a link when you are ready to share.', {exact:true}).waitFor({timeout:90000});

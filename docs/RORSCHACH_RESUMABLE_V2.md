@@ -10,13 +10,13 @@ Use the bundled native hash utility and the strict bucket-policy storage mode. T
 
 ## HTTP contract
 
-- POST /uploads/resumable reserves capacity for an owned file. Supply a client-generated UUID request_id, name, content_type and size_bytes. Retrying the same request returns the same session. A conflicting use of the UUID returns 409.
+- POST /uploads/resumable reserves capacity for an owned file. Supply a client-generated UUID request_id, name, content_type, size_bytes and manifest_sha256. The manifest is SHA-256 of the ordered concatenation of the lowercase hexadecimal chunk digests. Retrying the same request returns the same session. A conflicting use of the UUID returns 409.
 - GET /uploads/resumable lists the caller’s active sessions. GET /uploads/resumable/{id} reports only durable progress. Add parts=1 to retrieve committed SHA-256 digests for bounded prefix verification after reselecting a file.
 - PATCH /uploads/resumable/{id} submits a raw application/octet-stream body with exact Content-Length, Upload-Offset and Upload-SHA256. A correct replay returns durable progress without writing a committed part again. A different digest for an already claimed part returns 409.
 - POST /uploads/resumable/{id}/complete records intent after all parts are committed. Poll session status. A completed session returns the same file ID and native SHA-256 on repeat requests.
 - DELETE /uploads/resumable/{id} requests cancellation before finalization. The worker aborts only known incomplete uploads belonging to the exact owned key. Expired open sessions use the same path. A file already being finalized is preserved for reconciliation.
 
-The existing signed link API accepts the file ID after the verified file row becomes visible. The browser keeps the transfer selection in memory and reads durable progress from the server after sign-in or refresh. When resuming with a reselected file, it checks each already committed chunk against its recorded SHA-256. Its upload and checksum buffers are bounded to one chunk at a time.
+The existing signed link API accepts the file ID after the verified file row becomes visible. The browser keeps the transfer selection in memory and reads durable progress from the server after sign-in or refresh. It checks the whole reselected file's manifest and each already committed chunk. The preflight reads the file once with one chunk in memory and retains up to 3,200 digests. Successful part commits renew the 48-hour inactivity expiry.
 
 ## Recovery and operations
 

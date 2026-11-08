@@ -3,6 +3,7 @@
   const chunk = 32 * 1024 * 1024;
   const field = id => document.getElementById(id);
   let limit = 0, operation = null, completed = null, pending = null;
+  let prepared = null;
   let refreshSequence = 0;
 
   function status(message) { field('resumableStatus').textContent = message; }
@@ -42,6 +43,20 @@
     return Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
   }
 
+  async function prepare(file, generation, signal) {
+    if (prepared?.file === file) return prepared;
+    const hashes = [];
+    for (let offset = 0; offset < file.size; offset += chunk) {
+      status('Checking file chunk ' + (hashes.length + 1) + ' of ' + Math.ceil(file.size / chunk) + '…');
+      hashes.push(await digest(file.slice(offset, offset + chunk), generation, signal));
+    }
+    // SHA-256 of concatenated lowercase hexadecimal chunk digests. This is a
+    // browser file-identity manifest. Native SHA-256 still covers the raw bytes.
+    const manifest = await digest(new Blob(hashes), generation, signal);
+    prepared = {file, hashes, manifest};
+    return prepared;
+  }
+
   function renderProgress(upload, speed = 0) {
     field('resumableProgress').value = 100 * upload.offset / upload.size_bytes;
     const committed = (upload.offset / (1024 * 1024)).toFixed(1);
@@ -68,7 +83,7 @@
   function reset() {
     ++refreshSequence;
     operation?.abort();
-    operation = pending = null;
+    operation = pending = prepared = null;
     field('resumableSaved').replaceChildren(new Option('New transfer', ''));
     field('resumableFile').value = '';
     field('resumableProgress').value = 0;
@@ -130,10 +145,12 @@
     try {
       let upload;
       if (!saved.value) {
+        const identity = await prepare(file, generation, signal);
         if (pending?.file !== file) pending = {file, id: crypto.randomUUID()};
         upload = await request(endpoint, {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({request_id:pending.id, name:file.name, content_type:file.type || 'application/octet-stream', size_bytes:file.size})
+          body:JSON.stringify({request_id:pending.id, name:file.name, content_type:file.type || 'application/octet-stream',
+            size_bytes:file.size, manifest_sha256:identity.manifest})
         }, generation, signal);
         saved.add(new Option(upload.name, upload.id));
         saved.value = upload.id;
@@ -147,19 +164,22 @@
         if (!file || file.name !== upload.name || file.size !== upload.size_bytes) {
           throw new Error('Reselect the original file with the same name and size to resume.');
         }
+        const identity = await prepare(file, generation, signal);
+        if (identity.manifest !== upload.manifest_sha256) {
+          throw new Error('The selected file differs from the original file. Reselect the original to resume.');
+        }
         if (committedDigests.length !== Math.ceil(upload.offset / chunk)) {
           throw new Error('Progress changed in another window. Resume again to verify the current committed chunks.');
         }
         for (let i = 0; i < committedDigests.length; i++) {
-          status('Checking previously committed chunk ' + (i + 1) + ' of ' + committedDigests.length + '…');
-          if (await digest(file.slice(i * chunk, (i + 1) * chunk), generation, signal) !== committedDigests[i]) {
+          if (identity.hashes[i] !== committedDigests[i]) {
             throw new Error('The selected file differs from the committed chunks. Select the original file.');
           }
         }
         renderProgress(upload);
         while (upload.offset < upload.size_bytes) {
           const offset = upload.offset, part = file.slice(offset, offset + chunk), start = performance.now();
-          const sha = await digest(part, generation, signal);
+          const sha = identity.hashes[Math.floor(offset / chunk)];
           upload = await request(endpoint + '/' + upload.id, {
             method:'PATCH', headers:{'Content-Type':'application/octet-stream','Upload-Offset':String(offset),'Upload-SHA256':sha}, body:part
           }, generation, signal);

@@ -66,17 +66,22 @@ func r2PartCount(total, configuredLimit int64) (int, error) {
 // r2ValidatePartDigest only accepts an unambiguous canonical SHA-256 hex
 // string. Never put the digest in a signed URL, request log or exception.
 func r2ValidatePartDigest(candidate string, actual [sha256.Size]byte) error {
-	if len(candidate) != sha256.Size*2 || candidate != strings.ToLower(candidate) {
+	if !r2CanonicalDigest(candidate) {
 		return errors.New("noncanonical part checksum")
 	}
-	b, err := hex.DecodeString(candidate)
-	if err != nil || len(b) != sha256.Size {
-		return errors.New("invalid part checksum")
-	}
+	b, _ := hex.DecodeString(candidate)
 	if subtle.ConstantTimeCompare(b, actual[:]) != 1 {
 		return errors.New("part checksum mismatch")
 	}
 	return nil
+}
+
+func r2CanonicalDigest(candidate string) bool {
+	if len(candidate) != sha256.Size*2 || candidate != strings.ToLower(candidate) {
+		return false
+	}
+	_, err := hex.DecodeString(candidate)
+	return err == nil
 }
 
 // r2ValidateCompletion rejects an incomplete or duplicate multipart ledger.

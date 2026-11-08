@@ -109,6 +109,9 @@ SQL
     certutil -A -n "SFD owned HTTPS fixture" -t 'C,,' -i "$root/origin-ca.pem" -d "sql:$root/browser-home/.pki/nssdb"
     dd if=/dev/urandom of="$root/r2-browser.bin" bs=1M count=32 status=none
     printf 'browser restart fixture\n' >>"$root/r2-browser.bin"
+    mkdir "$root/different-file"
+    cp "$root/r2-browser.bin" "$root/different-file/r2-browser.bin"
+    printf 'X' | dd of="$root/different-file/r2-browser.bin" bs=1 seek=33554432 conv=notrunc status=none
     node tests/rorschach/resumable_browser.cjs
 fi
 mkdir "$root/multipart"
@@ -127,6 +130,7 @@ source_volume="${project}_objects"
 restore_project=sfd-rorschach-$(openssl rand -hex 6)
 restore_volume="${restore_project}_objects"
 restore=(docker compose --env-file /dev/null -f deploy/rorschach/compose.yml -p "$restore_project")
+trap '"${restore[@]}" ps -a' ERR
 restore_label="label=com.docker.compose.project=$restore_project"
 [[ "$restore_project" != "$project" && -z "$(docker ps -aq --filter "$restore_label")" &&
    -z "$(docker volume ls -q --filter "$restore_label")" && -z "$(docker network ls -q --filter "$restore_label")" ]]

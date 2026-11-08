@@ -330,7 +330,10 @@ func New(cfg Config) *Server {
 	if cfg.Resumable.MaxFileBytes > 0 {
 		resumable = &r2Service{
 			db: cfg.DB, store: r2ObjectStore{client: mc, bucket: bucket}, config: cfg.Resumable,
-			slots: make(chan struct{}, 4), wake: make(chan struct{}, 1),
+			slots: make(chan []byte, 4), wake: make(chan struct{}, 1),
+		}
+		for range cap(resumable.slots) {
+			resumable.slots <- nil
 		}
 		resumable.endpoints(mux, cfg.Auth)
 	}

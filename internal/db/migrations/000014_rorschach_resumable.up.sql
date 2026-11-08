@@ -8,9 +8,10 @@ CREATE TABLE r2_uploads (
     orig_name TEXT NOT NULL,
     content_type TEXT NOT NULL,
     total_bytes BIGINT NOT NULL CHECK (total_bytes BETWEEN 1 AND 107374182400),
+    manifest TEXT NOT NULL CHECK (manifest ~ '^[0-9a-f]{64}$'),
     offset_bytes BIGINT NOT NULL DEFAULT 0 CHECK (offset_bytes >= 0 AND offset_bytes <= total_bytes),
     upload_id TEXT CHECK (length(upload_id) BETWEEN 1 AND 2048),
-    state TEXT NOT NULL DEFAULT 'new' CHECK (state IN ('new','open','finalizing','complete','cancelling','cancelled','quarantined')),
+    state TEXT NOT NULL DEFAULT 'new' CHECK (state IN ('new','open','finalizing','complete','canceling','canceled','quarantined')),
     digest TEXT CHECK (digest ~ '^[0-9a-f]{64}$'),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     expires_at TIMESTAMPTZ NOT NULL DEFAULT now() + interval '48 hours',
@@ -21,8 +22,8 @@ CREATE TABLE r2_uploads (
     CHECK ((state = 'complete') = (digest IS NOT NULL))
 );
 
-CREATE INDEX r2_uploads_work ON r2_uploads (next_attempt, expires_at) WHERE state IN ('new','open','finalizing','cancelling');
-CREATE INDEX r2_uploads_reservations ON r2_uploads (owner_id) WHERE state IN ('new','open','finalizing','cancelling','quarantined');
+CREATE INDEX r2_uploads_work ON r2_uploads (next_attempt, expires_at) WHERE state IN ('new','open','finalizing','canceling');
+CREATE INDEX r2_uploads_reservations ON r2_uploads (owner_id) WHERE state IN ('new','open','finalizing','canceling','quarantined');
 CREATE INDEX r2_uploads_owner_created ON r2_uploads (owner_id, created_at);
 
 CREATE TABLE r2_parts (

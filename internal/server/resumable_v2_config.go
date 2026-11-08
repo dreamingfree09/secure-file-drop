@@ -6,6 +6,7 @@ import (
 	"strconv"
 )
 
+// ResumableConfig defines the opted-in private upload and reservation limits.
 type ResumableConfig struct {
 	MaxFileBytes     int64
 	MaxReservedBytes int64

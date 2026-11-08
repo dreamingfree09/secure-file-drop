@@ -45,7 +45,7 @@ func (s *r2Service) collection(w http.ResponseWriter, r *http.Request, owner str
 	ctx, cancel := sqlContext(r.Context())
 	defer cancel()
 	if r.Method == http.MethodGet {
-		rows, err := s.db.QueryContext(ctx, "SELECT "+r2Fields+" FROM r2_uploads WHERE owner_id=$1 AND state NOT IN ('cancelled','complete') ORDER BY created_at DESC LIMIT 20", owner)
+		rows, err := s.db.QueryContext(ctx, "SELECT "+r2Fields+" FROM r2_uploads WHERE owner_id=$1 AND state NOT IN ('canceled','complete') ORDER BY created_at DESC LIMIT 20", owner)
 		if err != nil {
 			writeR2Error(w, err)
 			return
@@ -77,6 +77,7 @@ func (s *r2Service) collection(w http.ResponseWriter, r *http.Request, owner str
 		Name        string `json:"name"`
 		ContentType string `json:"content_type"`
 		Total       int64  `json:"size_bytes"`
+		Manifest    string `json:"manifest_sha256"`
 	}
 	if !decodeJSON(w, r, &request) {
 		return
@@ -84,7 +85,7 @@ func (s *r2Service) collection(w http.ResponseWriter, r *http.Request, owner str
 	id, err := uuid.Parse(request.ID)
 	name, valid := safeFilename(request.Name)
 	contentType := strings.TrimSpace(request.ContentType)
-	if _, _, mediaErr := mime.ParseMediaType(contentType); err != nil || id == uuid.Nil || !valid ||
+	if _, _, mediaErr := mime.ParseMediaType(contentType); err != nil || id == uuid.Nil || !valid || !r2CanonicalDigest(request.Manifest) ||
 		len(contentType) > 255 || mediaErr != nil || ValidateUploadMimeType(name, contentType) != nil {
 		http.Error(w, "invalid file name, type or request ID", http.StatusBadRequest)
 		return
@@ -93,7 +94,7 @@ func (s *r2Service) collection(w http.ResponseWriter, r *http.Request, owner str
 		http.Error(w, "resumable file size exceeds configured limit", http.StatusRequestEntityTooLarge)
 		return
 	}
-	u, err := s.reserve(ctx, owner, id, name, contentType, request.Total)
+	u, err := s.reserve(ctx, owner, id, name, contentType, request.Manifest, request.Total)
 	if err != nil {
 		writeR2Error(w, err)
 		return
@@ -170,16 +171,23 @@ func (s *r2Service) patchPart(w http.ResponseWriter, r *http.Request, owner stri
 		writeR2Error(w, errR2Conflict)
 		return
 	}
+	var buffer []byte
 	select {
-	case s.slots <- struct{}{}:
-		defer func() { <-s.slots }()
+	case buffer = <-s.slots:
 	default:
 		w.Header().Set("Retry-After", "1")
 		http.Error(w, "upload queue busy", http.StatusTooManyRequests)
 		return
 	}
+	if buffer == nil {
+		buffer = make([]byte, r2ChunkBytes)
+	}
+	defer func() {
+		clear(buffer)
+		s.slots <- buffer
+	}()
 	r.Body = http.MaxBytesReader(w, r.Body, part.Length+1)
-	data := make([]byte, part.Length)
+	data := buffer[:part.Length]
 	_, err = io.ReadFull(r.Body, data)
 	var extra [1]byte
 	_, tailErr := io.ReadFull(r.Body, extra[:])
@@ -236,5 +244,5 @@ func (s *r2Service) endpoints(mux *http.ServeMux, auth AuthConfig) {
 	bind("GET /uploads/resumable/{id}", s.inspect)
 	bind("PATCH /uploads/resumable/{id}", s.patchPart)
 	bind("POST /uploads/resumable/{id}/complete", change("finalizing"))
-	bind("DELETE /uploads/resumable/{id}", change("cancelling"))
+	bind("DELETE /uploads/resumable/{id}", change("canceling"))
 }

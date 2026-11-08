@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
 	"time"
@@ -13,7 +14,7 @@ type r2Service struct {
 	db     *sql.DB
 	store  r2ObjectStore
 	config ResumableConfig
-	slots  chan struct{}
+	slots  chan []byte
 	wake   chan struct{}
 }
 
@@ -26,13 +27,14 @@ type r2Upload struct {
 	State       string    `json:"state"`
 	Expires     time.Time `json:"expires_at"`
 	Digest      string    `json:"sha256,omitempty"`
+	Manifest    string    `json:"manifest_sha256"`
 	owner       string
 	key         string
 	provider    string
 }
 
-const r2Fields = "id, orig_name, content_type, total_bytes, offset_bytes, state, expires_at, COALESCE(digest,''), owner_id, object_key, COALESCE(upload_id,'')"
-const r2ReservedStates = "('new','open','finalizing','cancelling','quarantined')"
+const r2Fields = "id, orig_name, content_type, total_bytes, offset_bytes, state, expires_at, COALESCE(digest,''), manifest, owner_id, object_key, COALESCE(upload_id,'')"
+const r2ReservedStates = "('new','open','finalizing','canceling','quarantined')"
 
 type rowScanner interface{ Scan(...any) error }
 type sqlRowQueryer interface {
@@ -41,7 +43,7 @@ type sqlRowQueryer interface {
 
 func scanR2Upload(row rowScanner) (r2Upload, error) {
 	var u r2Upload
-	err := row.Scan(&u.ID, &u.Name, &u.ContentType, &u.Total, &u.Offset, &u.State, &u.Expires, &u.Digest,
+	err := row.Scan(&u.ID, &u.Name, &u.ContentType, &u.Total, &u.Offset, &u.State, &u.Expires, &u.Digest, &u.Manifest,
 		&u.owner, &u.key, &u.provider)
 	return u, err
 }
@@ -72,7 +74,7 @@ func readStorageUsage(ctx context.Context, db sqlRowQueryer, owner string, resum
 	return used, err
 }
 
-func (s *r2Service) reserve(ctx context.Context, owner string, requestID uuid.UUID, name, contentType string, total int64) (r2Upload, error) {
+func (s *r2Service) reserve(ctx context.Context, owner string, requestID uuid.UUID, name, contentType, manifest string, total int64) (r2Upload, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return r2Upload{}, err
@@ -86,7 +88,7 @@ func (s *r2Service) reserve(ctx context.Context, owner string, requestID uuid.UU
 	}
 	existing, err := scanR2Upload(tx.QueryRowContext(ctx, "SELECT "+r2Fields+" FROM r2_uploads WHERE owner_id=$1 AND request_id=$2", owner, requestID))
 	if err == nil {
-		if existing.Name != name || existing.ContentType != contentType || existing.Total != total {
+		if existing.Name != name || existing.ContentType != contentType || existing.Total != total || existing.Manifest != manifest {
 			return r2Upload{}, errR2Conflict
 		}
 		return existing, nil
@@ -120,9 +122,9 @@ func (s *r2Service) reserve(ctx context.Context, owner string, requestID uuid.UU
 	}
 	id := uuid.New()
 	u, err := scanR2Upload(tx.QueryRowContext(ctx, `INSERT INTO r2_uploads
-		(id,owner_id,request_id,object_key,orig_name,content_type,total_bytes)
-		VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING `+r2Fields,
-		id, owner, requestID, "resumable/"+id.String(), name, contentType, total))
+		(id,owner_id,request_id,object_key,orig_name,content_type,total_bytes,manifest)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING `+r2Fields,
+		id, owner, requestID, "resumable/"+id.String(), name, contentType, total, manifest))
 	if err != nil {
 		return r2Upload{}, err
 	}
@@ -192,7 +194,8 @@ func (s *r2Service) writePart(ctx context.Context, id, owner, digest string, par
 		return r2Upload{}, err
 	}
 	u.Offset += part.Length
-	if _, err := tx.ExecContext(ctx, "UPDATE r2_uploads SET offset_bytes=$2 WHERE id=$1", id, u.Offset); err != nil {
+	if err := tx.QueryRowContext(ctx, `UPDATE r2_uploads SET offset_bytes=$2, expires_at=now()+interval '48 hours'
+		WHERE id=$1 RETURNING expires_at`, id, u.Offset).Scan(&u.Expires); err != nil {
 		return r2Upload{}, err
 	}
 	return u, tx.Commit()
@@ -219,8 +222,11 @@ func (s *r2Service) transition(ctx context.Context, id, owner, target string) (r
 		if !time.Now().Before(u.Expires) {
 			return r2Upload{}, errR2Expired
 		}
-	case "cancelling":
-		if u.State == target || u.State == "cancelled" {
+		if err := verifyR2Manifest(ctx, tx, u); err != nil {
+			return r2Upload{}, err
+		}
+	case "canceling":
+		if u.State == target || u.State == "canceled" {
 			return u, nil
 		}
 		if u.State != "new" && u.State != "open" {
@@ -234,6 +240,34 @@ func (s *r2Service) transition(ctx context.Context, id, owner, target string) (r
 		return r2Upload{}, err
 	}
 	return u, tx.Commit()
+}
+
+func verifyR2Manifest(ctx context.Context, tx *sql.Tx, u r2Upload) error {
+	rows, err := tx.QueryContext(ctx, "SELECT digest FROM r2_parts WHERE upload=$1 AND etag IS NOT NULL ORDER BY number", u.ID)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = rows.Close() }()
+	manifest := sha256.New()
+	count := 0
+	for rows.Next() {
+		var digest string
+		if err := rows.Scan(&digest); err != nil {
+			return err
+		}
+		_, _ = manifest.Write([]byte(digest))
+		count++
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	expected, err := r2PartCount(u.Total, r2MaximumBytes)
+	var checksum [sha256.Size]byte
+	copy(checksum[:], manifest.Sum(nil))
+	if err != nil || count != expected || r2ValidatePartDigest(u.Manifest, checksum) != nil {
+		return errR2Conflict
+	}
+	return nil
 }
 
 func (s *r2Service) signal() {

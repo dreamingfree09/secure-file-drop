@@ -115,6 +115,7 @@ services:
       SFD_BACKUP_ENABLED: "false"
       SFD_CLEANUP_ENABLED: "false"
       SFD_ENV: production
+      GOMEMLIMIT: 384MiB
       SFD_COMMIT: ${R1_SOURCE_REVISION:?}
       SFD_LOG_FORMAT: json
     healthcheck:

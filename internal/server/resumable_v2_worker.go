@@ -9,6 +9,7 @@ import (
 	"hash"
 	"io"
 	"math"
+	"slices"
 	"time"
 
 	"github.com/minio/minio-go/v7"
@@ -90,6 +91,9 @@ func (s *r2Service) finish(ctx context.Context, tx *sql.Tx, u r2Upload) error {
 	if err != nil {
 		return err
 	}
+	if err := s.abortUnfinished(ctx, u, false); err != nil {
+		return err
+	}
 	body, err := s.store.read(ctx, u.key, info)
 	if err != nil {
 		return err
@@ -132,11 +136,15 @@ func (s *r2Service) cancelStoredParts(ctx context.Context, u r2Upload) error {
 	if !r2ObjectMissing(err) {
 		return errors.New("owned key is not confirmed absent")
 	}
+	return s.abortUnfinished(ctx, u, true)
+}
+
+func (s *r2Service) abortUnfinished(ctx context.Context, u r2Upload, includeKnown bool) error {
 	ids, err := s.store.uploads(ctx, u.key)
 	if err != nil {
 		return err
 	}
-	if u.provider != "" {
+	if includeKnown && u.provider != "" && !slices.Contains(ids, u.provider) {
 		ids = append(ids, u.provider)
 	}
 	for _, id := range ids {
@@ -154,7 +162,7 @@ func (s *r2Service) process(ctx context.Context) (bool, error) {
 	}
 	defer func() { _ = tx.Rollback() }()
 	u, err := scanR2Upload(tx.QueryRowContext(ctx, "SELECT "+r2Fields+` FROM r2_uploads
-		WHERE next_attempt <= now() AND (state IN ('new','finalizing','cancelling') OR (state='open' AND expires_at<=now()))
+		WHERE next_attempt <= now() AND (state IN ('new','finalizing','canceling') OR (state='open' AND expires_at<=now()))
 		ORDER BY next_attempt, id LIMIT 1 FOR UPDATE SKIP LOCKED`))
 	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
@@ -164,7 +172,7 @@ func (s *r2Service) process(ctx context.Context) (bool, error) {
 	}
 	if (u.State == "new" || u.State == "open") && !time.Now().Before(u.Expires) {
 		// Record cancellation intent independently of any provider operation.
-		_, err = tx.ExecContext(ctx, "UPDATE r2_uploads SET state='cancelling' WHERE id=$1", u.ID)
+		_, err = tx.ExecContext(ctx, "UPDATE r2_uploads SET state='canceling' WHERE id=$1", u.ID)
 	} else {
 		err = s.processState(ctx, tx, u)
 	}
@@ -200,7 +208,7 @@ func (s *r2Service) processState(ctx context.Context, tx *sql.Tx, u r2Upload) er
 	if err := s.cancelStoredParts(storeCtx, u); err != nil {
 		return err
 	}
-	_, err := tx.ExecContext(ctx, "UPDATE r2_uploads SET state='cancelled' WHERE id=$1", u.ID)
+	_, err := tx.ExecContext(ctx, "UPDATE r2_uploads SET state='canceled' WHERE id=$1", u.ID)
 	return err
 }
 
