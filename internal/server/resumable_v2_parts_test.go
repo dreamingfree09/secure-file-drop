@@ -62,7 +62,7 @@ func TestRorschachMultipartPartGeometryAndIntegrity(t *testing.T) {
 	partNumbers := make([]int, 3200)
 	etags := make([]string, 3200)
 	for i := range partNumbers {
-		partNumbers[i], etags[i] = i + 1, "private-s3-etag"
+		partNumbers[i], etags[i] = i+1, "private-s3-etag"
 	}
 	if err := r2ValidateCompletion(target, target, partNumbers, etags); err != nil {
 		t.Errorf("complete 3200-part ledger rejected: %v", err)
