@@ -58,7 +58,19 @@ async function main() {
       assert.equal(response.status(), 200);
       assert.equal(await preview.locator('img').count(), 0);
       await preview.locator('#download-form').waitFor({state:'visible'});
-      const download = preview.waitForEvent('download');
+      let formStatus = 'no POST response observed';
+      preview.on('response', response => {
+        if (new URL(response.url()).pathname === '/share-download') {
+          const headers = response.headers();
+          formStatus = 'POST returned ' + response.status() + ' (' +
+            (headers['content-type'] || 'unknown media') + ', attachment=' +
+            Boolean(headers['content-disposition']?.startsWith('attachment')) + ')';
+        }
+      });
+      const download = preview.waitForEvent('download', {timeout:20000}).catch(error => {
+        console.error('Preview-safe explicit download diagnostic:', formStatus);
+        throw error;
+      });
       await preview.getByRole('button', {name:'Download file'}).click();
       const savedFile = await download;
       assert.equal(await hash(await savedFile.path()), await hash(fixture));
