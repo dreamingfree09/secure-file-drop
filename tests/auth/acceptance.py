@@ -212,6 +212,25 @@ def main():
         check(target.scheme=='https' and target.hostname=='localhost' and target.port==server.server_port and target.username is None and target.password is None and target.path=='/download' and not target.fragment,'signed download target confined to owned HTTPS origin')
         req=urllib.request.Request(link)
         with anonymous.open(req,timeout=10) as r:check(r.status==200 and r.read()==data,'signed download bytes match')
+        def range_request(range_value, validator=None, url=target.geturl()):
+            headers={'Range':range_value,'Accept-Encoding':'gzip'}
+            if validator is not None:headers['If-Range']=validator
+            try:
+                with anonymous.open(urllib.request.Request(url,headers=headers),timeout=10) as response:
+                    return response.status,response.read(),response.headers
+            except urllib.error.HTTPError as error:return error.code,error.read(),error.headers
+        code,payload,headers=range_request('bytes=1-3')
+        check(code==206 and payload==data[1:4] and headers['Accept-Ranges']=='bytes' and
+              headers['Content-Range']==f'bytes 1-3/{len(data)}' and headers['Content-Length']=='3' and
+              headers.get('Content-Encoding') is None and headers.get('ETag') is not None,
+              'signed range is byte-exact and carries a stable uncompressed representation validator')
+        code,payload,headers=range_request('bytes=4-',headers['ETag'])
+        check(code==206 and payload==data[4:],'matching If-Range resumes at the exact offset')
+        code,payload,headers=range_request('bytes=1-3','"other"')
+        check(code==200 and payload==data and headers.get('Content-Range') is None,'stale If-Range returns the complete representation')
+        code,_,headers=range_request(f'bytes={len(data)}-')
+        check(code==416 and headers.get('Content-Range')==f'bytes */{len(data)}' and
+              range_request('bytes=0-1',url=target.geturl()+'x')[0]==401,'unsatisfiable range and tampered bearer are rejected')
         # New recipient delivery: mail contains only locator; sender gets separate access code.
         check(request('/invitations',{'file_id':fid,'recipient_email':'not-an-email','description':'safe'})[0]==400,'recipient delivery rejects malformed address')
         check(request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'a'*1001})[0]==400,'recipient delivery rejects excessive description')
