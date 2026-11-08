@@ -43,3 +43,7 @@ A lost upload COMMIT acknowledgement returns a server error. A fresh row-lock re
 ## Browser preview-safe sharing
 
 Browser uploads explicitly request share_page=true and TTL 86400 seconds. Their copied links lead to the generic /share page; the POST /share-download form invokes the already-reviewed byte-stream handler internally and does not redirect the bearer into a new network URL. Third-party unfurlers fetching the sharing page do not receive file bytes or metadata. The legacy GET /download endpoint and clients omitting share_page remain unchanged. This is not a replacement for access-code protection: possession of an ordinary signed link is sufficient for access until expiry. Per-link revocation and more flexible expiry policies remain future work.
+
+### HTTPS form Origin and referrer policy
+
+The generic share page deliberately uses an origin-only referrer policy (`strict-origin`), not `no-referrer`: the Fetch standard makes ordinary HTML form POST requests report `Origin: null` under `no-referrer`, which would be rejected by Secure File Drop's existing same-origin middleware. `strict-origin` sends only the scheme/host/port on HTTPS-to-HTTPS requests, **not the sensitive token query or URL path**. The self-hosted Caddy origin uses the same policy. The server still rejects unrelated/noncanonical origins; there is no bypass or CSRF relaxation. The signed bearer is submitted in the bounded POST body only.

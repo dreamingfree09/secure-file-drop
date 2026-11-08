@@ -22,9 +22,12 @@ func TestPreviewSafeShareFormAndLegacyCompatibility(t *testing.T) {
 			t.Errorf("generic landing contains private/preview element %q", forbidden)
 		}
 	}
-	if !strings.Contains(string(page), "action=\"/share-download\" method=\"post\"") {
-		t.Error("explicit form POST must be present")
+	if !strings.Contains(string(page), "action=\"/share-download\" method=\"post\"") ||
+		!strings.Contains(string(page), `name="referrer" content="strict-origin"`) {
+		t.Error("explicit form and origin-only referrer policy are required")
 	}
+	// No full signed URL or path may appear in Referrer. The document needs
+	// origin-only policy so HTML form POST retains its real Origin.
 	script, err := os.ReadFile("../../web/static/share.js")
 	if err != nil {
 		t.Fatal(err)

@@ -16,7 +16,10 @@ func sharePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "no-store, max-age=0")
 	w.Header().Set("Pragma", "no-cache")
-	w.Header().Set("Referrer-Policy", "no-referrer")
+	// A no-referrer document makes browser HTML form POST send Origin: null.
+	// strict-origin reveals only scheme/host/port (never path or bearer query)
+	// and preserves the existing fail-closed Origin check on form submission.
+	w.Header().Set("Referrer-Policy", "strict-origin")
 	w.Header().Set("X-Robots-Tag", "noindex, nofollow, noarchive")
 	w.Header().Set("Content-Security-Policy",
 		"default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'")
