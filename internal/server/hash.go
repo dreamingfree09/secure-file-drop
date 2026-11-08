@@ -113,13 +113,16 @@ func sha256FromMinioObject(ctx context.Context, mc *minio.Client, bucket, object
 
 type hashInput struct {
 	reader io.Reader
-	bytes  uint64
+	bytes  int64
 	eof    bool
 }
 
 func (input *hashInput) Read(buffer []byte) (int, error) {
 	n, err := input.reader.Read(buffer)
-	input.bytes += uint64(n)
+	if n < 0 || input.bytes > math.MaxInt64-int64(n) {
+		return 0, errors.New("invalid hash input size")
+	}
+	input.bytes += int64(n)
 	input.eof = err == io.EOF
 	return n, err
 }
@@ -130,7 +133,7 @@ func hashStream(ctx context.Context, input io.Reader) (hashToolOutput, error) {
 	if err != nil {
 		return hashToolOutput{}, err
 	}
-	if !source.eof || out.Bytes != source.bytes {
+	if !source.eof || out.Bytes > math.MaxInt64 || int64(out.Bytes) != source.bytes {
 		return hashToolOutput{}, errors.New("hash tool did not verify the complete input")
 	}
 	return out, nil

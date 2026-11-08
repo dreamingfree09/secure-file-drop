@@ -28,7 +28,10 @@ func TestHashStreamRequiresCompleteInput(t *testing.T) {
 			helper := filepath.Join(t.TempDir(), "fixture-hasher")
 			script := "#!/bin/sh\n" + tc.command + "\nprintf '%s\\n' " +
 				"'{\"algorithm\":\"sha256\",\"hash\":\"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad\",\"bytes\":" + tc.count + "}'\n"
-			if err := os.WriteFile(helper, []byte(script), 0700); err != nil {
+			if err := os.WriteFile(helper, []byte(script), 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Chmod(helper, 0700); err != nil {
 				t.Fatal(err)
 			}
 			t.Setenv("SFD_HASH_TOOL", helper)
