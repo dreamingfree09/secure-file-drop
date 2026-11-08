@@ -31,6 +31,7 @@ func TestHashStreamRequiresCompleteInput(t *testing.T) {
 			if err := os.WriteFile(helper, []byte(script), 0600); err != nil {
 				t.Fatal(err)
 			}
+			// #nosec G302 -- Synthetic helper inside t.TempDir needs owner-only execute permission.
 			if err := os.Chmod(helper, 0700); err != nil {
 				t.Fatal(err)
 			}
