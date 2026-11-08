@@ -93,12 +93,15 @@ def main():
                 if probe.returncode==0:return
                 time.sleep(.1)
             raise AssertionError('owned loopback SMTP readiness')
-        def start_backend(image=None):
-            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--stop-timeout','25','--mount','type=bind,source='+str(smtp_tool)+',target=/fixture/smtp-sink,readonly','--env-file',str(root/'backend.env'),'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
+        def start_backend(image=None, mail_enabled=True):
+            overrides=[] if mail_enabled else ['-e','SFD_AUTH_SMTP_FIXTURE=','-e','SFD_SMTP_HOST=']
+            b=docker('run','-d','--pull=never','--label',label+'='+name,'--network',network,'--stop-timeout','25','--mount','type=bind,source='+str(smtp_tool)+',target=/fixture/smtp-sink,readonly','--env-file',str(root/'backend.env'),*overrides,'-p','127.0.0.1::8080',image or args.backend_image);created.append(b);i=owned('container',b);ports=i['NetworkSettings'].get('Ports',{}).get('8080/tcp')
             if not ports:
                 if image is None:raise RuntimeError('candidate exited before loopback binding')
                 Relay.backend=0;return b
-            assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1';Relay.backend=int(ports[0]['HostPort']);start_mail(b);return b
+            assert len(ports)==1 and ports[0]['HostIp']=='127.0.0.1';Relay.backend=int(ports[0]['HostPort'])
+            if mail_enabled:start_mail(b)
+            return b
         backend=start_backend();thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
         trust=ssl.create_default_context(cafile=str(pathlib.Path(args.ca) if args.ca else cert));jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(NoRedirect(),urllib.request.ProxyHandler({}),urllib.request.HTTPSHandler(context=trust),urllib.request.HTTPCookieProcessor(jar))
         def request(path,body=None,method=None,headers=None,who=client):
@@ -257,11 +260,32 @@ def main():
         # Each phase uses a newly recreated owned backend, retaining the real
         # persisted sessions. Production rate limits are unchanged; this avoids
         # combining unrelated test cases into one limiter window.
-        def restart_phase(label_name):
+        def restart_phase(label_name, mail_enabled=True):
             nonlocal backend
             owned('container',backend);docker('rm','-f',backend);created.remove(backend)
-            backend=start_backend();ready()
+            backend=start_backend(mail_enabled=mail_enabled);ready()
             check(request('/me')[0]==200,label_name+' preserves the existing verified session')
+        result['stage']='manual-invitation-without-email'
+        restart_phase('manual invitation phase restart',mail_enabled=False)
+        check(request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid'})[0]==503,'email invitation fails closed with no provider')
+        check(request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','delivery':'manual'})[0]==400,'manual invitation rejects an email address')
+        code,body=request('/invitations',{'file_id':fid,'delivery':'manual','description':'synthetic manual note'})
+        check(code==201,'verified owner creates manual invitation without email')
+        manual=json.loads(body)
+        manual_url=urllib.parse.urlsplit(manual['invitation_url'])
+        manual_id=urllib.parse.parse_qs(manual_url.query)['id'][0]
+        check(manual['invitation_url']==origin+'/receive?id='+manual_id and
+              re.fullmatch(r'[0-9a-f-]{36}',manual_id) and 'recipient_email' not in manual and
+              manual['access_code'] not in manual['invitation_url'] and manual['downloads_allowed']==3,
+              'manual locator stays on the configured HTTPS origin and excludes the separate access code')
+        code,landing=request('/receive?'+manual_url.query,who=anonymous)
+        check(code==200 and b'/receive-download' in landing and data not in landing and
+              b'synthetic manual note' not in landing and manual['access_code'].encode() not in landing,
+              'manual landing exposes neither private metadata nor file bytes')
+        check(redeem('AAAA-AAAA-AAAA-AAAA',manual_id)[0]==401,'manual invitation rejects wrong code')
+        code,payload,_=redeem(manual['access_code'],manual_id)
+        check(code==200 and payload==data,'manual code unlocks the exact uploaded bytes')
+        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='2','email and manual invitations share the independent hourly sender ledger')
         # Independent real invitations exercise persisted expiry/retry state.
         # Only this uniquely owned synthetic namespace is edited; no live data.
         result['stage']='real-recipient-expiry-and-attempt-policy'
@@ -296,7 +320,7 @@ def main():
         missing=subprocess.run(['docker','exec',storage,'mc','stat','fixture/'+name+'/uploads/'+fid],capture_output=True).returncode!=0
         check(admin_status==204 and not admin_row and missing,'administrator deletes exact stored object and metadata')
         check(sql("SELECT count(*) FROM file_invitations WHERE file_id='"+fid+"';")=='0','file deletion invalidates its recipient invitations')
-        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='3','file deletion cannot erase accepted SMTP rate-limit history')
+        check(sql("SELECT count(*) FROM invitation_send_ledger WHERE sender_id=(SELECT id FROM users WHERE username='uploader');")=='4','file deletion cannot erase accepted invitation rate-limit history')
         check(request('/upload/resumable',{},method='POST')[0]==403,'environment identity cannot acquire unsupported UUID ownership')
         jar.clear();check(request('/login',{'username':'uploader','password':uploader_password})[0]==200,'lifecycle owner login')
         def create_file(filename,size):
@@ -310,7 +334,7 @@ def main():
         fid=create_file('storage-failure.txt',len(data));check(upload_bytes(fid,data)[0]==200,'real file exists before storage-failure deletion')
         # Seed only this disposable account's rate-ledger fixture so the
         # account-wide quota is tested independently of HTTP IP limiting.
-        sql("INSERT INTO invitation_send_ledger (id,sender_id) SELECT gen_random_uuid(),u.id FROM users u CROSS JOIN generate_series(1,9) WHERE u.username='uploader';")
+        sql("INSERT INTO invitation_send_ledger (id,sender_id) SELECT gen_random_uuid(),u.id FROM users u CROSS JOIN generate_series(1,8) WHERE u.username='uploader';")
         rate_status,rate_body=request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'limit-test'})
         check(rate_status==429 and b'invitation limit reached' in rate_body,'account hourly invitation quota survives deletion and blocks cross-file sends')
         before_delete=hashlib.sha256(sql("SELECT row_to_json(f)::text FROM files f WHERE id='"+fid+"';").encode()).hexdigest()
