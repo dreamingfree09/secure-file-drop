@@ -24,11 +24,12 @@ func TestBinaryDownloadCompression(t *testing.T) {
 	}
 	mux.HandleFunc("/download", attachment)
 	mux.HandleFunc("/receive-download", attachment)
+	mux.HandleFunc("/share-download", attachment)
 	srv := httptest.NewServer(CompressionMiddleware(mux))
 	t.Cleanup(srv.Close)
 	client := &http.Client{Transport: &http.Transport{DisableCompression: true}}
 	defer client.CloseIdleConnections()
-	for _, route := range []struct{ method, path string }{{http.MethodGet, "/download"}, {http.MethodPost, "/receive-download"}} {
+	for _, route := range []struct{ method, path string }{{http.MethodGet, "/download"}, {http.MethodPost, "/receive-download"}, {http.MethodPost, "/share-download"}} {
 		for _, encoding := range []string{"", "gzip"} {
 			req, err := http.NewRequest(route.method, srv.URL+route.path, strings.NewReader("id=synthetic&code=synthetic"))
 			if err != nil {
