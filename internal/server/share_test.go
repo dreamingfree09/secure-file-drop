@@ -66,7 +66,7 @@ func TestPreviewSafeShareFormAndLegacyCompatibility(t *testing.T) {
 		{"/share-download", "application/x-www-form-urlencoded", "token=abc&token=def", 400},
 		{"/share-download", "application/x-www-form-urlencoded", "token=abc&extra=evil", 400},
 		{"/share-download", "application/x-www-form-urlencoded", "token=", 400},
-		{"/share-download", "application/x-www-form-urlencoded", "token="+strings.Repeat("x", 8193), 400},
+		{"/share-download", "application/x-www-form-urlencoded", "token=" + strings.Repeat("x", 8193), 400},
 	}
 	for _, tc := range invalid {
 		got := post(tc.path, tc.contentType, tc.body)
