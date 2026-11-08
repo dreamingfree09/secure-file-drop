@@ -2,10 +2,10 @@
 
 This is the first **implemented source prerequisite** for a new, secure, durable
 100 GiB upload path. It does not enable the inherited TUS handler or change the
-10 MiB staging cap. The live \`/upload/resumable\` endpoint remains HTTP 501.
+10 MiB staging cap. The live `/upload/resumable` endpoint remains HTTP 501.
 
-The multipart primitive in \`internal/server/resumable_v2_parts.go\` accepts
-**exactly 100 GiB** (107374182400 bytes) as its hard upper bound and
+The multipart primitive in `internal/server/resumable_v2_parts.go` caps each file at
+**100 GiB** (107374182400 bytes) as its hard upper bound and
 **exactly 32 MiB** (33554432 bytes) per non-final part. A final part may be
 shorter. 100 GiB therefore requires 3200 consecutive S3 parts, below the
 standard 10000-part limit. Each part's declared offset and body length must
@@ -13,7 +13,7 @@ match a predictable plan; no sparse offsets, unbounded chunks, duplicate or
 missing completion records are accepted. The environment-configured file
 maximum still applies and may be lower than the hard bound.
 
-\`internal/server/resumable_v2_s3.go\` now contains usable private S3
+`internal/server/resumable_v2_s3.go` now contains usable private S3
 operations for initiate, transfer a streamed part with a SHA-256 body check,
 complete a fully validated ordered part list, and abort **only** an
 independently confirmed owned multipart session. No private S3 endpoint or
