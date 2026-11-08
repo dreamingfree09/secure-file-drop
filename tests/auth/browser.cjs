@@ -46,8 +46,15 @@ function check(value,name){ assert.ok(value,name); checks.push(name); }
    stage='real upload '+i;const uploaded=page.waitForResponse(r=>new URL(r.url()).pathname==='/upload'&&r.request().method()==='POST');
    await page.locator('#fileInput').setInputFiles({name:sample.name,mimeType:'text/plain',buffer:sample.data});check((await uploaded).status()===200,'actual multipart upload '+i);
    await page.waitForFunction(()=>document.getElementById('linkContainer').classList.contains('show'));
-   const link=await page.locator('#downloadLink').inputValue();check(new URL(link).origin===origin&&new URL(link).pathname==='/download','owned HTTPS signed link '+i);
-   const downloaded=await page.request.get(link);check(downloaded.status()===200&&(await downloaded.body()).equals(sample.data),'actual byte-equal download '+i);
+   const link=await page.locator('#downloadLink').inputValue(),shareURL=new URL(link);
+   const preview=await page.request.get(link),markup=await preview.body();
+   check(shareURL.origin===origin&&shareURL.pathname==='/share'&&preview.status()===200&&
+     markup.includes(Buffer.from('/share-download'))&&!markup.includes(Buffer.from(sample.name))&&
+     (sample.data.length===0||!markup.includes(sample.data)),'owned HTTPS preview-safe signed link '+i);
+   const downloaded=await page.request.post(origin+'/share-download',{
+     form:{token:shareURL.searchParams.get('token')},headers:{Origin:origin}
+   });
+   check(downloaded.status()===200&&(await downloaded.body()).equals(sample.data),'actual byte-equal explicit download '+i);
    const rows=await page.evaluate(async()=>(await fetch('/user/files')).json()),row=rows.find(x=>x.orig_name===sample.name);
    check(row&&row.sha256_hex===crypto.createHash('sha256').update(sample.data).digest('hex'),'native hash and owned browser metadata '+i);
    await page.getByRole('button',{name:'Copy Link',exact:true}).click();check(await page.evaluate(()=>window.fixtureCopied===document.getElementById('downloadLink').value),'copy control with isolated test clipboard '+i);
