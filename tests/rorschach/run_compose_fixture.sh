@@ -55,12 +55,69 @@ trap '"${compose[@]}" ps -a' ERR
 # Real signup continues to require its existing email verification.
 printf "INSERT INTO users (email, username, password_hash, email_verified, is_active) VALUES ('fixture@example.invalid', 'fixture', '%s', true, true);\n" "$user_hash" |
     "${compose[@]}" exec -T postgres sh -c 'export PGPASSWORD="$POSTGRES_PASSWORD"; exec psql -h 127.0.0.1 -U postgres -d sfd -q -v ON_ERROR_STOP=1'
+fixture_sql() {
+    "${compose[@]}" exec -T postgres sh -c 'export PGPASSWORD="$SFD_PG_APP_SECRET"; exec psql -h 127.0.0.1 -U sfd -d sfd -qAt -v ON_ERROR_STOP=1'
+}
 python3 -B tests/rorschach/https_acceptance.py create
+if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 13 ]]
+    export R1_RESUMABLE_MAX_BYTES=1073741824 R1_RESUMABLE_RESERVED_BYTES=2147483648
+    "${compose[@]}" stop proxy backend
+    "${compose[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 14 ]]
+    python3 -B tests/rorschach/https_acceptance.py reopen
+    echo "PASS: opt-in schema 13 to 14 upgrade preserved the existing ordinary user's verified file"
+    printf "INSERT INTO users (email, username, password_hash, email_verified, is_active,storage_quota_bytes) VALUES ('r2other@example.invalid','r2other','%s',true,true,NULL),('r2limited@example.invalid','r2limited','%s',true,true,1024);\n" "$user_hash" "$user_hash" | fixture_sql
+    python3 -B tests/rorschach/resumable_acceptance.py before
+fi
 "${compose[@]}" stop proxy backend storage postgres
 "${compose[@]}" start postgres storage
 "${compose[@]}" run --rm --no-deps provision verify
 "${compose[@]}" up -d --no-build --no-recreate --wait --wait-timeout 180 backend proxy
 python3 -B tests/rorschach/https_acceptance.py reopen
+if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
+    fixture_sql <<'SQL'
+UPDATE r2_uploads SET expires_at = now() - interval '1 second' WHERE orig_name = 'r2-expiry.bin';
+CREATE SEQUENCE r2_fixture_attempt;
+CREATE FUNCTION r2_fixture_fail_publish() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.orig_name = 'r2-restart.bin' THEN
+        PERFORM nextval('r2_fixture_attempt');
+        RAISE EXCEPTION 'owned resumable fixture interrupts publication';
+    END IF;
+    RETURN NEW;
+END
+$$;
+CREATE TRIGGER r2_fixture_fail_publish BEFORE INSERT ON files FOR EACH ROW EXECUTE FUNCTION r2_fixture_fail_publish();
+SQL
+    python3 -B tests/rorschach/resumable_acceptance.py submit-final
+    for attempt in $(seq 1 90); do
+        [[ "$(fixture_sql <<< 'SELECT is_called FROM r2_fixture_attempt')" != t ]] || break
+        sleep 1
+    done
+    [[ "$(fixture_sql <<< 'SELECT is_called FROM r2_fixture_attempt')" == t ]]
+    [[ "$(fixture_sql <<< "SELECT state FROM r2_uploads WHERE orig_name='r2-restart.bin'")" == finalizing ]]
+    [[ "$(fixture_sql <<< "SELECT count(*) FROM files WHERE orig_name='r2-restart.bin'")" == 0 ]]
+    python3 -B tests/rorschach/resumable_acceptance.py reject-cancel
+    "${compose[@]}" stop proxy backend
+    fixture_sql <<'SQL'
+DROP TRIGGER r2_fixture_fail_publish ON files;
+DROP FUNCTION r2_fixture_fail_publish();
+DROP SEQUENCE r2_fixture_attempt;
+SQL
+    "${compose[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+    python3 -B tests/rorschach/resumable_acceptance.py reconcile
+
+    mkdir -p "$root/browser-home/.pki/nssdb"
+    certutil -N --empty-password -d "sql:$root/browser-home/.pki/nssdb"
+    certutil -A -n "SFD owned HTTPS fixture" -t 'C,,' -i "$root/origin-ca.pem" -d "sql:$root/browser-home/.pki/nssdb"
+    dd if=/dev/urandom of="$root/r2-browser.bin" bs=1M count=32 status=none
+    printf 'browser restart fixture\n' >>"$root/r2-browser.bin"
+    mkdir "$root/different-file"
+    cp "$root/r2-browser.bin" "$root/different-file/r2-browser.bin"
+    printf 'X' | dd of="$root/different-file/r2-browser.bin" bs=1 seek=33554432 conv=notrunc status=none
+    node tests/rorschach/resumable_browser.cjs
+fi
 mkdir "$root/multipart"
 dd if=/dev/urandom of="$root/multipart/multipart.bin" bs=1M count=65 status=none
 chmod 0444 "$root/multipart/multipart.bin"
@@ -77,6 +134,7 @@ source_volume="${project}_objects"
 restore_project=sfd-rorschach-$(openssl rand -hex 6)
 restore_volume="${restore_project}_objects"
 restore=(docker compose --env-file /dev/null -f deploy/rorschach/compose.yml -p "$restore_project")
+trap '"${restore[@]}" ps -a' ERR
 restore_label="label=com.docker.compose.project=$restore_project"
 [[ "$restore_project" != "$project" && -z "$(docker ps -aq --filter "$restore_label")" &&
    -z "$(docker volume ls -q --filter "$restore_label")" && -z "$(docker network ls -q --filter "$restore_label")" ]]
@@ -104,5 +162,21 @@ docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-n
 "${restore[@]}" run --rm --no-deps provision verify
 "${restore[@]}" up -d --no-build --no-recreate --wait --wait-timeout 180 backend proxy
 python3 -B tests/rorschach/https_acceptance.py restore
+if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
+    docker_root=$(docker info --format '{{.DockerRootDir}}')
+    available=$(sudo df -B1 --output=avail "$docker_root" | tail -1)
+    [[ "$available" -ge 10737418240 ]]
+    echo "Hosted fixture free bytes before 1 GiB acceptance: $available"
+    python3 -B tests/rorschach/resumable_acceptance.py large 1
+    available=$(sudo df -B1 --output=avail "$docker_root" | tail -1)
+    if [[ "$available" -ge 34359738368 ]]; then
+        export R1_RESUMABLE_MAX_BYTES=10737418240 R1_RESUMABLE_RESERVED_BYTES=12884901888
+        "${restore[@]}" stop proxy backend
+        "${restore[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+        python3 -B tests/rorschach/resumable_acceptance.py large 10
+    else
+        echo "CAPACITY GATE: 10 GiB fixture unexecuted. Available $available bytes, requires 34359738368."
+    fi
+fi
 "${restore[@]}" stop
 echo "PASS: paired database/object restore into a new project; original disposable services remain stopped"

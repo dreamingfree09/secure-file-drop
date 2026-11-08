@@ -356,3 +356,7 @@ Initial candidate1b55b807 passes the new provider unit cases, but hosted CI41937
 ### 2026-11-05 — Issue53 exact-count enforcement
 
 The provider regression addition contributes20 Go pass events (two parent tests plus18 subcases). The unchanged full-stack baseline259 therefore becomes279; the portable fixture and its hosted workflow retain exact equality, zero skips/failures and every existing lineage/lifecycle/COMMIT counter. Update the workflow expectation in its own commit under AGENTS.md; do not disable or loosen any check. Exact-head artifacts must confirm the actual count. Browser27/backend124 and the additional isolated invitation UI14 remain separate.
+
+## 2026-11-08 Rorschach resumable transfer implementation
+
+PR #61 was integrated normally at `2d29a777b7398e805339445ada6b28d5daaea958` and its actual master checks passed. The exact PR #62 primitive received REVISE. The corrected [resumable worker](https://github.com/dreamingfree09/secure-file-drop/pull/63) preserves both histories and contains the opt-in schema 14 API, browser flow and isolated acceptance. See the [resumable runbook](RORSCHACH_RESUMABLE_V2.md). Independent review, host qualification and the full 100 GiB evidence remain rollout gates.

@@ -41,7 +41,13 @@ func (s *Server) UserQuotaHandler(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := sqlContext(r.Context())
 	defer cancel()
-	err = s.db.QueryRowContext(ctx, `
+	if s.resumable != nil {
+		err = s.db.QueryRowContext(ctx, "SELECT storage_quota_bytes FROM users WHERE id=$1", userID).Scan(&quota)
+		if err == nil {
+			usage, err = readStorageUsage(ctx, s.db, userID, true)
+		}
+	} else {
+		err = s.db.QueryRowContext(ctx, `
 		SELECT
 			u.storage_quota_bytes,
 			COALESCE(SUM(f.size_bytes), 0) as current_usage
@@ -50,6 +56,7 @@ func (s *Server) UserQuotaHandler(w http.ResponseWriter, r *http.Request) {
 		WHERE u.id = $1
 		GROUP BY u.storage_quota_bytes
 	`, userID).Scan(&quota, &usage)
+	}
 
 	if err != nil {
 		http.Error(w, "db error", http.StatusInternalServerError)

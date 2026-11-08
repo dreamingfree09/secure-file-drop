@@ -899,6 +899,37 @@
 
 
       <!-- A protected recipient invitation uses a separate one-time-displayed code. -->
+      <section class="main-card delivery-panel hidden" id="resumablePanel" aria-labelledby="resumableHeading">
+        <div class="delivery-header">
+          <h2 class="section-title" id="resumableHeading">Resumable upload</h2>
+          <p class="delivery-intro">Pause and continue a large transfer. After refreshing, select the same file to verify its committed chunks.</p>
+        </div>
+        <div class="delivery-form">
+          <div class="delivery-field delivery-field-full">
+            <label class="input-label" for="resumableSaved">Transfer</label>
+            <select id="resumableSaved"><option value="">New transfer</option></select>
+          </div>
+          <div class="delivery-field delivery-field-full">
+            <label class="input-label" for="resumableFile">File to upload</label>
+            <input type="file" id="resumableFile">
+          </div>
+          <div class="delivery-field-full">
+            <label class="input-label" for="resumableProgress">Committed progress</label>
+            <progress id="resumableProgress" max="100" value="0" style="width:100%"></progress>
+            <p id="resumableStatus" class="delivery-hint" role="status" aria-live="polite"></p>
+          </div>
+          <div class="delivery-field delivery-field-full">
+            <button type="button" class="btn btn-primary" id="resumableStart">Start or resume</button>
+            <button type="button" class="btn btn-secondary" id="resumablePause" disabled>Pause</button>
+            <button type="button" class="btn btn-secondary" id="resumableCancel" disabled>Cancel transfer</button>
+            <button type="button" class="btn btn-secondary" id="resumableLink" disabled>Create download link</button>
+          </div>
+          <div class="delivery-field delivery-field-full hidden" id="resumableLinkBox">
+            <label class="input-label" for="resumableLinkValue">Expiring download link</label>
+            <input id="resumableLinkValue" type="text" readonly>
+          </div>
+        </div>
+      </section>
       <section class="main-card delivery-panel" id="deliveryPanel" aria-labelledby="deliveryHeading">
         <div class="delivery-header">
           <span class="delivery-eyebrow">PROTECTED SHARING</span>
@@ -1047,6 +1078,7 @@ let logoutPending = false;
 const activeUploads = new Set();
 const activeRequests = new Set();
 function resetSessionUI() {
+  globalThis.SFDResumable?.reset();
   sessionGeneration++;
   isLoggedIn = false; isAdmin = false;
   for (const controller of activeRequests) controller.abort();
@@ -1081,13 +1113,20 @@ function resetSessionUI() {
 async function sessionFetch(input, options) {
   const generation = sessionGeneration;
   const controller = new AbortController();
+  const signal = options?.signal;
+  const abort = () => controller.abort();
+  if (signal?.aborted) abort();
+  else signal?.addEventListener('abort', abort, {once: true});
   activeRequests.add(controller);
   try {
     const response = await fetch(input, { ...options, signal: controller.signal });
     if (generation !== sessionGeneration) throw new DOMException('Session changed', 'AbortError');
     if (response.status === 401) resetSessionUI();
     return response;
-  } finally { activeRequests.delete(controller); }
+  } finally {
+    signal?.removeEventListener('abort', abort);
+    activeRequests.delete(controller);
+  }
 }
 let isLoggedIn = false;
 let isAdmin = false;
@@ -1104,6 +1143,7 @@ async function loadConfig() {
     const res = await fetch('/config');
     if (res.ok) {
       const config = await res.json();
+      globalThis.SFDResumable?.configure(config);
       maxUploadBytes = config.max_upload_bytes || 0;
     }
   } catch (err) {
@@ -1849,6 +1889,7 @@ let mySelection = new Set();
 let myFilesRendered = [];
 
 async function loadMyFiles() {
+  void globalThis.SFDResumable?.refresh();
   const generation = sessionGeneration;
   try {
     const res = await sessionFetch('/user/files');
@@ -2639,5 +2680,6 @@ function downloadQRCode() {
   link.href = canvas.toDataURL();
   link.click();
 }</script>
+<script src="/static/resumable-v2.js" defer></script>
 </body>
 </html>

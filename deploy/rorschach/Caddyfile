@@ -21,8 +21,20 @@ https://{$R1_HOST}:8443 {
 		Referrer-Policy "no-referrer"
 		-Server
 	}
-	request_body {
-		max_size 11534336
+	@resumable_part {
+		method PATCH
+		path /uploads/resumable/*
 	}
-	reverse_proxy backend:8080
+	handle @resumable_part {
+		request_body {
+			max_size 33554432
+		}
+		reverse_proxy backend:8080
+	}
+	handle {
+		request_body {
+			max_size 11534336
+		}
+		reverse_proxy backend:8080
+	}
 }

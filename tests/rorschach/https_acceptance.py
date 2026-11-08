@@ -18,10 +18,15 @@ CONTEXT = ssl.create_default_context(cafile=os.environ["R1_RUNTIME"] + "/origin-
 COOKIE = ""
 
 
-def request(method, path, status, body=None, content_type="application/json"):
-    conn = http.client.HTTPSConnection(HOST, PORT, context=CONTEXT, timeout=20)
+def connection(timeout=20):
+    conn = http.client.HTTPSConnection(HOST, PORT, context=CONTEXT, timeout=timeout)
     conn._create_connection = lambda _address, *args: socket.create_connection(("127.0.0.1", PORT), *args)
-    headers = {"Origin": f"https://{HOST}:{PORT}"}
+    return conn
+
+
+def request(method, path, status, body=None, content_type="application/json", headers=None):
+    conn = connection()
+    headers = {"Origin": f"https://{HOST}:{PORT}", **(headers or {})}
     if path.startswith("/download?"):
         headers["Accept-Encoding"] = "gzip"
     if body is not None:

@@ -104,7 +104,16 @@ func main() {
 
 	// Run migrations
 	log.Printf("service=backend msg=%q", "running_migrations")
-	if err := db.RunMigrations(dbConn); err != nil {
+	resumable, err := server.LoadResumableConfig()
+	if err != nil {
+		log.Printf("service=backend msg=%q err=%v", "invalid_resumable_configuration", err)
+		os.Exit(1)
+	}
+	migrate := db.RunMigrations
+	if resumable.MaxFileBytes > 0 {
+		migrate = db.RunResumableMigrations
+	}
+	if err := migrate(dbConn); err != nil {
 		log.Printf("service=backend msg=%q err=%v", "migration_failed", err)
 		os.Exit(1)
 	}
@@ -132,12 +141,13 @@ func main() {
 	defer backupMgr.Stop()
 
 	srv := server.New(server.Config{
-		Addr:     addr,
-		Build:    build,
-		Auth:     auth,
-		DB:       dbConn,
-		EmailSvc: emailSvc,
-		BaseURL:  baseURL,
+		Addr:      addr,
+		Build:     build,
+		Auth:      auth,
+		DB:        dbConn,
+		EmailSvc:  emailSvc,
+		BaseURL:   baseURL,
+		Resumable: resumable,
 	})
 
 	// Start the HTTP server in a background goroutine.

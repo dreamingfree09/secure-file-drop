@@ -57,6 +57,12 @@ func (erl *EndpointRateLimiter) Middleware(next http.Handler) http.Handler {
 			limiter = erl.authLimiter
 			limitType = "authentication"
 
+		case path == "/uploads/resumable" || strings.HasPrefix(path, "/uploads/resumable/"):
+			// A single file can require 3,200 requests. Session creation has
+			// a separate durable account limit and part buffers are bounded.
+			limiter = erl.apiLimiter
+			limitType = "api"
+
 		case strings.HasPrefix(path, "/upload"):
 			limiter = erl.uploadLimiter
 			limitType = "upload"
