@@ -1,6 +1,8 @@
 # Recipient delivery — separate access code (development draft)
 
 ## Workflow
+Choose **Copy the invitation link** in Protected Sharing to create an invitation without an email provider. Copy the HTTPS link and send it through a channel of your choice. Send the separately displayed access code through another channel. A link preview receives the generic code-entry page without the filename, description, code or file bytes. The optional description can accompany the link in your chosen channel. Manual creation still requires a verified account and shares the existing invitation quota with email delivery.
+
 Sign up using a real email address, verify it through configured SMTP, and sign in. Upload a file with the web interface and wait for a hashed/ready result. Under **Send a protected file invitation**, select that file, enter a destination email, an optional description (maximum 1000 UTF-8 bytes) and one-, 24- or 72-hour expiry. The recipient receives a link to the code-entry page; the sender sees a new access code **once**, after SMTP acceptance and database commit. Give the code to the intended recipient **separately**, preferably by telephone. There is no code-recovery endpoint.
 
 The invitation is a UUID link plus an independent 80-bit OS-random Base32 code. Only an HMAC-SHA256 digest of the code bound to the UUID is stored in the additive `file_invitations` table. The code is not included in an email, URL, server log or persisted browser storage. Do not share screenshots or copy the code to an untrusted clipboard. The recipient submits the code by POST; after eight incorrect attempts or three reserved downloads, the invitation can no longer download. The invitation and underlying file expiry are checked. A download slot is consumed even if the network connection subsequently fails.
@@ -9,6 +11,8 @@ The sender must own the verified file, must have an active verified account, and
 
 ## API
 `POST /invitations`: authenticated JSON `{"file_id":"UUID","recipient_email":"name@example.org","description":"Optional message","ttl_hours":24}`. HTTP 201 includes `access_code` (sender only), `expires_at`, `downloads_allowed`. This response is marked no-store.
+
+For manual delivery, send `"delivery":"manual"` and omit `recipient_email`. The same committed response includes `invitation_url` instead of `recipient_email`. The URL carries only the invitation locator. Missing email configuration still prevents email delivery and email-based registration. A separate approved onboarding flow is needed where email is unavailable.
 
 `GET /receive?id=UUID`: public HTML code-entry page, with no file bytes and no code. `POST /receive-download`: bounded `application/x-www-form-urlencoded` body with exactly `id` and `code`; binary attachment only after database-locked code/expiry/status/download-count verification. The code never travels as a query parameter.
 

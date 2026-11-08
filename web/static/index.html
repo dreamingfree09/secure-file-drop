@@ -903,7 +903,7 @@
         <div class="delivery-header">
           <span class="delivery-eyebrow">PROTECTED SHARING</span>
           <h2 class="section-title" id="deliveryHeading">Send a protected file invitation</h2>
-          <p class="delivery-intro">Email a download invitation, then share the access code separately. Your file stays private.</p>
+          <p class="delivery-intro">Copy or email a download invitation, then share the access code separately.</p>
         </div>
         <form class="delivery-form" id="deliveryForm" onsubmit="event.preventDefault(); sendProtectedInvitation();" novalidate>
           <div class="delivery-field delivery-field-full">
@@ -911,7 +911,14 @@
             <select id="deliveryFile" required aria-describedby="deliveryFileHint"><option value="">Choose an uploaded file</option></select>
             <p class="delivery-hint" id="deliveryFileHint">Choose one of your completed uploads.</p>
           </div>
-          <div class="delivery-field">
+          <div class="delivery-field delivery-field-full">
+            <label class="input-label" for="deliveryMethod">Invitation delivery</label>
+            <select id="deliveryMethod" onchange="updateDeliveryMethod()">
+              <option value="">Email the invitation</option>
+              <option value="manual">Copy the invitation link</option>
+            </select>
+          </div>
+          <div class="delivery-field" id="deliveryRecipientField">
             <label class="input-label" for="deliveryRecipient">Recipient’s email address</label>
             <input type="email" id="deliveryRecipient" autocomplete="off" maxlength="254" placeholder="recipient@example.com" required>
           </div>
@@ -925,15 +932,20 @@
             <p class="delivery-hint" id="deliveryDescriptionHint">Included in the invitation email. Keep private access codes out of this note.</p>
           </div>
           <div class="delivery-actions delivery-field-full">
-            <p class="delivery-hint">The recipient needs both the email and your separate access code.</p>
+            <p class="delivery-hint">The recipient needs both the invitation link and your separate access code.</p>
             <button class="btn btn-primary" type="submit" id="sendDeliveryButton">Email protected invitation</button>
           </div>
           <div class="delivery-field-full" id="deliveryAlert" role="status" aria-live="polite" aria-atomic="true"></div>
           <div class="delivery-code-box delivery-field-full" id="deliveryCodeBox" style="display:none;">
+            <div id="deliveryLinkField" hidden>
+              <label class="input-label" for="deliveryLink">Protected invitation link</label>
+              <input id="deliveryLink" type="text" readonly autocomplete="off">
+              <button class="btn btn-secondary" type="button" onclick="copyDeliveryValue('deliveryLink', 'Invitation link copied')">Copy invitation link</button>
+            </div>
             <strong>Access code — shown once</strong>
-            <p>Record this code now and give it to the recipient separately, for example by phone. It is never included in their email.</p>
+            <p>Save this code and give it to the recipient separately, for example by phone.</p>
             <input id="deliveryCode" type="text" readonly aria-label="Access code" autocomplete="off">
-            <button class="btn btn-secondary" type="button" onclick="copyDeliveryCode()">Copy access code</button>
+            <button class="btn btn-secondary" type="button" onclick="copyDeliveryValue('deliveryCode', 'Access code copied')">Copy access code</button>
             <div id="deliverySentSummary"></div>
           </div>
         </form>
@@ -1042,11 +1054,14 @@ function resetSessionUI() {
   for (const upload of activeUploads) upload.abort();
   activeUploads.clear();
   selectedFile = currentUpload = null; uploadQueue = []; queuedKeys.clear();
-  document.getElementById('deliveryCodeBox').style.display = 'none';
   // Any old request belongs to the invalidated session. A later login must
   // never inherit the previous account's disabled send button.
   const deliveryButton = document.getElementById('sendDeliveryButton');
   if (deliveryButton) deliveryButton.disabled = false;
+  const deliveryMethod = document.getElementById('deliveryMethod');
+  deliveryMethod.value = '';
+  deliveryMethod.disabled = false;
+  updateDeliveryMethod();
   uploadInProgress = false; allFiles = []; myFilesAll = []; myFilesRendered = []; mySelection.clear();
   updateDeliveryChoices();
   for (const id of ['username','password','regEmail','regUsername','regPassword','regPasswordConfirm','linkPassword','downloadLink','fileInput','deliveryRecipient','deliveryDescription','deliveryCode','deliveryFile']) {
@@ -1955,29 +1970,66 @@ async function invitationFailureMessage(response) {
   return 'The invitation could not be confirmed. Please contact the operator before trying again.';
 }
 
+function clearDeliveryReceipt() {
+  document.getElementById('deliveryCodeBox').style.display = 'none';
+  document.getElementById('deliveryCode').value = '';
+  document.getElementById('deliveryLink').value = '';
+  document.getElementById('deliveryLinkField').hidden = true;
+  document.getElementById('deliverySentSummary').textContent = '';
+}
+
+function updateDeliveryMethod() {
+  const manual = document.getElementById('deliveryMethod').value === 'manual';
+  document.getElementById('deliveryRecipientField').hidden = manual;
+  document.getElementById('deliveryRecipient').required = !manual;
+  document.getElementById('sendDeliveryButton').textContent = manual ? 'Create protected invitation' : 'Email protected invitation';
+  document.getElementById('deliveryDescriptionHint').textContent = manual
+    ? 'Share any description with the recipient separately from the access code.'
+    : 'Included in the invitation email. Keep private access codes out of this note.';
+  document.getElementById('deliveryAlert').textContent = '';
+  clearDeliveryReceipt();
+}
+
+function protectedInvitationURL(value) {
+  if (typeof value !== 'string') return '';
+  try {
+    const url = new URL(value);
+    if (url.protocol === 'https:' && url.origin === window.location.origin &&
+        !url.username && !url.password && !url.hash && url.pathname === '/receive' &&
+        url.searchParams.size === 1 && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/.test(url.searchParams.get('id'))) {
+      return url.href;
+    }
+  } catch {
+    return '';
+  }
+  return '';
+}
+
 async function sendProtectedInvitation() {
   if (!isLoggedIn) return;
   const generation = sessionGeneration;
   const fileID = document.getElementById('deliveryFile').value;
+  const method = document.getElementById('deliveryMethod');
+  const manual = method.value === 'manual';
   const email = document.getElementById('deliveryRecipient').value.trim();
   const description = document.getElementById('deliveryDescription').value.trim();
   const alert = document.getElementById('deliveryAlert');
   const btn = document.getElementById('sendDeliveryButton');
-  document.getElementById('deliveryCodeBox').style.display = 'none';
-  document.getElementById('deliveryCode').value = '';
-  document.getElementById('deliverySentSummary').textContent = '';
-  if (!fileID || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || new TextEncoder().encode(description).length > 1000) {
-    showAlert(alert, 'Choose a verified upload, enter a valid recipient email and use a description under 1000 bytes.', 'error');
+  clearDeliveryReceipt();
+  if (!fileID || (!manual && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) || new TextEncoder().encode(description).length > 1000) {
+    showAlert(alert, manual ? 'Choose a verified upload and use a description of up to 1000 bytes.' :
+      'Choose a verified upload, enter a valid recipient email and use a description under 1000 bytes.', 'error');
     return;
   }
   btn.disabled = true;
+  method.disabled = true;
   let failureMessage = 'The invitation could not be confirmed. Check your connection before trying again.';
   try {
     const res = await sessionFetch('/invitations', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        file_id: fileID, recipient_email: email, description,
+        file_id: fileID, ...(manual ? {delivery: 'manual'} : {recipient_email: email}), description,
         ttl_hours: Number(document.getElementById('deliveryTTL').value)
       })
     });
@@ -1988,28 +2040,36 @@ async function sendProtectedInvitation() {
     }
     const receipt = await res.json();
     if (!isLoggedIn || generation !== sessionGeneration) return;
+    const link = manual ? protectedInvitationURL(receipt?.invitation_url) : '';
     if (!receipt || !/^[A-Z2-7]{4}(?:-[A-Z2-7]{4}){3}$/.test(receipt.access_code) ||
-        typeof receipt.recipient_email !== 'string' || !Number.isFinite(Date.parse(receipt.expires_at)) ||
+        (manual ? !link : typeof receipt.recipient_email !== 'string') || !Number.isFinite(Date.parse(receipt.expires_at)) ||
         receipt.downloads_allowed !== 3) throw new Error('invalid_invitation_receipt');
+    document.getElementById('deliveryLink').value = link;
+    document.getElementById('deliveryLinkField').hidden = !manual;
     document.getElementById('deliveryCode').value = receipt.access_code;
     document.getElementById('deliverySentSummary').textContent =
-      'Invitation accepted for ' + receipt.recipient_email +
+      (manual ? 'Protected invitation created' : 'Invitation accepted for ' + receipt.recipient_email) +
       '. Expires ' + new Date(receipt.expires_at).toLocaleString() +
       '. Maximum ' + receipt.downloads_allowed + ' downloads.';
     document.getElementById('deliveryCodeBox').style.display = 'block';
-    showAlert(alert, 'Mail server accepted the invitation. Save the code now; it cannot be recovered.', 'success');
+    showAlert(alert, manual ? 'Send the link and the access code separately. Save the code now; it cannot be recovered.' :
+      'Mail server accepted the invitation. Save the code now; it cannot be recovered.', 'success');
   } catch (err) {
     if (isLoggedIn && generation === sessionGeneration) {
       showAlert(alert, failureMessage, 'error');
     }
   } finally {
-    if (sessionGeneration === generation) btn.disabled = false;
+    if (sessionGeneration === generation) {
+      btn.disabled = false;
+      method.disabled = false;
+    }
   }
 }
 
-async function copyDeliveryCode() {
-  const field = document.getElementById('deliveryCode');
-  if (!field.value) return;
+async function copyDeliveryValue(id, message) {
+  const generation = sessionGeneration;
+  const field = document.getElementById(id);
+  if (!isLoggedIn || !field.value) return;
   try {
     if (navigator.clipboard && navigator.clipboard.writeText) {
       await navigator.clipboard.writeText(field.value);
@@ -2017,9 +2077,13 @@ async function copyDeliveryCode() {
       field.select();
       if (!document.execCommand('copy')) throw new Error('clipboard unavailable');
     }
-    showAlert(document.getElementById('deliveryAlert'), 'Access code copied. Share it separately from the invitation email.', 'success');
+    if (generation === sessionGeneration) {
+      showAlert(document.getElementById('deliveryAlert'), message + '. Share the link and code separately.', 'success');
+    }
   } catch (_) {
-    showAlert(document.getElementById('deliveryAlert'), 'Clipboard access unavailable; record the displayed code manually.', 'error');
+    if (generation === sessionGeneration) {
+      showAlert(document.getElementById('deliveryAlert'), 'Clipboard access unavailable. Copy the displayed value manually.', 'error');
+    }
   }
 }
 
