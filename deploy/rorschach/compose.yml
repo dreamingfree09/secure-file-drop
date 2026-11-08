@@ -1,0 +1,163 @@
+# Separate Rorschach candidate. Never combine with the development Compose file.
+x-restricted: &restricted
+  platform: linux/amd64
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  read_only: true
+  logging:
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  postgres:
+    <<: *restricted
+    image: postgres:16.15-alpine@sha256:ac838714b7d794185a866e5a6b479b954e7d8a070568aa0acac6fe07c3070bf5
+    user: "70:70"
+    stop_grace_period: 60s
+    environment:
+      POSTGRES_DB: sfd
+      POSTGRES_PASSWORD: ${R1_PG_ADMIN:?}
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      SFD_PG_APP_SECRET: ${R1_PG_APP:?}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d sfd"]
+      interval: 3s
+      timeout: 2s
+      retries: 30
+    networks: [database]
+    volumes:
+      - postgres:/var/lib/postgresql/data
+      - ./postgres-init.sh:/docker-entrypoint-initdb.d/10-sfd.sh:ro
+    tmpfs:
+      - /var/run/postgresql:uid=70,gid=70,mode=0770,size=16m
+      - /tmp:mode=1777,size=32m
+
+  storage:
+    <<: *restricted
+    image: rustfs/rustfs:1.0.4@sha256:e287e99762a4a3e7b706526e01f2ff755f67db165e9be9f6b907adc6fb6d6ee1
+    user: "10001:10001"
+    entrypoint: ["/usr/bin/rustfs"]
+    command: ["/data"]
+    stop_grace_period: 60s
+    environment:
+      RUSTFS_ACCESS_KEY: ${R1_S3_ROOT_KEY:?}
+      RUSTFS_SECRET_KEY: ${R1_S3_ROOT_SECRET:?}
+      RUSTFS_ADDRESS: "0.0.0.0:9000"
+      RUSTFS_TLS_PATH: /tls
+      RUSTFS_CONSOLE_ENABLE: "false"
+      RUSTFS_FTP_ENABLE: "false"
+      RUSTFS_FTPS_ENABLE: "false"
+      RUSTFS_SFTP_ENABLE: "false"
+      RUSTFS_WEBDAV_ENABLE: "false"
+      RUSTFS_OBS_LOG_DIRECTORY: ""
+    networks: [objects]
+    volumes:
+      - objects:/data
+      - ${R1_RUNTIME:?}/storage-tls:/tls:ro
+    tmpfs:
+      - /tmp:mode=1777,size=32m
+
+  provision:
+    <<: *restricted
+    profiles: [initialize]
+    build:
+      context: ../..
+      dockerfile: deploy/rorschach/Dockerfile.provision
+    user: "10001:10001"
+    environment:
+      HOME: /tmp
+      XDG_CONFIG_HOME: /tmp
+      R1_S3_ROOT_KEY: ${R1_S3_ROOT_KEY:?}
+      R1_S3_ROOT_SECRET: ${R1_S3_ROOT_SECRET:?}
+      R1_S3_APP_KEY: ${R1_S3_APP_KEY:?}
+      R1_S3_APP_SECRET: ${R1_S3_APP_SECRET:?}
+    networks: [objects]
+    volumes:
+      - ${R1_RUNTIME:?}/storage-ca.pem:/trust/storage-ca.pem:ro
+    tmpfs:
+      - /tmp:uid=10001,gid=10001,mode=0700,size=32m
+
+  backend:
+    <<: *restricted
+    build:
+      context: ../..
+      dockerfile: Dockerfile.backend
+      args:
+        SFD_BUILD_BASE: golang:1.26.10-alpine3.24@sha256:2173d702003b1a8d17b844191acaeb36e94de46f6cabf2cb27370e151bbce5aa
+        SFD_RUNTIME_BASE: alpine:3.24@sha256:0f49f331d9212aff11b932863be4eb01cdf962969aa86dab7d1ee21ac6f5f52b
+    user: "10001:10001"
+    stop_grace_period: 25s
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgres://sfd:${R1_PG_APP:?}@postgres:5432/sfd?sslmode=disable
+      SFD_PUBLIC_BASE_URL: https://${R1_HOST:?}${R1_PUBLIC_PORT_SUFFIX:-}
+      SFD_BASE_URL: https://${R1_HOST:?}${R1_PUBLIC_PORT_SUFFIX:-}
+      SFD_S3_ENDPOINT: https://storage:9000
+      SFD_S3_BUCKET_LOOKUP: path
+      SFD_S3_PRIVACY_MODE: bucket-policy
+      SFD_BUCKET: sfd-files
+      SFD_S3_ACCESS_KEY: ${R1_S3_APP_KEY:?}
+      SFD_S3_SECRET_KEY: ${R1_S3_APP_SECRET:?}
+      SSL_CERT_FILE: /trust/storage-ca.pem
+      SFD_ADMIN_USER: admin
+      SFD_ADMIN_PASS: ${R1_ADMIN_HASH:?}
+      SFD_SESSION_SECRET: ${R1_SESSION_SECRET:?}
+      SFD_DOWNLOAD_SECRET: ${R1_DOWNLOAD_SECRET:?}
+      SFD_MAX_UPLOAD_BYTES: "10485760"
+      SFD_MAX_REQUEST_BYTES: "11534336"
+      SFD_BACKUP_ENABLED: "false"
+      SFD_CLEANUP_ENABLED: "false"
+      SFD_ENV: production
+      SFD_COMMIT: ${R1_SOURCE_REVISION:?}
+      SFD_LOG_FORMAT: json
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/ready"]
+      interval: 5s
+      timeout: 4s
+      retries: 12
+    networks: [database, objects, application]
+    volumes:
+      - ${R1_RUNTIME:?}/storage-ca.pem:/trust/storage-ca.pem:ro
+    tmpfs:
+      - /tmp:uid=10001,gid=10001,mode=0700,size=128m
+    mem_limit: 512m
+    pids_limit: 128
+
+  proxy:
+    <<: *restricted
+    image: caddy:2.11.9-alpine@sha256:fc9cbc100585871d18d4e451cca7021785c90a7006087427ae5ceb3e4efe6424
+    user: "10001:10001"
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+    environment:
+      R1_HOST: ${R1_HOST:?}
+    stop_grace_period: 30s
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${R1_ORIGIN_PORT:?}:8443/tcp"
+    networks: [application, ingress]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${R1_RUNTIME:?}/origin-tls:/tls:ro
+    tmpfs:
+      - /data:uid=10001,gid=10001,mode=0700,size=16m
+      - /config:uid=10001,gid=10001,mode=0700,size=16m
+
+networks:
+  database:
+    internal: true
+  objects:
+    internal: true
+  application:
+    internal: true
+  ingress: {}
+
+volumes:
+  postgres: {}
+  objects: {}

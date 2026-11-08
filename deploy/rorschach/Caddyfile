@@ -1,0 +1,28 @@
+{
+	admin off
+	auto_https off
+	servers {
+		protocols h1 h2
+		strict_sni_host
+		timeouts {
+			read_header 10s
+			read_body 5m
+			write 32m
+			idle 60s
+		}
+	}
+}
+
+https://{$R1_HOST}:8443 {
+	tls /tls/fullchain.pem /tls/key.pem
+	header {
+		Strict-Transport-Security "max-age=86400"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+	request_body {
+		max_size 11534336
+	}
+	reverse_proxy backend:8080
+}

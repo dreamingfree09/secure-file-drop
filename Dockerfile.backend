@@ -1,4 +1,6 @@
-FROM golang:1.26.10-alpine3.24 AS build
+ARG SFD_BUILD_BASE=golang:1.26.10-alpine3.24
+ARG SFD_RUNTIME_BASE=alpine:3.24
+FROM ${SFD_BUILD_BASE} AS build
 WORKDIR /src
 
 # Copy module files first for better Docker layer caching
@@ -19,7 +21,7 @@ RUN gcc -O2 -s -I./native -o /out/sfd-hash ./native/sfd_hash.c ./native/sfd_hash
 # Build a static binary
 RUN CGO_ENABLED=0 GOOS=linux go build -o /out/backend ./cmd/backend
 
-FROM alpine:3.24
+FROM ${SFD_RUNTIME_BASE}
 WORKDIR /app
 
 # Install PostgreSQL client tools for pg_dump (required for backups)
