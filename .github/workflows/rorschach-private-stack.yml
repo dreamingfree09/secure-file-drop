@@ -1,0 +1,26 @@
+name: Rorschach private stack
+on:
+  push:
+    branches: [codex/rorschach-private-stack-20261108]
+  pull_request:
+    paths:
+      - '.github/workflows/rorschach-private-stack.yml'
+      - 'deploy/rorschach/**'
+      - 'tests/rorschach/**'
+      - 'Dockerfile.backend'
+permissions:
+  contents: read
+concurrency:
+  group: rorschach-private-stack-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  private-stack:
+    name: Disposable PostgreSQL, private S3 and verified HTTPS
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Effective Compose and preservation guards
+        run: python3 -B -m unittest discover -s tests/rorschach -p test_stack.py -v
+      - name: Strict TLS and persisted-byte acceptance
+        run: bash tests/rorschach/run_compose_fixture.sh
