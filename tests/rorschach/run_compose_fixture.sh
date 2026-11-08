@@ -61,5 +61,48 @@ python3 -B tests/rorschach/https_acceptance.py create
 "${compose[@]}" run --rm --no-deps provision verify
 "${compose[@]}" up -d --no-build --no-recreate --wait --wait-timeout 180 backend proxy
 python3 -B tests/rorschach/https_acceptance.py reopen
-"${compose[@]}" stop
-echo "PASS: disposable stack stopped; runner owns its containers, data and fixtures"
+mkdir "$root/multipart"
+dd if=/dev/urandom of="$root/multipart/multipart.bin" bs=1M count=65 status=none
+chmod 0444 "$root/multipart/multipart.bin"
+sudo chown 10001:10001 "$root/multipart"
+"${compose[@]}" run --rm --no-deps --volume "$root/multipart:/fixture:rw" provision verify-multipart
+
+# Consistent checkpoint: quiesce ingress, backend and object storage before capture.
+"${compose[@]}" stop proxy backend storage
+"${compose[@]}" exec -T postgres sh -c 'export PGPASSWORD="$SFD_PG_APP_SECRET"; exec pg_dump -h 127.0.0.1 -U sfd -d sfd -Fc' >"$root/postgres.dump"
+"${compose[@]}" stop postgres
+source_storage=$("${compose[@]}" ps -aq storage)
+storage_image=$(docker inspect --format '{{.Image}}' "$source_storage")
+source_volume="${project}_objects"
+restore_project=sfd-rorschach-$(openssl rand -hex 6)
+restore_volume="${restore_project}_objects"
+restore=(docker compose --env-file /dev/null -f deploy/rorschach/compose.yml -p "$restore_project")
+restore_label="label=com.docker.compose.project=$restore_project"
+[[ "$restore_project" != "$project" && -z "$(docker ps -aq --filter "$restore_label")" &&
+   -z "$(docker volume ls -q --filter "$restore_label")" && -z "$(docker network ls -q --filter "$restore_label")" ]]
+[[ "$(docker volume inspect --format '{{index .Labels "com.docker.compose.project"}}' "$source_volume")" == "$project" &&
+   "$(docker inspect --format '{{.State.Running}}' "$source_storage")" == false ]]
+docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+    --user 10001:10001 --entrypoint tar --mount "type=volume,source=$source_volume,target=/data,readonly" \
+    "$storage_image" -C /data -cf - . >"$root/objects.tar"
+sha256sum "$root/postgres.dump" "$root/objects.tar" >"$root/checkpoint.sha256"
+sha256sum --check --status "$root/checkpoint.sha256"
+
+# Restore into a separate project with new volumes using the identical local images.
+for service in backend provision; do
+    image_id=$(docker image inspect --format '{{.Id}}' "$project-$service")
+    docker tag "$image_id" "$restore_project-$service"
+done
+"${restore[@]}" create --no-build storage
+[[ "$(docker volume inspect --format '{{index .Labels "com.docker.compose.project"}}' "$restore_volume")" == "$restore_project" ]]
+docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+    --user 10001:10001 --entrypoint tar --mount "type=volume,source=$restore_volume,target=/data" \
+    "$storage_image" -C /data -xf - <"$root/objects.tar"
+"${restore[@]}" up -d --wait --wait-timeout 60 postgres
+"${restore[@]}" exec -T postgres sh -c 'export PGPASSWORD="$SFD_PG_APP_SECRET"; exec pg_restore --exit-on-error -h 127.0.0.1 -U sfd -d sfd' <"$root/postgres.dump"
+"${restore[@]}" start storage
+"${restore[@]}" run --rm --no-deps provision verify
+"${restore[@]}" up -d --no-build --no-recreate --wait --wait-timeout 180 backend proxy
+python3 -B tests/rorschach/https_acceptance.py restore
+"${restore[@]}" stop
+echo "PASS: paired database/object restore into a new project; original disposable services remain stopped"

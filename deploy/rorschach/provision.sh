@@ -34,12 +34,27 @@ case "${1:-}" in
         rc_checked admin policy create root/ sfd-runtime /tmp/app-policy.json || fail 'Scoped policy creation failed'
         rc_checked admin policy attach root/ sfd-runtime --user "$R1_S3_APP_KEY" || fail 'Scoped policy attachment failed'
         ;;
-    verify) ;;
-    *) fail 'Expected initialize or verify' ;;
+    verify|verify-multipart) ;;
+    *) fail 'Unknown provisioner operation' ;;
 esac
 rc_checked alias set app "$endpoint" "$R1_S3_APP_KEY" "$R1_S3_APP_SECRET" || fail 'Application authentication failed'
 
 object="rorschach-probe-$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
+if [ "$1" = verify-multipart ]; then
+    # The version-pinned rc client uses multipart above 64 MiB.
+    payload=/fixture/multipart.bin
+    [ "$(wc -c <"$payload")" -eq 68157440 ] || fail 'Unexpected disposable multipart fixture size'
+    expected=$(sha256sum <"$payload")
+    rc_checked cp "$payload" "app/$bucket/$object" || fail 'Signed multipart write failed'
+    trap 'rc_checked rm "app/$bucket/$object" || printf "%s\n" "Signed multipart cleanup failed" >&2' EXIT
+    trap 'exit 1' HUP INT TERM
+    rc_checked cp "app/$bucket/$object" /fixture/multipart-readback.bin || fail 'Signed multipart readback failed'
+    [ "$(sha256sum </fixture/multipart-readback.bin)" = "$expected" ] || fail 'Signed multipart hash mismatch'
+    trap - EXIT HUP INT TERM
+    rc_checked rm "app/$bucket/$object" || fail 'Signed multipart cleanup failed'
+    printf '%s\n' 'PASS: signed 65 MiB multipart write, exact SHA-256 and owned canary removal'
+    exit 0
+fi
 printf 'Secure File Drop Rorschach storage attestation\n' >/tmp/payload
 rc_checked cp /tmp/payload "app/$bucket/$object" || fail 'Signed canary write failed'
 # After a positively acknowledged create, remove only this invocation's random key.
