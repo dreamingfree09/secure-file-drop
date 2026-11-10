@@ -14,6 +14,8 @@ JSON requests/responses are used except multipart uploads, file downloads and ge
 | GET /files | Session | Up to 100 of the current principal's files, newest first |
 | POST /upload?id=UUID | Owner or administrator | multipart field file; synchronous store/hash, returns hashed |
 | POST /links | Owner | id, ttl_seconds, optional share_page=true; legacy raw bearer URL by default or generic sharing-page URL when requested; **NOT code protected** |
+| GET /managed-links?file_id=UUID | Owner (schema15 opt-in) | Returns up to 50 owner-scoped managed-link metadata records; no bearer tokens |
+| DELETE /managed-links/{link_id} | Owner (schema15 opt-in) | Revokes one owning user's link, idempotent HTTP 204; unavailable IDs 404 |
 | POST /invitations | Verified file owner | file_id, recipient_email, description?, ttl_hours?; emails protected invitation; returns one-time-displayed access_code |
 | GET /receive?id=UUID | Public | Renders code-entry form; does not reveal file bytes |
 | POST /receive-download | Public with UUID + code in POST body | Code-gated attachment; max eight incorrect attempts, three download reservations and finite expiry |
@@ -47,3 +49,5 @@ Browser uploads explicitly request share_page=true and TTL 86400 seconds. Their 
 ### HTTPS form Origin and referrer policy
 
 The generic share page deliberately uses an origin-only referrer policy (`strict-origin`), not `no-referrer`: the Fetch standard makes ordinary HTML form POST requests report `Origin: null` under `no-referrer`, which would be rejected by Secure File Drop's existing same-origin middleware. `strict-origin` sends only the scheme/host/port on HTTPS-to-HTTPS requests, **not the sensitive token query or URL path**. The self-hosted Caddy origin uses the same policy. The server still rejects unrelated/noncanonical origins; there is no bypass or CSRF relaxation. The signed bearer is submitted in the bounded POST body only.
+
+Managed-link identity/revocation is an opt-in schema15 Rorschach feature. When enabled, `/links` includes a durable `link_id` and every new signed whole/ranged download verifies the non-revoked ledger before object access. Older stateless links keep their original expiry and are not retroactively individually revocable. See [managed sharing](MANAGED_SHARING.md). This implementation is not evidence of real Rorschach installation or 100 GiB download acceptance.
