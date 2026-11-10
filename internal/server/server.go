@@ -34,13 +34,13 @@ type BuildInfo struct {
 // EmailSvc is optional; when nil, a service is constructed from env.
 // BaseURL is the publicly reachable URL used in emails and link generation.
 type Config struct {
-	Addr      string // e.g. ":8080"
-	Build     BuildInfo
-	Auth      AuthConfig
-	DB        *sql.DB
-	EmailSvc  *EmailService
-	BaseURL   string // Base URL for email links (e.g. "http://localhost:8080")
-	Resumable ResumableConfig
+	Addr         string // e.g. ":8080"
+	Build        BuildInfo
+	Auth         AuthConfig
+	DB           *sql.DB
+	EmailSvc     *EmailService
+	BaseURL      string // Base URL for email links (e.g. "http://localhost:8080")
+	Resumable    ResumableConfig
 	ManagedLinks bool // Opt-in only after schema15 and private Rorschach gates.
 }
 

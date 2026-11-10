@@ -149,13 +149,13 @@ func main() {
 	defer backupMgr.Stop()
 
 	srv := server.New(server.Config{
-		Addr:      addr,
-		Build:     build,
-		Auth:      auth,
-		DB:        dbConn,
-		EmailSvc:  emailSvc,
-		BaseURL:   baseURL,
-		Resumable: resumable,
+		Addr:         addr,
+		Build:        build,
+		Auth:         auth,
+		DB:           dbConn,
+		EmailSvc:     emailSvc,
+		BaseURL:      baseURL,
+		Resumable:    resumable,
 		ManagedLinks: managedLinks,
 	})
 
