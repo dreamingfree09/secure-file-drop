@@ -17,11 +17,12 @@ REVOKED = ROOT / "managed-fixture-revoked-link"
 
 def login(username):
     https.COOKIE = ""
-    body, headers = https.json_request("POST", "/login", 200, {
+    _, headers = https.json_request("POST", "/login", 200, {
         "username": username, "password": os.environ["SFD_R1_FIXTURE_USER_PASSWORD"]
     })
-    assert json.loads(body)["is_admin"] is False
     https.COOKIE = headers["Set-Cookie"].split(";", 1)[0]
+    identity, _ = https.request("GET", "/me", 200)
+    assert json.loads(identity)["is_admin"] is False
 
 
 def raw_request(method, target, code, body=None):
