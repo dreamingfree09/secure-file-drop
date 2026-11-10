@@ -31,6 +31,7 @@ type createLinkReq struct {
 type createLinkResp struct {
 	URL       string `json:"url"`
 	ExpiresAt string `json:"expires_at"`
+	LinkID    string `json:"link_id,omitempty"`
 }
 
 // clampTTLSeconds enforces TTL constraints for download links.
@@ -118,7 +119,16 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 		ttl := clampTTLSeconds(req.TTLSeconds)
 		expiresAt := time.Now().UTC().Add(time.Duration(ttl) * time.Second)
 
-		token, err := signDownloadToken(id.String(), expiresAt)
+		var linkID uuid.UUID
+		var linkIdentity string
+		var token string
+		if cfg.ManagedLinks {
+			linkID = uuid.New()
+			linkIdentity = linkID.String()
+			token, err = signManagedDownloadToken(id.String(), linkIdentity, expiresAt)
+		} else {
+			token, err = signDownloadToken(id.String(), expiresAt)
+		}
 		if err != nil {
 			// If secret missing/misconfigured, this is a server error.
 			if err == errDownloadSecretMissing {
@@ -140,6 +150,18 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 			base = requestOrigin(r)
 		}
 
+		// Persist before returning the signed bearer. Unknown COMMIT outcomes
+		// may leave undisclosed links, never an unrecorded disclosed token.
+		if cfg.ManagedLinks {
+			_, err = db.ExecContext(ctx, `INSERT INTO managed_share_links
+				(id,file_id,owner_id,token_sha256,expires_at)
+				VALUES ($1,$2,$3,$4,$5)`, linkID, id, userID, managedLinkDigest(token), expiresAt)
+			if err != nil {
+				http.Error(w, "managed sharing temporarily unavailable", http.StatusServiceUnavailable)
+				return
+			}
+		}
+
 		url := base + shareLinkPath(req.SharePage) + "?token=" + token
 
 		w.Header().Set("Content-Type", "application/json")
@@ -147,6 +169,7 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 		_ = json.NewEncoder(w).Encode(createLinkResp{
 			URL:       url,
 			ExpiresAt: expiresAt.Format(time.RFC3339),
+			LinkID:    linkIdentity,
 		})
 	}))
 }
