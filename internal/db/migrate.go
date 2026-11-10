@@ -19,15 +19,20 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-type legacyMigrationSource struct{ embed.FS }
+type boundedMigrationSource struct {
+	embed.FS
+	maxVersion uint
+}
 
-func (source legacyMigrationSource) ReadDir(name string) ([]fs.DirEntry, error) {
+func (source boundedMigrationSource) ReadDir(name string) ([]fs.DirEntry, error) {
 	entries, err := source.FS.ReadDir(name)
 	visible := entries[:0]
 	for _, entry := range entries {
-		if !strings.HasPrefix(entry.Name(), "000014_") {
-			visible = append(visible, entry)
+		if (source.maxVersion < 14 && strings.HasPrefix(entry.Name(), "000014_")) ||
+			(source.maxVersion < 15 && strings.HasPrefix(entry.Name(), "000015_")) {
+			continue
 		}
+		visible = append(visible, entry)
 	}
 	return visible, err
 }
@@ -42,12 +47,18 @@ func RunResumableMigrations(db *sql.DB) error {
 	return runMigrations(db, 14)
 }
 
+// RunManagedShareMigrations installs the separately gated durable link ledger.
+// The schema is never activated by default Railway/staging configurations.
+func RunManagedShareMigrations(db *sql.DB) error {
+	return runMigrations(db, 15)
+}
+
 func runMigrations(db *sql.DB, target uint) (result error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	var files fs.FS = migrationsFS
-	if target == 13 {
-		files = legacyMigrationSource{migrationsFS}
+	if target < 15 {
+		files = boundedMigrationSource{FS: migrationsFS, maxVersion: target}
 	}
 	source, err := iofs.New(files, "migrations")
 	if err != nil {

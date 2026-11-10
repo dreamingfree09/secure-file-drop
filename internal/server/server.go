@@ -41,6 +41,7 @@ type Config struct {
 	EmailSvc  *EmailService
 	BaseURL   string // Base URL for email links (e.g. "http://localhost:8080")
 	Resumable ResumableConfig
+	ManagedLinks bool // Opt-in only after schema15 and private Rorschach gates.
 }
 
 // Server wires HTTP routes to handlers and holds external dependencies.

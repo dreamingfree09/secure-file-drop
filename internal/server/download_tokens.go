@@ -13,6 +13,8 @@ import (
 	"errors"
 	"os"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -24,6 +26,7 @@ var (
 type downloadClaims struct {
 	FileID string `json:"file_id"`
 	Exp    int64  `json:"exp"` // unix seconds
+	LinkID string `json:"link_id,omitempty"`
 }
 
 // downloadSecret returns the raw secret bytes from env.
@@ -38,15 +41,25 @@ func downloadSecret() ([]byte, error) {
 // signDownloadToken creates a compact token: base64url(payload).base64url(sig)
 // where sig = HMAC-SHA256(secret, payloadBytes).
 func signDownloadToken(fileID string, expiresAt time.Time) (string, error) {
+	return signDownloadClaims(downloadClaims{FileID: fileID, Exp: expiresAt.Unix()})
+}
+
+// signManagedDownloadToken binds a separately revocable UUID to the normal
+// file ID and expiry without changing historical legacy-token signatures.
+func signManagedDownloadToken(fileID, linkID string, expiresAt time.Time) (string, error) {
+	if _, err := uuid.Parse(linkID); err != nil {
+		return "", errBadToken
+	}
+	return signDownloadClaims(downloadClaims{FileID: fileID, Exp: expiresAt.Unix(), LinkID: linkID})
+}
+
+func signDownloadClaims(claims downloadClaims) (string, error) {
 	sec, err := downloadSecret()
 	if err != nil {
 		return "", err
 	}
 
-	payload, err := json.Marshal(downloadClaims{
-		FileID: fileID,
-		Exp:    expiresAt.Unix(),
-	})
+	payload, err := json.Marshal(claims)
 	if err != nil {
 		return "", err
 	}
@@ -105,7 +118,12 @@ func verifyDownloadToken(token string, now time.Time) (downloadClaims, error) {
 	if c.FileID == "" || c.Exp == 0 {
 		return c, errBadToken
 	}
-
+	if c.LinkID != "" {
+		id, parseErr := uuid.Parse(c.LinkID)
+		if parseErr != nil || id == uuid.Nil || id.String() != c.LinkID {
+			return c, errBadToken
+		}
+	}
 	if now.Unix() >= c.Exp {
 		return c, errTokenExpired
 	}
