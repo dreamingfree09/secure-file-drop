@@ -59,6 +59,23 @@ fixture_sql() {
     "${compose[@]}" exec -T postgres sh -c 'export PGPASSWORD="$SFD_PG_APP_SECRET"; exec psql -h 127.0.0.1 -U sfd -d sfd -qAt -v ON_ERROR_STOP=1'
 }
 python3 -B tests/rorschach/https_acceptance.py create
+if [[ "${SFD_MANAGED_LINKS_FIXTURE:-0}" == 1 ]]; then
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 13 ]]
+    python3 -B tests/rorschach/managed_links_acceptance.py legacy-before
+    export R1_RESUMABLE_MAX_BYTES=1073741824 R1_RESUMABLE_RESERVED_BYTES=2147483648
+    "${compose[@]}" stop proxy backend
+    "${compose[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 14 ]]
+    python3 -B tests/rorschach/https_acceptance.py reopen
+    export R1_MANAGED_LINKS_ENABLED=true
+    "${compose[@]}" stop proxy backend
+    "${compose[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 15 ]]
+    python3 -B tests/rorschach/https_acceptance.py reopen
+    printf "INSERT INTO users (email,username,password_hash,email_verified,is_active) VALUES ('managed-other@example.invalid','managed-other','%s',true,true);\n" "$user_hash" | fixture_sql
+    python3 -B tests/rorschach/managed_links_acceptance.py after-upgrade
+    echo "PASS: opt-in schema 13 to 14 to 15 preserved verified files and enabled durable revocation"
+fi
 if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
     [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 13 ]]
     export R1_RESUMABLE_MAX_BYTES=1073741824 R1_RESUMABLE_RESERVED_BYTES=2147483648
@@ -75,6 +92,9 @@ fi
 "${compose[@]}" run --rm --no-deps provision verify
 "${compose[@]}" up -d --no-build --no-recreate --wait --wait-timeout 180 backend proxy
 python3 -B tests/rorschach/https_acceptance.py reopen
+if [[ "${SFD_MANAGED_LINKS_FIXTURE:-0}" == 1 ]]; then
+    python3 -B tests/rorschach/managed_links_acceptance.py after-restart
+fi
 if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
     fixture_sql <<'SQL'
 UPDATE r2_uploads SET expires_at = now() - interval '1 second' WHERE orig_name = 'r2-expiry.bin';
