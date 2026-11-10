@@ -23,6 +23,7 @@ import (
 type createLinkReq struct {
 	ID         string `json:"id"`
 	TTLSeconds int    `json:"ttl_seconds"`
+	SharePage  bool   `json:"share_page"`
 }
 
 // createLinkResp is the JSON response containing the signed download URL
@@ -47,6 +48,14 @@ func clampTTLSeconds(n int) int {
 		return 86400
 	}
 	return n
+}
+
+// shareLinkPath preserves the raw-download URL for existing clients.
+func shareLinkPath(page bool) string {
+	if page {
+		return "/share"
+	}
+	return "/download"
 }
 
 func requestOrigin(r *http.Request) string {
@@ -131,7 +140,7 @@ func (cfg Config) createLinkHandler(db *sql.DB) http.Handler {
 			base = requestOrigin(r)
 		}
 
-		url := base + "/download?token=" + token
+		url := base + shareLinkPath(req.SharePage) + "?token=" + token
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)

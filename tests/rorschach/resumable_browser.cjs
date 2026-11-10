@@ -49,10 +49,34 @@ async function main() {
     await page.getByText('Upload verified. Create a link when you are ready to share.', {exact:true}).waitFor({timeout:90000});
     await page.locator('#resumableLink').click();
     await page.locator('#resumableLinkBox').waitFor({state:'visible'});
-    const download = page.waitForEvent('download');
-    await page.locator('#resumableLinkValue').evaluate(input => window.location.assign(input.value));
-    const savedFile = await download;
-    assert.equal(await hash(await savedFile.path()), await hash(fixture));
+    // A fresh browser context simulates Discord-style preview retrieval: no
+    // authenticated session, and no file bytes until a deliberate form POST.
+    const shared = await page.locator('#resumableLinkValue').inputValue();
+    const preview = await browser.newPage({acceptDownloads:true});
+    try {
+      const response = await preview.goto(shared);
+      assert.equal(response.status(), 200);
+      assert.equal(await preview.locator('img').count(), 0);
+      await preview.locator('#download-form').waitFor({state:'visible'});
+      let formStatus = 'no POST response observed';
+      preview.on('response', response => {
+        if (new URL(response.url()).pathname === '/share-download') {
+          const headers = response.headers();
+          formStatus = 'POST returned ' + response.status() + ' (' +
+            (headers['content-type'] || 'unknown media') + ', attachment=' +
+            Boolean(headers['content-disposition']?.startsWith('attachment')) + ')';
+        }
+      });
+      const download = preview.waitForEvent('download', {timeout:20000}).catch(error => {
+        console.error('Preview-safe explicit download diagnostic:', formStatus);
+        throw error;
+      });
+      await preview.getByRole('button', {name:'Download file'}).click();
+      const savedFile = await download;
+      assert.equal(await hash(await savedFile.path()), await hash(fixture));
+    } finally {
+      await preview.close();
+    }
     await page.unroute('**/uploads/resumable/*');
     let partArrived, releasePart;
     const arrival = new Promise(resolve => { partArrived = resolve; });

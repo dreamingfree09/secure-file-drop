@@ -234,6 +234,27 @@ def main():
         code,_,headers=range_request(f'bytes={len(data)}-')
         check(code==416 and headers.get('Content-Range')==f'bytes */{len(data)}' and
               range_request('bytes=0-1',url=target.geturl()+'x')[0]==401,'unsatisfiable range and tampered bearer are rejected')
+        # The opt-in sharing URL has no automatic file bytes. The deliberate
+        # POST reuses HMAC and stored-object integrity, from a cookie-free client.
+        share_status,share_body=request('/links',{'id':fid,'ttl_seconds':3600,'share_page':True})
+        check(share_status==200,'owned sender can request an explicit download landing')
+        share_url=json.loads(share_body)['url']
+        share_target=urllib.parse.urlsplit(share_url)
+        token_values=urllib.parse.parse_qs(share_target.query).get('token',[])
+        check(share_target.scheme=='https' and share_target.netloc==target.netloc and share_target.path=='/share' and len(token_values)==1,'preview-safe signed locator uses the same trusted HTTPS origin')
+        with anonymous.open(urllib.request.Request(share_url),timeout=10) as share_response:
+            share_markup=share_response.read()
+            check(share_response.status==200 and b'/share-download' in share_markup and data not in share_markup and b'fixture.txt' not in share_markup and b'<img' not in share_markup,'anonymous preview GET contains no original name, media image or file bytes')
+        def submit_share(value):
+            form=urllib.parse.urlencode({'token':value}).encode()
+            req=urllib.request.Request(origin+'/share-download',form,{'Content-Type':'application/x-www-form-urlencoded','Origin':origin},method='POST')
+            try:
+                with anonymous.open(req,timeout=10) as response:return response.status,response.read(),response.headers
+            except urllib.error.HTTPError as error:return error.code,error.read(),error.headers
+        response_code,payload,response_headers=submit_share(token_values[0])
+        check(response_code==200 and payload==data and response_headers.get('Content-Disposition','').startswith('attachment'),'explicit unauthenticated same-origin form POST returns exactly signed attachment bytes')
+        check(submit_share(token_values[0]+'x')[0]==401,'tampered preview-safe form token fails existing HMAC verification')
+        check(request('/share-download',who=anonymous)[0]==405,'GET cannot retrieve file data through explicit form download endpoint')
         # New recipient delivery: mail contains only locator; sender gets separate access code.
         check(request('/invitations',{'file_id':fid,'recipient_email':'not-an-email','description':'safe'})[0]==400,'recipient delivery rejects malformed address')
         check(request('/invitations',{'file_id':fid,'recipient_email':'recipient@example.invalid','description':'a'*1001})[0]==400,'recipient delivery rejects excessive description')
