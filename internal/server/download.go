@@ -83,6 +83,7 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			return
 		}
 
+		w.Header().Set("Cache-Control", "private, no-store")
 		claims, err := verifyDownloadToken(token, time.Now().UTC())
 		if err != nil {
 			if errors.Is(err, errTokenExpired) {
@@ -91,6 +92,27 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 			}
 			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
+		}
+
+		// Legacy tokens have no LinkID and retain their original expiry.
+		// Managed tokens require the non-revoked durable ledger on every
+		// new full or ranged download, before private object-store access.
+		if claims.LinkID != "" {
+			if !cfg.ManagedLinks {
+				http.Error(w, "managed link unavailable", http.StatusUnauthorized)
+				return
+			}
+			checkCtx, finishCheck := sqlContext(r.Context())
+			active, checkErr := managedLinkAllowed(checkCtx, db, claims, token)
+			finishCheck()
+			if checkErr != nil {
+				http.Error(w, "managed link verification unavailable", http.StatusServiceUnavailable)
+				return
+			}
+			if !active {
+				http.Error(w, "link revoked or expired", http.StatusGone)
+				return
+			}
 		}
 
 		var (

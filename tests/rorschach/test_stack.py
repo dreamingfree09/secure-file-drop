@@ -50,6 +50,15 @@ class StackTests(unittest.TestCase):
                 stack.parse_env(render_env({**values, key: value}))
         with self.assertRaises(ValueError):
             stack.parse_env(render_env(values) + "\nR1_HOST=other.fixture.test")
+        qualified = {**values, "R1_RESUMABLE_MAX_BYTES": "1073741824",
+                     "R1_RESUMABLE_RESERVED_BYTES": "2147483648",
+                     "R1_MANAGED_LINKS_ENABLED": "true"}
+        self.assertEqual(stack.parse_env(render_env(qualified)), qualified)
+        for invalid in ("yes", "TRUE", "1"):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                stack.parse_env(render_env({**qualified, "R1_MANAGED_LINKS_ENABLED": invalid}))
+        with self.assertRaises(ValueError):
+            stack.parse_env(render_env({**values, "R1_MANAGED_LINKS_ENABLED": "true"}))
 
     def test_project_refuses_unowned_preexisting_volume(self):
         with patch.object(stack, "run", side_effect=["", "sfd-rorschach-123_objects\n", ""]):

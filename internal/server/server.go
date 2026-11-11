@@ -34,13 +34,14 @@ type BuildInfo struct {
 // EmailSvc is optional; when nil, a service is constructed from env.
 // BaseURL is the publicly reachable URL used in emails and link generation.
 type Config struct {
-	Addr      string // e.g. ":8080"
-	Build     BuildInfo
-	Auth      AuthConfig
-	DB        *sql.DB
-	EmailSvc  *EmailService
-	BaseURL   string // Base URL for email links (e.g. "http://localhost:8080")
-	Resumable ResumableConfig
+	Addr         string // e.g. ":8080"
+	Build        BuildInfo
+	Auth         AuthConfig
+	DB           *sql.DB
+	EmailSvc     *EmailService
+	BaseURL      string // Base URL for email links (e.g. "http://localhost:8080")
+	Resumable    ResumableConfig
+	ManagedLinks bool // Opt-in only after schema15 and private Rorschach gates.
 }
 
 // Server wires HTTP routes to handlers and holds external dependencies.
@@ -234,7 +235,7 @@ func New(cfg Config) *Server {
 	// maximum upload size in bytes.
 	mux.HandleFunc("/config", func(w http.ResponseWriter, _ *http.Request) {
 		maxBytes, _ := maxUploadBytes()
-		result := map[string]any{"max_upload_bytes": maxBytes}
+		result := map[string]any{"max_upload_bytes": maxBytes, "managed_links_enabled": cfg.ManagedLinks}
 		if cfg.Resumable.MaxFileBytes > 0 {
 			result["resumable_max_bytes"] = cfg.Resumable.MaxFileBytes
 			result["resumable_chunk_bytes"] = r2ChunkBytes
@@ -338,8 +339,12 @@ func New(cfg Config) *Server {
 		resumable.endpoints(mux, cfg.Auth)
 	}
 
-	// Create signed, expiring download links.
+	// Create signed links. Managed links require explicit schema15 opt-in.
 	mux.Handle("/links", cfg.createLinkHandler(cfg.DB))
+	if cfg.ManagedLinks {
+		mux.Handle("GET /managed-links", cfg.listManagedLinksHandler(cfg.DB))
+		mux.Handle("DELETE /managed-links/{id}", cfg.revokeManagedLinkHandler(cfg.DB))
+	}
 
 	// Preserve the legacy direct-byte API. New browser links may opt in to
 	// a generic landing with an explicit POST before any file data is returned.

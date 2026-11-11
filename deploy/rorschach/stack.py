@@ -59,7 +59,13 @@ def parse_env(content):
         "R1_S3_ROOT_KEY", "R1_S3_APP_KEY", "R1_ADMIN_HASH",
     }
     capacity = {"R1_RESUMABLE_MAX_BYTES", "R1_RESUMABLE_RESERVED_BYTES"}
-    require(expected <= result.keys() <= expected | capacity, "Unexpected or missing environment key")
+    managed = {"R1_MANAGED_LINKS_ENABLED"}
+    require(expected <= result.keys() <= expected | capacity | managed, "Unexpected or missing environment key")
+    if managed & result.keys():
+        require(result["R1_MANAGED_LINKS_ENABLED"] in {"true", "false"}, "Invalid managed-link activation value")
+        if result["R1_MANAGED_LINKS_ENABLED"] == "true":
+            require(capacity <= result.keys() and int(result["R1_RESUMABLE_MAX_BYTES"]) > 0,
+                    "Managed links require a qualified resumable capacity")
     if capacity & result.keys():
         require(capacity <= result.keys() and all(re.fullmatch(r"0|[1-9][0-9]{0,15}", result[k]) for k in capacity),
                 "Invalid resumable capacity format")

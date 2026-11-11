@@ -1,0 +1,37 @@
+name: Rorschach managed sharing acceptance
+on:
+  pull_request:
+    branches: [master]
+    paths:
+      - '.github/workflows/managed-share-acceptance.yml'
+      - 'internal/server/managed_link*.go'
+      - 'internal/server/links.go'
+      - 'internal/server/download.go'
+      - 'internal/server/download_tokens.go'
+      - 'internal/db/migrate.go'
+      - 'internal/db/lineage.go'
+      - 'internal/db/migrations/000015*'
+      - 'deploy/rorschach/**'
+      - 'tests/rorschach/managed_links_acceptance.py'
+      - 'tests/rorschach/run_compose_fixture.sh'
+permissions:
+  contents: read
+jobs:
+  managed-links:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install isolated browser fixture tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Verify schema13 to schema15 upgrade, owner-only link revocation and paired restore
+        env:
+          SFD_MANAGED_LINKS_FIXTURE: '1'
+        run: bash tests/rorschach/run_compose_fixture.sh

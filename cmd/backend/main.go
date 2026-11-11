@@ -109,9 +109,17 @@ func main() {
 		log.Printf("service=backend msg=%q err=%v", "invalid_resumable_configuration", err)
 		os.Exit(1)
 	}
+	managedLinks, managedErr := server.LoadManagedLinksConfig(resumable.MaxFileBytes > 0)
+	if managedErr != nil {
+		log.Printf("service=backend msg=%q", "invalid_managed_links_configuration")
+		os.Exit(1)
+	}
 	migrate := db.RunMigrations
 	if resumable.MaxFileBytes > 0 {
 		migrate = db.RunResumableMigrations
+	}
+	if managedLinks {
+		migrate = db.RunManagedShareMigrations
 	}
 	if err := migrate(dbConn); err != nil {
 		log.Printf("service=backend msg=%q err=%v", "migration_failed", err)
@@ -141,13 +149,14 @@ func main() {
 	defer backupMgr.Stop()
 
 	srv := server.New(server.Config{
-		Addr:      addr,
-		Build:     build,
-		Auth:      auth,
-		DB:        dbConn,
-		EmailSvc:  emailSvc,
-		BaseURL:   baseURL,
-		Resumable: resumable,
+		Addr:         addr,
+		Build:        build,
+		Auth:         auth,
+		DB:           dbConn,
+		EmailSvc:     emailSvc,
+		BaseURL:      baseURL,
+		Resumable:    resumable,
+		ManagedLinks: managedLinks,
 	})
 
 	// Start the HTTP server in a background goroutine.
