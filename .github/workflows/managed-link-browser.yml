@@ -1,0 +1,48 @@
+name: Managed link browser and actual-master acceptance
+on:
+  push:
+    branches: [master, codex/managed-links-browser-20261111]
+  pull_request:
+    branches: [master]
+    paths:
+      - 'web/static/**'
+      - 'internal/server/**'
+      - 'internal/db/**'
+      - 'tests/rorschach/**'
+      - '.github/workflows/managed-link-browser.yml'
+permissions:
+  contents: read
+jobs:
+  acceptance:
+    name: ${{ matrix.source }} / ${{ matrix.suite }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        source: [accepted-master, candidate]
+        suite: [managed, resumable]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ matrix.source == 'accepted-master' && '7c6137aa4db0e8a92f35d3541d16a271c79d298a' || github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify actual selected source
+        env:
+          EXPECTED_SOURCE: ${{ matrix.source == 'accepted-master' && '7c6137aa4db0e8a92f35d3541d16a271c79d298a' || github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SOURCE"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install disposable HTTPS browser fixture tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Real private RustFS/PostgreSQL, HTTPS, restart and paired recovery
+        env:
+          SFD_MANAGED_LINKS_FIXTURE: ${{ matrix.suite == 'managed' && '1' || '0' }}
+          SFD_MANAGED_BROWSER_FIXTURE: ${{ matrix.suite == 'managed' && matrix.source == 'candidate' && '1' || '0' }}
+          SFD_R2_HOSTED_FIXTURE: ${{ matrix.suite == 'resumable' && '1' || '0' }}
+        run: bash tests/rorschach/run_compose_fixture.sh
