@@ -71,7 +71,7 @@ async function main() {
       await page.locator('#managedFile').selectOption(state.file);
       await ready();
       const card = page.locator('[data-link-id="' + state.revoked + '"]');
-      await card.getByText('Revoked', {exact:true}).waitFor();
+      await card.locator('.managed-state-revoked').waitFor();
       assert.equal((await api('GET', '/download?' + new URL(state.url).searchParams)).status(), 410);
       assert.equal((await range(state.url.replace('/share?', '/download?'))).status(), 410);
       assert.equal((await api('GET',state.other.replace('/share?', '/download?'))).status(), 200);
@@ -119,7 +119,7 @@ async function main() {
     assert.equal((await api('GET',url.replace('/share?', '/download?'))).status(),200);
     await card.getByRole('button',{name:'Revoke link',exact:true}).click();
     await page.locator('#managedConfirmYes').click();
-    await card.getByText('Revoked',{exact:true}).waitFor();
+    await card.locator('.managed-state-revoked').waitFor();
     assert.equal(await page.locator('#managedURL').inputValue(),'');
     const raw = url.replace('/share?', '/download?');
     assert.equal((await api('GET',raw)).status(),410);

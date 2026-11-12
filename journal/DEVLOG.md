@@ -565,3 +565,9 @@ browser unit tests pass locally; real hosted acceptance is pending publication.
 Exact final source, executed/failing CI, independent acknowledgement and
 limitations belong in the PR handover. No live deployment/data/engine/trust
 changes. The separate next no-email onboarding assignment remains design-only.
+
+### Actual-master security gate correction
+
+Master7c6137a core43123437368 fails the newly published GO-2026-6859 standard-library gate; downstream canonical backend is blocked at the same scanner. Unit/race/vet/build passed before that failure; lint and real canonical backend were not executed. Upgrade active build/test pins to Go1.26.11 and independently verified amd64 build-base digest f496f8c537ed506626ee1a6913afb32c45068a48697163c088f604cc775a0c38. Preserve historical evidence pins and failed master receipts. No vulnerability suppression or live deployment. Exact corrected CI remains mandatory.
+
+First browser runtime43125022305 candidate job130874793080 reached real upload/copy/preview/download and revoke, then its strict text selector matched both the Revoked badge and Revoked timestamp label. Correct the selector to the status class; retain the assertion and failed evidence. No application check is removed.
