@@ -131,6 +131,13 @@ async function main() {
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),true);
     await page.screenshot({path:join(root,'managed-mobile.png'),fullPage:true,mask:[page.locator('#linkContainer'),page.locator('#managedIssued')]});
+    const mobileCard = page.locator('[data-link-id="' + other.link_id + '"]');
+    await mobileCard.getByRole('button',{name:'Revoke link',exact:true}).click();
+    assert.equal(await page.locator('#managedConfirm').evaluate(node => {
+      const bounds=node.getBoundingClientRect(); return bounds.left>=0 && bounds.right<=innerWidth;
+    }),true);
+    await page.screenshot({path:join(root,'managed-mobile-confirm.png'),mask:[page.locator('#linkContainer'),page.locator('#managedIssued')]});
+    await page.locator('#managedConfirmCancel').click();
     // Failed network reads cannot continue to display stale 'active' status.
     await page.route('**/managed-links?*', route => route.abort('connectionreset'));
     await page.locator('#managedRefresh').click();
