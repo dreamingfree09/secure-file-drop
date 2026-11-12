@@ -1166,7 +1166,7 @@ async function loadConfig() {
     if (res.ok) {
       const config = await res.json();
       globalThis.SFDResumable?.configure(config);
-      globalThis.SFDManagedLinks?.configure(config);
+      globalThis.SFDManagedLinks?.configure(config, myFilesAll);
       maxUploadBytes = config.max_upload_bytes || 0;
     }
   } catch (err) {

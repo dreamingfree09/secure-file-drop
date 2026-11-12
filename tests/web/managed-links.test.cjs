@@ -66,3 +66,15 @@ test('reset removes issued bearer, choices, dialog target and list',async()=>{
   assert.equal(h.node('managedConfirmName').textContent,'');assert.equal(h.node('managedList').children.length,0);
   assert.equal(h.node('managedFile').children.length,1);
 });
+test('delayed configuration populates the current account files without retaining an earlier account list',async()=>{
+  const h=harness(async()=>response([]));
+  h.links.configure({managed_links_enabled:false});
+  const files=[{id,orig_name:'current-account.txt',status:'hashed'}];
+  h.links.files(files);assert.equal(h.node('managedFile').children.length,1);
+  h.links.configure({managed_links_enabled:true},files);
+  assert.equal(h.node('managedFile').children.length,2);
+  assert.equal(h.node('managedFile').children[1].text,'current-account.txt');
+  h.links.reset();h.context.sessionGeneration++;
+  h.links.configure({managed_links_enabled:true},[]);
+  assert.equal(h.node('managedFile').children.length,1);
+});

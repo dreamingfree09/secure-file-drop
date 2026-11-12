@@ -30,10 +30,10 @@
     $('managedLinksPanel').hidden = true;
     clearIssued(); controls(false); message('');
   }
-  function configure(config) {
+  function configure(config, currentFiles = []) {
     enabled = config.managed_links_enabled === true;
     if (!enabled) reset();
-    else if (isLoggedIn && !isAdmin) void refresh();
+    else if (isLoggedIn && !isAdmin) files(currentFiles);
   }
   function files(items) {
     if (!enabled || !isLoggedIn || isAdmin) return;

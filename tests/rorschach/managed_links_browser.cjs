@@ -95,6 +95,18 @@ async function main() {
     await page.locator('#linkContainer.show').waitFor();
     await page.locator('#managedFile option').filter({hasText:filename}).waitFor({state:'attached'});
     const file = await page.locator('#managedFile option').filter({hasText:filename}).getAttribute('value');
+    // Authenticated reload with /config deliberately later than /me and the
+    // complete parsed account file list must still populate the selector.
+    let releaseConfig;
+    const configuration = new Promise(resolve => {releaseConfig=resolve});
+    await page.route('**/config',async route => {await configuration; await route.continue()});
+    try {
+      await page.reload({waitUntil:'domcontentloaded'});
+      await page.waitForFunction(file => myFilesAll.some(item => item.id===file),file);
+    } finally {releaseConfig();}
+    await page.locator('#managedFile option').filter({hasText:filename}).waitFor({state:'attached'});
+    await page.unroute('**/config'); await ready();
+    console.log('PASS: authenticated reload with delayed configuration retains current-account file choices');
     await page.locator('#managedFile').selectOption(file); await ready();
     const issued = page.waitForResponse(r => new URL(r.url()).pathname === '/links' && r.request().method() === 'POST');
     await page.locator('#managedCreate').click();
