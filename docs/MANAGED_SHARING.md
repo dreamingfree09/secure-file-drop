@@ -35,6 +35,11 @@ omitting it still receive a raw signed-download URL.
 `GET /managed-links?file_id=UUID` requires an authenticated ordinary owner.
 It returns at most 50 owner-scoped link metadata records, newest first,
 including creation/expiry/revocation timestamps; no token digests or bearer URLs.
+The browser candidate adds `file_name` and server-evaluated `state`
+(`active`, `expired`, `revoked`). `X-Next-Cursor` indicates an older page;
+pass its canonical UUID as `before`, retaining the optional file filter.
+Ordering is descending creation time and descending UUID. The anchor is
+owner-scoped too; foreign or missing anchors yield an empty page.
 
 `DELETE /managed-links/{link_id}` requires the original owning account,
 returns HTTP 204 and is idempotent for the same owner. Inaccessible or
@@ -56,9 +61,20 @@ Legacy stateless links created before the schema15 upgrade remain valid until
 their original cryptographic expiry (maximum 24 hours), and cannot be
 individually revoked retroactively; this limitation is explicit.
 
-Owner-facing link listing and revocation endpoints are source implemented,
-but the complete browser management experience, retention/cleanup, production
-off-host restore and additional security review are not yet accepted. The
+The browser candidate adds **Your sharing links** for authenticated ordinary
+users only when `/config` explicitly enables managed links. Choose a file to
+create a one-hour preview-safe link, copy its one-time receipt, browse older
+metadata, and confirm individual revocation in the keyboard-accessible dialog.
+The list cannot recover old bearer URLs. It displays server-reported state,
+refreshes after successful mutations and checks expiry again every minute.
+Failed verification removes stale cards and shows a retry message. Logout,
+expired sessions and account changes clear names, choices, receipt and dialog.
+Nothing is stored in browser persistent storage. A clipboard copy already made
+by the user is outside the application's session state; revoke its link to
+invalidate subsequent use. Protected code invitations remain a separate flow.
+
+Independent browser-source acceptance, retention/cleanup, production
+off-host restore and further deployment review remain outstanding. The
 disposable HTTPS fixture validates the source, including cross-account denial,
 preserved legacy tokens, active/new link independence, revocation across backend
 restart and paired database/object restore. A passing fixture is **not** proof

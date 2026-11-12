@@ -551,3 +551,17 @@ Initial candidate1b55b807 passes the new provider unit cases, but hosted CI41937
 ### 2026-11-05 — Issue53 exact-count enforcement
 
 The provider regression addition contributes20 Go pass events (two parent tests plus18 subcases). The unchanged full-stack baseline259 therefore becomes279; the portable fixture and its hosted workflow retain exact equality, zero skips/failures and every existing lineage/lifecycle/COMMIT counter. Update the workflow expectation in its own commit under AGENTS.md; do not disable or loosen any check. Exact-head artifacts must confirm the actual count. Browser27/backend124 and the additional isolated invitation UI14 remain separate.
+
+
+## 2026-11-12 — managed-link browser candidate
+
+SFD-RORSCHACH-R3-LINK-MANAGEMENT-COMPLETE: independently reviewed Aether PR65
+15408a2159e71491967c5a4fdfca7873a993b06d and normally integrated it as
+7c6137aa4db0e8a92f35d3541d16a271c79d298a. Both ordered parents and intervening
+preflight files are preserved. The separate Codex browser worker adds scoped
+metadata pagination/status, responsive private cards, one-time link copying,
+confirmed revocation and stale-response/session isolation. Existing24 and new6
+browser unit tests pass locally; real hosted acceptance is pending publication.
+Exact final source, executed/failing CI, independent acknowledgement and
+limitations belong in the PR handover. No live deployment/data/engine/trust
+changes. The separate next no-email onboarding assignment remains design-only.

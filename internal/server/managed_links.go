@@ -37,6 +37,8 @@ func managedLinkAllowed(ctx context.Context, db *sql.DB, claims downloadClaims, 
 type managedLinkPublic struct {
 	ID        string     `json:"id"`
 	FileID    string     `json:"file_id"`
+	FileName  string     `json:"file_name"`
+	State     string     `json:"state"`
 	CreatedAt time.Time  `json:"created_at"`
 	ExpiresAt time.Time  `json:"expires_at"`
 	RevokedAt *time.Time `json:"revoked_at,omitempty"`
@@ -56,8 +58,12 @@ func (cfg Config) listManagedLinksHandler(db *sql.DB) http.Handler {
 			return
 		}
 		fileText := r.URL.Query().Get("file_id")
-		query := `SELECT id::text,file_id::text,created_at,expires_at,revoked_at
-			FROM managed_share_links WHERE owner_id=$1::uuid`
+		query := `SELECT l.id::text,l.file_id::text,f.orig_name,
+			CASE WHEN l.revoked_at IS NOT NULL THEN 'revoked'
+			WHEN l.expires_at<=now() THEN 'expired' ELSE 'active' END,
+			l.created_at,l.expires_at,l.revoked_at
+			FROM managed_share_links l JOIN files f ON f.id=l.file_id AND f.user_id=l.owner_id
+			WHERE l.owner_id=$1::uuid`
 		args := []any{owner}
 		if fileText != "" {
 			fileID, parseErr := uuid.Parse(fileText)
@@ -65,10 +71,25 @@ func (cfg Config) listManagedLinksHandler(db *sql.DB) http.Handler {
 				http.Error(w, "invalid file id", http.StatusBadRequest)
 				return
 			}
-			query += " AND file_id=$2"
+			query += " AND l.file_id=$2"
 			args = append(args, fileID)
 		}
-		query += " ORDER BY created_at DESC,id LIMIT 50"
+		if before := r.URL.Query().Get("before"); before != "" {
+			cursor, parseErr := uuid.Parse(before)
+			if parseErr != nil || cursor == uuid.Nil || cursor.String() != before {
+				http.Error(w, "invalid cursor", http.StatusBadRequest)
+				return
+			}
+			// The anchor is scoped to this owner too. Foreign/missing anchors
+			// produce an empty page without disclosing whether they exist.
+			args = append(args, cursor)
+			parameter := "$2"
+			if len(args) == 3 {
+				parameter = "$3"
+			}
+			query += " AND (l.created_at,l.id)<(SELECT created_at,id FROM managed_share_links WHERE id=" + parameter + " AND owner_id=$1::uuid)"
+		}
+		query += " ORDER BY l.created_at DESC,l.id DESC LIMIT 51"
 		ctx, cancel := sqlContext(r.Context())
 		defer cancel()
 		rows, err := db.QueryContext(ctx, query, args...)
@@ -81,7 +102,7 @@ func (cfg Config) listManagedLinksHandler(db *sql.DB) http.Handler {
 		for rows.Next() {
 			var item managedLinkPublic
 			var revoked sql.NullTime
-			if err := rows.Scan(&item.ID, &item.FileID, &item.CreatedAt, &item.ExpiresAt, &revoked); err != nil {
+			if err := rows.Scan(&item.ID, &item.FileID, &item.FileName, &item.State, &item.CreatedAt, &item.ExpiresAt, &revoked); err != nil {
 				http.Error(w, "managed sharing unavailable", http.StatusServiceUnavailable)
 				return
 			}
@@ -93,6 +114,10 @@ func (cfg Config) listManagedLinksHandler(db *sql.DB) http.Handler {
 		if err := rows.Err(); err != nil {
 			http.Error(w, "managed sharing unavailable", http.StatusServiceUnavailable)
 			return
+		}
+		if len(items) > 50 {
+			items = items[:50]
+			w.Header().Set("X-Next-Cursor", items[49].ID)
 		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(items)

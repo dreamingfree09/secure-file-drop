@@ -59,6 +59,12 @@ fixture_sql() {
     "${compose[@]}" exec -T postgres sh -c 'export PGPASSWORD="$SFD_PG_APP_SECRET"; exec psql -h 127.0.0.1 -U sfd -d sfd -qAt -v ON_ERROR_STOP=1'
 }
 python3 -B tests/rorschach/https_acceptance.py create
+if [[ "${SFD_MANAGED_BROWSER_FIXTURE:-0}" == 1 ]]; then
+    mkdir -p "$root/managed-browser-home/.pki/nssdb"
+    certutil -N --empty-password -d "sql:$root/managed-browser-home/.pki/nssdb"
+    certutil -A -n "SFD owned managed HTTPS fixture" -t 'C,,' -i "$root/origin-ca.pem" -d "sql:$root/managed-browser-home/.pki/nssdb"
+    node tests/rorschach/managed_links_browser.cjs disabled
+fi
 if [[ "${SFD_MANAGED_LINKS_FIXTURE:-0}" == 1 ]]; then
     [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 13 ]]
     python3 -B tests/rorschach/managed_links_acceptance.py legacy-before
@@ -74,6 +80,24 @@ if [[ "${SFD_MANAGED_LINKS_FIXTURE:-0}" == 1 ]]; then
     python3 -B tests/rorschach/https_acceptance.py reopen
     printf "INSERT INTO users (email,username,password_hash,email_verified,is_active) VALUES ('managed-other@example.invalid','managed-other','%s',true,true);\n" "$user_hash" | fixture_sql
     python3 -B tests/rorschach/managed_links_acceptance.py after-upgrade
+    if [[ "${SFD_MANAGED_BROWSER_FIXTURE:-0}" == 1 ]]; then
+        node tests/rorschach/managed_links_browser.cjs journey
+        # Mutate only newly seeded disposable fixture rows, never real records.
+        fixture_sql <<'SQL'
+INSERT INTO managed_share_links(id,file_id,owner_id,token_sha256,created_at,expires_at)
+SELECT gen_random_uuid(),f.id,f.user_id,md5(g::text)||md5('synthetic-'||g::text),
+now()-interval '2 hours',now()-interval '1 hour'
+FROM files f CROSS JOIN generate_series(1,53) g WHERE f.orig_name='rorschach-fixture.txt';
+SQL
+        python3 -B tests/rorschach/managed_links_extended.py states
+        node tests/rorschach/managed_links_browser.cjs history
+        fixture_sql <<< 'REVOKE SELECT ON managed_share_links FROM sfd'
+        python3 -B tests/rorschach/managed_links_extended.py database-failure
+        fixture_sql <<< 'GRANT SELECT ON managed_share_links TO sfd'
+        fixture_sql <<< 'REVOKE INSERT ON managed_share_links FROM sfd'
+        python3 -B tests/rorschach/managed_links_extended.py insert-failure
+        fixture_sql <<< 'GRANT INSERT ON managed_share_links TO sfd'
+    fi
     echo "PASS: opt-in schema 13 to 14 to 15 preserved verified files and enabled durable revocation"
 fi
 if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
@@ -94,6 +118,9 @@ fi
 python3 -B tests/rorschach/https_acceptance.py reopen
 if [[ "${SFD_MANAGED_LINKS_FIXTURE:-0}" == 1 ]]; then
     python3 -B tests/rorschach/managed_links_acceptance.py after-restart
+    if [[ "${SFD_MANAGED_BROWSER_FIXTURE:-0}" == 1 ]]; then
+        node tests/rorschach/managed_links_browser.cjs restart
+    fi
 fi
 if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
     fixture_sql <<'SQL'
@@ -182,6 +209,9 @@ docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-n
 "${restore[@]}" run --rm --no-deps provision verify
 "${restore[@]}" up -d --no-build --no-recreate --wait --wait-timeout 180 backend proxy
 python3 -B tests/rorschach/https_acceptance.py restore
+if [[ "${SFD_MANAGED_BROWSER_FIXTURE:-0}" == 1 ]]; then
+    node tests/rorschach/managed_links_browser.cjs restart
+fi
 if [[ "${SFD_R2_HOSTED_FIXTURE:-0}" == 1 ]]; then
     docker_root=$(docker info --format '{{.DockerRootDir}}')
     available=$(sudo df -B1 --output=avail "$docker_root" | tail -1)
