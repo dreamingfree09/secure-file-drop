@@ -46,3 +46,11 @@ jobs:
           SFD_MANAGED_BROWSER_FIXTURE: ${{ matrix.suite == 'managed' && matrix.source == 'candidate' && '1' || '0' }}
           SFD_R2_HOSTED_FIXTURE: ${{ matrix.suite == 'resumable' && '1' || '0' }}
         run: bash tests/rorschach/run_compose_fixture.sh
+      - name: Preserve token-masked desktop and mobile screenshots
+        if: always() && matrix.source == 'candidate' && matrix.suite == 'managed'
+        uses: actions/upload-artifact@v4
+        with:
+          name: managed-link-ui-${{ github.run_id }}
+          path: ${{ runner.temp }}/sfd-rorschach.*/managed-*.png
+          if-no-files-found: warn
+          retention-days: 3
