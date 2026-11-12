@@ -16,9 +16,19 @@ async function main() {
   page.on('pageerror', error => errors.push(error.name));
   const login = async username => {
     await page.waitForFunction(() => !logoutPending);
-    await page.locator('#username').fill(username);
-    await page.locator('#password').fill(process.env.SFD_R1_FIXTURE_USER_PASSWORD);
-    await page.getByRole('button', {name:'Sign In',exact:true}).click();
+    for (let attempt=0; attempt<2; attempt++) {
+      await page.locator('#username').fill(username);
+      await page.locator('#password').fill(process.env.SFD_R1_FIXTURE_USER_PASSWORD);
+      const receipt = page.waitForResponse(r => new URL(r.url()).pathname === '/login');
+      await page.getByRole('button', {name:'Sign In',exact:true}).click();
+      const response = await receipt;
+      if (response.status() === 200) break;
+      assert.equal(response.status(),429, 'fixture login must authenticate or respect its real rate limit');
+      assert.equal(attempt,0,'only one bounded rate-limit wait is allowed');
+      assert.equal(response.headers()['retry-after'],'60');
+      console.log('Fixture login received429; honouring Retry-After60 without changing the limiter');
+      await page.waitForTimeout(61000);
+    }
     await page.locator('#logoutBtn').waitFor({state:'visible'});
     await page.waitForFunction(() => document.querySelector('#password').value === '');
   };
@@ -175,4 +185,4 @@ async function main() {
     console.log('PASS: Chromium mobile/desktop, failed listing/revocation, logout/account isolation and expired-session clearing');
   } finally { await context.close(); await browser.close(); }
 }
-main().catch(error => { console.error('Managed browser acceptance failed:', error.message.split('\n')[0]); process.exitCode=1; });
+main().catch(error => { console.error('Managed browser acceptance failed in '+process.argv[2]+':', error.message.split('\n')[0]); process.exitCode=1; });
