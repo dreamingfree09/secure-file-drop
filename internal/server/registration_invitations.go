@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const registrationQuotaBytes = int64(10 << 30)
@@ -332,7 +332,7 @@ func (cfg Config) RedeemRegistrationInvitation(w http.ResponseWriter, r *http.Re
 	_, err = tx.ExecContext(ctx, `INSERT INTO users(id,email,username,password_hash,email_verified,is_admin,is_active,storage_quota_bytes,registration_method,registration_invitation_id)
 	 VALUES($1,$2,$3,$4,FALSE,FALSE,TRUE,$5,'administrator_invitation',$6)`, accountID, input.Email, input.Username, hash, registrationQuotaBytes, invitationID)
 	if err != nil {
-		var constraint *pq.Error
+		var constraint *pgconn.PgError
 		if errors.As(err, &constraint) && constraint.Code == "23505" {
 			registrationError(w, 409, "registration_conflict")
 			return

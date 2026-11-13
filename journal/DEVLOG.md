@@ -639,3 +639,18 @@ assertion for the newly invited account; no foreign file is accepted and no
 application assertion is removed. Final registration acceptance remains pending.
 Local invocation corrections: Node needs tests/web/*.test.cjs on Windows;
 doc-link Python needs UTF-8 mode. Correct invocations passed41/41 and44 docs.
+
+
+### R4 production-driver constraint correction and negative coverage
+
+Run43429112886 correctly stopped at duplicate registration: expected409 but
+received503. OpenDB uses pgx, while the new constraint classification used
+lib/pq's error type. Classify pgconn.PgError23505 and retain generic503 for
+unexpected SQL errors. Use the same production pgx connector for the separate
+real-PostgreSQL transaction reporting fixture. Preserve rollback and the
+existing duplicate409 assertion rather than broadening accepted statuses.
+
+Add explicit foreign/null Origin denials, a one-character alteration of a
+valid capability, and exact outcome_unconfirmed checks for both reporting
+faults. No application fault hooks, authentication shortcuts, weakened limits
+or production resources are introduced. Final exact-revision CI remains pending.

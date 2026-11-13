@@ -21,7 +21,8 @@ import (
 	"secure-file-drop/internal/server"
 
 	"github.com/google/uuid"
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/stdlib"
 )
 
 type commitConnector struct {
@@ -82,7 +83,7 @@ func TestRegistrationUnknownCommit(t *testing.T) {
 		!strings.HasPrefix(owner, "sfd-rorschach-") || os.Getenv("GITHUB_ACTIONS") != "true" || os.Getenv("RUNNER_ENVIRONMENT") != "github-hosted" {
 		t.Fatal("refusing an unqualified database target")
 	}
-	base, err := sql.Open("postgres", dsn)
+	base, err := sql.Open("pgx", dsn)
 	if err != nil {
 		t.Fatal("fixture connection failed")
 	}
@@ -108,10 +109,11 @@ func TestRegistrationUnknownCommit(t *testing.T) {
 			if err != nil {
 				t.Fatal("fixture invitation setup failed")
 			}
-			connector, err := pq.NewConnector(dsn)
+			pgcfg, err := pgx.ParseConfig(dsn)
 			if err != nil {
 				t.Fatal("fixture connector failed")
 			}
+			connector := stdlib.GetConnector(*pgcfg)
 			fault := sql.OpenDB(commitConnector{base: connector, mode: mode})
 			defer func() { _ = fault.Close() }()
 			cfg := server.Config{DB: fault, RegistrationInvitations: true, Auth: server.AuthConfig{AdminUser: "admin"}}
@@ -141,6 +143,14 @@ func TestRegistrationUnknownCommit(t *testing.T) {
 				data, _ := io.ReadAll(response.Body)
 				if bytes.Contains(data, []byte(token)) || bytes.Contains(data, []byte(password)) {
 					t.Fatal("credential disclosure")
+				}
+				if expected == http.StatusServiceUnavailable {
+					var result struct {
+						Error string `json:"error"`
+					}
+					if json.Unmarshal(data, &result) != nil || result.Error != "outcome_unconfirmed" {
+						t.Fatal("unknown commit must not be presented as confirmed rollback")
+					}
 				}
 			}
 			post(503)

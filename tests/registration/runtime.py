@@ -40,7 +40,7 @@ def call(method, path, expected, value=None, *, cookie=None, origin=True):
         connection = https.connection()
         headers = {'Content-Type': 'application/json'}
         if origin:
-            headers['Origin'] = f'https://{https.HOST}:{https.PORT}'
+            headers['Origin'] = origin if isinstance(origin, str) else f'https://{https.HOST}:{https.PORT}'
         selected = COOKIE if cookie is None else cookie
         if selected:
             headers['Cookie'] = selected
@@ -131,11 +131,15 @@ def main():
     call('HEAD', '/join', 200, cookie='')
     assert sql("SELECT redeemed_at IS NULL FROM registration_invitations WHERE id='" + primary + "'") == 't'
     call('POST', '/registration-invitations/redeem', 403, credentials(token, 'r4_missing_origin'), cookie='', origin=False)
+    call('POST', '/registration-invitations/redeem', 403, credentials(token, 'r4_foreign_origin'), cookie='', origin='https://foreign.example.invalid')
+    call('POST', '/registration-invitations/redeem', 403, credentials(token, 'r4_null_origin'), cookie='', origin='null')
     redeem(token, 'r4_bad_role', 400, is_admin=True)
     redeem(token, 'r4_bad_quota', 400, storage_quota_bytes=1 << 50)
     redeem(token, 'admin', 400)
     redeem(token, 'r4_short_password', 400, password='7')
     redeem('0' * 64, 'r4_unknown', 410)
+    tampered = ('1' if token[0] == '0' else '0') + token[1:]
+    redeem(tampered, 'r4_tampered', 410)
     redeem(token, 'r4_api_user')
     redeem(token, 'r4_replay', 410)
     login('r4_api_user')
