@@ -1,0 +1,54 @@
+name: R4 invitation-only registration acceptance
+on:
+  push:
+    branches: [codex/registration-invitations-r4-20261113]
+  pull_request:
+    branches: [master]
+    paths:
+      - 'cmd/backend/**'
+      - 'internal/server/**'
+      - 'internal/db/**'
+      - 'web/static/**'
+      - 'deploy/rorschach/**'
+      - 'tests/registration/**'
+      - 'tests/rorschach/run_compose_fixture.sh'
+      - '.github/workflows/registration-invitations.yml'
+permissions:
+  contents: read
+jobs:
+  registration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Require the exact candidate source
+        env:
+          EXPECTED_SOURCE: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SOURCE"
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Prepare disposable strict-HTTPS Chromium tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libnss3-tools
+          npm ci --prefix tests/browser --ignore-scripts
+          node tests/browser/node_modules/playwright-core/cli.js install --only-shell chromium
+      - name: Real registration, concurrent/unknown COMMIT, compatibility, restart and paired recovery
+        env:
+          SFD_R4_FIXTURE: '1'
+        run: bash tests/rorschach/run_compose_fixture.sh
+      - name: Preserve only token-masked browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: registration-ui-${{ github.run_id }}
+          path: ${{ runner.temp }}/sfd-rorschach.*/r4-*.png
+          if-no-files-found: warn
+          retention-days: 3
