@@ -70,6 +70,14 @@ async function main(){
     await adminContext.grantPermissions(['clipboard-read','clipboard-write'],{origin});
     const first=await issue();const token=new URLSearchParams(new URL(first.url).hash.slice(1)).get('token');
     await admin.locator('#registrationCopy').click();assert.equal(await admin.evaluate(()=>navigator.clipboard.readText()),first.url);
+    // Depart with a copied receipt, revoke that session in another tab, and
+    // return through history. Cached client flags cannot revive authority.
+    await admin.goto(origin+'/join');
+    const otherTab=await adminContext.newPage();
+    try{await otherTab.goto(origin);assert.equal((await api(otherTab,'/logout','POST')).status,200);}finally{await otherTab.close();}
+    await admin.goBack();await admin.locator('#loginScreen').waitFor({state:'visible'});
+    assert.equal(await admin.locator('#registrationURL').inputValue(),'');assert.equal(await admin.locator('#registrationAdminPanel').isVisible(),false);
+    await login(admin,'admin',process.env.SFD_R1_FIXTURE_PASSWORD);await adminReady();
     const requests=[];
     recipient.on('request',request=>requests.push({url:request.url(),method:request.method()}));
     const preview=await recipient.goto(first.url);assert.equal(preview.status(),200);

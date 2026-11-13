@@ -11,12 +11,13 @@ function nodes(){const all=new Map();const create=()=>({children:[],value:'',tex
   return {get(id){if(!all.has(id))all.set(id,create());return all.get(id)},create};}
 const response=(rows)=>({ok:true,status:200,headers:{get:()=>''},json:async()=>rows});
 function admin(fetcher){
-  const n=nodes();const context=vm.createContext({document:{getElementById:id=>n.get(id),createElement:n.create},
+  const n=nodes(),events={};const context=vm.createContext({document:{getElementById:id=>n.get(id),createElement:n.create},
     sessionFetch:fetcher,isLoggedIn:false,isAdmin:true,sessionGeneration:1,URL,URLSearchParams,location:{origin:'https://fixture.test'},
-    navigator:{clipboard:{writeText:async()=>{}}},setTimeout(){return 1},clearTimeout(){}});
+    navigator:{clipboard:{writeText:async()=>{}}},setTimeout(){return 1},clearTimeout(){},addEventListener(name,fn){events[name]=fn},
+    resetSessionUI(){context.isLoggedIn=false;context.sessionGeneration++;context.SFDRegistrationAdmin.reset()},loadConfig(){},checkSession(){}});
   vm.runInContext(readFileSync(join(__dirname,'../../web/static/registration-admin.js'),'utf8'),context);
   const api=context.SFDRegistrationAdmin;api.configure({registration_invitations_enabled:true});api.activate({environment_admin:true});context.isLoggedIn=true;
-  return {context,node:id=>n.get(id),api};
+  return {context,node:id=>n.get(id),api,events};
 }
 test('registration controls require explicit feature flag and environment issuer identity',async()=>{
   let calls=0;const h=admin(async()=>{calls++;return response([row])});
@@ -45,6 +46,13 @@ test('a late successful issuance cannot disclose its invitation in the next acco
   h.api.reset();h.context.sessionGeneration++;h.context.isLoggedIn=true;
   finish({status:201,json:async()=>({id,url:'https://fixture.test/join#token='+'a'.repeat(64)})});await work;
   await new Promise(resolve=>setImmediate(resolve));assert.equal(h.node('registrationURL').value,'');assert.equal(h.node('registrationReceipt').hidden,true);
+});
+test('page departure clears authority and persisted restoration requires fresh session readback',async()=>{
+  const h=admin(async()=>response([row]));await h.api.refresh();h.node('registrationURL').value='private synthetic receipt';
+  h.events.pagehide();assert.equal(h.node('registrationURL').value,'');assert.equal(h.node('registrationAdminPanel').hidden,true);
+  let checks=0,configs=0;h.context.checkSession=()=>{checks++};h.context.loadConfig=()=>{configs++};
+  h.events.pageshow({persisted:true});assert.equal(checks,1);assert.equal(configs,1);assert.equal(h.context.isLoggedIn,false);
+  assert.equal(h.node('registrationURL').value,'');assert.equal(h.node('registrationAdminList').children.length,0);
 });
 function recipient(fetcher,fragment='token='+'a'.repeat(64)){
   const n=nodes(),events={},history=[];

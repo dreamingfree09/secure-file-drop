@@ -65,4 +65,11 @@
     try{await navigator.clipboard.writeText(value);if(current(e,g))message('Invitation copied. Deliver it privately; anyone holding it may register once.');}
     catch{if(current(e,g)){$('registrationURL').select();message('Clipboard unavailable. Copy the selected invitation manually.',true);}}});
   globalThis.SFDRegistrationAdmin={configure,activate,reset,refresh};
+  addEventListener('pagehide',reset);
+  addEventListener('pageshow',event=>{
+    if(!event.persisted)return;
+    // A cached document cannot establish that its old cookie/role is current.
+    // Drop every account-bound view before fresh server/configuration readback.
+    resetSessionUI();void loadConfig();void checkSession();
+  });
 })();

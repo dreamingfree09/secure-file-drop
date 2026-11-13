@@ -18,9 +18,10 @@ https://{$R1_HOST}:8443 {
 	header {
 		Strict-Transport-Security "max-age=86400"
 		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin"
 		-Server
 	}
+	# Preserve the application's route-specific no-referrer requirement.
+	header ?Referrer-Policy "strict-origin"
 	@resumable_part {
 		method PATCH
 		path /uploads/resumable/*
