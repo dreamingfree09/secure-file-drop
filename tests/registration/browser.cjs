@@ -139,4 +139,8 @@ async function main(){
     console.log('PASS: native-hashed upload/download bytes, quota/role/owner/email restrictions, invitation replay/revocation, mobile/desktop and logout isolation');
   }finally{await adminContext.close();await recipientContext.close();await browser.close();}
 }
-main().catch(error=>{console.error('Registration browser acceptance failed:',error.message.split('\n')[0]);process.exitCode=1;});
+main().catch(error=>{
+  // Report only owned source coordinates: Playwright call logs can contain URLs.
+  const frames=[...String(error.stack).matchAll(/tests[\\/]registration[\\/]browser\.cjs:(\d+):(\d+)/g)].map(match=>match[1]+':'+match[2]);
+  console.error('Registration browser acceptance failed:',error.name,'owned source frames',frames.join(','));process.exitCode=1;
+});

@@ -56,12 +56,14 @@ test('page departure clears authority and persisted restoration requires fresh s
 });
 function recipient(fetcher,fragment='token='+'a'.repeat(64)){
   const n=nodes(),events={},history=[];
+  n.get('joinStart').hidden=false;
   const context=vm.createContext({document:{getElementById:id=>n.get(id)},location:{hash:'#'+fragment,pathname:'/join'},
     history:{replaceState(...args){history.push(args)}},URLSearchParams,AbortController,fetch:fetcher,
     setTimeout(){return 1},clearTimeout(){},addEventListener(name,fn){events[name]=fn}});
   vm.runInContext(readFileSync(join(__dirname,'../../web/static/register-invitation.js'),'utf8'),context);
   const fill=()=>{n.get('joinUsername').value='ordinary_user';n.get('joinEmail').value='unverified@example.invalid';n.get('joinPassword').value='Z9'+String(987654321);n.get('joinConfirm').value=n.get('joinPassword').value;};
-  return {node:id=>n.get(id),events,history,fill,submit:()=>n.get('joinForm').listeners.submit({preventDefault(){}})};
+  return {node:id=>n.get(id),events,history,fill,context,submit:()=>n.get('joinForm').listeners.submit({preventDefault(){}}),
+    navigateFragment(value){context.location.hash='#token='+value;events.hashchange?.()}};
 }
 test('preview parsing removes the fragment and never automatically redeems or persists a capability',()=>{
   let calls=0;const h=recipient(async()=>{calls++;throw Error()});assert.equal(calls,0);assert.deepEqual(h.history[0],[null,'','/join']);
@@ -83,4 +85,21 @@ test('page departure aborts redemption and rejects its late success response',as
   h.fill();const work=h.submit();h.events.pagehide();assert.equal(signal.aborted,true);
   finish({status:201,json:async()=>({status:'registered',email_verified:false,registration_method:'administrator_invitation'})});await work;
   assert.equal(h.node('joinPassword').value,'');assert.doesNotMatch(h.node('joinStatus').textContent,/account is ready/);
+});
+test('a different invitation in the same document requires explicit consent and clears the old form',async()=>{
+  let calls=0;const h=recipient(async()=>{calls++;return {status:410,json:async()=>({})}});
+  h.fill();await h.submit();assert.equal(h.node('joinStart').hidden,true);
+  h.navigateFragment('b'.repeat(64));assert.equal(h.node('joinStart').hidden,false);
+  assert.equal(h.node('joinForm').hidden,true);assert.equal(h.node('joinPassword').value,'');assert.equal(calls,1);
+  h.node('joinStart').listeners.click();assert.equal(h.node('joinForm').hidden,false);assert.equal(calls,1);
+});
+test('replacing an in-flight invitation aborts it and fences its late response from the new invitation',async()=>{
+  let finish,signal;const pending=new Promise(resolve=>finish=resolve),submitted=[];
+  const h=recipient(async(_,options)=>{submitted.push(JSON.parse(options.body));if(submitted.length===1){signal=options.signal;return pending}
+    return {status:201,json:async()=>({status:'registered',email_verified:false,registration_method:'administrator_invitation'})}});
+  h.fill();const old=h.submit();h.navigateFragment('b'.repeat(64));assert.equal(signal.aborted,true);
+  finish({status:201,json:async()=>({status:'registered',email_verified:false,registration_method:'administrator_invitation'})});await old;
+  assert.doesNotMatch(h.node('joinStatus').textContent,/account is ready/);assert.equal(h.node('joinStart').hidden,false);
+  h.node('joinStart').listeners.click();h.fill();await h.submit();assert.equal(submitted[1].token,'b'.repeat(64));
+  assert.match(h.node('joinStatus').textContent,/account is ready/);
 });

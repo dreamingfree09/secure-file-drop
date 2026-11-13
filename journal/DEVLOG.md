@@ -654,3 +654,25 @@ Add explicit foreign/null Origin denials, a one-character alteration of a
 valid capability, and exact outcome_unconfirmed checks for both reporting
 faults. No application fault hooks, authentication shortcuts, weakened limits
 or production resources are introduced. Final exact-revision CI remains pending.
+
+
+### R4 same-document fragment recovery and response isolation
+
+Runs43429823224/43429831675 passed actual concurrent201/410 with exactly one
+account, SQL INSERT/deferred-COMMIT rollback, production-pgx before/after
+reporting faults and real runtime login. Chromium produced registration and
+success screenshots, then stopped at a click timeout; the remaining browser
+journey/restart/paired recovery were not accepted. Exact failure archive
+14039042172 SHA25648989c6945a46b5a625f5c1954c24f47014634faad37ac41b54abc66c28346d3
+was verified before reading its two allowed screenshots. An initial local ZIP
+path assertion rejected the nested names before extraction; preserve archive.
+
+Two new unit regressions independently reproduced the recipient's missing
+same-document fragment navigation and absent in-flight replacement fencing.
+Both fail on the previous source. Parse a newly opened fragment locally, erase
+it from history, clear/abort the old form and require new explicit consent.
+An epoch prevents late old success/error/finally from affecting a new receipt.
+Uncertain previous results still require ordinary sign-in before another try.
+All43 browser units now pass, zero skips. Keep the actual Chromium transition
+assertion; add source-coordinate-only diagnostics so future browser failures
+cannot disclose Playwright URL call logs. Full exact-head CI is pending.
