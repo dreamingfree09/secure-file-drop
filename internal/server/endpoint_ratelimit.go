@@ -53,7 +53,7 @@ func (erl *EndpointRateLimiter) Middleware(next http.Handler) http.Handler {
 		var limitType string
 
 		switch {
-		case strings.HasPrefix(path, "/login") || strings.HasPrefix(path, "/register"):
+		case strings.HasPrefix(path, "/login") || strings.HasPrefix(path, "/register") || path == "/registration-invitations/redeem":
 			limiter = erl.authLimiter
 			limitType = "authentication"
 

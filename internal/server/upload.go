@@ -307,7 +307,11 @@ func (cfg Config) uploadHandler(db *sql.DB, mc *minio.Client, bucket string) htt
 				ctx, cancel := context.WithTimeout(context.WithoutCancel(r.Context()), 5*time.Second)
 				defer cancel()
 				var address, name string
-				if db.QueryRowContext(ctx, "SELECT u.email,f.orig_name FROM files f JOIN users u ON u.id=f.user_id WHERE f.id=$1", id).Scan(&address, &name) == nil {
+				query := "SELECT u.email,f.orig_name FROM files f JOIN users u ON u.id=f.user_id WHERE f.id=$1"
+				if cfg.RegistrationInvitations {
+					query += " AND u.email_verified=TRUE"
+				}
+				if db.QueryRowContext(ctx, query, id).Scan(&address, &name) == nil {
 					_ = cfg.EmailSvc.SendFileUploadNotification(address, name, id.String(), cfg.BaseURL)
 				}
 			}()

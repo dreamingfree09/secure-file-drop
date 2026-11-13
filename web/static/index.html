@@ -1048,6 +1048,16 @@
         </div>
       </div>
 
+      <section class="main-card" id="registrationAdminPanel" aria-labelledby="registrationHeading" hidden>
+        <div class="registration-heading"><h2 id="registrationHeading">Invite someone to Secure File Drop</h2><button class="btn btn-secondary" id="registrationRefresh" type="button">Refresh invitations</button></div>
+        <p class="registration-note">Issue a private, single-use invitation for an ordinary account. No email delivery is required. This authorises registration; it does not verify email ownership. New accounts receive a 10 GiB quota.</p>
+        <div class="registration-controls"><label for="registrationTTL">Invitation expires after <select id="registrationTTL"><option value="3600">1 hour</option><option value="86400">24 hours</option></select></label><button class="btn btn-primary" id="registrationIssue" type="button">Create registration invitation</button></div>
+        <div class="registration-receipt" id="registrationReceipt" hidden><label for="registrationURL">Private invitation — copy now</label><input id="registrationURL" readonly autocomplete="off" spellcheck="false"><button class="btn btn-secondary" id="registrationCopy" type="button">Copy registration invitation</button></div>
+        <p id="registrationAdminStatus" role="status" aria-live="polite" aria-atomic="true"></p><div id="registrationAdminList"></div>
+        <button id="registrationMore" type="button" class="btn btn-secondary" hidden>Load older invitations</button>
+        <dialog id="registrationRevokeDialog" aria-labelledby="registrationRevokeTitle" aria-describedby="registrationRevokeHint"><h2 id="registrationRevokeTitle">Revoke this invitation?</h2><p id="registrationRevokeHint">This prevents registration with this link and cannot be undone. It does not delete or disable an account already created.</p><div class="registration-actions"><button class="btn btn-secondary" id="registrationRevokeCancel" type="button">Keep invitation</button><button class="btn btn-danger" id="registrationRevokeYes" type="button">Revoke this invitation</button></div></dialog>
+      </section>
+
       <!-- Admin Dashboard -->
       <div class="main-card" id="adminSection">
         <div class="admin-nav">
@@ -1099,6 +1109,7 @@ let logoutPending = false;
 const activeUploads = new Set();
 const activeRequests = new Set();
 function resetSessionUI() {
+  globalThis.SFDRegistrationAdmin?.reset();
   globalThis.SFDManagedLinks?.reset();
   globalThis.SFDResumable?.reset();
   sessionGeneration++;
@@ -1167,6 +1178,7 @@ async function loadConfig() {
       const config = await res.json();
       globalThis.SFDResumable?.configure(config);
       globalThis.SFDManagedLinks?.configure(config, myFilesAll);
+      globalThis.SFDRegistrationAdmin?.configure(config);
       maxUploadBytes = config.max_upload_bytes || 0;
     }
   } catch (err) {
@@ -1205,6 +1217,7 @@ async function login() {
         if (generation !== sessionGeneration) return;
         if (userData.status !== 'ok' || typeof userData.username !== 'string' || !userData.username || typeof userData.is_admin !== 'boolean') throw new Error('Session verification failed');
         isLoggedIn = true; isAdmin = userData.is_admin;
+        globalThis.SFDRegistrationAdmin?.activate(userData);
         for (const id of ['username','password','regPassword','regPasswordConfirm']) document.getElementById(id).value = '';
 
         // Show/hide admin section based on admin status
@@ -1251,6 +1264,7 @@ async function checkSession() {
     if (generation !== sessionGeneration || userData.status !== 'ok' || typeof userData.username !== 'string' || typeof userData.is_admin !== 'boolean') return;
     isLoggedIn = true;
     isAdmin = !!userData.is_admin;
+    globalThis.SFDRegistrationAdmin?.activate(userData);
 
     // Toggle UI
     document.getElementById('loginScreen').classList.add('hidden');
@@ -2710,5 +2724,7 @@ function downloadQRCode() {
 <script src="/static/resumable-v2.js" defer></script>
 <script src="/static/managed-links.js" defer></script>
 <link rel="stylesheet" href="/static/managed-links.css">
+<link rel="stylesheet" href="/static/registration.css">
+<script src="/static/registration-admin.js" defer></script>
 </body>
 </html>

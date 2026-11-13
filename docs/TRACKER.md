@@ -346,3 +346,14 @@ See [managed sharing](MANAGED_SHARING.md), [continuity](CONTINUITY.md) and the
 Aether acceptance of the browser candidate remains mandatory. Real50/100GiB,
 authenticated Rorschach access, off-host recovery and public deployment remain
 outstanding. Railway and all original installations/data are preserved.
+
+
+## 2026-11-13 — R4 administrator-authorised registration
+
+Actual PR66 master9e368c4fe4fca2fababc5eecbe81d456f87a23e5 passed all mandatory
+merged-source checks. The [new R4 candidate](REGISTRATION_INVITATIONS.md)
+provides opted-in issuer-only invitation management, explicit no-email browser
+registration, ordinary10GiB accounts, digest-only capability/audit storage and
+atomic one-use redemption. Current source/hosted result identities belong in
+the separate draft PR; independent review/integration remain pending. Preserve
+default schema13/14/15, existing records, deployment and recovery boundaries.

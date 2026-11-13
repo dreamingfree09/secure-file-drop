@@ -54,6 +54,12 @@ class StackTests(unittest.TestCase):
                      "R1_RESUMABLE_RESERVED_BYTES": "2147483648",
                      "R1_MANAGED_LINKS_ENABLED": "true"}
         self.assertEqual(stack.parse_env(render_env(qualified)), qualified)
+        registration = {**qualified, "R1_REGISTRATION_INVITATIONS_ENABLED": "true"}
+        self.assertEqual(stack.parse_env(render_env(registration)), registration)
+        with self.assertRaises(ValueError):
+            stack.parse_env(render_env({**registration, "R1_MANAGED_LINKS_ENABLED": "false"}))
+        with self.assertRaises(ValueError):
+            stack.parse_env(render_env({**qualified, "R1_REGISTRATION_INVITATIONS_ENABLED": "yes"}))
         for invalid in ("yes", "TRUE", "1"):
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 stack.parse_env(render_env({**qualified, "R1_MANAGED_LINKS_ENABLED": invalid}))

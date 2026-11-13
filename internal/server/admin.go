@@ -177,7 +177,11 @@ func (s *Server) deleteFile(w http.ResponseWriter, r *http.Request, id, owner st
 	}
 	defer func() { _ = tx.Rollback() }()
 	var key, name, address string
-	err = tx.QueryRowContext(ctx, `SELECT f.object_key,f.orig_name,COALESCE(u.email,'') FROM files f LEFT JOIN users u ON u.id=f.user_id
+	addressQuery := "COALESCE(u.email,'')"
+	if s.authCfg.RegistrationInvitations {
+		addressQuery = "CASE WHEN u.email_verified THEN COALESCE(u.email,'') ELSE '' END"
+	}
+	err = tx.QueryRowContext(ctx, "SELECT f.object_key,f.orig_name,"+addressQuery+` FROM files f LEFT JOIN users u ON u.id=f.user_id
  WHERE f.id=$1 AND ($2 OR f.user_id::text=$3) FOR UPDATE OF f`, id, admin, owner).Scan(&key, &name, &address)
 	if errors.Is(err, sql.ErrNoRows) {
 		http.Error(w, "not found", http.StatusNotFound)

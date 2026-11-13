@@ -114,12 +114,20 @@ func main() {
 		log.Printf("service=backend msg=%q", "invalid_managed_links_configuration")
 		os.Exit(1)
 	}
+	registrationInvitations, registrationErr := server.LoadRegistrationInvitationsConfig(managedLinks)
+	if registrationErr != nil {
+		log.Printf("service=backend msg=%q", "invalid_registration_invitation_configuration")
+		os.Exit(1)
+	}
 	migrate := db.RunMigrations
 	if resumable.MaxFileBytes > 0 {
 		migrate = db.RunResumableMigrations
 	}
 	if managedLinks {
 		migrate = db.RunManagedShareMigrations
+	}
+	if registrationInvitations {
+		migrate = db.RunRegistrationInvitationMigrations
 	}
 	if err := migrate(dbConn); err != nil {
 		log.Printf("service=backend msg=%q err=%v", "migration_failed", err)
@@ -138,6 +146,7 @@ func main() {
 	auth.DB = dbConn
 	auth.AccountLockout = accountLockout
 	auth.EmailService = emailSvc
+	auth.RegistrationInvitations = registrationInvitations
 
 	// Get public base URL for links (prefer SFD_PUBLIC_BASE_URL, fallback to SFD_BASE_URL)
 	baseURL := getenvDefault("SFD_PUBLIC_BASE_URL", getenvDefault("SFD_BASE_URL", "http://localhost:8080"))
@@ -149,14 +158,15 @@ func main() {
 	defer backupMgr.Stop()
 
 	srv := server.New(server.Config{
-		Addr:         addr,
-		Build:        build,
-		Auth:         auth,
-		DB:           dbConn,
-		EmailSvc:     emailSvc,
-		BaseURL:      baseURL,
-		Resumable:    resumable,
-		ManagedLinks: managedLinks,
+		Addr:                    addr,
+		Build:                   build,
+		Auth:                    auth,
+		DB:                      dbConn,
+		EmailSvc:                emailSvc,
+		BaseURL:                 baseURL,
+		Resumable:               resumable,
+		ManagedLinks:            managedLinks,
+		RegistrationInvitations: registrationInvitations,
 	})
 
 	// Start the HTTP server in a background goroutine.

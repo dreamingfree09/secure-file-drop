@@ -34,14 +34,15 @@ type BuildInfo struct {
 // EmailSvc is optional; when nil, a service is constructed from env.
 // BaseURL is the publicly reachable URL used in emails and link generation.
 type Config struct {
-	Addr         string // e.g. ":8080"
-	Build        BuildInfo
-	Auth         AuthConfig
-	DB           *sql.DB
-	EmailSvc     *EmailService
-	BaseURL      string // Base URL for email links (e.g. "http://localhost:8080")
-	Resumable    ResumableConfig
-	ManagedLinks bool // Opt-in only after schema15 and private Rorschach gates.
+	Addr                    string // e.g. ":8080"
+	Build                   BuildInfo
+	Auth                    AuthConfig
+	DB                      *sql.DB
+	EmailSvc                *EmailService
+	BaseURL                 string // Base URL for email links (e.g. "http://localhost:8080")
+	Resumable               ResumableConfig
+	ManagedLinks            bool // Opt-in only after schema15 and private Rorschach gates.
+	RegistrationInvitations bool // Opt-in only after the schema16 gate.
 }
 
 // Server wires HTTP routes to handlers and holds external dependencies.
@@ -74,6 +75,10 @@ type Server struct {
 // critical dependencies (MinIO). It panics early if required dependencies
 // are missing to avoid running in a half-configured state.
 func New(cfg Config) *Server {
+	if cfg.RegistrationInvitations && (!cfg.ManagedLinks || cfg.Resumable.MaxFileBytes <= 0) {
+		panic("registration invitations require their original enabled configuration")
+	}
+	cfg.Auth.RegistrationInvitations = cfg.RegistrationInvitations
 	if _, err := publicOrigin(); err != nil {
 		panic("invalid SFD_PUBLIC_BASE_URL")
 	}
@@ -236,6 +241,7 @@ func New(cfg Config) *Server {
 	mux.HandleFunc("/config", func(w http.ResponseWriter, _ *http.Request) {
 		maxBytes, _ := maxUploadBytes()
 		result := map[string]any{"max_upload_bytes": maxBytes, "managed_links_enabled": cfg.ManagedLinks}
+		result["registration_invitations_enabled"] = cfg.RegistrationInvitations
 		if cfg.Resumable.MaxFileBytes > 0 {
 			result["resumable_max_bytes"] = cfg.Resumable.MaxFileBytes
 			result["resumable_chunk_bytes"] = r2ChunkBytes
@@ -304,6 +310,12 @@ func New(cfg Config) *Server {
 
 	// Register endpoint (POST JSON {email,username,password})
 	mux.HandleFunc("/register", cfg.RegisterHandler)
+	if cfg.RegistrationInvitations {
+		mux.HandleFunc("/admin/registration-invitations", cfg.registrationInvitationsHandler)
+		mux.HandleFunc("DELETE /admin/registration-invitations/{id}", cfg.revokeRegistrationInvitation)
+		mux.HandleFunc("/registration-invitations/redeem", cfg.RedeemRegistrationInvitation)
+		mux.HandleFunc("/join", registrationPage)
+	}
 
 	// Email verification endpoint (GET /verify?token={token})
 	mux.HandleFunc("/verify", cfg.VerifyEmailHandler)

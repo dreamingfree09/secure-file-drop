@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow,noarchive">
+<title>Join Secure File Drop</title><link rel="stylesheet" href="/static/registration.css">
+<script src="/static/register-invitation.js" defer></script></head>
+<body class="join-page"><main class="join-shell">
+<div class="join-eyebrow">Secure File Drop</div><h1>Your invitation to join</h1>
+<p>An administrator has authorised you to create an ordinary account. Registration needs no email delivery.</p>
+<button id="joinStart" type="button">Use invitation</button>
+<form id="joinForm" hidden>
+<label for="joinUsername">Username</label><input id="joinUsername" name="username" autocomplete="username" minlength="3" maxlength="50" pattern="[A-Za-z0-9_]+" required>
+<label for="joinEmail">Contact email</label><input id="joinEmail" name="email" type="email" autocomplete="email" maxlength="254" aria-describedby="joinEmailHint" required>
+<p class="registration-note" id="joinEmailHint">This address is not verified by your invitation. Email-dependent features remain restricted. Sign in using your username.</p>
+<label for="joinPassword">Choose a password</label><input id="joinPassword" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="72" aria-describedby="joinPasswordHint" required>
+<p class="registration-note" id="joinPasswordHint">Use 8–72 bytes with letters and numbers.</p>
+<label for="joinConfirm">Confirm password</label><input id="joinConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+<button id="joinSubmit" type="submit">Create my account</button>
+</form>
+<p id="joinStatus" role="status" aria-live="polite" aria-atomic="true"></p>
+<a class="join-signin" id="joinSignIn" href="/" hidden>Go to sign in</a>
+<p class="registration-note">Invitations are private, expire and can be used once. If you reload this page, reopen the original invitation.</p>
+</main></body></html>

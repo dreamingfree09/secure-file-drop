@@ -21,7 +21,7 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	}
 	var outside bool
 	if err := conn.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
- WHERE c.oid=ANY(ARRAY[to_regclass('schema_migrations'),to_regclass('files'),to_regclass('users'),to_regclass('auth_sessions'),to_regclass('resumable_uploads'),to_regclass('audit_logs'),to_regclass('sessions'),to_regclass('file_invitations'),to_regclass('invitation_send_ledger'),to_regclass('r2_uploads'),to_regclass('r2_parts'),to_regclass('managed_share_links')]::oid[])
+ WHERE c.oid=ANY(ARRAY[to_regclass('schema_migrations'),to_regclass('files'),to_regclass('users'),to_regclass('auth_sessions'),to_regclass('resumable_uploads'),to_regclass('audit_logs'),to_regclass('sessions'),to_regclass('file_invitations'),to_regclass('invitation_send_ledger'),to_regclass('r2_uploads'),to_regclass('r2_parts'),to_regclass('managed_share_links'),to_regclass('registration_invitations'),to_regclass('registration_invitation_audit')]::oid[])
  AND n.nspname<>current_schema())`).Scan(&outside); err != nil {
 		return fmt.Errorf("schema resolution inspection: %w", err)
 	}
@@ -31,7 +31,7 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	var versioned, files, users, sessions, canonical, applicationData bool
 	if err := conn.QueryRowContext(ctx, `SELECT to_regclass('schema_migrations') IS NOT NULL,to_regclass('files') IS NOT NULL,to_regclass('users') IS NOT NULL,to_regclass('auth_sessions') IS NOT NULL,
  EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema=current_schema() AND table_name='sessions'),
- EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname IN ('files','users','auth_sessions','resumable_uploads','audit_logs','sessions','file_invitations','invitation_send_ledger','r2_uploads','r2_parts','managed_share_links'))`).Scan(&versioned, &files, &users, &sessions, &canonical, &applicationData); err != nil {
+ EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=current_schema() AND c.relname IN ('files','users','auth_sessions','resumable_uploads','audit_logs','sessions','file_invitations','invitation_send_ledger','r2_uploads','r2_parts','managed_share_links','registration_invitations','registration_invitation_audit'))`).Scan(&versioned, &files, &users, &sessions, &canonical, &applicationData); err != nil {
 		return fmt.Errorf("lineage inspection: %w", err)
 	}
 	if canonical {
@@ -55,7 +55,7 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 	if err != nil {
 		return fmt.Errorf("schema version inspection: %w", err)
 	}
-	if dirty || rows != 1 || version < 11 || version > 15 {
+	if dirty || rows != 1 || version < 11 || version > 16 {
 		return incompatible
 	}
 	if version == 11 && sessions {
@@ -123,12 +123,28 @@ func checkSchemaLineage(ctx context.Context, conn *sql.Conn) error {
 		return incompatible
 	}
 	var managedShareTables bool
-	if err := conn.QueryRowContext(ctx, `SELECT CASE WHEN $1=15 THEN
+	if err := conn.QueryRowContext(ctx, `SELECT CASE WHEN $1>=15 THEN
 		to_regclass('managed_share_links') IS NOT NULL
 		ELSE to_regclass('managed_share_links') IS NULL END`, version).Scan(&managedShareTables); err != nil {
 		return fmt.Errorf("managed share schema inspection: %w", err)
 	}
 	if !managedShareTables {
+		return incompatible
+	}
+	var registrationTables bool
+	if err := conn.QueryRowContext(ctx, `SELECT CASE WHEN $1=16 THEN
+	 to_regclass('registration_invitations') IS NOT NULL AND to_regclass('registration_invitation_audit') IS NOT NULL
+	 AND (SELECT count(*)=15 FROM information_schema.columns WHERE table_schema=current_schema() AND
+	 ((table_name='registration_invitations' AND column_name IN ('id','token_sha256','issuer','created_at','expires_at','revoked_at','redeemed_at','redeemed_by'))
+	 OR (table_name='registration_invitation_audit' AND column_name IN ('invitation_id','event','occurred_at','issuer','account_id'))
+	 OR (table_name='users' AND ((column_name='registration_method' AND data_type='text' AND is_nullable='NO')
+	 OR (column_name='registration_invitation_id' AND data_type='uuid')))))
+	 ELSE to_regclass('registration_invitations') IS NULL AND to_regclass('registration_invitation_audit') IS NULL
+	 AND NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='users'
+	 AND column_name IN ('registration_method','registration_invitation_id')) END`, version).Scan(&registrationTables); err != nil {
+		return fmt.Errorf("registration schema inspection: %w", err)
+	}
+	if !registrationTables {
 		return incompatible
 	}
 	return nil

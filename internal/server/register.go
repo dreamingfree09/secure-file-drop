@@ -129,6 +129,10 @@ func sendPasswordResetEmail(emailSvc *EmailService, baseURL, email, token string
 
 // RegisterHandler handles POST /register requests for user registration
 func (cfg Config) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	if cfg.RegistrationInvitations {
+		registrationError(w, http.StatusForbidden, "registration_invitation_required")
+		return
+	}
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -349,7 +353,11 @@ func (cfg Config) RequestPasswordResetHandler(w http.ResponseWriter, r *http.Req
 
 	// Check if user exists
 	var userID string
-	err := cfg.DB.QueryRowContext(ctx, "SELECT id FROM users WHERE email = $1 AND is_active = TRUE", req.Email).Scan(&userID)
+	query := "SELECT id FROM users WHERE email = $1 AND is_active = TRUE"
+	if cfg.RegistrationInvitations {
+		query += " AND email_verified=TRUE"
+	}
+	err := cfg.DB.QueryRowContext(ctx, query, req.Email).Scan(&userID)
 	if err == sql.ErrNoRows {
 		// Don't reveal if email exists or not for security
 		w.Header().Set("Content-Type", "application/json")
@@ -436,11 +444,11 @@ func (cfg Config) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	// Find user with valid token
 	var userID string
 	var expiresAt time.Time
-	err := cfg.DB.QueryRowContext(ctx, `
-		SELECT id, reset_token_expires
-		FROM users
-		WHERE reset_token = $1 AND is_active = TRUE
-	`, req.Token).Scan(&userID, &expiresAt)
+	query := "SELECT id,reset_token_expires FROM users WHERE reset_token=$1 AND is_active=TRUE"
+	if cfg.RegistrationInvitations {
+		query += " AND email_verified=TRUE"
+	}
+	err := cfg.DB.QueryRowContext(ctx, query, req.Token).Scan(&userID, &expiresAt)
 
 	if err == sql.ErrNoRows {
 		http.Error(w, "Invalid or expired reset token", http.StatusNotFound)
@@ -502,6 +510,10 @@ func (cfg Config) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 // authenticateUser checks credentials against the database
 func authenticateUser(parent context.Context, db *sql.DB, username, password string) (string, bool, error) {
+	return authenticateUserWithInvitations(parent, db, username, password, false)
+}
+
+func authenticateUserWithInvitations(parent context.Context, db *sql.DB, username, password string, invitations bool) (string, bool, error) {
 	ctx, cancel := sqlContext(parent)
 	defer cancel()
 	var userID string
@@ -510,8 +522,12 @@ func authenticateUser(parent context.Context, db *sql.DB, username, password str
 
 	log.Printf("auth: attempting login (username: %s)", username)
 
-	err := db.QueryRowContext(ctx,
-		"SELECT id, password_hash, email_verified FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE",
+	query := "SELECT id, password_hash, email_verified FROM users WHERE (username = $1 OR email = $1) AND is_active = TRUE"
+	if invitations {
+		// Unverified contact addresses are not login aliases or proof of inbox ownership.
+		query = "SELECT id,password_hash," + invitationIdentityPredicate + " FROM users WHERE (username=$1 OR (email=$1 AND email_verified=TRUE)) AND is_active=TRUE"
+	}
+	err := db.QueryRowContext(ctx, query,
 		username,
 	).Scan(&userID, &passwordHash, &emailVerified)
 

@@ -577,3 +577,29 @@ Second browser run43125454624 passed the real user journey and PostgreSQL pagina
 Visual readback: artifact13903088098 from source5e8d255 archive SHA2569d2cd3f38251c40866e9ab9e569a4175d52b5b5648b0fb92a56817318ab9a2dd verified before PNG extraction. Desktop and mobile confirmation inspected. Existing global resets left the new panel without padding and the modal at the top-left; explicitly scope panel padding, desktop button sizing and dialog auto margins. No changes to existing upload/protected-sharing layouts. Final screenshots and exact-head runtime checks remain required.
 
 Supplemental code review4544707745 identified a real delayed-config race: authenticated files can finish before the feature flag and leave no selector choices. Configuration now receives only the current session backing list, without caching an earlier account list. Add a seventh state unit test and real Chromium authenticated reload that deliberately holds configuration until the parsed file list is complete. Existing session-generation checks and feature-disabled behaviour remain intact.
+
+
+## 2026-11-13 — R4 no-SMTP registration implementation
+
+Work SFD-RORSCHACH-R4-ADMIN-REGISTRATION-20261113. Verified Aether6851429781 and
+actual master9e368c4fe4fca2fababc5eecbe81d456f87a23e5 (accepted tree20b128d)
+before implementation; six merged-master workflows and required runtime,
+Windows, Go1.26.11 and real10GiB results passed. Dedicated R4 worker preserves
+all previous branches and original no-origin working tree.
+
+Implemented guarded additive16, digest-only issuer/expiry/redeem/revoke/audit,
+ordinary10GiB accounts and separate administrator-invitation registration
+provenance. Existing email ownership remains false and email-dependent access
+and notifications remain restricted. Explicit fragment-private recipient page,
+issuer management, strict Origin and bounded requests accompany atomic account
+creation/consumption. No automatic retry or compensation after unknown COMMIT.
+Added real-PostgreSQL transaction reporting faults, no-email Chromium flow,
+schema13/14/15 credential/file SHA-256 preservation and separate paired restore.
+
+Local guard test and nine browser-state regressions pass; transaction package
+was compiled only, not executed locally against a database. Final CI evidence,
+failures and exact source belong in the draft PR. Two preparation helpers had
+local encoding/assertion errors: the completed filesystem writes were checked,
+and a pre-write overly broad assertion was corrected. Neither was a runtime
+acceptance result or a reason to weaken tests. No Owner engine, account, data,
+credential, trust, backup or deployment operation occurred.
