@@ -13,6 +13,11 @@ async function main(){
   const recipientContext=await browser.newContext({viewport:{width:390,height:844},acceptDownloads:true});
   const admin=await adminContext.newPage(),recipient=await recipientContext.newPage();
   const errors=[];for(const page of [admin,recipient])page.on('pageerror',err=>errors.push(err.name));
+  const receipts=[],paths=new Set(['/login','/me','/config','/files','/upload','/links','/quota','/user/files','/logout','/invitations','/admin/registration-invitations','/registration-invitations/redeem']);
+  for(const [name,page] of [['admin',admin],['recipient',recipient]])page.on('response',response=>{
+    const url=new URL(response.url());if(url.origin!==origin||!paths.has(url.pathname))return;
+    receipts.push({page:name,path:url.pathname,status:response.status()});if(receipts.length>64)receipts.shift();
+  });
   const api=async(page,path,method='GET',body)=>page.evaluate(async({path,method,body})=>{
     const response=await fetch(path,{method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined});
     return {status:response.status,body:await response.text()};
@@ -137,6 +142,10 @@ async function main(){
     assert.deepEqual(errors,[]);
     console.log('PASS: real Chromium administrator issue/copy, fragment-private preview, explicit no-email registration and ordinary username/password login');
     console.log('PASS: native-hashed upload/download bytes, quota/role/owner/email restrictions, invitation replay/revocation, mobile/desktop and logout isolation');
+  }catch(error){
+    const state=await recipient.evaluate(()=>({authenticated:isLoggedIn,generation:sessionGeneration,uploading:uploadInProgress,
+      selected:!!selectedFile,current:!!currentUpload,queued:uploadQueue.length,receipt:document.querySelector('#linkContainer')?.classList.contains('show')===true})).catch(()=>({documentUnavailable:true}));
+    console.error('Bounded fixed-path HTTP receipts:',JSON.stringify(receipts));console.error('Synthetic upload state:',JSON.stringify(state));throw error;
   }finally{await adminContext.close();await recipientContext.close();await browser.close();}
 }
 main().catch(error=>{

@@ -676,3 +676,16 @@ Uncertain previous results still require ordinary sign-in before another try.
 All43 browser units now pass, zero skips. Keep the actual Chromium transition
 assertion; add source-coordinate-only diagnostics so future browser failures
 cannot disclose Playwright URL call logs. Full exact-head CI is pending.
+
+
+### R4 parallel-run discrepancy retained for diagnosis
+
+Exact ccf6557 push43431645396 completed the full real browser registration,
+ordinary login/upload/download, replay/revocation, restart, issuer cap and
+independent paired restore successfully. Parallel PR43431652862 passed the
+PostgreSQL concurrency/failure/unknown-COMMIT checks, then timed out waiting
+for the upload receipt at browser.cjs105. A single green run does not close
+this discrepancy. Preserve both outcomes. Add only a bounded fixed-path/status
+receipt and boolean/count UI-state diagnostic on failure; never print complete
+URLs, query strings, bodies, headers, passwords or tokens. All existing browser
+and HTTP assertions remain unchanged. Cause and final acceptance are pending.
