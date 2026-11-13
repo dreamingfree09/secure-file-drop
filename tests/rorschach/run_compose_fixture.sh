@@ -46,10 +46,6 @@ project=sfd-rorschach-$(openssl rand -hex 6)
 label="label=com.docker.compose.project=$project"
 [[ -z "$(docker ps -aq --filter "$label")" && -z "$(docker volume ls -q --filter "$label")" && -z "$(docker network ls -q --filter "$label")" ]]
 compose=(docker compose --env-file /dev/null -f deploy/rorschach/compose.yml -p "$project")
-if [[ "${SFD_R4_FIXTURE:-0}" == 1 ]]; then
-    printf 'services:\n  postgres:\n    ports:\n      - "127.0.0.1::5432"\n' >"$root/r4-postgres.yml"
-    compose=(docker compose --env-file /dev/null -f deploy/rorschach/compose.yml -f "$root/r4-postgres.yml" -p "$project")
-fi
 trap '"${compose[@]}" ps -a' ERR
 "${compose[@]}" config --quiet
 "${compose[@]}" build backend provision
@@ -91,11 +87,9 @@ SELECT encode(sha256(convert_to(json_agg(ROW(id,user_id,object_key,status,orig_n
     printf "INSERT INTO users(email,username,password_hash,email_verified,is_active,is_admin) VALUES ('r4-unverified@example.invalid','r4_legacy_unverified','%s',false,true,false),('r4-dbadmin@example.invalid','r4_database_admin','%s',true,true,true);\n" "$user_hash" "$user_hash" | fixture_sql
     fixture_sql <<<"CREATE TABLE r4_fixture_ownership(owner text NOT NULL); INSERT INTO r4_fixture_ownership VALUES ('$project');"
     export SFD_R4_PROJECT="$project" SFD_R4_TEST_OWNER="$project"
-    pg_binding=$("${compose[@]}" port postgres 5432)
-    [[ "$pg_binding" =~ ^127\.0\.0\.1:([0-9]+)$ ]]
-    export SFD_R4_TEST_DSN="postgres://sfd:$R1_PG_APP@127.0.0.1:${BASH_REMATCH[1]}/sfd?sslmode=disable"
-    # Plain PostgreSQL is confined to this hosted runner's loopback; application
-    # and browser traffic retain independently validating HTTPS throughout.
+    export SFD_R4_TEST_DSN="postgres://sfd:$R1_PG_APP@postgres:5432/sfd?sslmode=disable"
+    # The static fault-test executable runs inside the owned internal database
+    # network. No database host port or non-internal network is added.
     mkdir -p "$root/r4-browser-home/.pki/nssdb"
     certutil -N --empty-password -d "sql:$root/r4-browser-home/.pki/nssdb"
     certutil -A -n "SFD owned registration HTTPS fixture" -t 'C,,' -i "$root/origin-ca.pem" -d "sql:$root/r4-browser-home/.pki/nssdb"
@@ -227,9 +221,6 @@ source_volume="${project}_objects"
 restore_project=sfd-rorschach-$(openssl rand -hex 6)
 restore_volume="${restore_project}_objects"
 restore=(docker compose --env-file /dev/null -f deploy/rorschach/compose.yml -p "$restore_project")
-if [[ "${SFD_R4_FIXTURE:-0}" == 1 ]]; then
-    restore=(docker compose --env-file /dev/null -f deploy/rorschach/compose.yml -f "$root/r4-postgres.yml" -p "$restore_project")
-fi
 trap '"${restore[@]}" ps -a' ERR
 restore_label="label=com.docker.compose.project=$restore_project"
 [[ "$restore_project" != "$project" && -z "$(docker ps -aq --filter "$restore_label")" &&

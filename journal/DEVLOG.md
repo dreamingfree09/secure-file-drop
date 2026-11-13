@@ -603,3 +603,7 @@ local encoding/assertion errors: the completed filesystem writes were checked,
 and a pre-write overly broad assertion was corrected. Neither was a runtime
 acceptance result or a reason to weaken tests. No Owner engine, account, data,
 credential, trust, backup or deployment operation occurred.
+
+### R4 first hosted failures and correction
+
+Initiale2993f4 core43426344701 fails four lint findings: import grouping, deprecated driver Begin, redundant embedded selector and unused authentication wrapper. Correct source/modern test-driver BeginTx without exclusions. Registration43426344891 verified schema13/14/15 preservation and16 activation, then stopped because an internal-only database network provided no host port. Preserve that isolation: compile the test-only transaction executable on the runner and execute it read-only/non-root in the exact owned internal database network with ownership marker and immutable image identity checks. No production network change or host database port is introduced. All actual new runtime assertions remain pending corrected CI.

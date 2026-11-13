@@ -18,9 +18,10 @@ import (
 	"strings"
 	"testing"
 
+	"secure-file-drop/internal/server"
+
 	"github.com/google/uuid"
 	"github.com/lib/pq"
-	"secure-file-drop/internal/server"
 )
 
 type commitConnector struct {
@@ -42,8 +43,12 @@ type commitConnection struct {
 	mode string
 }
 
-func (c commitConnection) Begin() (driver.Tx, error) {
-	tx, err := c.Conn.Begin()
+func (c commitConnection) BeginTx(ctx context.Context, options driver.TxOptions) (driver.Tx, error) {
+	beginner, ok := c.Conn.(driver.ConnBeginTx)
+	if !ok {
+		return nil, errors.New("fixture driver requires context-aware transactions")
+	}
+	tx, err := beginner.BeginTx(ctx, options)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +62,7 @@ type commitTransaction struct {
 
 func (tx commitTransaction) Commit() error {
 	if tx.mode == "before" {
-		_ = tx.Tx.Rollback()
+		_ = tx.Rollback()
 		return errors.New("owned fixture reports failed commit before application")
 	}
 	if err := tx.Tx.Commit(); err != nil {
@@ -73,7 +78,7 @@ func TestRegistrationUnknownCommit(t *testing.T) {
 	}
 	parsed, err := url.Parse(dsn)
 	owner := os.Getenv("SFD_R4_TEST_OWNER")
-	if err != nil || parsed.Hostname() != "127.0.0.1" || parsed.Port() == "" || parsed.Path != "/sfd" ||
+	if err != nil || parsed.Hostname() != "postgres" || parsed.Port() != "5432" || parsed.Path != "/sfd" ||
 		!strings.HasPrefix(owner, "sfd-rorschach-") || os.Getenv("GITHUB_ACTIONS") != "true" || os.Getenv("RUNNER_ENVIRONMENT") != "github-hosted" {
 		t.Fatal("refusing an unqualified database target")
 	}

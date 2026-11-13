@@ -509,11 +509,7 @@ func (cfg Config) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // authenticateUser checks credentials against the database
-func authenticateUser(parent context.Context, db *sql.DB, username, password string) (string, bool, error) {
-	return authenticateUserWithInvitations(parent, db, username, password, false)
-}
-
-func authenticateUserWithInvitations(parent context.Context, db *sql.DB, username, password string, invitations bool) (string, bool, error) {
+func authenticateUser(parent context.Context, db *sql.DB, username, password string, invitations bool) (string, bool, error) {
 	ctx, cancel := sqlContext(parent)
 	defer cancel()
 	var userID string

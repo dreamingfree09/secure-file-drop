@@ -17,8 +17,7 @@ ROOT = Path(os.environ['R1_RUNTIME'])
 PROJECT = os.environ['SFD_R4_PROJECT']
 assert re.fullmatch(r'sfd-rorschach-[a-f0-9]{12}', PROJECT)
 assert os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('RUNNER_ENVIRONMENT') == 'github-hosted'
-COMPOSE = ['docker', 'compose', '--env-file', '/dev/null', '-f', 'deploy/rorschach/compose.yml',
-           '-f', str(ROOT / 'r4-postgres.yml'), '-p', PROJECT]
+COMPOSE = ['docker', 'compose', '--env-file', '/dev/null', '-f', 'deploy/rorschach/compose.yml', '-p', PROJECT]
 COOKIE = ''
 PASSWORD = os.environ['SFD_R1_FIXTURE_USER_PASSWORD']
 
@@ -210,7 +209,25 @@ def main():
     print('PASS: expiry/revocation and real SQL INSERT/deferred-COMMIT failures preserve atomic account/invitation state', flush=True)
     # True transaction outcome uncertainty: the production handler uses a real
     # PostgreSQL transaction through a test-only reporting driver. No app hook.
-    subprocess.run(['go', 'test', '-race', '-v', './tests/registration', '-count=1'], check=True)
+    executable = ROOT / 'registration-transaction-tests'
+    subprocess.run(['go', 'test', '-c', '-o', str(executable), './tests/registration'],
+                   env={**os.environ, 'CGO_ENABLED': '0'}, check=True)
+    executable.chmod(0o555)
+    network = PROJECT + '_database'
+    assert command(['docker', 'network', 'inspect', '--format', '{{index .Labels "com.docker.compose.project"}}', network]) == PROJECT
+    assert command(['docker', 'network', 'inspect', '--format', '{{.Internal}}', network]) == 'true'
+    test_name = PROJECT + '-registration-transactions'
+    assert not command(['docker', 'ps', '-aq', '--filter', 'name=^/' + test_name + '$'])
+    image = command(['docker', 'image', 'inspect', '--format', '{{.Id}}', PROJECT + '-backend'])
+    assert re.fullmatch(r'sha256:[a-f0-9]{64}', image)
+    subprocess.run(['docker', 'run', '--rm', '--name', test_name, '--label', 'sfd.registration.fixture=' + PROJECT,
+        '--network', network, '--read-only', '--user', '10001:10001', '--cap-drop', 'ALL',
+        '--security-opt', 'no-new-privileges', '--tmpfs', '/tmp:rw,noexec,nosuid,size=32m',
+        '--env', 'SFD_R4_TEST_DSN', '--env', 'SFD_R4_TEST_OWNER', '--env', 'SFD_R1_FIXTURE_USER_PASSWORD',
+        '--env', 'GITHUB_ACTIONS', '--env', 'RUNNER_ENVIRONMENT',
+        '--mount', 'type=bind,source=' + str(executable) + ',target=/registration-tests,readonly',
+        '--entrypoint', '/registration-tests', image, '-test.v', '-test.run', '^TestRegistrationUnknownCommit$'],
+        check=True, timeout=120)
     login('r4_commit_before')
     login('r4_commit_after')
     print('PASS: both real PostgreSQL pre-COMMIT rollback and post-COMMIT lost acknowledgement reconciled; actual runtime login succeeds', flush=True)

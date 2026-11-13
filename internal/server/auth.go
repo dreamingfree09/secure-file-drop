@@ -195,7 +195,7 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		// First, try database authentication if DB is available
 		if a.DB != nil {
 			var authErr error
-			userID, authenticated, authErr = authenticateUserWithInvitations(r.Context(), a.DB, body.Username, body.Password, a.RegistrationInvitations)
+			userID, authenticated, authErr = authenticateUser(r.Context(), a.DB, body.Username, body.Password, a.RegistrationInvitations)
 			if authErr != nil {
 				http.Error(w, "server error", http.StatusInternalServerError)
 				return
