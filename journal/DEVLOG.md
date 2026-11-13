@@ -626,3 +626,16 @@ policy exists and respecting no-referrer otherwise. The assertion is retained.
 Caddy primary reference: https://caddyserver.com/docs/caddyfile/directives/header
 Run43427343604 Go/race/vulnerability/lint job131891922072 passed after the
 previous correction. Final runtime acceptance remains pending this revision.
+
+
+### R4 inherited empty-list contract
+
+Run43428419992 passed actual schema preservation and the corrected HTTPS
+no-referrer check, then stopped because the new harness expected [] from an
+empty owned-file list. Existing UserFilesHandler encodes its nil Go slice as
+JSON null (admin.go118), with its UUID-scoped predicate unchanged. Retain that
+API and check either empty representation plus an independent SQL zero-row
+assertion for the newly invited account; no foreign file is accepted and no
+application assertion is removed. Final registration acceptance remains pending.
+Local invocation corrections: Node needs tests/web/*.test.cjs on Windows;
+doc-link Python needs UTF-8 mode. Correct invocations passed41/41 and44 docs.

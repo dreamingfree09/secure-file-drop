@@ -143,7 +143,11 @@ def main():
     call('POST', '/admin/registration-invitations', 403, {'ttl_seconds': 3600})
     call('DELETE', '/admin/registration-invitations/' + primary, 403)
     call('GET', '/admin/files', 403)
-    assert json.loads(call('GET', '/user/files', 200)[0]) == []
+    # The inherited empty Go slice is encoded as JSON null, not an array.
+    # Preserve that API contract and independently require no owned rows.
+    listing = json.loads(call('GET', '/user/files', 200)[0])
+    assert listing is None or listing == []
+    assert sql("SELECT count(*) FROM files f JOIN users u ON u.id=f.user_id WHERE u.username='r4_api_user'") == '0'
     assert json.loads(call('GET', '/quota', 200)[0])['storage_quota_bytes'] == 10 << 30
     call('POST', '/logout', 200)
     call('GET', '/me', 401)
