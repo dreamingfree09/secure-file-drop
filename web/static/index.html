@@ -982,6 +982,27 @@
         </form>
       </section>
 
+      <section class="main-card" id="managedLinksPanel" aria-labelledby="managedHeading" hidden>
+        <div class="managed-heading"><h2 id="managedHeading">Your sharing links</h2>
+          <button class="btn btn-secondary" id="managedRefresh" type="button">Refresh links</button></div>
+        <p class="managed-note">Manage the links you have issued. Revoking a link stops new downloads, including resumed requests. Downloads already in progress may finish. Older legacy links expire normally and are not listed here.</p>
+        <div class="managed-controls"><label for="managedFile">Uploaded file<select id="managedFile"><option value="">All files</option></select></label>
+          <button class="btn btn-primary" id="managedCreate" type="button">Create one-hour link</button></div>
+        <div class="managed-issued" id="managedIssued" hidden><label for="managedURL">New sharing link — copy now</label>
+          <input id="managedURL" readonly autocomplete="off" spellcheck="false">
+          <button class="btn btn-secondary" id="managedCopy" type="button">Copy sharing link</button>
+          <p class="managed-note">Anyone with this link can download. For a separate access code, use Protected Sharing.</p></div>
+        <p id="managedStatus" role="status" aria-live="polite" aria-atomic="true"></p>
+        <div class="managed-list" id="managedList"></div>
+        <button class="btn btn-secondary" id="managedMore" type="button" hidden>Load older links</button>
+        <dialog id="managedConfirm" aria-labelledby="managedConfirmTitle" aria-describedby="managedConfirmName managedConfirmHint">
+          <h2 id="managedConfirmTitle">Revoke sharing link?</h2><p id="managedConfirmName"></p>
+          <p id="managedConfirmHint">This cannot be undone. New downloads will be blocked; any download already streaming may finish. The file and other links stay available.</p>
+          <div class="managed-actions"><button class="btn btn-secondary" id="managedConfirmCancel" type="button">Keep link</button>
+            <button class="btn btn-danger" id="managedConfirmYes" type="button">Revoke this link</button></div>
+        </dialog>
+      </section>
+
       <!-- My Uploads Section -->
       <div class="main-card">
         <div class="admin-nav" style="cursor: pointer;" onclick="toggleMyUploads()">
@@ -1078,6 +1099,7 @@ let logoutPending = false;
 const activeUploads = new Set();
 const activeRequests = new Set();
 function resetSessionUI() {
+  globalThis.SFDManagedLinks?.reset();
   globalThis.SFDResumable?.reset();
   sessionGeneration++;
   isLoggedIn = false; isAdmin = false;
@@ -1144,6 +1166,7 @@ async function loadConfig() {
     if (res.ok) {
       const config = await res.json();
       globalThis.SFDResumable?.configure(config);
+      globalThis.SFDManagedLinks?.configure(config, myFilesAll);
       maxUploadBytes = config.max_upload_bytes || 0;
     }
   } catch (err) {
@@ -1198,6 +1221,7 @@ async function login() {
       document.getElementById('loginScreen').classList.add('hidden');
       document.getElementById('appScreen').classList.remove('hidden');
       document.getElementById('logoutBtn').classList.remove('hidden');
+      void globalThis.SFDManagedLinks?.refresh();
       loadMyFiles();
       loadQuota();
 
@@ -1240,6 +1264,7 @@ async function checkSession() {
     }
 
     // Load user data
+    void globalThis.SFDManagedLinks?.refresh();
     loadMyFiles();
     loadQuota();
 
@@ -1900,6 +1925,7 @@ async function loadMyFiles() {
     const files = await res.json();
     if (!isLoggedIn || generation !== sessionGeneration) return;
     myFilesAll = files;
+    globalThis.SFDManagedLinks?.files(files);
 
     const countEl = document.getElementById('myFilesCount');
     if (countEl) {
@@ -2682,5 +2708,7 @@ function downloadQRCode() {
   link.click();
 }</script>
 <script src="/static/resumable-v2.js" defer></script>
+<script src="/static/managed-links.js" defer></script>
+<link rel="stylesheet" href="/static/managed-links.css">
 </body>
 </html>

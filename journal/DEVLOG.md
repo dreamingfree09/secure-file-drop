@@ -551,3 +551,29 @@ Initial candidate1b55b807 passes the new provider unit cases, but hosted CI41937
 ### 2026-11-05 — Issue53 exact-count enforcement
 
 The provider regression addition contributes20 Go pass events (two parent tests plus18 subcases). The unchanged full-stack baseline259 therefore becomes279; the portable fixture and its hosted workflow retain exact equality, zero skips/failures and every existing lineage/lifecycle/COMMIT counter. Update the workflow expectation in its own commit under AGENTS.md; do not disable or loosen any check. Exact-head artifacts must confirm the actual count. Browser27/backend124 and the additional isolated invitation UI14 remain separate.
+
+
+## 2026-11-12 — managed-link browser candidate
+
+SFD-RORSCHACH-R3-LINK-MANAGEMENT-COMPLETE: independently reviewed Aether PR65
+15408a2159e71491967c5a4fdfca7873a993b06d and normally integrated it as
+7c6137aa4db0e8a92f35d3541d16a271c79d298a. Both ordered parents and intervening
+preflight files are preserved. The separate Codex browser worker adds scoped
+metadata pagination/status, responsive private cards, one-time link copying,
+confirmed revocation and stale-response/session isolation. Existing24 and new6
+browser unit tests pass locally; real hosted acceptance is pending publication.
+Exact final source, executed/failing CI, independent acknowledgement and
+limitations belong in the PR handover. No live deployment/data/engine/trust
+changes. The separate next no-email onboarding assignment remains design-only.
+
+### Actual-master security gate correction
+
+Master7c6137a core43123437368 fails the newly published GO-2026-6859 standard-library gate; downstream canonical backend is blocked at the same scanner. Unit/race/vet/build passed before that failure; lint and real canonical backend were not executed. Upgrade active build/test pins to Go1.26.11 and independently verified amd64 build-base digest f496f8c537ed506626ee1a6913afb32c45068a48697163c088f604cc775a0c38. Preserve historical evidence pins and failed master receipts. No vulnerability suppression or live deployment. Exact corrected CI remains mandatory.
+
+First browser runtime43125022305 candidate job130874793080 reached real upload/copy/preview/download and revoke, then its strict text selector matched both the Revoked badge and Revoked timestamp label. Correct the selector to the status class; retain the assertion and failed evidence. No application check is removed.
+
+Second browser run43125454624 passed the real user journey and PostgreSQL pagination/expiry tests, then timed out entering the history phase. The fixture performs ten logins within the active backend minute before its history login; production authentication remains limited to ten/minute. Add explicit login HTTP-status diagnostics and one bounded wait only for a verified429 with Retry-After60, then repeat the ordinary browser login. No limit, authentication assertion or deadline is weakened. Final logs must establish whether that was the observed cause.
+
+Visual readback: artifact13903088098 from source5e8d255 archive SHA2569d2cd3f38251c40866e9ab9e569a4175d52b5b5648b0fb92a56817318ab9a2dd verified before PNG extraction. Desktop and mobile confirmation inspected. Existing global resets left the new panel without padding and the modal at the top-left; explicitly scope panel padding, desktop button sizing and dialog auto margins. No changes to existing upload/protected-sharing layouts. Final screenshots and exact-head runtime checks remain required.
+
+Supplemental code review4544707745 identified a real delayed-config race: authenticated files can finish before the feature flag and leave no selector choices. Configuration now receives only the current session backing list, without caching an earlier account list. Add a seventh state unit test and real Chromium authenticated reload that deliberately holds configuration until the parsed file list is complete. Existing session-generation checks and feature-disabled behaviour remain intact.

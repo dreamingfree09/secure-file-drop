@@ -360,3 +360,27 @@ The provider regression addition contributes20 Go pass events (two parent tests 
 ## 2026-11-08 Rorschach resumable transfer implementation
 
 PR #61 was integrated normally at `2d29a777b7398e805339445ada6b28d5daaea958` and its actual master checks passed. The exact PR #62 primitive received REVISE. The corrected [resumable worker](https://github.com/dreamingfree09/secure-file-drop/pull/63) preserves both histories and contains the opt-in schema 14 API, browser flow and isolated acceptance. See the [resumable runbook](RORSCHACH_RESUMABLE_V2.md). Independent review, host qualification and the full 100 GiB evidence remain rollout gates.
+
+## 2026-11-12 — managed-link integration and browser candidate
+
+Work SFD-RORSCHACH-R3-LINK-MANAGEMENT-COMPLETE. Codex independently accepted
+Aether's PR65 head `15408a2159e71491967c5a4fdfca7873a993b06d` in
+[the exact-source review](https://github.com/dreamingfree09/secure-file-drop/pull/65#issuecomment-6810123643).
+Normal merge `7c6137aa4db0e8a92f35d3541d16a271c79d298a` has ordered parents
+`4cc0af368a2eed4a00f60036009e758c4a689d58` and that accepted head; all existing
+preflight files survive. Seven prior PR workflows passed; actual-master
+acceptance is a separate receipt and must be read back before claiming success.
+
+The Codex-owned browser worker is based on that actual merge. It adds private
+metadata cards, server-reported active/expired/revoked states, owner-scoped
+keyset pagination, file filtering, one-time copied link receipts and confirmed
+revocation. Stale asynchronous responses cannot render across sessions or
+filters; failed verification clears stale cards. See the
+[managed-sharing boundaries](MANAGED_SHARING.md) and the separate
+[next onboarding assignment](REGISTRATION_INVITATIONS_NEXT.md).
+
+The PR handover must report exact final source, changed paths and terminal
+hosted results, including any failures/corrections. Source implementation and
+local tests are not independent Aether acceptance or production deployment.
+Railway remains unchanged; no Rorschach access, original Docker/WSL start,
+real-data/trust/backup operation or 50/100 GiB test is authorised here.
