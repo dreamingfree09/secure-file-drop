@@ -21,6 +21,7 @@ R1_S3_APP_SECRET=$(openssl rand -hex 32)
 export SFD_R1_FIXTURE_PASSWORD SFD_R1_FIXTURE_USER_PASSWORD R1_ADMIN_HASH
 SFD_R1_FIXTURE_PASSWORD=$(openssl rand -hex 16)
 SFD_R1_FIXTURE_USER_PASSWORD=$(openssl rand -hex 16)
+if [[ "${SFD_R4_FIXTURE:-0}" == 1 ]]; then SFD_R1_FIXTURE_USER_PASSWORD+="Z9"; fi
 R1_ADMIN_HASH=$(printf '%s\n' "$SFD_R1_FIXTURE_PASSWORD" | htpasswd -niBC 12 admin | cut -d: -f2-)
 user_hash=$(printf '%s\n' "$SFD_R1_FIXTURE_USER_PASSWORD" | htpasswd -niBC 12 fixture | cut -d: -f2-)
 mkdir "$root/origin-tls" "$root/storage-tls"
@@ -59,6 +60,45 @@ fixture_sql() {
     "${compose[@]}" exec -T postgres sh -c 'export PGPASSWORD="$SFD_PG_APP_SECRET"; exec psql -h 127.0.0.1 -U sfd -d sfd -qAt -v ON_ERROR_STOP=1'
 }
 python3 -B tests/rorschach/https_acceptance.py create
+if [[ "${SFD_R4_FIXTURE:-0}" == 1 ]]; then
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 13 ]]
+    preservation_query="SELECT encode(sha256(convert_to(json_agg(ROW(id,email,username,password_hash,email_verified,is_admin,storage_quota_bytes) ORDER BY id)::text,'UTF8')),'hex') FROM users;
+SELECT encode(sha256(convert_to(json_agg(ROW(id,user_id,object_key,status,orig_name,size_bytes,sha256_hex,sha256_bytes) ORDER BY id)::text,'UTF8')),'hex') FROM files;"
+    fixture_sql <<<"$preservation_query" >"$root/r4-schema13.sha256-evidence"
+    export R1_RESUMABLE_MAX_BYTES=1073741824 R1_RESUMABLE_RESERVED_BYTES=2147483648
+    "${compose[@]}" stop proxy backend
+    "${compose[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 14 ]]
+    python3 -B tests/rorschach/https_acceptance.py reopen
+    fixture_sql <<<"$preservation_query" | cmp -s - "$root/r4-schema13.sha256-evidence"
+    export R1_MANAGED_LINKS_ENABLED=true
+    "${compose[@]}" stop proxy backend
+    "${compose[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 15 ]]
+    python3 -B tests/rorschach/https_acceptance.py reopen
+    fixture_sql <<<"$preservation_query" | cmp -s - "$root/r4-schema13.sha256-evidence"
+    export R1_REGISTRATION_INVITATIONS_ENABLED=true
+    "${compose[@]}" stop proxy backend
+    "${compose[@]}" up -d --no-build --force-recreate --no-deps --wait --wait-timeout 180 backend proxy
+    [[ "$(fixture_sql <<< 'SELECT version FROM schema_migrations')" == 16 ]]
+    python3 -B tests/rorschach/https_acceptance.py reopen
+    fixture_sql <<<"$preservation_query" | cmp -s - "$root/r4-schema13.sha256-evidence"
+    echo "PASS: schema13/14/15 original account credentials/roles/quota and file identities/digests preserved before enabling schema16"
+    printf "INSERT INTO users(email,username,password_hash,email_verified,is_active,is_admin) VALUES ('r4-unverified@example.invalid','r4_legacy_unverified','%s',false,true,false),('r4-dbadmin@example.invalid','r4_database_admin','%s',true,true,true);\n" "$user_hash" "$user_hash" | fixture_sql
+    fixture_sql <<<"CREATE TABLE r4_fixture_ownership(owner text NOT NULL); INSERT INTO r4_fixture_ownership VALUES ('$project');"
+    export SFD_R4_PROJECT="$project" SFD_R4_TEST_OWNER="$project"
+    export SFD_R4_TEST_DSN="postgres://sfd:$R1_PG_APP@postgres:5432/sfd?sslmode=disable"
+    # The static fault-test executable runs inside the owned internal database
+    # network. No database host port or non-internal network is added.
+    mkdir -p "$root/r4-browser-home/.pki/nssdb"
+    certutil -N --empty-password -d "sql:$root/r4-browser-home/.pki/nssdb"
+    certutil -A -n "SFD owned registration HTTPS fixture" -t 'C,,' -i "$root/origin-ca.pem" -d "sql:$root/r4-browser-home/.pki/nssdb"
+    python3 -B tests/registration/runtime.py
+    r4_recovery_query="SELECT encode(sha256(convert_to(json_agg(ROW(id,token_sha256,issuer,created_at,expires_at,revoked_at,redeemed_at,redeemed_by) ORDER BY id)::text,'UTF8')),'hex') FROM registration_invitations;
+SELECT encode(sha256(convert_to(json_agg(ROW(invitation_id,event,issuer,account_id,occurred_at) ORDER BY invitation_id,event)::text,'UTF8')),'hex') FROM registration_invitation_audit;
+SELECT encode(sha256(convert_to(json_agg(ROW(id,registration_method,registration_invitation_id,email_verified,is_admin,storage_quota_bytes) ORDER BY id)::text,'UTF8')),'hex') FROM users;"
+    fixture_sql <<<"$r4_recovery_query" >"$root/r4-recovery.sha256-evidence"
+fi
 if [[ "${SFD_MANAGED_BROWSER_FIXTURE:-0}" == 1 ]]; then
     mkdir -p "$root/managed-browser-home/.pki/nssdb"
     certutil -N --empty-password -d "sql:$root/managed-browser-home/.pki/nssdb"
@@ -209,6 +249,11 @@ docker run --rm -i --network none --read-only --cap-drop ALL --security-opt no-n
 "${restore[@]}" run --rm --no-deps provision verify
 "${restore[@]}" up -d --no-build --no-recreate --wait --wait-timeout 180 backend proxy
 python3 -B tests/rorschach/https_acceptance.py restore
+if [[ "${SFD_R4_FIXTURE:-0}" == 1 ]]; then
+    "${restore[@]}" exec -T postgres sh -c 'export PGPASSWORD="$SFD_PG_APP_SECRET"; exec psql -h 127.0.0.1 -U sfd -d sfd -qAt -v ON_ERROR_STOP=1' <<<"$r4_recovery_query" | cmp -s - "$root/r4-recovery.sha256-evidence"
+    node tests/registration/browser.cjs restore
+    echo "PASS: schema16 account provenance, invitation/audit ledger and object bytes preserved in independent paired restore"
+fi
 if [[ "${SFD_MANAGED_BROWSER_FIXTURE:-0}" == 1 ]]; then
     node tests/rorschach/managed_links_browser.cjs restart
 fi

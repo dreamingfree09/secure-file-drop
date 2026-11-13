@@ -54,6 +54,15 @@ through an HTTPS email API without putting access codes in emails. See the
 [Railway staging guide](docs/RAILWAY_STAGING.md) before provisioning.
 A configured provider does not by itself establish production readiness.
 
+## Administrator-issued registration
+
+The separate [administrator-issued registration candidate](docs/REGISTRATION_INVITATIONS.md)
+adds opted-in, single-use registration without SMTP. It requires schema16 and
+the accepted private-storage/HTTPS gates. Invited accounts remain ordinary;
+administrator authorisation does not verify their contact email. Default
+Railway registration is unchanged. Independent review and deployment acceptance
+remain separate.
+
 ## Windows tray companion
 
 The [native Windows companion](docs/WINDOWS_COMPANION.md) adds Quick Send, verified expiring-link copying, transfer/service status and explicit per-user Explorer integration. It uses the existing authenticated backend without starting Docker or WSL. This development preview requires independent review and the documented interactive Windows acceptance; production and representative large-file gates remain open.

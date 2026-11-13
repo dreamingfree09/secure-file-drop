@@ -577,3 +577,115 @@ Second browser run43125454624 passed the real user journey and PostgreSQL pagina
 Visual readback: artifact13903088098 from source5e8d255 archive SHA2569d2cd3f38251c40866e9ab9e569a4175d52b5b5648b0fb92a56817318ab9a2dd verified before PNG extraction. Desktop and mobile confirmation inspected. Existing global resets left the new panel without padding and the modal at the top-left; explicitly scope panel padding, desktop button sizing and dialog auto margins. No changes to existing upload/protected-sharing layouts. Final screenshots and exact-head runtime checks remain required.
 
 Supplemental code review4544707745 identified a real delayed-config race: authenticated files can finish before the feature flag and leave no selector choices. Configuration now receives only the current session backing list, without caching an earlier account list. Add a seventh state unit test and real Chromium authenticated reload that deliberately holds configuration until the parsed file list is complete. Existing session-generation checks and feature-disabled behaviour remain intact.
+
+
+## 2026-11-13 — R4 no-SMTP registration implementation
+
+Work SFD-RORSCHACH-R4-ADMIN-REGISTRATION-20261113. Verified Aether6851429781 and
+actual master9e368c4fe4fca2fababc5eecbe81d456f87a23e5 (accepted tree20b128d)
+before implementation; six merged-master workflows and required runtime,
+Windows, Go1.26.11 and real10GiB results passed. Dedicated R4 worker preserves
+all previous branches and original no-origin working tree.
+
+Implemented guarded additive16, digest-only issuer/expiry/redeem/revoke/audit,
+ordinary10GiB accounts and separate administrator-invitation registration
+provenance. Existing email ownership remains false and email-dependent access
+and notifications remain restricted. Explicit fragment-private recipient page,
+issuer management, strict Origin and bounded requests accompany atomic account
+creation/consumption. No automatic retry or compensation after unknown COMMIT.
+Added real-PostgreSQL transaction reporting faults, no-email Chromium flow,
+schema13/14/15 credential/file SHA-256 preservation and separate paired restore.
+
+Local guard test and nine browser-state regressions pass; transaction package
+was compiled only, not executed locally against a database. Final CI evidence,
+failures and exact source belong in the draft PR. Two preparation helpers had
+local encoding/assertion errors: the completed filesystem writes were checked,
+and a pre-write overly broad assertion was corrected. Neither was a runtime
+acceptance result or a reason to weaken tests. No Owner engine, account, data,
+credential, trust, backup or deployment operation occurred.
+
+### R4 first hosted failures and correction
+
+Initiale2993f4 core43426344701 fails four lint findings: import grouping, deprecated driver Begin, redundant embedded selector and unused authentication wrapper. Correct source/modern test-driver BeginTx without exclusions. Registration43426344891 verified schema13/14/15 preservation and16 activation, then stopped because an internal-only database network provided no host port. Preserve that isolation: compile the test-only transaction executable on the runner and execute it read-only/non-root in the exact owned internal database network with ownership marker and immutable image identity checks. No production network change or host database port is introduced. All actual new runtime assertions remain pending corrected CI.
+
+
+## 2026-11-13 - R4 browser lifecycle and private proxy correction
+
+Supplementary review4563332280 identified retained issuer receipts on browser
+history restoration. Clear them on pagehide and reset/revalidate identity and
+configuration on persisted pageshow. Ten registration UI unit tests pass; the
+real Chromium journey now also navigates away, logs out in another tab and
+returns before requiring a new administrator login. No BFCache execution is
+claimed solely from ordinary history navigation.
+
+Run43427343730 preserved schema13/14/15 credentials, roles, quota and file
+identities, then correctly failed the real HTTPS no-referrer assertion: the
+private Caddy header block overrode the upstream route policy. Use a separate
+default-only Referrer-Policy directive, retaining strict-origin when no app
+policy exists and respecting no-referrer otherwise. The assertion is retained.
+Caddy primary reference: https://caddyserver.com/docs/caddyfile/directives/header
+Run43427343604 Go/race/vulnerability/lint job131891922072 passed after the
+previous correction. Final runtime acceptance remains pending this revision.
+
+
+### R4 inherited empty-list contract
+
+Run43428419992 passed actual schema preservation and the corrected HTTPS
+no-referrer check, then stopped because the new harness expected [] from an
+empty owned-file list. Existing UserFilesHandler encodes its nil Go slice as
+JSON null (admin.go118), with its UUID-scoped predicate unchanged. Retain that
+API and check either empty representation plus an independent SQL zero-row
+assertion for the newly invited account; no foreign file is accepted and no
+application assertion is removed. Final registration acceptance remains pending.
+Local invocation corrections: Node needs tests/web/*.test.cjs on Windows;
+doc-link Python needs UTF-8 mode. Correct invocations passed41/41 and44 docs.
+
+
+### R4 production-driver constraint correction and negative coverage
+
+Run43429112886 correctly stopped at duplicate registration: expected409 but
+received503. OpenDB uses pgx, while the new constraint classification used
+lib/pq's error type. Classify pgconn.PgError23505 and retain generic503 for
+unexpected SQL errors. Use the same production pgx connector for the separate
+real-PostgreSQL transaction reporting fixture. Preserve rollback and the
+existing duplicate409 assertion rather than broadening accepted statuses.
+
+Add explicit foreign/null Origin denials, a one-character alteration of a
+valid capability, and exact outcome_unconfirmed checks for both reporting
+faults. No application fault hooks, authentication shortcuts, weakened limits
+or production resources are introduced. Final exact-revision CI remains pending.
+
+
+### R4 same-document fragment recovery and response isolation
+
+Runs43429823224/43429831675 passed actual concurrent201/410 with exactly one
+account, SQL INSERT/deferred-COMMIT rollback, production-pgx before/after
+reporting faults and real runtime login. Chromium produced registration and
+success screenshots, then stopped at a click timeout; the remaining browser
+journey/restart/paired recovery were not accepted. Exact failure archive
+14039042172 SHA25648989c6945a46b5a625f5c1954c24f47014634faad37ac41b54abc66c28346d3
+was verified before reading its two allowed screenshots. An initial local ZIP
+path assertion rejected the nested names before extraction; preserve archive.
+
+Two new unit regressions independently reproduced the recipient's missing
+same-document fragment navigation and absent in-flight replacement fencing.
+Both fail on the previous source. Parse a newly opened fragment locally, erase
+it from history, clear/abort the old form and require new explicit consent.
+An epoch prevents late old success/error/finally from affecting a new receipt.
+Uncertain previous results still require ordinary sign-in before another try.
+All43 browser units now pass, zero skips. Keep the actual Chromium transition
+assertion; add source-coordinate-only diagnostics so future browser failures
+cannot disclose Playwright URL call logs. Full exact-head CI is pending.
+
+
+### R4 parallel-run discrepancy retained for diagnosis
+
+Exact ccf6557 push43431645396 completed the full real browser registration,
+ordinary login/upload/download, replay/revocation, restart, issuer cap and
+independent paired restore successfully. Parallel PR43431652862 passed the
+PostgreSQL concurrency/failure/unknown-COMMIT checks, then timed out waiting
+for the upload receipt at browser.cjs105. A single green run does not close
+this discrepancy. Preserve both outcomes. Add only a bounded fixed-path/status
+receipt and boolean/count UI-state diagnostic on failure; never print complete
+URLs, query strings, bodies, headers, passwords or tokens. All existing browser
+and HTTP assertions remain unchanged. Cause and final acceptance are pending.

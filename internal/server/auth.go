@@ -30,14 +30,15 @@ import (
 // Unit tests can construct this directly. Database-backed user auth
 // is supported when DB is non-nil.
 type AuthConfig struct {
-	AdminUser      string
-	AdminPass      string
-	SessionSecret  string
-	SessionTTL     time.Duration
-	CookieName     string
-	DB             *sql.DB         // Database connection for user authentication
-	AccountLockout *AccountLockout // Account lockout manager
-	EmailService   *EmailService   // Email service for notifications
+	AdminUser               string
+	AdminPass               string
+	SessionSecret           string
+	SessionTTL              time.Duration
+	CookieName              string
+	DB                      *sql.DB         // Database connection for user authentication
+	AccountLockout          *AccountLockout // Account lockout manager
+	EmailService            *EmailService   // Email service for notifications
+	RegistrationInvitations bool            // Explicit schema16 alternative to inbox verification.
 }
 
 type sessionPayload struct {
@@ -194,7 +195,7 @@ func (a AuthConfig) loginHandler() http.HandlerFunc {
 		// First, try database authentication if DB is available
 		if a.DB != nil {
 			var authErr error
-			userID, authenticated, authErr = authenticateUser(r.Context(), a.DB, body.Username, body.Password)
+			userID, authenticated, authErr = authenticateUser(r.Context(), a.DB, body.Username, body.Password, a.RegistrationInvitations)
 			if authErr != nil {
 				http.Error(w, "server error", http.StatusInternalServerError)
 				return
@@ -311,7 +312,11 @@ func (a AuthConfig) resolveIdentity(r *http.Request) (identity, error) {
 		principal.Username, principal.Admin, principal.EnvironmentAdmin = a.AdminUser, true, true
 		return principal, nil
 	}
-	err = a.DB.QueryRowContext(ctx, "SELECT username, is_admin FROM users WHERE id::text = $1 AND is_active = TRUE AND email_verified = TRUE", payload.Sub).Scan(&principal.Username, &principal.Admin)
+	query := "SELECT username, is_admin FROM users WHERE id::text = $1 AND is_active = TRUE AND email_verified = TRUE"
+	if a.RegistrationInvitations {
+		query = "SELECT username,is_admin FROM users WHERE id::text=$1 AND is_active=TRUE AND " + invitationIdentityPredicate
+	}
+	err = a.DB.QueryRowContext(ctx, query, payload.Sub).Scan(&principal.Username, &principal.Admin)
 	if errors.Is(err, sql.ErrNoRows) {
 		return identity{}, errUnauthenticated
 	}
@@ -403,6 +408,10 @@ func (a AuthConfig) meHandler() http.Handler {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"status": "ok", "username": principal.Username, "is_admin": principal.Admin})
+		result := map[string]any{"status": "ok", "username": principal.Username, "is_admin": principal.Admin}
+		if a.RegistrationInvitations {
+			result["environment_admin"] = principal.EnvironmentAdmin
+		}
+		_ = json.NewEncoder(w).Encode(result)
 	}))
 }

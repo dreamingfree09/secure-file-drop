@@ -60,7 +60,12 @@ def parse_env(content):
     }
     capacity = {"R1_RESUMABLE_MAX_BYTES", "R1_RESUMABLE_RESERVED_BYTES"}
     managed = {"R1_MANAGED_LINKS_ENABLED"}
-    require(expected <= result.keys() <= expected | capacity | managed, "Unexpected or missing environment key")
+    registration = {"R1_REGISTRATION_INVITATIONS_ENABLED"}
+    require(expected <= result.keys() <= expected | capacity | managed | registration, "Unexpected or missing environment key")
+    if registration & result.keys():
+        require(result["R1_REGISTRATION_INVITATIONS_ENABLED"] in {"true", "false"}, "Invalid registration activation value")
+        require(result["R1_REGISTRATION_INVITATIONS_ENABLED"] != "true" or result.get("R1_MANAGED_LINKS_ENABLED") == "true",
+                "Registration requires the managed-link schema")
     if managed & result.keys():
         require(result["R1_MANAGED_LINKS_ENABLED"] in {"true", "false"}, "Invalid managed-link activation value")
         if result["R1_MANAGED_LINKS_ENABLED"] == "true":

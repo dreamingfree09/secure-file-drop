@@ -384,3 +384,22 @@ hosted results, including any failures/corrections. Source implementation and
 local tests are not independent Aether acceptance or production deployment.
 Railway remains unchanged; no Rorschach access, original Docker/WSL start,
 real-data/trust/backup operation or 50/100 GiB test is authorised here.
+
+
+## 2026-11-13 — accepted PR66 baseline and R4 registration candidate
+
+Owner R4 assignment accepts actual master9e368c4fe4fca2fababc5eecbe81d456f87a23e5,
+normal parents7c6137a/c0487f1, tree20b128d. Aether6851429781 accepted exact PR66
+source. All six actual-master workflows43416974126/124/275/202/294/421 passed,
+including Go1.26.11 reachable-advisory/lint, Windows143/27/290/17 and actual
+managed/resumable Chromium/restart/paired recovery/10GiB. The old compiler
+finding remains historical evidence; the new actual-master gate is satisfied.
+
+Separate worker codex/registration-invitations-r4-20261113 implements the
+[schema16 registration candidate](REGISTRATION_INVITATIONS.md), disabled by
+default and dependent on managed schema15/HTTPS. Administrator invitation
+possession is a separate ordinary-account registration method, never inbox
+verification; no role/quota selector or email fallback. Source and synthetic
+tests are implemented; final hosted results and SHA belong in the draft PR.
+Independent Aether acceptance remains pending. No protected merge/deployment,
+original engine/WSL/PKI/data/backup or Railway/Rorschach operation is authorised.

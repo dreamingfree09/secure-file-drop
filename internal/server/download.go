@@ -282,12 +282,11 @@ func (cfg Config) downloadHandler(db *sql.DB, mc *minio.Client, bucket string) h
 
 			// Send download notification to file owner
 			var userEmail string
-			err := db.QueryRowContext(statCtx, `
-				SELECT u.email
-				FROM files f
-				JOIN users u ON u.id = f.user_id
-				WHERE f.id = $1
-			`, claims.FileID).Scan(&userEmail)
+			query := "SELECT u.email FROM files f JOIN users u ON u.id=f.user_id WHERE f.id=$1"
+			if cfg.RegistrationInvitations {
+				query += " AND u.email_verified=TRUE"
+			}
+			err := db.QueryRowContext(statCtx, query, claims.FileID).Scan(&userEmail)
 
 			if err == nil && cfg.EmailSvc != nil {
 				_ = cfg.EmailSvc.SendFileDownloadNotification(userEmail, origName, downloaderIP)

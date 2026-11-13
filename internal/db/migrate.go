@@ -29,7 +29,8 @@ func (source boundedMigrationSource) ReadDir(name string) ([]fs.DirEntry, error)
 	visible := entries[:0]
 	for _, entry := range entries {
 		if (source.maxVersion < 14 && strings.HasPrefix(entry.Name(), "000014_")) ||
-			(source.maxVersion < 15 && strings.HasPrefix(entry.Name(), "000015_")) {
+			(source.maxVersion < 15 && strings.HasPrefix(entry.Name(), "000015_")) ||
+			(source.maxVersion < 16 && strings.HasPrefix(entry.Name(), "000016_")) {
 			continue
 		}
 		visible = append(visible, entry)
@@ -53,11 +54,16 @@ func RunManagedShareMigrations(db *sql.DB) error {
 	return runMigrations(db, 15)
 }
 
+// RunRegistrationInvitationMigrations enables separately reviewed schema16.
+func RunRegistrationInvitationMigrations(db *sql.DB) error {
+	return runMigrations(db, 16)
+}
+
 func runMigrations(db *sql.DB, target uint) (result error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 	var files fs.FS = migrationsFS
-	if target < 15 {
+	if target < 16 {
 		files = boundedMigrationSource{FS: migrationsFS, maxVersion: target}
 	}
 	source, err := iofs.New(files, "migrations")
